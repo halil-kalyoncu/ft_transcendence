@@ -1,0 +1,84 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: ./nestjs
+      # Only build development stage from Dockerfile
+      target: development
+    # Mount our host dir to the docker container
+    # Mount api directory (./api) to (:) docker container (/pong_game/src/app)
+    # Reflect File changes from host to container
+    volumes:
+      - ./nestjs/conf:/pong_game/src/app
+      - /pong_game/src/app/node_modules/
+    # RUN in debug mode: npm run start:debug -> Also start your vscode debugger
+    # RUN in dev mode: npm run start:dev
+    command: npm run start:debug
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgres:5432/db
+      NODE_ENV: development
+      JWT_SECRET: hard_to_guess_secret_123
+      PORT: 3000
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+      - 9229:9229
+    container_name: ponggame_api
+
+  frontend:
+    build:
+      dockerfile: Dockerfile
+      context: ./angular
+      target: development
+    volumes:
+      - ./angular/conf:/pong_game/frontend/src/app
+      - /pong_game/frontend/src/app/node_modules/
+    command: npm run start
+    restart: unless-stopped
+    ports:
+      - 4200:4200
+    links:
+      - api
+    container_name: ponggame_frontend
+    # build:
+    #   dockerfile: Dockerfile
+    #   context: ./vue
+    #   target: development
+    # volumes:
+    #   - ./vue/conf:/pong_game/frontend/src/app
+    #   - /pong_game/frontend/src/app/node_modules/
+    # command: npm run start
+    # restart: unless-stopped
+    # ports:
+    #   - 4200:4200
+    # links:
+    #   - api
+    # container_name: ponggame_frontend
+
+  postgres:
+    build:
+      dockerfile: Dockerfile
+      context: ./postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    restart: unless-stopped
+    ports:
+      - 35000:5432
+    container_name: ponggame_postgres
+
+  adminer:
+    build:
+      dockerfile: Dockerfile
+      context: ./adminer
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    ports:
+      - 5050:80
+    container_name: ponggame_adminer
