@@ -37,7 +37,7 @@ services:
     volumes:
       - ./vue/conf:/pong_game/frontend/src/app
       - /pong_game/frontend/src/app/node_modules/
-    command: npm run serve
+    command: npm run dev
     restart: unless-stopped
     ports:
       - 4200:4200
