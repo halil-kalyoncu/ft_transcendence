@@ -14,7 +14,7 @@ WORKDIR /pong_game/frontend/src/app
 COPY ./conf/package*.json ./
 
 RUN npm install -y
-RUN npm install -g @angular/cli
+RUN npm install -g @vue/cli
 
 COPY ./conf .
 

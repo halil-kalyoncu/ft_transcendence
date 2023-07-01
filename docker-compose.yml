@@ -32,32 +32,18 @@ services:
   frontend:
     build:
       dockerfile: Dockerfile
-      context: ./angular
+      context: ./vue
       target: development
     volumes:
-      - ./angular/conf:/pong_game/frontend/src/app
+      - ./vue/conf:/pong_game/frontend/src/app
       - /pong_game/frontend/src/app/node_modules/
-    command: npm run start
+    command: npm run serve
     restart: unless-stopped
     ports:
       - 4200:4200
     links:
       - api
     container_name: ponggame_frontend
-    # build:
-    #   dockerfile: Dockerfile
-    #   context: ./vue
-    #   target: development
-    # volumes:
-    #   - ./vue/conf:/pong_game/frontend/src/app
-    #   - /pong_game/frontend/src/app/node_modules/
-    # command: npm run start
-    # restart: unless-stopped
-    # ports:
-    #   - 4200:4200
-    # links:
-    #   - api
-    # container_name: ponggame_frontend
 
   postgres:
     build:
