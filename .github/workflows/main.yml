@@ -20,16 +20,16 @@ jobs:
         node-version: 'lts/*'
 
     - name: Install dependencies for NestJS
-      run: cd /nestjs/conf && npm install
+      run: cd ./nestjs/conf && npm install
 
     - name: Run NestJS tests
-      run: cd /nestjs/conf && npm run test
+      run: cd ./nestjs/conf && npm run test
 
     - name: Install dependencies for VueJS
-      run: cd /vue/conf && npm install
+      run: cd ./vue/conf && npm install
 
     - name: Run VueJS tests
-      run: cd /vue/conf && npm run test:unit
+      run: cd ./vue/conf && npm run test:unit
 
     - name: Build the Docker Compose configuration
       run: |
