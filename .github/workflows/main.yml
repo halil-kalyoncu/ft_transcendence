@@ -12,7 +12,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+
+    - name: Install dependencies for NestJS
+      run: cd /nestjs/conf && npm install
+
+    - name: Run NestJS tests
+      run: cd /nestjs/conf && npm run test
+
+    - name: Install dependencies for VueJS
+      run: cd /vue/conf && npm install
+
+    - name: Run VueJS tests
+      run: cd /vue/conf && npm run test:unit
 
     - name: Build the Docker Compose configuration
       run: |
