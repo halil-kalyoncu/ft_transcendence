@@ -28,6 +28,7 @@ import { useRoute } from 'vue-router'
   transition: all 0.25s ease-in;
   cursor: pointer;
   outline: none;
+  text-decoration: none;
   animation: appear 0.5s ease-out;
 }
 
