@@ -1,7 +1,26 @@
-<script setup lang="ts" />
+<script setup lang="ts" >
+import Chat from './Chat.vue'
+</script>
 
 <template>
-  <div class="friends">
+  <section class="friends">
+    <div class="friendsList">
     <h1>Friends View</h1>
-  </div>
+    </div>
+    <Chat/>
+  </section>
 </template>
+
+
+<style>
+.friends {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 50px) ;
+}
+
+.channels > * {
+  flex: 1;
+}
+
+</style>

@@ -1,3 +1,17 @@
+<script setup lang="ts">
+import Channels from './Channels.vue'
+import Friends from './Friends.vue'
+import { ref, onMounted } from 'vue'
+
+let showFriendsSideBar = ref(true)
+
+const setFriendsVisible = (value: boolean) => {
+  showFriendsSideBar.value = value
+}
+
+onMounted(() => console.log("on Mounted"))
+</script>
+
 <template>
   <nav class="sideBar">
     <ul>
@@ -21,24 +35,11 @@
   </nav>
 </template>
 
-<script setup lang="ts">
-import Channels from './Channels.vue'
-import Friends from './Friends.vue'
-import { ref } from 'vue'
-
-let showFriendsSideBar = ref(true)
-
-const setFriendsVisible = (value: boolean) => {
-  showFriendsSideBar.value = value
-}
-</script>
-
 <style>
 .sideBar {
   width: 300px;
-  height: 100vh;
   background-color: #0d1117;
-  padding: 0.1rem;
+  padding: 0 .5rem;
   border-right: 0.25px solid darkgray;
 }
 

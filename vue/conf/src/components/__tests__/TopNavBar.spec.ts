@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { config } from '@vue/test-utils'
 import TopNavBar from '../TopNavBar.vue'
-import { beforeEach, describe, it, expect, test} from 'vitest'
+import { beforeEach, describe, expect, test } from 'vitest'
 
 const history = createMemoryHistory()
 const router = createRouter({
@@ -10,7 +10,7 @@ const router = createRouter({
   routes: [
     { path: '/', component: {} },
     { path: '/home', component: {} },
-    { path: '/profile', component: {} },
+    { path: '/profile', component: {} }
   ]
 })
 
