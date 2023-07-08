@@ -12,7 +12,7 @@
 import { ref } from 'vue';
 import { io } from 'socket.io-client';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '../stores/username.ts';
+import { useUserStore } from '../stores/username';
 
 const username = ref('');
 const router = useRouter();
