@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import SideBar from '@/components/SideBar.vue'
 import Friends from '@/components/Friends.vue'
 import Channels from '@/components/Channels.vue'
-
+import { createPinia } from 'pinia';
 
 //('.navButton')[0] is Friends Button
 //('.navButton')[1] is Channels Button
@@ -12,6 +12,7 @@ describe('SideBar', () => {
   test('toggles Friends and Channels visibility correctly', async () => {
     const wrapper = mount(SideBar, {
       global: {
+        plugins: [createPinia()],
         stubs: {
           Friends,
           Channels
@@ -33,6 +34,7 @@ describe('SideBar', () => {
 
   test('applies "selected" class correctly', async () => {
     const wrapper = mount(SideBar, {
+      plugins: [createPinia()],
       global: {
         stubs: {
           Friends,

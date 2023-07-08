@@ -12,9 +12,11 @@
 import { ref } from 'vue';
 import { io } from 'socket.io-client';
 import { useRouter } from 'vue-router';
+import { useUserStore } from '../stores/username.ts';
 
 const username = ref('');
 const router = useRouter();
+const userStore = useUserStore();
 
 const submitForm = async () => {
   try {
@@ -28,6 +30,7 @@ const submitForm = async () => {
 
     if (response.ok) {
       console.log('Login successful');
+      userStore.setUsername(username.value);
       router.push('/home');
     } else {
       console.error('Login failed!!');

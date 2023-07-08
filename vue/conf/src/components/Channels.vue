@@ -1,5 +1,11 @@
 <script setup lang="ts" >
 import Chat from './Chat.vue'
+import { computed, watch } from 'vue';
+import { useUserStore } from '../stores/username';
+
+const userStore = useUserStore();
+const username = computed(() => userStore.username);
+
 </script>
 
 <template>
