@@ -21,18 +21,16 @@ const submitForm = async () => {
     const response = await fetch('http://localhost:3000/api/users/login', {
       method: 'POST',
       headers: {
-        'Username': 'abc',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ username: username.value }),
     });
 
     if (response.ok) {
-      // Handle successful login
       console.log('Login successful');
       router.push('/home');
     } else {
-      // Handle login failure
-      console.error('Login failed');
+      console.error('Login failed!!');
     }
   } catch (error) {
     console.error('Error occurred during login:', error);
