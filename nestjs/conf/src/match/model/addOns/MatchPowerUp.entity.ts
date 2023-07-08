@@ -1,4 +1,3 @@
-
 /*
   Table matchPowerups {
 	id integer

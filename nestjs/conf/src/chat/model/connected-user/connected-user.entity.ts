@@ -1,16 +1,14 @@
-import { UserEntity } from "src/user/model/user.entity";
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { UserEntity } from '../../../user/model/user.entity';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class ConnectedUserEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-	@PrimaryGeneratedColumn()
-	id: number;
+  @Column()
+  socketId: string;
 
-	@Column()
-	socketId: string;
-
-	@OneToOne(() => UserEntity)
-	user: UserEntity;
-
+  @OneToOne(() => UserEntity)
+  user: UserEntity;
 }

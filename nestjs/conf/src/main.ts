@@ -6,14 +6,15 @@ import * as session from 'express-session';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+  app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
   app.use(
     session({
       secret: process.env.JWT_SECRET,
       resave: false,
-      saveUninitialized: false
-    })
-  )
+      saveUninitialized: false,
+    }),
+  );
   await app.listen(3000);
 }
 bootstrap();

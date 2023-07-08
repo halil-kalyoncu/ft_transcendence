@@ -11,13 +11,33 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { io } from 'socket.io-client';
+import { useRouter } from 'vue-router';
 
 const username = ref('');
+const router = useRouter();
 
 const submitForm = async () => {
-  //todo implement submitForm
-};
+  try {
+    const response = await fetch('http://localhost:3000/api/users/login', {
+      method: 'POST',
+      headers: {
+        'Username': 'abc',
+      },
+      body: JSON.stringify({ username: username.value }),
+    });
 
+    if (response.ok) {
+      // Handle successful login
+      console.log('Login successful');
+      router.push('/home');
+    } else {
+      // Handle login failure
+      console.error('Login failed');
+    }
+  } catch (error) {
+    console.error('Error occurred during login:', error);
+  }
+};
 </script>
 
 

@@ -1,4 +1,3 @@
-
 /*
 Table queue {
 	id integer

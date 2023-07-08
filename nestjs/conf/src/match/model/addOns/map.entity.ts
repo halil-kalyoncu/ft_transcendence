@@ -1,4 +1,3 @@
-
 /*
 Table maps {
 	id integer [primary key]

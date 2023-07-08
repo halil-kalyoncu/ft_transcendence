@@ -1,7 +1,7 @@
-import { UserI } from "src/user/model/user.interface";
+import { UserI } from 'src/user/model/user.interface';
 
 export interface ConnectedUserI {
-	id?: number;
-	socketId?: string;
-	user?: UserI;
+  id?: number;
+  socketId?: string;
+  user?: UserI;
 }
