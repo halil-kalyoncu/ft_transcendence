@@ -24,4 +24,6 @@ export class FriendshipEntity {
 	@Column({ type: 'enum', enum: FriendshipStatus, default: FriendshipStatus.Pending })
 	status: FriendshipStatus;
 
+	@Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+	requestedAt: Date;
 }

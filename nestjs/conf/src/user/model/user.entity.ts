@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { UserChatroomEntity } from "src/chat/model/chatroom/user-chatroom.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class UserEntity {
@@ -8,4 +9,7 @@ export class UserEntity {
 
 	@Column({unique: true})
 	username: string;
+
+	@OneToMany(() => UserChatroomEntity, (userChatroom) => userChatroom.user)
+	joinedChatrooms: UserChatroomEntity[];
 }

@@ -17,6 +17,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {}
 
   async handleConnection(socket: Socket, ...args: any[]) {
+    //!!!hard coded, change this to the current user!!!
     const user: UserI = await this.userService.findByUsername("hkalyonc");
     if (!user) {
       return this.disconnect(socket);
