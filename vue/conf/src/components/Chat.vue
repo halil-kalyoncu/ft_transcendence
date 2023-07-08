@@ -32,7 +32,7 @@
 
 .chat .chat-input {
   flex: 0 0 auto;
-    display: flex;
+  display: flex;
   justify-content: center;
   align-items: center;
   padding: 1rem .5rem;
@@ -53,7 +53,6 @@
 .chat .chat-input button{
   position: absolute;
   right: 1rem;
-
   background-color: #ea9f42; 
   border: none;
   color: white;
