@@ -1,18 +1,56 @@
-<script setup lang="ts" />
-
 <template>
   <div class="login">
-    <router-link to="/home" custom v-slot="{ navigate }">
-      <button @click="navigate" role="link">42 Login</button>
-    </router-link>
+    <form @submit.prevent="submitForm" class="login-form">
+      <label for="username">Username:</label>
+      <input type="text" id="username" v-model="username" required />
+      <button type="submit" role="link">42 Login</button>
+    </form>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { io } from 'socket.io-client';
+
+const username = ref('');
+
+const submitForm = async () => {
+  //todo implement submitForm
+};
+
+</script>
+
 
 <style>
 .login {
   background-color: #0d1117;
   width: 100vw;
   height: 100vh;
+  position: relative;
+}
+
+.login-form {
+  width: 400px;
+  height: 300px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  -webkit-transform: translateX(-50%) translateY(-50%);
+  -moz-transform: translateX(-50%) translateY(-50%);
+  text-align: center;
+}
+
+
+.login-form input{
+  padding: .5rem .25rem;
+  background-color: lightgray;
+  border-radius: .25rem;
+  margin: 1rem;
+}
+
+.login-form input:focus{
+  outline:solid 2px #ea9f42;
 }
 
 .login button {
@@ -23,12 +61,6 @@
   background-color: transparent;
   padding: 0.25rem 2rem;
   cursor: pointer;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  -webkit-transform: translateX(-50%) translateY(-50%);
-  -moz-transform: translateX(-50%) translateY(-50%);
-  transform: translateX(-50%) translateY(-50%);
   transition: 0.15s ease-in-out;
 }
 
