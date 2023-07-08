@@ -9,9 +9,13 @@ import { DirectMessageEntity } from './model/messages/directMessage.entity';
 import { GroupMessageEntity } from './model/messages/groupMessages.entity';
 import { MessageEntity } from './model/messages/message.entity';
 import { UserChatroomEntity } from './model/chatroom/user-chatroom.entity';
+import { ConnectedUserService } from './service/connected-user/connected-user.service';
+import { AuthModule } from 'src/auth/auth.module';
+import { ConnectedUserEntity } from './model/connected-user/connected-user.entity';
 
 @Module({
 	imports: [
+		AuthModule,
 		UserModule,
 		TypeOrmModule.forFeature([
 			FriendshipEntity,
@@ -19,9 +23,10 @@ import { UserChatroomEntity } from './model/chatroom/user-chatroom.entity';
 			UserChatroomEntity,
 			DirectMessageEntity,
 			GroupMessageEntity,
-			MessageEntity
+			MessageEntity,
+			ConnectedUserEntity
 		])
 	],
-	providers: [ChatGateway, FriendshipService]
+	providers: [ChatGateway, FriendshipService, ConnectedUserService]
 })
 export class ChatModule {}

@@ -26,11 +26,17 @@ export class UserService {
 	async create(newUser: UserI): Promise<UserI> {
 		try {
 			const user = await this.userRepository.save(this.userRepository.create(newUser));
-			return this.findOne(user.id);
+			return this.findById(user.id);
 		}
 		catch {
 			throw new HttpException('Username is already in use', HttpStatus.CONFLICT);
 		}
+	}
+
+	async findById(id: number): Promise<UserI> {
+		return this.userRepository.findOne({
+			where: { id }
+		});
 	}
 
 	async findByUsername(username: string): Promise<UserI> {
@@ -49,10 +55,6 @@ export class UserService {
 				username: Like(`%${username}%`)
 			}
 		});
-	}
-
-	private async findOne(id: number): Promise<UserI> {
-		return this.userRepository.findOne({ where: { id } });
 	}
 
 }
