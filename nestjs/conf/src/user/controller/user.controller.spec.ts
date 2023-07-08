@@ -19,11 +19,11 @@ describe('UserController', () => {
         AuthService,
         {
           provide: getRepositoryToken(UserEntity),
-          useValue: {}, // mock methods for the UserEntityRepository here
+          useValue: {},
         },
         {
           provide: JwtService,
-          useValue: {}, // mock methods for JwtService here
+          useValue: {},
         },
       ],
     }).compile();
