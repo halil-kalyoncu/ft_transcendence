@@ -8,11 +8,13 @@ describe('ConnectedUserService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ConnectedUserService,
-                {
-        provide: getRepositoryToken(ConnectedUserEntity),
-        useValue: {},
-      },],
+      providers: [
+        ConnectedUserService,
+        {
+          provide: getRepositoryToken(ConnectedUserEntity),
+          useValue: {},
+        },
+      ],
     }).compile();
 
     service = module.get<ConnectedUserService>(ConnectedUserService);

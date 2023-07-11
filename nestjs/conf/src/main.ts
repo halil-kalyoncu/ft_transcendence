@@ -13,6 +13,7 @@ async function bootstrap() {
       secret: process.env.JWT_SECRET,
       resave: false,
       saveUninitialized: false,
+      cookie: { secure: false },
     }),
   );
   await app.listen(3000);

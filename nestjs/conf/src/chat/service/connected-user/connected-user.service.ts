@@ -13,7 +13,9 @@ export class ConnectedUserService {
   ) {}
 
   async create(connectedUser: ConnectedUserI): Promise<ConnectedUserI> {
-    return this.connectedUserRepository.save(connectedUser);
+    return this.connectedUserRepository.save(
+      this.connectedUserRepository.create(connectedUser),
+    );
   }
 
   async findByUser(user: UserI): Promise<ConnectedUserI> {

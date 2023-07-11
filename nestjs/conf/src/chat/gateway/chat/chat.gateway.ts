@@ -15,11 +15,7 @@ import { UserService } from '../../../user/service/user-service/user.service';
 
 @WebSocketGateway({
   cors: {
-    origin: [
-      'https://hoppscotch.io',
-      'http://localhost:3000',
-      'http://localhost:4200',
-    ],
+    origin: ['http://localhost:3000', 'http://localhost:4200'],
   },
 })
 export class ChatGateway
@@ -28,35 +24,53 @@ export class ChatGateway
   @WebSocketServer()
   server: Server;
 
+  title: string[] = [];
+
   constructor(
     private authService: AuthService,
     private userService: UserService,
     private friendshipService: FriendshipService,
-    private connectedUserSerice: ConnectedUserService,
+    private connectedUserService: ConnectedUserService,
   ) {}
 
   async onModuleInit() {
-    await this.connectedUserSerice.deleteAll();
+    await this.connectedUserService.deleteAll();
   }
 
   async handleConnection(socket: Socket, ...args: any[]) {
     try {
-      const decodedToken = await this.authService.verifyJwt(
-        socket.handshake.headers.authorization,
-      );
+      //Authorization has the format Bearer <access_token>, remove Bearer to verify the token
+      const tokenArray: string[] =
+        socket.handshake.headers.authorization.split(' ');
+      const decodedToken = await this.authService.verifyJwt(tokenArray[1]);
       const user: UserI = await this.userService.findById(decodedToken.user.id);
+      if (!user) {
+        return this.disconnectUnauthorized(socket);
+      }
+      //save user data in socket
+      socket.data.user = user;
+
+      const friends = await this.friendshipService.getFriends(user.id);
+      console.log(friends);
+
+      //save user in connectedUsers
+      await this.connectedUserService.create({ socketId: socket.id, user });
+
+      //emit friends to the connected client
+      return this.server.to(socket.id).emit('friends', friends);
     } catch {
       return this.disconnectUnauthorized(socket);
     }
   }
 
   async handleDisconnect(socket: Socket) {
-    await this.connectedUserSerice.deleteBySocketId(socket.id);
+    await this.connectedUserService.deleteBySocketId(socket.id);
     socket.disconnect();
   }
 
   private disconnectUnauthorized(socket: Socket) {
     socket.emit('Error', new UnauthorizedException());
+    socket.disconnect();
   }
 
   @SubscribeMessage('addFriend')
@@ -66,10 +80,5 @@ export class ChatGateway
       sender: socket.data.user,
       receiver: receiver,
     });
-  }
-
-  private disconnect(socket: Socket) {
-    socket.emit('Error', new UnauthorizedException());
-    socket.disconnect();
   }
 }

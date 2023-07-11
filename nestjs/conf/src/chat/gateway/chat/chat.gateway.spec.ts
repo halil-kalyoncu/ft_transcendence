@@ -27,7 +27,7 @@ describe('ChatGateway', () => {
         },
         {
           provide: JwtService,
-          useValue: {}, 
+          useValue: {},
         },
         {
           provide: getRepositoryToken(FriendshipEntity),

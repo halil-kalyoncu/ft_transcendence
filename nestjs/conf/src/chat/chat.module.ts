@@ -12,6 +12,7 @@ import { UserChatroomEntity } from './model/chatroom/user-chatroom.entity';
 import { ConnectedUserService } from './service/connected-user/connected-user.service';
 import { AuthModule } from '../auth/auth.module';
 import { ConnectedUserEntity } from './model/connected-user/connected-user.entity';
+import { ChatController } from './controller/chat/chat.controller';
 
 @Module({
   imports: [
@@ -28,5 +29,6 @@ import { ConnectedUserEntity } from './model/connected-user/connected-user.entit
     ]),
   ],
   providers: [ChatGateway, FriendshipService, ConnectedUserService],
+  controllers: [ChatController],
 })
 export class ChatModule {}

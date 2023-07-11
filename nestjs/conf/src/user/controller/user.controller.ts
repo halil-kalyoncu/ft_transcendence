@@ -38,7 +38,9 @@ export class UserController {
   }
 
   @Get('/find-by-username')
-  async findAllByUsername(@Query('username') username: string) {
+  async findAllByUsername(
+    @Query('username') username: string,
+  ): Promise<UserI[]> {
     return this.userService.findAllByUsername(username);
   }
 }
