@@ -2,10 +2,10 @@
 import { RouterLink, RouterView } from 'vue-router'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useUserStore } from '../stores/username';
+import { useUserStore } from '../stores/username'
 
-const userStore = useUserStore();
-const username = computed(() => userStore.username);
+const userStore = useUserStore()
+const username = computed(() => userStore.username)
 
 const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
@@ -16,14 +16,18 @@ const showProfilePage = computed(() => route.path === '/profile')
   <header class="header">
     <nav>
       <div>
-      <RouterLink class="navButton" to="/home" :class="{ selected: showHomePage }">Home</RouterLink>
-      <RouterLink class="navButton" :class="{ selected: showProfilePage }" to="/profile"
-        >Profile</RouterLink
-      >
+        <RouterLink class="navButton" to="/home" :class="{ selected: showHomePage }"
+          >Home</RouterLink
+        >
+        <RouterLink class="navButton" :class="{ selected: showProfilePage }" to="/profile"
+          >Profile</RouterLink
+        >
       </div>
       <div>
-      <RouterLink class="navButton header-username" to="/profile">{{username ? username : 'TBD'}}</RouterLink>  
-      <RouterLink class="navButtonLogout" to="/">Logout</RouterLink>
+        <RouterLink class="navButton header-username" to="/profile">{{
+          username ? username : 'TBD'
+        }}</RouterLink>
+        <RouterLink class="navButtonLogout" to="/">Logout</RouterLink>
       </div>
     </nav>
   </header>
@@ -58,17 +62,15 @@ const showProfilePage = computed(() => route.path === '/profile')
   transition: color 0.15s ease-in-out;
 }
 
-.navButtonLogout:hover{
+.navButtonLogout:hover {
   color: red;
-
 }
 
-.header-username{
-  color: #FFFF00;
+.header-username {
+  color: #ffff00;
   font-weight: light;
   font-family: Helvetica, sans-serif;
   padding: 0;
   text-align: bottom;
 }
-
 </style>

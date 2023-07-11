@@ -9,38 +9,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { io } from 'socket.io-client';
-import { useRouter } from 'vue-router';
-import { useUserStore } from '../stores/username';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '../stores/username'
 
-const username = ref('');
-const router = useRouter();
-const userStore = useUserStore();
+const username = ref('')
+const router = useRouter()
+const userStore = useUserStore()
 
 const submitForm = async () => {
   try {
     const response = await fetch('http://localhost:3000/api/users/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ username: username.value }),
-    });
+      body: JSON.stringify({ username: username.value })
+    })
 
     if (response.ok) {
-      console.log('Login successful');
-      userStore.setUsername(username.value);
-      router.push('/home');
+      console.log('Login successful')
+      const { access_token } = await response.json()
+      console.log('access_token: ' + access_token)
+      //save jwt into local storage
+      localStorage.setItem('ponggame', access_token)
+      userStore.setUsername(username.value)
+      router.push('/home')
     } else {
-      console.error('Login failed!!');
+      console.error('Login failed!!')
     }
   } catch (error) {
-    console.error('Error occurred during login:', error);
+    console.error('Error occurred during login:', error)
   }
-};
+}
 </script>
-
 
 <style>
 .login {
@@ -62,16 +64,15 @@ const submitForm = async () => {
   text-align: center;
 }
 
-
-.login-form input{
-  padding: .5rem .25rem;
+.login-form input {
+  padding: 0.5rem 0.25rem;
   background-color: lightgray;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
   margin: 1rem;
 }
 
-.login-form input:focus{
-  outline:solid 2px #ea9f42;
+.login-form input:focus {
+  outline: solid 2px #ea9f42;
 }
 
 .login button {

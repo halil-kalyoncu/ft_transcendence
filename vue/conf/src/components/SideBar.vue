@@ -9,7 +9,7 @@ const setFriendsVisible = (value: boolean) => {
   showFriendsSideBar.value = value
 }
 
-onMounted(() => console.log("on Mounted"))
+onMounted(() => console.log('on Mounted'))
 </script>
 
 <template>
@@ -39,7 +39,7 @@ onMounted(() => console.log("on Mounted"))
 .sideBar {
   width: 300px;
   background-color: #0d1117;
-  padding: 0 .5rem;
+  padding: 0 0.5rem;
   border-right: 0.25px solid darkgray;
 }
 

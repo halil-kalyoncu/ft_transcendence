@@ -3,7 +3,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { config } from '@vue/test-utils'
 import TopNavBar from '../TopNavBar.vue'
 import { beforeEach, describe, expect, test } from 'vitest'
-import { createPinia } from 'pinia';
+import { createPinia } from 'pinia'
 
 const history = createMemoryHistory()
 const router = createRouter({
@@ -23,8 +23,6 @@ config.global.mocks = {
   $route: router.currentRoute,
   $router: router
 }
-
-
 
 describe('TopNavBar', () => {
   test('renders and applies "selected" class correctly', async () => {
