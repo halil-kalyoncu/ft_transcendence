@@ -1,6 +1,6 @@
 import { Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { MessageEntity } from './message.entity';
-import { UserEntity } from 'src/user/model/user.entity';
+import { UserEntity } from '../../../user/model/user.entity';
 
 @Entity()
 export class DirectMessageEntity {
