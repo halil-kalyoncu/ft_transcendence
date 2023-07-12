@@ -1,6 +1,6 @@
 import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
-import { FriendshipService } from 'src/chat/service/friendship/friendship.service';
-import { UserI } from 'src/user/model/user.interface';
+import { FriendshipService } from '../../service/friendship/friendship.service';
+import { UserI } from '../../../user/model/user.interface';
 
 @Controller('chat')
 export class ChatController {

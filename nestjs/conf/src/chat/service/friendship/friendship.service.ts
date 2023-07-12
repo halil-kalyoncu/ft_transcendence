@@ -6,7 +6,7 @@ import {
 } from '../../../chat/model/friendship/friendship.entity';
 import { FriendshipI } from '../../../chat/model/friendship/friendship.interface';
 import { Repository } from 'typeorm';
-import { UserI } from 'src/user/model/user.interface';
+import { UserI } from '../../../user/model/user.interface';
 
 @Injectable()
 export class FriendshipService {

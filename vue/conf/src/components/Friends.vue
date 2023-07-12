@@ -7,7 +7,6 @@ import { Socket } from 'socket.io-client'
 const MyComponent = defineComponent({
   setup() {
     const socket = ref<Socket | null>(null)
-    const friends = ref<UserI>(null)
 
     onMounted(() => {
       const accessToken = localStorage.getItem('ponggame') ?? ''
