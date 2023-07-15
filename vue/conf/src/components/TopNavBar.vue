@@ -3,6 +3,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '../stores/username'
+import router from '../router'
 
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
@@ -11,10 +12,11 @@ const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
 const showProfilePage = computed(() => route.path === '/profile')
 
-function clearUserStore() {
+const logout = () => {
+  localStorage.removeItem('ponggame')
   userStore.clearUsername()
+  router.push('/')
 }
-
 </script>
 
 <template>
@@ -32,7 +34,7 @@ function clearUserStore() {
         <RouterLink class="navButton header-username" to="/profile">{{
           username ? username : 'TBD'
         }}</RouterLink>
-        <RouterLink class="navButtonLogout" to="/" @click="clearUserStore">Logout</RouterLink>
+        <a class="navButtonLogout" @click="logout">Logout</a>
       </div>
     </nav>
   </header>
