@@ -63,7 +63,10 @@ const addFriend = () => {
         notificationStore.showNotification(response.error, false)
       } else {
         errorMessage.value = ''
-        notificationStore.showNotification('Friend Request was sent to ' + response.friend.username, true)
+        notificationStore.showNotification(
+          'Friend Request was sent to ' + response.friend.username,
+          true
+        )
       }
     }
   )
