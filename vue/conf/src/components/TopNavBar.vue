@@ -10,6 +10,11 @@ const username = computed(() => userStore.username)
 const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
 const showProfilePage = computed(() => route.path === '/profile')
+
+function clearUserStore() {
+  userStore.clearUsername()
+}
+
 </script>
 
 <template>
@@ -27,7 +32,7 @@ const showProfilePage = computed(() => route.path === '/profile')
         <RouterLink class="navButton header-username" to="/profile">{{
           username ? username : 'TBD'
         }}</RouterLink>
-        <RouterLink class="navButtonLogout" to="/">Logout</RouterLink>
+        <RouterLink class="navButtonLogout" to="/" @click="clearUserStore">Logout</RouterLink>
       </div>
     </nav>
   </header>
