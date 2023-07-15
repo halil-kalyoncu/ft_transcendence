@@ -8,7 +8,7 @@ export const useUserStore = defineStore('user', () => {
     username.value = newUsername
   }
 
-  function clearUsername(newUsername: string) {
+  function clearUsername() {
     username.value = ''
   }
 
