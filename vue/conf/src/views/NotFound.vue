@@ -7,5 +7,6 @@ h2 {
   padding: 10%;
   color: rgb(255, 0, 0);
   font-size: 4rem;
+  text-align: center;
 }
 </style>

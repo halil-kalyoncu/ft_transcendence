@@ -14,19 +14,7 @@ const showLoginPage = computed(() => route.path === '/')
 <template>
   <Login v-if="showLoginPage" />
 
-  <main v-if="!showLoginPage">
-    <SideBar />
-    <section>
-      <TopNavBar />
-      <RouterView />
-    </section>
-  </main>
+  <RouterView v-if="!showLoginPage" />
 </template>
 
-<style scoped>
-main {
-  display: flex;
-  flex-direction: row;
-  font-family: 'Courier New', Courier, monospace;
-}
-</style>
+
