@@ -12,10 +12,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/username'
+import { useNotificationStore } from '../stores/notification'
 
 const username = ref('')
 const router = useRouter()
 const userStore = useUserStore()
+const notificationStore = useNotificationStore()
 
 const submitForm = async () => {
   try {
@@ -37,9 +39,11 @@ const submitForm = async () => {
       router.push('/home')
     } else {
       console.error('Login failed!! ' + response.status + ': ' + response.statusText)
+      notificationStore.showNotification(response.status + ': ' + response.statusText, false)
     }
   } catch (error) {
     console.error('Error occurred during login:', error)
+    notificationStore.showNotification('Error occurred during login:' + error, false)
   }
 }
 </script>

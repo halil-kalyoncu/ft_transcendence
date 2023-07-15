@@ -9,7 +9,7 @@ import TopNavBar from './TopNavBar.vue'
 const route = useRoute()
 </script>
 
-<template >
+<template>
   <main>
     <SideBar />
     <section>

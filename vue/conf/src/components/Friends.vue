@@ -2,6 +2,7 @@
 import Chat from './Chat.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { connectWebSocket, disconnectWebSocket } from '../websocket'
+import { useNotificationStore } from '../stores/notification'
 
 interface UserI {
   id?: number
@@ -13,6 +14,8 @@ interface FriendshipEntryI {
   friend: UserI
   isOnline?: boolean
 }
+
+const notificationStore = useNotificationStore()
 
 const friends = ref<FriendshipEntryI[]>([])
 const newFriend = ref('')
@@ -57,8 +60,10 @@ const addFriend = () => {
     (response: FriendshipEntryI | { error: string }) => {
       if ('error' in response) {
         errorMessage.value = response.error
+        notificationStore.showNotification(response.error, false)
       } else {
         errorMessage.value = ''
+        notificationStore.showNotification('Friend Request was sent to ' + response.friend.username, true)
       }
     }
   )
@@ -256,7 +261,7 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
 }
 
 .offline {
-  background-color: red;
+  background-color: #e2411f;
 }
 
 .friendRequestsList {
@@ -299,7 +304,7 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
   flex: 1;
 }
 
-.error {
+.friends.error {
   color: red;
   margin-top: 10px;
 }

@@ -8,8 +8,6 @@ let showFriendsSideBar = ref(true)
 const setFriendsVisible = (value: boolean) => {
   showFriendsSideBar.value = value
 }
-
-onMounted(() => console.log('on Mounted'))
 </script>
 
 <template>

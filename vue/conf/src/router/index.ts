@@ -99,8 +99,8 @@ const router = createRouter({
         {
           path: '',
           component: () => import('../views/NotFound.vue') //lazy load
-        },
-      ],
+        }
+      ]
     }
   ]
 })

@@ -12,9 +12,7 @@ const showLoginPage = computed(() => route.path === '/')
 </script>
 
 <template>
+  <Notification />
   <Login v-if="showLoginPage" />
-
   <RouterView v-if="!showLoginPage" />
 </template>
-
-

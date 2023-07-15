@@ -9,8 +9,8 @@ const showLoginPage = computed(() => route.path === '/')
 
 <template>
   <main>
-      <RouterView />
-      <RouterLink class="goToLogin" to="/">Go To Login</RouterLink>
+    <RouterView />
+    <RouterLink class="goToLogin" to="/">Go To Login</RouterLink>
   </main>
 </template>
 
@@ -20,16 +20,15 @@ main {
   height: 100vh;
 }
 
-.goToLogin{
-    display:block;
-    text-align:center;
-    color: aliceblue;
-    text-decoration: none;
-    transition: .15s color ease-out;
+.goToLogin {
+  display: block;
+  text-align: center;
+  color: aliceblue;
+  text-decoration: none;
+  transition: 0.15s color ease-out;
 }
 
-.goToLogin:hover{
-    color: #ffff00;
+.goToLogin:hover {
+  color: #ffff00;
 }
-
 </style>
