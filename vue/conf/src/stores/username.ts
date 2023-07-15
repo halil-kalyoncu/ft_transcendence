@@ -2,10 +2,14 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
 export const useUserStore = defineStore('user', () => {
-  const username = ref('')
+  const username = ref<string>('')
 
   function setUsername(newUsername: string) {
     username.value = newUsername
+  }
+
+  function reset() {
+    username.value = ''
   }
 
   return { username, setUsername }
