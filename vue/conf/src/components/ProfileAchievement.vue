@@ -12,13 +12,24 @@
   </div>
 </template>
 
-<script setup>
-import { defineProps } from 'vue'
+<script lang="ts">
+import { defineComponent } from 'vue'
 
-const props = defineProps({
-  achievementType: Number,
-  achievementTitle: String,
-  achievementDescription: String
+export default defineComponent({
+  props: {
+    achievementType: {
+      type: Number,
+      required: true,
+    },
+    achievementTitle: {
+      type: String,
+      required: true,
+    },
+    achievementDescription: {
+      type: String,
+      required: true,
+    },
+  },
 })
 </script>
 
@@ -31,7 +42,6 @@ const props = defineProps({
   color: white;
   margin: 0 1.5rem 1.5rem 0;
 }
-
 .achievement-image {
   width: 100px;
   height: 100px;
@@ -40,17 +50,14 @@ const props = defineProps({
   border: 0.1rem solid gold;
   border-radius: 50%;
 }
-
 .achievement-content {
   display: flex;
   flex-direction: column;
 }
-
 .achievement-title {
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
 }
-
 .achievement-description {
   font-size: 1rem;
 }
