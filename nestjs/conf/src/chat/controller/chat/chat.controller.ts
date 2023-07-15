@@ -1,6 +1,6 @@
 import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
 import { FriendshipService } from '../../service/friendship/friendship.service';
-import { UserI } from '../../../user/model/user.interface';
+import { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface';
 
 @Controller('chat')
 export class ChatController {
@@ -9,7 +9,7 @@ export class ChatController {
   @Get('friendship')
   async findAllFriendsByUserId(
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<UserI[]> {
+  ): Promise<FriendshipEntryI[]> {
     return this.friendshipService.getFriends(userId);
   }
 }

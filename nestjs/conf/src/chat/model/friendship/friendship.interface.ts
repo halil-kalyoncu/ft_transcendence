@@ -3,7 +3,7 @@ import { FriendshipStatus } from './friendship.entity';
 
 export interface FriendshipI {
   id?: number;
-  sender: UserI;
-  receiver: UserI;
+  sender?: UserI;
+  receiver?: UserI;
   status?: FriendshipStatus;
 }

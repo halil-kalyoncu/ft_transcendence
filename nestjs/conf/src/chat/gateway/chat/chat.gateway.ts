@@ -12,6 +12,10 @@ import { ConnectedUserService } from '../../../chat/service/connected-user/conne
 import { FriendshipService } from '../../../chat/service/friendship/friendship.service';
 import { UserI } from '../../../user/model/user.interface';
 import { UserService } from '../../../user/service/user-service/user.service';
+import { FriendshipI } from '../../model/friendship/friendship.interface';
+import { ConnectedUserI } from '../../model/connected-user/connected-user.interface';
+import { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface';
+import { FriendshipStatus } from '../../model/friendship/friendship.entity';
 
 @WebSocketGateway({
   cors: {
@@ -24,8 +28,6 @@ export class ChatGateway
   @WebSocketServer()
   server: Server;
 
-  title: string[] = [];
-
   constructor(
     private authService: AuthService,
     private userService: UserService,
@@ -33,11 +35,11 @@ export class ChatGateway
     private connectedUserService: ConnectedUserService,
   ) {}
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     await this.connectedUserService.deleteAll();
   }
 
-  async handleConnection(socket: Socket, ...args: any[]) {
+  async handleConnection(socket: Socket, ...args: any[]): Promise<void> {
     try {
       //Authorization has the format Bearer <access_token>, remove Bearer to verify the token
       const tokenArray: string[] =
@@ -50,35 +52,171 @@ export class ChatGateway
       //save user data in socket
       socket.data.user = user;
 
-      const friends = await this.friendshipService.getFriends(user.id);
-      console.log(friends);
-
       //save user in connectedUsers
-      await this.connectedUserService.create({ socketId: socket.id, user });
+      const connectedUser = await this.connectedUserService.create({
+        socketId: socket.id,
+        user,
+      });
 
-      //emit friends to the connected client
-      return this.server.to(socket.id).emit('friends', friends);
+      this.updateFriendsOf(user.id);
+      this.sendFriendsToClient(connectedUser);
+      this.sendFriendRequestsToClient(connectedUser);
     } catch {
-      return this.disconnectUnauthorized(socket);
+      this.disconnectUnauthorized(socket);
     }
   }
 
-  async handleDisconnect(socket: Socket) {
+  async handleDisconnect(socket: Socket): Promise<void> {
+    this.updateFriendsOf(socket.data.user.id);
     await this.connectedUserService.deleteBySocketId(socket.id);
     socket.disconnect();
   }
 
-  private disconnectUnauthorized(socket: Socket) {
-    socket.emit('Error', new UnauthorizedException());
-    socket.disconnect();
+  @SubscribeMessage('sendFriendRequest')
+  async sendFriendRequest(
+    socket: Socket,
+    receiverUsername: string,
+  ): Promise<FriendshipEntryI | { error: string }> {
+    try {
+      const receiver: UserI = await this.userService.findByUsername(
+        receiverUsername,
+      );
+      if (!receiver) {
+        throw new Error('User not found');
+      } else if (socket.data.user.username === receiverUsername) {
+        throw new Error("Can't add yourself");
+      }
+
+      const checkFriendship: FriendshipI = await this.friendshipService.findOne(
+        socket.data.user.id,
+        receiver.id,
+      );
+      if (checkFriendship) {
+        if (checkFriendship.status === FriendshipStatus.Pending) {
+          throw new Error('Already send a request');
+        } else if (checkFriendship.status === FriendshipStatus.Accepted) {
+          throw new Error('Already friends');
+        } else if (checkFriendship.status === FriendshipStatus.Rejected) {
+          await this.friendshipService.remove(checkFriendship.id);
+        }
+      }
+
+      const friendship: FriendshipI = await this.friendshipService.create({
+        sender: socket.data.user,
+        receiver: receiver,
+      });
+
+      const receiverOnline: ConnectedUserI =
+        await this.connectedUserService.findByUser(receiver);
+      if (!!receiverOnline) {
+        this.sendFriendRequestsToClient(receiverOnline);
+      }
+      return { id: friendship.id, friend: friendship.receiver };
+    } catch (error) {
+      return { error: error.message };
+    }
   }
 
-  @SubscribeMessage('addFriend')
-  async addFriend(socket: Socket, receiverUsername: string) {
-    const receiver = await this.userService.findByUsername(receiverUsername);
-    return await this.friendshipService.create({
-      sender: socket.data.user,
-      receiver: receiver,
-    });
+  @SubscribeMessage('acceptFriendRequest')
+  async acceptFriendRequest(
+    socket: Socket,
+    friendshipId: number,
+  ): Promise<void> {
+    const friendship: FriendshipI =
+      await this.friendshipService.acceptFriendshipRequest(friendshipId);
+    const senderOnline: ConnectedUserI =
+      await this.connectedUserService.findByUser(friendship.sender);
+    const receiverOnline: ConnectedUserI =
+      await this.connectedUserService.findByUser(friendship.receiver);
+    if (!!senderOnline) {
+      this.sendFriendsToClient(senderOnline);
+    }
+    if (!!receiverOnline) {
+      this.sendFriendRequestsToClient(receiverOnline);
+      this.sendFriendsToClient(receiverOnline);
+    }
+  }
+
+  @SubscribeMessage('rejectFriendRequest')
+  async rejectFriendRequest(
+    socket: Socket,
+    friendshipId: number,
+  ): Promise<void> {
+    const friendship: FriendshipI =
+      await this.friendshipService.rejectFriendshipRequest(friendshipId);
+    const senderOnline: ConnectedUserI =
+      await this.connectedUserService.findByUser(friendship.sender);
+    const receiverOnline: ConnectedUserI =
+      await this.connectedUserService.findByUser(friendship.receiver);
+    if (!!senderOnline) {
+      this.sendFriendsToClient(senderOnline);
+    }
+    if (!!receiverOnline) {
+      this.sendFriendRequestsToClient(receiverOnline);
+      this.sendFriendsToClient(receiverOnline);
+    }
+  }
+
+  @SubscribeMessage('removeFriend')
+  async removeFriend(
+    socket: Socket,
+    friendshipId: number,
+  ): Promise<void | { error: string }> {
+    try {
+      const friendship = await this.friendshipService.getOne(friendshipId);
+      if (!friendship) {
+        throw new Error('Something went wrong during removing from friends');
+      }
+      const senderOnline: ConnectedUserI =
+        await this.connectedUserService.findByUser(friendship.sender);
+      const receiverOnline: ConnectedUserI =
+        await this.connectedUserService.findByUser(friendship.receiver);
+
+      await this.friendshipService.remove(friendshipId);
+      if (!!senderOnline) {
+        this.sendFriendsToClient(senderOnline);
+      }
+      if (!!receiverOnline) {
+        this.sendFriendsToClient(receiverOnline);
+      }
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+
+  private async sendFriendsToClient(
+    connectedUser: ConnectedUserI,
+  ): Promise<void> {
+    const friends: FriendshipEntryI[] = await this.friendshipService.getFriends(
+      connectedUser.user.id,
+    );
+    this.server.to(connectedUser.socketId).emit('friends', friends);
+  }
+
+  private async sendFriendRequestsToClient(
+    connectedUser: ConnectedUserI,
+  ): Promise<void> {
+    const requests: FriendshipEntryI[] =
+      await this.friendshipService.getFriendRequests(connectedUser.user.id);
+    this.server.to(connectedUser.socketId).emit('friendRequests', requests);
+  }
+
+  private async updateFriendsOf(aboutClientId: number): Promise<void> {
+    const friends: FriendshipEntryI[] = await this.friendshipService.getFriends(
+      aboutClientId,
+    );
+
+    for (const friendEntry of friends) {
+      const friendOnline: ConnectedUserI =
+        await this.connectedUserService.findByUser(friendEntry.friend);
+      if (!!friendOnline) {
+        this.sendFriendsToClient(friendOnline);
+      }
+    }
+  }
+
+  private disconnectUnauthorized(socket: Socket): void {
+    socket.emit('Error', new UnauthorizedException());
+    socket.disconnect();
   }
 }

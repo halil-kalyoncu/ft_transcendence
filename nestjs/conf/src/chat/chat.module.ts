@@ -30,6 +30,6 @@ import { ChatController } from './controller/chat/chat.controller';
   ],
   providers: [ChatGateway, FriendshipService, ConnectedUserService],
   controllers: [ChatController],
-  exports: [FriendshipService],
+  exports: [FriendshipService, ConnectedUserService],
 })
 export class ChatModule {}

@@ -19,7 +19,13 @@ export class ConnectedUserService {
   }
 
   async findByUser(user: UserI): Promise<ConnectedUserI> {
-    return this.connectedUserRepository.findOne({ where: { user } });
+    const connectedUser = await this.connectedUserRepository
+      .createQueryBuilder('connectedUser')
+      .leftJoinAndSelect('connectedUser.user', 'user')
+      .where('user.id = :userId', { userId: user.id })
+      .getOne();
+
+    return connectedUser;
   }
 
   async deleteBySocketId(socketId: string) {

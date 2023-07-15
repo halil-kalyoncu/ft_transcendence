@@ -36,7 +36,7 @@ const submitForm = async () => {
       userStore.setUsername(username.value)
       router.push('/home')
     } else {
-      console.error('Login failed!!')
+      console.error('Login failed!! ' + response.status + ': ' + response.statusText)
     }
   } catch (error) {
     console.error('Error occurred during login:', error)
