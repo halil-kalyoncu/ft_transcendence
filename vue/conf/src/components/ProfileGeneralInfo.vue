@@ -6,7 +6,7 @@
     </div>
     <div class="stats-section">
       <div class="stat-item">
-        <span class="stat-number">7</span>
+        <span class="stat-number">3</span>
         <span class="stat-text stat-wins">Victories</span>
       </div>
       <div class="stat-item">
@@ -25,6 +25,7 @@
   border-bottom: 0.1px solid darkgray;
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
+  
 }
 
 .profile-section {

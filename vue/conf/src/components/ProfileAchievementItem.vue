@@ -12,34 +12,27 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
+<script setup lang="ts">
 
-export default defineComponent({
-  props: {
-    achievementType: {
-      type: Number,
-      required: true,
-    },
-    achievementTitle: {
-      type: String,
-      required: true,
-    },
-    achievementDescription: {
-      type: String,
-      required: true,
-    },
-  },
-})
+type Props = {
+  achievementType: number;
+  achievementTitle: string;
+  achievementDescription: string;
+
+}
+
+defineProps<Props>()
+
 </script>
 
-<style scoped>
+<style>
 .achievement {
   display: flex;
   align-items: center;
   background: linear-gradient(to right, #051139, #0d2265);
   padding: 1rem;
   color: white;
+  border-radius: .25rem;
   margin: 0 1.5rem 1.5rem 0;
 }
 .achievement-image {

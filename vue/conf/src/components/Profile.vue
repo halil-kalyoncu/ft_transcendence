@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
-import ProfileAchievement from './ProfileAchievement.vue'
+import ProfileAchievementItem from './ProfileAchievementItem.vue'
+import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 </script>
 
 <template>
@@ -8,20 +9,20 @@ import ProfileAchievement from './ProfileAchievement.vue'
     <ProfileGeneralInfo />
     <section class="detailed-info">
       <div class="achievements">
-          <h2 class="profile-title">achievements</h2>
+        <h2 class="profile-title">achievements</h2>
         <div class="achievements-scrollview">
           <!-- todo: replace with foreach -->
-          <ProfileAchievement
+          <ProfileAchievementItem
             :achievementType="1"
             :achievementTitle="'First Achievement'"
             :achievementDescription="'This is the first achievement'"
           />
-          <ProfileAchievement
+          <ProfileAchievementItem
             :achievementType="6"
             :achievementTitle="'Last Achievement'"
             :achievementDescription="'This is the last achievement'"
           />
-          <ProfileAchievement
+          <ProfileAchievementItem
             :achievementType="2"
             :achievementTitle="'Second Achievement'"
             :achievementDescription="'This is the second achievement'"
@@ -30,6 +31,45 @@ import ProfileAchievement from './ProfileAchievement.vue'
       </div>
       <div class="match-history">
         <h2 class="profile-title">match history</h2>
+        <div class="match-history-scrollview">
+          <!-- todo: replace with foreach -->
+          <ProfileMatchHistoryItem
+            :score="'5 : 3'"
+            :victory="true"
+            :playerName="'username'"
+            :opponentName="'Opponent 1'"
+            :dateTime="'2023/07/16 11:11'"
+            :playerAvatar="'src/assets/avatar-1.png'"
+            :opponentAvatar="'src/assets/avatar-2.png'"
+          />
+          <ProfileMatchHistoryItem
+            :score="'1 : 5'"
+            :victory="false"
+            :playerName="'username'"
+            :opponentName="'Opponent 2'"
+            :dateTime="'2023/07/16 11:11'"
+            :playerAvatar="'src/assets/avatar-1.png'"
+            :opponentAvatar="'src/assets/avatar-3.png'"
+          />
+          <ProfileMatchHistoryItem
+            :score="'5 : 4'"
+            :victory="true"
+            :playerName="'username'"
+            :opponentName="'Opponent 2'"
+            :dateTime="'2023/07/16 11:11'"
+            :playerAvatar="'src/assets/avatar-1.png'"
+            :opponentAvatar="'src/assets/avatar-3.png'"
+          />
+          <ProfileMatchHistoryItem
+            :score="'5 : 0'"
+            :victory="true"
+            :playerName="'username'"
+            :opponentName="'Opponent 1'"
+            :dateTime="'2023/07/16 11:11'"
+            :playerAvatar="'src/assets/avatar-1.png'"
+            :opponentAvatar="'src/assets/avatar-2.png'"
+          />
+        </div>
       </div>
     </section>
   </article>
@@ -70,9 +110,31 @@ import ProfileAchievement from './ProfileAchievement.vue'
 .achievements {
   border-right: 0.25px solid darkgray;
 }
-.achievements-scrollview {
+
+.achievements-scrollview,
+.match-history-scrollview {
   overflow-y: auto;
   max-height: 50vh;
+  border-radius: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #303030;
+}
+
+.achievements-scrollview::-webkit-scrollbar,
+.match-history-scrollview::-webkit-scrollbar {
+  width: 8px;
+}
+
+.achievements-scrollview::-webkit-scrollbar-track,
+.match-history-scrollview::-webkit-scrollbar-track {
+  background-color: #303030;
+  border-radius: 10px;
+}
+
+.achievements-scrollview::-webkit-scrollbar-thumb,
+.match-history-scrollview::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
 }
 .match-history {
   padding-left: 1.5rem;
