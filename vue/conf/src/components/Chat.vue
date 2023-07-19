@@ -22,7 +22,7 @@ watch(
   () => props.friend,
   async (newFriend) => {
     if (newFriend) {
-      const accessToken = localStorage.getItem('ponggame')
+      const accessToken = localStorage.getItem('ponggame') ?? ''
       const socket = connectWebSocket('http://localhost:3000', accessToken)
 
       socket.emit('directMessages', newFriend.friend.id, (responseData: directMessageI[]) => {
