@@ -25,7 +25,6 @@
   border-bottom: 0.1px solid darkgray;
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
-  
 }
 
 .profile-section {

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserI } from '../../user/model/user.interface';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  generateJwt(user: UserI): Promise<string> {
+  generateJwt(user: Prisma.UserCreateInput): Promise<string> {
     return this.jwtService.signAsync({ user });
   }
 

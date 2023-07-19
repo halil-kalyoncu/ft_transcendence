@@ -3,17 +3,8 @@ import Chat from './Chat.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { connectWebSocket, disconnectWebSocket } from '../websocket'
 import { useNotificationStore } from '../stores/notification'
-
-interface UserI {
-  id?: number
-  username?: string
-}
-
-interface FriendshipEntryI {
-  id: number
-  friend: UserI
-  isOnline?: boolean
-}
+import type { UserI } from '../model/user.interface'
+import type { FriendshipEntryI } from '../model/friendshipEntry.interface'
 
 const notificationStore = useNotificationStore()
 
@@ -29,6 +20,8 @@ const contextMenuPosition = ref({ top: 0, left: 0 })
 const selectedFriend = ref<FriendshipEntryI | null>(null)
 
 const errorMessage = ref('')
+
+const showChat = ref(false)
 
 onMounted(() => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -198,13 +191,21 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
         class="contextMenu"
       >
         <ul>
+          <li @click="showChat = !showChat">Send message</li>
           <li @click="removeFriendContextMenu(selectedFriend)">Remove Friend</li>
         </ul>
       </div>
 
+      <!-- TODO: replace this with error notification -->
       <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
     </div>
-    <Chat />
+
+    <div v-if="showChat" class="chat-container">
+      <div class="chat-component">
+        <button class="close-button" @click="showChat = false">X</button>
+        <Chat :friend="selectedFriend" />
+      </div>
+    </div>
   </section>
 </template>
 
@@ -294,6 +295,8 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
 }
 
 .contextMenu ul {
+  display: flex;
+  flex-direction: column;
   padding: 0;
   margin: 0;
 }
@@ -310,5 +313,32 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
 .friends.error {
   color: red;
   margin-top: 10px;
+}
+
+/* chat */
+.chat-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 500px;
+  height: 100%;
+  background-color: #0d1117;
+  z-index: 9999;
+}
+
+.chat-component {
+  position: relative;
+  height: 100%;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 16px;
+  color: #333;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 </style>

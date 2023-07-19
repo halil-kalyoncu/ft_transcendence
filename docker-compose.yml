@@ -19,7 +19,6 @@ services:
     depends_on:
       - postgres
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/db
       NODE_ENV: development
       JWT_SECRET: hard_to_guess_secret_123
       PORT: 3000

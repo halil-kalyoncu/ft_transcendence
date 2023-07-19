@@ -10,7 +10,6 @@ const username = computed(() => userStore.username)
 <template>
   <section class="channels">
     <h1>Channels View</h1>
-    <Chat />
   </section>
 </template>
 

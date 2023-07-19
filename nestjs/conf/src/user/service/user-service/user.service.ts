@@ -1,32 +1,30 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from '../../../auth/service/auth.service';
-import { UserEntity } from '../../../user/model/user.entity';
-import { UserI } from '../../../user/model/user.interface';
-import { Like, Repository } from 'typeorm';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { Prisma, User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>,
+    private prisma: PrismaService,
     private authService: AuthService,
   ) {}
 
   //remove this, if 42 login works
-  async login(user: UserI): Promise<string> {
-    let foundUser: UserI = await this.findByUsername(user.username);
+  async login(user: Prisma.UserCreateInput): Promise<string> {
+    let foundUser: User | null = await this.findByUsername(user.username);
+
     if (!foundUser) {
       foundUser = await this.create(user);
     }
     return this.authService.generateJwt(foundUser);
   }
 
-  async create(newUser: UserI): Promise<UserI> {
+  async create(newUser: Prisma.UserCreateInput): Promise<User> {
     try {
-      const user = await this.userRepository.save(
-        this.userRepository.create(newUser),
-      );
+      const user = await this.prisma.user.create({
+        data: newUser,
+      });
       return this.findById(user.id);
     } catch {
       throw new HttpException(
@@ -36,26 +34,28 @@ export class UserService {
     }
   }
 
-  async findById(id: number): Promise<UserI> {
-    return this.userRepository.findOne({
+  async findById(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({
       where: { id },
     });
   }
 
-  async findByUsername(username: string): Promise<UserI> {
-    return this.userRepository.findOne({
+  async findByUsername(username: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
       where: { username },
     });
   }
 
-  async findAll(): Promise<UserI[]> {
-    return this.userRepository.find();
+  async findAll(): Promise<User[]> {
+    return this.prisma.user.findMany();
   }
 
-  async findAllByUsername(username: string): Promise<UserI[]> {
-    return this.userRepository.find({
+  async findAllByUsername(username: string): Promise<User[]> {
+    return this.prisma.user.findMany({
       where: {
-        username: Like(`%${username}%`),
+        username: {
+          contains: username,
+        },
       },
     });
   }

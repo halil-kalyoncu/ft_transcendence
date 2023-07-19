@@ -19,15 +19,14 @@
 </template>
 
 <script setup lang="ts">
-
 type Props = {
-  score: string;
-  victory: boolean;
-  playerName: string;
-  opponentName: string;
-  playerAvatar: string;
-  opponentAvatar: string;
-  dateTime: string;
+  score: string
+  victory: boolean
+  playerName: string
+  opponentName: string
+  playerAvatar: string
+  opponentAvatar: string
+  dateTime: string
 }
 
 defineProps<Props>()
@@ -43,7 +42,7 @@ defineProps<Props>()
   padding: 20px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   margin: 0 1.5rem 1.5rem 0;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
 }
 
 section {
@@ -66,11 +65,11 @@ section {
   margin-bottom: 10px;
 }
 
-.match-history-item .profile-username{
-    font-size: .8rem;
-    color: #ffff00;
-    text-align: center;
-    margin: 0 .25rem;
+.match-history-item .profile-username {
+  font-size: 0.8rem;
+  color: #ffff00;
+  text-align: center;
+  margin: 0 0.25rem;
 }
 
 .date-time {
@@ -78,12 +77,9 @@ section {
   color: #aaa;
 }
 
-.result-section
-.stat-wins,
-.result-section
-.stat-losses{
-    font-size: 1.5rem;
-    font-weight: bold;
+.result-section .stat-wins,
+.result-section .stat-losses {
+  font-size: 1.5rem;
+  font-weight: bold;
 }
-
 </style>

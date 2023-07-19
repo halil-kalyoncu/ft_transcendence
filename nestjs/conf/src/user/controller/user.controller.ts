@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { UserService } from '../service/user-service/user.service';
-import { CreateUserDto } from '../model/dto/create-user.dto';
-import { UserI } from '../model/user.interface';
+import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
-import { LoginResponseI } from '../model/login-response.interface';
+import { LoginResponseDto } from '../dto/login-response.dto';
+import { Prisma, User } from '@prisma/client';
 
 @Controller('users')
 export class UserController {
@@ -14,8 +14,8 @@ export class UserController {
 
   //remove this function, when 42 login works
   @Post('login')
-  async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseI> {
-    const userEntity: UserI =
+  async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseDto> {
+    const userEntity: Prisma.UserCreateInput =
       this.userHelperService.createUserDtoToEntity(createUserDto);
     const jwt: string = await this.userService.login(userEntity);
     return {
@@ -26,21 +26,21 @@ export class UserController {
   }
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDto): Promise<UserI> {
-    const UserEntity: UserI =
+  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    const UserEntity: Prisma.UserCreateInput =
       this.userHelperService.createUserDtoToEntity(createUserDto);
     return this.userService.create(UserEntity);
   }
 
   @Get()
-  async findAll(): Promise<UserI[]> {
+  async findAll(): Promise<User[]> {
     return this.userService.findAll();
   }
 
   @Get('find-by-username')
   async findAllByUsername(
     @Query('username') username: string,
-  ): Promise<UserI[]> {
+  ): Promise<User[]> {
     return this.userService.findAllByUsername(username);
   }
 }

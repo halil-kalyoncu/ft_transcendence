@@ -1,38 +1,50 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ConnectedUserEntity } from '../../../chat/model/connected-user/connected-user.entity';
-import { ConnectedUserI } from '../../../chat/model/connected-user/connected-user.interface';
-import { UserI } from '../../../user/model/user.interface';
-import { Repository } from 'typeorm';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { ConnectedUser, Prisma, User } from '@prisma/client';
 
 @Injectable()
 export class ConnectedUserService {
-  constructor(
-    @InjectRepository(ConnectedUserEntity)
-    private readonly connectedUserRepository: Repository<ConnectedUserEntity>,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async create(connectedUser: ConnectedUserI): Promise<ConnectedUserI> {
-    return this.connectedUserRepository.save(
-      this.connectedUserRepository.create(connectedUser),
-    );
+  async create(
+    connectedUser: Prisma.ConnectedUserCreateInput,
+  ): Promise<ConnectedUser> {
+    return this.prisma.connectedUser.create({
+      data: connectedUser,
+    });
   }
 
-  async findByUser(user: UserI): Promise<ConnectedUserI> {
-    const connectedUser = await this.connectedUserRepository
-      .createQueryBuilder('connectedUser')
-      .leftJoinAndSelect('connectedUser.user', 'user')
-      .where('user.id = :userId', { userId: user.id })
-      .getOne();
-
-    return connectedUser;
+  async findByUserId(userId: number): Promise<ConnectedUser | null> {
+    return this.prisma.connectedUser.findFirst({
+      where: {
+        userId,
+      },
+      include: {
+        user: true,
+      },
+    });
   }
 
-  async deleteBySocketId(socketId: string) {
-    return this.connectedUserRepository.delete({ socketId });
+  async findByUser(user: User): Promise<ConnectedUser | null> {
+    return this.prisma.connectedUser.findFirst({
+      where: {
+        userId: user.id,
+      },
+      include: {
+        user: true,
+      },
+    });
+  }
+
+  async deleteBySocketId(socketId: string): Promise<ConnectedUser> {
+    return this.prisma.connectedUser.delete({
+      where: {
+        socketId,
+      },
+    });
   }
 
   async deleteAll() {
-    await this.connectedUserRepository.createQueryBuilder().delete().execute();
+    return this.prisma.connectedUser.deleteMany();
   }
 }

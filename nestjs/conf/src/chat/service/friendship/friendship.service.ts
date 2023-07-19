@@ -1,59 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import {
-  FriendshipEntity,
-  FriendshipStatus,
-} from '../../../chat/model/friendship/friendship.entity';
-import { FriendshipI } from '../../../chat/model/friendship/friendship.interface';
-import { Repository } from 'typeorm';
-import { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { Friendship, FriendshipStatus, Prisma, User } from '@prisma/client';
+import { FriendshipDto } from '../../dto/friendship.dto';
 
 @Injectable()
 export class FriendshipService {
   constructor(
-    @InjectRepository(FriendshipEntity)
-    private readonly friendshipRepository: Repository<FriendshipEntity>,
+    private prisma: PrismaService,
     private connectedUserService: ConnectedUserService,
   ) {}
 
-  async create(friendship: FriendshipI): Promise<FriendshipI> {
-    return this.friendshipRepository.save(
-      this.friendshipRepository.create(friendship),
-    );
+  async create(friendship: Prisma.FriendshipCreateInput): Promise<Friendship> {
+    return this.prisma.friendship.create({
+      data: friendship,
+    });
   }
 
-  async findOne(userId1: number, userId2: number): Promise<FriendshipI> {
-    return await this.friendshipRepository
-      .createQueryBuilder('friendship')
-      .leftJoinAndSelect('friendship.sender', 'sender')
-      .leftJoinAndSelect('friendship.receiver', 'receiver')
-      .where(
-        '( (friendship.senderId = :user_id1 AND friendship.receiverId = :user_id2) OR (friendship.senderId = :user_id2 AND friendship.receiverId = :user_id1) ) ',
-        { user_id1: userId1, user_id2: userId2 },
-      )
-      .getOne();
+  async findOne(userId1: number, userId2: number): Promise<Friendship | null> {
+    return await this.prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { senderId: userId1, receiverId: userId2 },
+          { senderId: userId2, receiverId: userId1 },
+        ],
+      },
+      include: { sender: true, receiver: true },
+    });
   }
 
-  async getFriends(userId: number): Promise<FriendshipEntryI[]> {
-    const friends = await this.friendshipRepository
-      .createQueryBuilder('friendship')
-      .leftJoinAndSelect('friendship.sender', 'sender')
-      .leftJoinAndSelect('friendship.receiver', 'receiver')
-      .where(
-        '(friendship.senderId = :user_id OR friendship.receiverId = :user_id)',
-        { user_id: userId },
-      )
-      .andWhere('friendship.status = :status', {
-        status: FriendshipStatus.Accepted,
-      })
-      .getMany();
+  async getFriends(userId: number): Promise<FriendshipDto[]> {
+    const friends = await this.prisma.friendship.findMany({
+      where: {
+        AND: [
+          { status: FriendshipStatus.ACCEPTED },
+          {
+            OR: [{ senderId: userId }, { receiverId: userId }],
+          },
+        ],
+      },
+      include: { sender: true, receiver: true },
+    });
 
-    const friendshipEntries = await Promise.all(
+    const friendshipEntries: FriendshipDto[] = await Promise.all(
       friends.map(async (friendship) => {
         const id = friendship.id;
         const friend =
-          friendship.sender.id === userId
+          friendship.senderId === userId
             ? friendship.receiver
             : friendship.sender;
         const isConnected = await this.connectedUserService.findByUser(friend);
@@ -74,22 +67,19 @@ export class FriendshipService {
     return friendshipEntries;
   }
 
-  async getFriendRequests(userId: number): Promise<FriendshipEntryI[]> {
-    const requests = await this.friendshipRepository
-      .createQueryBuilder('friendship')
-      .leftJoinAndSelect('friendship.sender', 'sender')
-      .leftJoinAndSelect('friendship.receiver', 'receiver')
-      .where('friendship.receiverId = :user_id', { user_id: userId })
-      .andWhere('friendship.status = :status', {
-        status: FriendshipStatus.Pending,
-      })
-      .getMany();
+  async getFriendRequests(userId: number): Promise<FriendshipDto[]> {
+    const requests = await this.prisma.friendship.findMany({
+      where: {
+        AND: [{ receiverId: userId }, { status: FriendshipStatus.PENDING }],
+      },
+      include: { sender: true },
+    });
 
-    const requestEntries = await Promise.all(
+    const requestEntries: FriendshipDto[] = await Promise.all(
       requests.map(async (request) => {
         const id = request.id;
         const sender = request.sender;
-        return { id, friend: sender };
+        return { id, friend: sender, isOnline: false };
       }),
     );
 
@@ -98,45 +88,32 @@ export class FriendshipService {
 
   async acceptFriendshipRequest(
     friendshipId: number,
-  ): Promise<FriendshipI | null> {
-    const friendship = await this.getOne(friendshipId);
-
-    if (!friendship) {
-      return null;
-    }
-
-    friendship.status = FriendshipStatus.Accepted;
-    return await this.friendshipRepository.save(friendship);
+  ): Promise<Friendship | null> {
+    return this.prisma.friendship.update({
+      where: { id: friendshipId },
+      data: { status: FriendshipStatus.ACCEPTED },
+      include: { sender: true, receiver: true },
+    });
   }
 
   async rejectFriendshipRequest(
     friendshipId: number,
-  ): Promise<FriendshipI | null> {
-    const friendship = await this.getOne(friendshipId);
-
-    if (!friendship) {
-      return null;
-    }
-
-    friendship.status = FriendshipStatus.Rejected;
-    return await this.friendshipRepository.save(friendship);
+  ): Promise<Friendship | null> {
+    return this.prisma.friendship.update({
+      where: { id: friendshipId },
+      data: { status: FriendshipStatus.REJECTED },
+      include: { sender: true, receiver: true },
+    });
   }
 
-  async remove(friendshipId: number) {
-    const friendship = await this.getOne(friendshipId);
-
-    if (!friendship) {
-      throw new Error('Frienship not found');
-    }
-    await this.friendshipRepository.delete(friendshipId);
+  async remove(friendshipId: number): Promise<void> {
+    await this.prisma.friendship.delete({ where: { id: friendshipId } });
   }
 
-  async getOne(friendshipId: number): Promise<FriendshipI | null> {
-    return await this.friendshipRepository
-      .createQueryBuilder('friendship')
-      .leftJoinAndSelect('friendship.sender', 'sender')
-      .leftJoinAndSelect('friendship.receiver', 'receiver')
-      .where('friendship.id = :friendshipId', { friendshipId })
-      .getOne();
+  async getOne(friendshipId: number): Promise<Friendship | null> {
+    return this.prisma.friendship.findUnique({
+      where: { id: friendshipId },
+      include: { sender: true, receiver: true },
+    });
   }
 }

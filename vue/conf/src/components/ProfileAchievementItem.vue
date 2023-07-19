@@ -13,16 +13,13 @@
 </template>
 
 <script setup lang="ts">
-
 type Props = {
-  achievementType: number;
-  achievementTitle: string;
-  achievementDescription: string;
-
+  achievementType: number
+  achievementTitle: string
+  achievementDescription: string
 }
 
 defineProps<Props>()
-
 </script>
 
 <style>
@@ -32,7 +29,7 @@ defineProps<Props>()
   background: linear-gradient(to right, #051139, #0d2265);
   padding: 1rem;
   color: white;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
   margin: 0 1.5rem 1.5rem 0;
 }
 .achievement-image {

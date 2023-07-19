@@ -2,10 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from '../../user/service/user-service/user.service';
 import { UserHelperService } from '../../user/service/user-helper/user-helper.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { UserEntity } from '../../user/model/user.entity';
 import { AuthService } from '../../auth/service/auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../../prisma/prisma.service';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -18,13 +17,10 @@ describe('UserController', () => {
         UserHelperService,
         AuthService,
         {
-          provide: getRepositoryToken(UserEntity),
-          useValue: {},
-        },
-        {
           provide: JwtService,
           useValue: {},
         },
+        PrismaService,
       ],
     }).compile();
 

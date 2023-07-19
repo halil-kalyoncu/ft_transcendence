@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  username String @unique
+
+  connectedUser ConnectedUser?
+  chatrooms UserChatroom[]
+
+  sentFriendships Friendship[] @relation("Sender")
+  receivedFriendships Friendship[] @relation("Receiver")
+
+  sendDirectMessages DirectMessage[] @relation("Sender")
+  receivedDirectMessages DirectMessage[] @relation("Receiver")
+}
+
+enum ChatroomStatus {
+  PUBLIC
+  PRIVATE
+}
+
+model Chatroom {
+  id Int @id @default(autoincrement())
+  name String @unique
+  status ChatroomStatus @default(PUBLIC)
+  passwordHash String
+  members UserChatroom[]
+}
+
+enum UserStatus {
+  NORMAL
+  BANNED
+  MUTED
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model UserChatroom {
+  id Int @id @default(autoincrement())
+  status UserStatus @default(NORMAL)
+  statusSince DateTime @default(now())
+  role UserRole @default(MEMBER)
+  roleSince DateTime @default(now())
+  userId Int
+  chatroomId Int
+  joinedAt DateTime @default(now())
+
+  sendMessages ChatroomMessage[]
+
+  user User @relation(fields: [userId], references: [id])
+  chatroom Chatroom @relation(fields: [chatroomId], references: [id])
+}
+
+model ConnectedUser {
+  id Int @id @default(autoincrement())
+  socketId String @unique
+  userId Int @unique
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Friendship {
+  id Int @id @default(autoincrement())
+  senderId Int
+  receiverId Int
+  status FriendshipStatus @default(PENDING)
+  requestedAt DateTime @default(now())
+
+  sender User @relation("Sender", fields: [senderId], references: [id])
+  receiver User @relation("Receiver", fields: [receiverId], references: [id])
+}
+
+model DirectMessage {
+  id Int @id @default(autoincrement())
+  messageId Int @unique
+  senderId Int
+  receiverId Int
+
+  message Message @relation(fields: [messageId], references: [id])
+  sender User @relation("Sender", fields: [senderId], references: [id])
+  receiver User @relation("Receiver", fields: [receiverId], references: [id])
+}
+
+model ChatroomMessage {
+  id Int @id @default(autoincrement())
+  messageId Int @unique
+  senderId Int
+
+  message Message @relation(fields: [messageId], references: [id])
+  sender UserChatroom @relation(fields: [senderId], references: [id])
+}
+
+model Message {
+  id Int @id @default(autoincrement())
+  message String
+  createdAt DateTime @default(now())
+
+  directMessage DirectMessage?
+  chatroomMessage ChatroomMessage?
+}

@@ -4,11 +4,10 @@ import { UserService } from '../../../user/service/user-service/user.service';
 import { FriendshipService } from '../../../chat/service/friendship/friendship.service';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 import { AuthService } from '../../../auth/service/auth.service';
-import { UserEntity } from '../../../user/model/user.entity';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { FriendshipEntity } from '../../../chat/model/friendship/friendship.entity';
-import { ConnectedUserEntity } from '../../../chat/model/connected-user/connected-user.entity';
+import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
+import { MessageService } from '../../../chat/service/message/message.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 describe('ChatGateway', () => {
   let gateway: ChatGateway;
@@ -21,22 +20,13 @@ describe('ChatGateway', () => {
         FriendshipService,
         ConnectedUserService,
         AuthService,
-        {
-          provide: getRepositoryToken(UserEntity),
-          useValue: {},
-        },
+        DirectMessageService,
+        MessageService,
         {
           provide: JwtService,
           useValue: {},
         },
-        {
-          provide: getRepositoryToken(FriendshipEntity),
-          useValue: {},
-        },
-        {
-          provide: getRepositoryToken(ConnectedUserEntity),
-          useValue: {},
-        },
+        PrismaService,
       ],
     }).compile();
 
