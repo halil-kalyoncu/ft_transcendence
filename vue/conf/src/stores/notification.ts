@@ -15,7 +15,7 @@ export const useNotificationStore = defineStore('notification', () => {
       show.value = false
       success.value = false
       message.value = ''
-    }, 500)
+    }, 1500)
   }
 
   return { show, success, message, showNotification }
