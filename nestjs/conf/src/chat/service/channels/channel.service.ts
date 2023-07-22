@@ -294,7 +294,7 @@ export class ChannelService {
     });
   }
 
-  async muteUser(
+  async muteChannelMember(
     requesterId: number,
     targetUserId: number,
     channelId: number,

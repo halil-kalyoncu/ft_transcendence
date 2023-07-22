@@ -711,7 +711,7 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.muteUser(
+    const channelMember = await service.muteChannelMember(
       adminId,
       targetUserId,
       channelId,
@@ -799,7 +799,7 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.muteUser(
+    const channelMember = await service.muteChannelMember(
       ownerId,
       targetUserId,
       channelId,
@@ -868,7 +868,7 @@ describe('FriendshipService', () => {
       });
 
     await expect(
-      service.muteUser(nonOwnerId, targetUserId, channelId),
+      service.muteChannelMember(nonOwnerId, targetUserId, channelId),
     ).rejects.toThrow(
       'Only the owner or an admin can mute a user in the channel.',
     );
