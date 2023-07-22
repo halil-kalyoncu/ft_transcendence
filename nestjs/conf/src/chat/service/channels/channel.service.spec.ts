@@ -2,9 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelService } from './channel.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
-import { Channel, Prisma } from '@prisma/client';
+import { ChannelVisibility, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-
 
 describe('FriendshipService', () => {
   let service: ChannelService;
@@ -22,51 +21,63 @@ describe('FriendshipService', () => {
       module.get<ConnectedUserService>(ConnectedUserService);
   });
 
+  afterEach(async () => {
+    await prismaService.$disconnect();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  it('should create a channel', async () => {
+  it('should create a channel and assign the creator as the owner', async () => {
     const result = {
       id: 1,
-      name: "Mock Channel",
-      ownerId: 123,
-      password: "hashedmagic",
-      members: [
-      ],
-      owner: {
-      }
+      name: 'Mock Channel',
+      ownerId: 11,
+      password: 'hashedmagic',
+      visibility: ChannelVisibility.PUBLIC,
     };
-  
-    const createSpy = jest
+
+    const createChannelSpy = jest
       .spyOn(prismaService.channel, 'create')
       .mockResolvedValue(result);
-  
-    const mockChannelCreateInput: Prisma.ChannelCreateInput = {
-      name: "New Channel",
-      password: 'magic',
-      owner:  {
-        create: undefined,
-        connectOrCreate: {
-          where: undefined,
-          create: undefined,
-        },
-        connect: undefined,
+
+    const createMemberSpy = jest
+      .spyOn(prismaService.channelMember, 'create')
+      .mockResolvedValue(undefined);
+
+    const userId = 11;
+    const name = 'Mock Channel';
+    const password = 'hashedmagic';
+    const channelVisibility = ChannelVisibility.PUBLIC;
+
+    expect(
+      await service.createChannel({
+        userId,
+        name,
+        password,
+        channelVisibility,
+      }),
+    ).toEqual(result);
+    expect(createChannelSpy).toBeCalledWith({
+      data: {
+        name,
+        password,
+        ownerId: userId,
+        visibility: channelVisibility,
       },
-      members: {
-        create: undefined,
-        connectOrCreate: {
-          where: undefined,
-          create: undefined,
-        },
-        connect: undefined,
-      }
-    };
-  
-    expect(await service.create(mockChannelCreateInput)).toBe(result);
-    expect(createSpy).toBeCalledWith({ data: mockChannelCreateInput });
-  
-    createSpy.mockRestore();
+    });
+
+    expect(createMemberSpy).toBeCalledWith({
+      data: {
+        userId,
+        channelId: result.id,
+        role: UserRole.OWNER,
+      },
+    });
+
+    createChannelSpy.mockRestore();
+    createMemberSpy.mockRestore();
   });
 
   it('should set password for channel owner', async () => {
@@ -74,16 +85,22 @@ describe('FriendshipService', () => {
     const userId = 1;
     const password = 'password';
     const hashedPassword = 'hashedPassword';
-    
+
     jest.spyOn(bcrypt, 'hash').mockResolvedValue(hashedPassword);
-    
+
     const channel = { id: channelId, name: 'test', ownerId: userId };
-    jest.spyOn(prismaService.channel, 'findUnique').mockResolvedValue(channel as any);
+    jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue(channel as any);
 
     const updatedChannel = { ...channel, password: hashedPassword };
-    jest.spyOn(prismaService.channel, 'update').mockResolvedValue(updatedChannel as any);
+    jest
+      .spyOn(prismaService.channel, 'update')
+      .mockResolvedValue(updatedChannel as any);
 
-    expect(await service.setPassword(channelId, userId, password)).toEqual(updatedChannel);
+    expect(await service.setPassword(channelId, userId, password)).toEqual(
+      updatedChannel,
+    );
     expect(prismaService.channel.findUnique).toHaveBeenCalledWith({
       where: { id: channelId },
       include: { owner: true },
@@ -99,11 +116,15 @@ describe('FriendshipService', () => {
     const channelId = 1;
     const userId = 1;
     const password = 'password';
-    
+
     const channel = { id: channelId, name: 'test', ownerId: userId + 1 };
-    jest.spyOn(prismaService.channel, 'findUnique').mockResolvedValue(channel as any);
-    
-    await expect(service.setPassword(channelId, userId, password)).rejects.toThrow('Only the owner of the channel can set the password.');
+    jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue(channel as any);
+
+    await expect(
+      service.setPassword(channelId, userId, password),
+    ).rejects.toThrow('Only the owner of the channel can set the password.');
     expect(prismaService.channel.findUnique).toHaveBeenCalledWith({
       where: { id: channelId },
       include: { owner: true },
@@ -113,14 +134,25 @@ describe('FriendshipService', () => {
   it('should delete password for channel owner', async () => {
     const channelId = 1;
     const userId = 1;
-  
-    const channel = { id: channelId, name: 'test', ownerId: userId, password: 'password' };
-    jest.spyOn(prismaService.channel, 'findUnique').mockResolvedValue(channel as any);
-  
+
+    const channel = {
+      id: channelId,
+      name: 'test',
+      ownerId: userId,
+      password: 'password',
+    };
+    jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue(channel as any);
+
     const updatedChannel = { ...channel, password: null };
-    jest.spyOn(prismaService.channel, 'update').mockResolvedValue(updatedChannel as any);
-  
-    expect(await service.deletePassword(channelId, userId)).toEqual(updatedChannel);
+    jest
+      .spyOn(prismaService.channel, 'update')
+      .mockResolvedValue(updatedChannel as any);
+
+    expect(await service.deletePassword(channelId, userId)).toEqual(
+      updatedChannel,
+    );
     expect(prismaService.channel.findUnique).toHaveBeenCalledWith({
       where: { id: channelId },
       include: { owner: true },
@@ -130,19 +162,730 @@ describe('FriendshipService', () => {
       data: { password: null },
     });
   });
-  
+
   it('should throw error when non-owner tries to delete password', async () => {
     const channelId = 1;
     const userId = 1;
-  
-    const channel = { id: channelId, name: 'test', ownerId: userId + 1, password: 'password' };
-    jest.spyOn(prismaService.channel, 'findUnique').mockResolvedValue(channel as any);
-  
-    await expect(service.deletePassword(channelId, userId)).rejects.toThrow('Only the owner of the channel can delete the password.');
+
+    const channel = {
+      id: channelId,
+      name: 'test',
+      ownerId: userId + 1,
+      password: 'password',
+    };
+    jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue(channel as any);
+
+    await expect(service.deletePassword(channelId, userId)).rejects.toThrow(
+      'Only the owner of the channel can delete the password.',
+    );
     expect(prismaService.channel.findUnique).toHaveBeenCalledWith({
       where: { id: channelId },
       include: { owner: true },
     });
   });
 
+  it('should let a user join a channel', async () => {
+    const userId = 11;
+    const channelId = 1;
+
+    const findUniqueSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockResolvedValue(null);
+
+    const createSpy = jest
+      .spyOn(prismaService.channelMember, 'create')
+      .mockResolvedValue({
+        userId: userId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    const channelMember = await service.joinChannel(userId, channelId);
+
+    expect(channelMember.userId).toBe(userId);
+    expect(channelMember.channelId).toBe(channelId);
+    expect(channelMember.role).toBe(UserRole.MEMBER);
+    expect(findUniqueSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: userId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(createSpy).toBeCalledWith({
+      data: {
+        userId: userId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+      },
+    });
+
+    findUniqueSpy.mockRestore();
+    createSpy.mockRestore();
+  });
+
+  it('should not let a user join a channel if they are already a member', async () => {
+    const userId = 11;
+    const channelId = 1;
+
+    const existingMembership = {
+      userId: userId,
+      channelId: channelId,
+      role: UserRole.MEMBER,
+      banned: false,
+      unmuteAt: new Date(),
+    };
+
+    const findUniqueSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockResolvedValue(existingMembership);
+
+    await expect(service.joinChannel(userId, channelId)).rejects.toThrow(
+      'You are already a member of this channel.',
+    );
+    expect(findUniqueSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: userId,
+          channelId: channelId,
+        },
+      },
+    });
+
+    findUniqueSpy.mockRestore();
+  });
+
+  it('should let a user leave a channel', async () => {
+    const userId = 11;
+    const channelId = 1;
+
+    const findUniqueSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockResolvedValue({
+        userId: userId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    const deleteSpy = jest
+      .spyOn(prismaService.channelMember, 'delete')
+      .mockResolvedValue({
+        userId: userId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    const channelMember = await service.leaveChannel(userId, channelId);
+
+    expect(channelMember.userId).toBe(userId);
+    expect(channelMember.channelId).toBe(channelId);
+    expect(findUniqueSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: userId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(deleteSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: userId,
+          channelId: channelId,
+        },
+      },
+    });
+
+    findUniqueSpy.mockRestore();
+    deleteSpy.mockRestore();
+  });
+
+  it('should not let a user leave a channel if they are not a member', async () => {
+    const userId = 11;
+    const channelId = 1;
+
+    const findUniqueSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockResolvedValue(null);
+
+    await expect(service.leaveChannel(userId, channelId)).rejects.toThrow(
+      'User is not a member of the channel.',
+    );
+    expect(findUniqueSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: userId,
+          channelId: channelId,
+        },
+      },
+    });
+
+    findUniqueSpy.mockRestore();
+  });
+
+  it('should let an owner make a user an admin', async () => {
+    const ownerId = 11;
+    const targetUserId = 33;
+    const channelId = 1;
+
+    const findUniqueChannelSpy = jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue({
+        id: channelId,
+        name: 'Test Channel',
+        ownerId: ownerId,
+        password: 'hashedmagic',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+    const findUniqueMemberSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockResolvedValue({
+        userId: targetUserId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    const updateSpy = jest
+      .spyOn(prismaService.channelMember, 'update')
+      .mockResolvedValue({
+        userId: targetUserId,
+        channelId: channelId,
+        role: UserRole.ADMIN,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    const channelMember = await service.makeAdmin(
+      ownerId,
+      targetUserId,
+      channelId,
+    );
+
+    expect(channelMember.role).toBe(UserRole.ADMIN);
+    expect(findUniqueChannelSpy).toBeCalledWith({
+      where: { id: channelId },
+    });
+    expect(findUniqueMemberSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(updateSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+      data: {
+        role: UserRole.ADMIN,
+      },
+    });
+
+    findUniqueChannelSpy.mockRestore();
+    findUniqueMemberSpy.mockRestore();
+    updateSpy.mockRestore();
+  });
+
+  it('should not let a admin make a user an admin', async () => {
+    const ownerId = 11;
+    const nonOwnerId = 22;
+    const targetUserId = 33;
+    const channelId = 1;
+
+    const findUniqueChannelSpy = jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue({
+        id: channelId,
+        name: 'Test Channel',
+        ownerId: ownerId,
+        password: 'hashedmagic',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+    await expect(
+      service.makeAdmin(nonOwnerId, targetUserId, channelId),
+    ).rejects.toThrow(
+      'Only the owner of the channel can make a user an admin.',
+    );
+
+    expect(findUniqueChannelSpy).toBeCalledWith({
+      where: { id: channelId },
+    });
+
+    findUniqueChannelSpy.mockRestore();
+  });
+
+  it('should let an owner or admin ban a user from the channel', async () => {
+    const ownerId = 11;
+    const adminId = 22;
+    const targetUserId = 33;
+    const channelId = 1;
+
+    const findUniqueChannelSpy = jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue({
+        id: channelId,
+        name: 'Test Channel',
+        password: 'hashedmagic',
+        ownerId: ownerId,
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+    const findUniqueMemberSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockImplementation((async (args: any) => {
+        if (args.where.userId_channelId.userId === adminId) {
+          return {
+            userId: adminId,
+            channelId: channelId,
+            role: UserRole.ADMIN,
+            banned: false,
+            unmuteAt: null,
+          };
+        }
+        if (args.where.userId_channelId.userId === targetUserId) {
+          return {
+            userId: targetUserId,
+            channelId: channelId,
+            role: UserRole.MEMBER,
+            banned: false,
+            unmuteAt: null,
+          };
+        }
+      }) as any);
+
+    const updateSpy = jest
+      .spyOn(prismaService.channelMember, 'update')
+      .mockResolvedValue({
+        userId: targetUserId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: true,
+        unmuteAt: new Date(),
+      });
+
+    const channelMember = await service.banChannelMember(
+      adminId,
+      targetUserId,
+      channelId,
+    );
+
+    expect(channelMember.banned).toBe(true);
+    expect(findUniqueChannelSpy).toBeCalledWith({
+      where: { id: channelId },
+    });
+    expect(findUniqueMemberSpy).toHaveBeenCalledTimes(2);
+    expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(1, {
+      where: {
+        userId_channelId: {
+          userId: adminId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(2, {
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(updateSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+      data: {
+        banned: true,
+      },
+    });
+
+    findUniqueChannelSpy.mockRestore();
+    findUniqueMemberSpy.mockRestore();
+    updateSpy.mockRestore();
+  });
+
+  it('should let an owner ban a user from the channel', async () => {
+    const ownerId = 11;
+    const targetUserId = 33;
+    const channelId = 1;
+
+    const findUniqueChannelSpy = jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue({
+        id: channelId,
+        name: 'Test Channel',
+        password: 'hashedmagic',
+        ownerId: ownerId,
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+    const findUniqueMemberSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockImplementation((async (args: any) => {
+        if (args.where.userId_channelId.userId === ownerId) {
+          return {
+            userId: ownerId,
+            channelId: channelId,
+            role: UserRole.OWNER,
+            banned: false,
+            unmuteAt: null,
+          };
+        }
+        if (args.where.userId_channelId.userId === targetUserId) {
+          return {
+            userId: targetUserId,
+            channelId: channelId,
+            role: UserRole.MEMBER,
+            banned: false,
+            unmuteAt: null,
+          };
+        }
+      }) as any);
+
+    const updateSpy = jest
+      .spyOn(prismaService.channelMember, 'update')
+      .mockResolvedValue({
+        userId: targetUserId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: true,
+        unmuteAt: new Date(),
+      });
+
+    const channelMember = await service.banChannelMember(
+      ownerId,
+      targetUserId,
+      channelId,
+    );
+
+    expect(channelMember.banned).toBe(true);
+    expect(findUniqueChannelSpy).toBeCalledWith({
+      where: { id: channelId },
+    });
+    expect(findUniqueMemberSpy).toHaveBeenCalledTimes(2);
+    expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(1, {
+      where: {
+        userId_channelId: {
+          userId: ownerId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(2, {
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(updateSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+      data: {
+        banned: true,
+      },
+    });
+
+    findUniqueChannelSpy.mockRestore();
+    findUniqueMemberSpy.mockRestore();
+    updateSpy.mockRestore();
+  });
+
+  it('should not let a member ban a user from the channel', async () => {
+    const ownerId = 11;
+    const nonOwnerId = 22;
+    const targetUserId = 33;
+    const channelId = 1;
+
+    const findUniqueChannelSpy = jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue({
+        id: channelId,
+        name: 'Test Channel',
+        ownerId: ownerId,
+        password: 'hashedmagic',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+    const findUniqueMemberSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockResolvedValue({
+        userId: nonOwnerId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    await expect(
+      service.banChannelMember(nonOwnerId, targetUserId, channelId),
+    ).rejects.toThrow(
+      'Only the owner or an admin can ban a user from the channel.',
+    );
+
+    expect(findUniqueChannelSpy).toBeCalledWith({
+      where: { id: channelId },
+    });
+    expect(findUniqueMemberSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: nonOwnerId,
+          channelId: channelId,
+        },
+      },
+    });
+
+    findUniqueChannelSpy.mockRestore();
+    findUniqueMemberSpy.mockRestore();
+  });
+
+  it('should let an admin mute a user in the channel', async () => {
+    const ownerId = 11;
+    const adminId = 22;
+    const targetUserId = 33;
+    const channelId = 1;
+
+    const findUniqueChannelSpy = jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue({
+        id: channelId,
+        name: 'Test Channel',
+        ownerId: ownerId,
+        password: 'hashedmagic',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+    const findUniqueMemberSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockImplementation((async (args: any) => {
+        if (args.where.userId_channelId.userId === adminId) {
+          return {
+            userId: adminId,
+            channelId: channelId,
+            role: UserRole.ADMIN,
+            banned: false,
+            unmuteAt: new Date(),
+          };
+        }
+        return {
+          userId: targetUserId,
+          channelId: channelId,
+          role: UserRole.MEMBER,
+          banned: false,
+          unmuteAt: new Date(),
+        };
+      }) as any);
+
+    const updateSpy = jest
+      .spyOn(prismaService.channelMember, 'update')
+      .mockResolvedValue({
+        userId: targetUserId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    const channelMember = await service.muteUser(
+      adminId,
+      targetUserId,
+      channelId,
+    );
+
+    expect(channelMember.unmuteAt).toBeDefined();
+    expect(findUniqueChannelSpy).toBeCalledWith({
+      where: { id: channelId },
+    });
+    expect(findUniqueMemberSpy).toHaveBeenCalledTimes(2);
+    expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(1, {
+      where: {
+        userId_channelId: {
+          userId: adminId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(2, {
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(updateSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+      data: expect.objectContaining({ unmuteAt: expect.any(Date) }),
+    });
+
+    findUniqueChannelSpy.mockRestore();
+    findUniqueMemberSpy.mockRestore();
+    updateSpy.mockRestore();
+  });
+
+  it('should let an owner mute a user in the channel', async () => {
+    const ownerId = 11;
+    const targetUserId = 33;
+    const channelId = 1;
+
+    const findUniqueChannelSpy = jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue({
+        id: channelId,
+        name: 'Test Channel',
+        ownerId: ownerId,
+        password: 'hashedmagic',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+    const findUniqueMemberSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockImplementation((async (args: any) => {
+        if (args.where.userId_channelId.userId === ownerId) {
+          return {
+            userId: ownerId,
+            channelId: channelId,
+            role: UserRole.ADMIN,
+            banned: false,
+            unmuteAt: new Date(),
+          };
+        }
+        return {
+          userId: targetUserId,
+          channelId: channelId,
+          role: UserRole.MEMBER,
+          banned: false,
+          unmuteAt: new Date(),
+        };
+      }) as any);
+
+    const updateSpy = jest
+      .spyOn(prismaService.channelMember, 'update')
+      .mockResolvedValue({
+        userId: targetUserId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    const channelMember = await service.muteUser(
+      ownerId,
+      targetUserId,
+      channelId,
+    );
+
+    expect(channelMember.unmuteAt).toBeDefined();
+    expect(findUniqueChannelSpy).toBeCalledWith({
+      where: { id: channelId },
+    });
+    expect(findUniqueMemberSpy).toHaveBeenCalledTimes(2);
+    expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(1, {
+      where: {
+        userId_channelId: {
+          userId: ownerId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(2, {
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+    });
+    expect(updateSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+      data: expect.objectContaining({ unmuteAt: expect.any(Date) }),
+    });
+
+    findUniqueChannelSpy.mockRestore();
+    findUniqueMemberSpy.mockRestore();
+    updateSpy.mockRestore();
+  });
+
+  it('should not let a non-owner or non-admin mute a user in the channel', async () => {
+    const ownerId = 11;
+    const nonOwnerId = 22;
+    const targetUserId = 33;
+    const channelId = 1;
+
+    const findUniqueChannelSpy = jest
+      .spyOn(prismaService.channel, 'findUnique')
+      .mockResolvedValue({
+        id: channelId,
+        name: 'Test Channel',
+        ownerId: ownerId,
+        password: 'hashedmagic',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+    const findUniqueMemberSpy = jest
+      .spyOn(prismaService.channelMember, 'findUnique')
+      .mockResolvedValue({
+        userId: nonOwnerId,
+        channelId: channelId,
+        role: UserRole.MEMBER,
+        banned: false,
+        unmuteAt: new Date(),
+      });
+
+    await expect(
+      service.muteUser(nonOwnerId, targetUserId, channelId),
+    ).rejects.toThrow(
+      'Only the owner or an admin can mute a user in the channel.',
+    );
+
+    expect(findUniqueChannelSpy).toBeCalledWith({
+      where: { id: channelId },
+    });
+    expect(findUniqueMemberSpy).toBeCalledWith({
+      where: {
+        userId_channelId: {
+          userId: nonOwnerId,
+          channelId: channelId,
+        },
+      },
+    });
+
+    findUniqueChannelSpy.mockRestore();
+    findUniqueMemberSpy.mockRestore();
+  });
 });
