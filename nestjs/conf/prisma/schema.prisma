@@ -22,6 +22,9 @@ model User {
 
   sendDirectMessages DirectMessage[] @relation("Sender")
   receivedDirectMessages DirectMessage[] @relation("Receiver")
+
+  ownedChannels Channel[] @relation("OwnedChannels")
+  memberChannels Channel[] @relation("MemberChannels")
 }
 
 enum ChatroomStatus {
@@ -117,4 +120,13 @@ model Message {
 
   directMessage DirectMessage?
   chatroomMessage ChatroomMessage?
+}
+
+model Channel {
+  id Int @id @default(autoincrement())
+  name String
+  password      String?         @default("")
+  ownerId       Int
+  owner         User            @relation("OwnedChannels", fields: [ownerId], references: [id])
+  members       User[]          @relation("MemberChannels")
 }
