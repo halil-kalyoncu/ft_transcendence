@@ -8,7 +8,7 @@ WORKDIR /pong_game/src/app
 COPY ./conf/package*.json ./
 
 RUN npm install -y
-RUN npm rebuild bcryptjs
+
 COPY ./conf .
 
 EXPOSE 3000

@@ -12,7 +12,6 @@ import {
 } from '../../dto/channel.dto';
 
 import * as bcrypt from 'bcryptjs';
-import passport from 'passport';
 
 describe('FriendshipService', () => {
   let service: ChannelService;
