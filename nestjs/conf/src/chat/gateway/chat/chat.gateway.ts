@@ -1,5 +1,6 @@
 import { OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import {
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -10,10 +11,20 @@ import { Server, Socket } from 'socket.io';
 import { AuthService } from '../../../auth/service/auth.service';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 import { FriendshipService } from '../../../chat/service/friendship/friendship.service';
+import { ChannelService } from '../../../chat/service/channel/channel.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
 import { CreateDirectMessageDto } from '../../dto/create-direct-message.dto';
 import {
+  CreateChannelDto,
+  SetPasswordDto,
+  DeletePasswordDto,
+  AdminActionDto,
+  ChannelMembershipDto,
+} from '../../dto/channel.dto';
+
+import {
+  ChannelVisibility,
   ConnectedUser,
   DirectMessage,
   Friendship,
@@ -37,6 +48,7 @@ export class ChatGateway
     private authService: AuthService,
     private userService: UserService,
     private friendshipService: FriendshipService,
+    private channelService: ChannelService,
     private connectedUserService: ConnectedUserService,
     private directMessageService: DirectMessageService,
   ) {}
@@ -205,6 +217,137 @@ export class ChatGateway
     createDirectMessageDto: CreateDirectMessageDto,
   ): Promise<void> {
     await this.directMessageService.create(createDirectMessageDto);
+  }
+
+  @SubscribeMessage('createChannel')
+  async handleCreateChannel(
+    socket: Socket,
+    @MessageBody() createChannelDto: CreateChannelDto,
+  ): Promise<void> {
+    try {
+      const newChannel = await this.channelService.createChannel(
+        createChannelDto,
+      );
+      socket.emit('channelCreated', newChannel);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('setChannelPassword')
+  async handleSetPassword(
+    socket: Socket,
+    @MessageBody() setPasswordDto: SetPasswordDto,
+  ): Promise<void> {
+    try {
+      const channel = await this.channelService.setPassword(setPasswordDto);
+      socket.emit('passwordSet', channel);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('deleteChannelPassword')
+  async handleDeletePassword(
+    socket: Socket,
+    @MessageBody() deletePasswordDto: DeletePasswordDto,
+  ): Promise<void> {
+    try {
+      const channel = await this.channelService.deletePassword(
+        deletePasswordDto,
+      );
+      socket.emit('passwordDeleted', channel);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('joinChannel')
+  async handleJoinChannel(
+    socket: Socket,
+    @MessageBody() channelMembershipDto: ChannelMembershipDto,
+  ): Promise<void> {
+    try {
+      const membership = await this.channelService.joinChannel(
+        channelMembershipDto,
+      );
+      socket.emit('joinedChannel', membership);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('leaveChannel')
+  async handleLeaveChannel(
+    socket: Socket,
+    @MessageBody() channelMembershipDto: ChannelMembershipDto,
+  ): Promise<void> {
+    try {
+      const membership = await this.channelService.leaveChannel(
+        channelMembershipDto,
+      );
+      socket.emit('leftChannel', membership);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('makeChannelAdmin')
+  async handleMakeAdmin(
+    socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
+  ): Promise<void> {
+    try {
+      const membership = await this.channelService.makeAdmin(adminActionDto);
+      socket.emit('madeAdmin', membership);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('kickChannelMember')
+  async handleKickChannelMember(
+    socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
+  ): Promise<void> {
+    try {
+      const membership = await this.channelService.kickChannelMember(
+        adminActionDto,
+      );
+      socket.emit('memberKicked', membership);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('banChannelMember')
+  async handleBanChannelMember(
+    socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
+  ): Promise<void> {
+    try {
+      const membership = await this.channelService.banChannelMember(
+        adminActionDto,
+      );
+      socket.emit('memberBanned', membership);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('muteChannelMember')
+  async handleMuteChannelMember(
+    socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
+  ): Promise<void> {
+    try {
+      const membership = await this.channelService.muteChannelMember(
+        adminActionDto,
+      );
+      socket.emit('memberMuted', membership);
+    } catch (error) {
+      socket.emit('error', error.message);
+    }
   }
 
   private async sendFriendsToClient(
