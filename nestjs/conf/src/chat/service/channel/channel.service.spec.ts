@@ -11,7 +11,7 @@ import {
   AdminActionDto,
 } from '../../dto/channel.dto';
 
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import passport from 'passport';
 
 describe('FriendshipService', () => {

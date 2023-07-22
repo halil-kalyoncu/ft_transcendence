@@ -8,7 +8,7 @@ import {
   UserRole,
 } from '@prisma/client';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import {
   SetPasswordDto,
   DeletePasswordDto,
