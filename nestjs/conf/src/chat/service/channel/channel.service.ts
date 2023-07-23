@@ -37,7 +37,7 @@ export class ChannelService {
     channelVisibility: ChannelVisibility;
   }): Promise<Channel> {
 
-    const existingChannel = await this.prisma.channel.findUnique({
+    const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
     });
   

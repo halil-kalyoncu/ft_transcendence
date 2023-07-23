@@ -88,7 +88,12 @@ export class ChatGateway
   async handleDisconnect(socket: Socket): Promise<void> {
     if (socket.data && socket.data.user) {
       this.updateFriendsOf(socket.data.user.id);
-      await this.connectedUserService.deleteBySocketId(socket.id);
+      
+      const connectedUser = await this.connectedUserService.findByUser(socket.data.user);
+  
+      if (connectedUser) {
+        await this.connectedUserService.deleteBySocketId(socket.id);
+      }
     }
     socket.disconnect();
   }
