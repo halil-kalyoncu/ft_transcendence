@@ -7,7 +7,10 @@ describe('ConnectedUserService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ConnectedUserService, PrismaService],
+      providers: [
+        ConnectedUserService,
+        { provide: PrismaService, useValue: PrismaService.getInstance() }, 
+      ],
     }).compile();
 
     service = module.get<ConnectedUserService>(ConnectedUserService);

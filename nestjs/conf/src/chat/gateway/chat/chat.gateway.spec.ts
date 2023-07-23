@@ -9,9 +9,13 @@ import { JwtService } from '@nestjs/jwt';
 import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
 import { MessageService } from '../../../chat/service/message/message.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { CreateChannelDto } from '../../dto/channel.dto';
+import { Socket } from 'socket.io';
 
-describe('ChatGateway', () => {
+describe('ChatGateaway', () => {
   let gateway: ChatGateway;
+  let mockChannelService = { createChannel: jest.fn() };
+  let mockSocket = { emit: jest.fn() } as any as Socket;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,17 +29,51 @@ describe('ChatGateway', () => {
         MessageService,
         ChannelService,
         {
+          provide: ChannelService,
+          useValue: mockChannelService,
+        },
+        {
           provide: JwtService,
           useValue: {},
         },
-        PrismaService,
+        { provide: PrismaService, useValue: PrismaService.getInstance() }, // Use getInstance here
       ],
     }).compile();
 
     gateway = module.get<ChatGateway>(ChatGateway);
   });
 
-  it('should be defined', () => {
-    expect(gateway).toBeDefined();
+  it('should create channel and emit channelCreated', async () => {
+    const createChannelDto: CreateChannelDto = {
+      userId: 1,
+      name: 'Test Channel',
+      password: 'Test Password',
+      channelVisibility: 'PUBLIC',
+    };
+
+    mockChannelService.createChannel.mockResolvedValue({});
+    await gateway.handleCreateChannel(mockSocket, createChannelDto);
+    expect(mockChannelService.createChannel).toHaveBeenCalledWith(
+      createChannelDto,
+    );
+    expect(mockSocket.emit).toHaveBeenCalledWith('channelCreated', true);
+  });
+
+  it('should handle errors and emit error event', async () => {
+    const createChannelDto: CreateChannelDto = {
+      userId: 1,
+      name: 'Test Channel',
+      password: 'Test Password',
+      channelVisibility: 'PUBLIC',
+    };
+    const errorMessage = 'Test Error';
+    mockChannelService.createChannel.mockRejectedValue(new Error(errorMessage));
+
+    await gateway.handleCreateChannel(mockSocket, createChannelDto);
+
+    expect(mockChannelService.createChannel).toHaveBeenCalledWith(
+      createChannelDto,
+    );
+    expect(mockSocket.emit).toHaveBeenCalledWith('error', errorMessage);
   });
 });

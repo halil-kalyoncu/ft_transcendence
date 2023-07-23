@@ -20,17 +20,17 @@ describe('FriendshipService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ChannelService, PrismaService, ConnectedUserService],
+      providers: [
+        ChannelService,
+        { provide: PrismaService, useValue: PrismaService.getInstance() },
+        ConnectedUserService,
+      ],
     }).compile();
 
     service = module.get<ChannelService>(ChannelService);
     prismaService = module.get<PrismaService>(PrismaService);
     connectedUserService =
       module.get<ConnectedUserService>(ConnectedUserService);
-  });
-
-  afterEach(async () => {
-    await prismaService.$disconnect();
   });
 
   it('should be defined', () => {
@@ -106,7 +106,7 @@ describe('FriendshipService', () => {
       .spyOn(prismaService.channel, 'update')
       .mockResolvedValue(updatedChannel as any);
 
-    expect(await service.setPassword({channelId, userId, password})).toEqual(
+    expect(await service.setPassword({ channelId, userId, password })).toEqual(
       updatedChannel,
     );
     expect(prismaService.channel.findUnique).toHaveBeenCalledWith({
@@ -131,7 +131,7 @@ describe('FriendshipService', () => {
       .mockResolvedValue(channel as any);
 
     await expect(
-      service.setPassword({channelId, userId, password}),
+      service.setPassword({ channelId, userId, password }),
     ).rejects.toThrow('Only the owner of the channel can set the password.');
     expect(prismaService.channel.findUnique).toHaveBeenCalledWith({
       where: { id: channelId },
@@ -158,9 +158,9 @@ describe('FriendshipService', () => {
       .spyOn(prismaService.channel, 'update')
       .mockResolvedValue(updatedChannel as any);
 
-    expect(await service.deletePassword({channelId: channelId, userId: userId})).toEqual(
-      updatedChannel,
-    );
+    expect(
+      await service.deletePassword({ channelId: channelId, userId: userId }),
+    ).toEqual(updatedChannel);
     expect(prismaService.channel.findUnique).toHaveBeenCalledWith({
       where: { id: channelId },
       include: { owner: true },
@@ -185,9 +185,9 @@ describe('FriendshipService', () => {
       .spyOn(prismaService.channel, 'findUnique')
       .mockResolvedValue(channel as any);
 
-    await expect(service.deletePassword({channelId: channelId, userId: userId})).rejects.toThrow(
-      'Only the owner of the channel can delete the password.',
-    );
+    await expect(
+      service.deletePassword({ channelId: channelId, userId: userId }),
+    ).rejects.toThrow('Only the owner of the channel can delete the password.');
     expect(prismaService.channel.findUnique).toHaveBeenCalledWith({
       where: { id: channelId },
       include: { owner: true },
@@ -212,7 +212,10 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.joinChannel({channelId: channelId, userId: userId});
+    const channelMember = await service.joinChannel({
+      channelId: channelId,
+      userId: userId,
+    });
 
     expect(channelMember.userId).toBe(userId);
     expect(channelMember.channelId).toBe(channelId);
@@ -253,9 +256,9 @@ describe('FriendshipService', () => {
       .spyOn(prismaService.channelMember, 'findUnique')
       .mockResolvedValue(existingMembership);
 
-    await expect(service.joinChannel({userId: userId, channelId: channelId})).rejects.toThrow(
-      'You are already a member of this channel.',
-    );
+    await expect(
+      service.joinChannel({ userId: userId, channelId: channelId }),
+    ).rejects.toThrow('You are already a member of this channel.');
     expect(findUniqueSpy).toBeCalledWith({
       where: {
         userId_channelId: {
@@ -292,7 +295,10 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.leaveChannel({userId: userId, channelId: channelId});
+    const channelMember = await service.leaveChannel({
+      userId: userId,
+      channelId: channelId,
+    });
 
     expect(channelMember.userId).toBe(userId);
     expect(channelMember.channelId).toBe(channelId);
@@ -325,9 +331,9 @@ describe('FriendshipService', () => {
       .spyOn(prismaService.channelMember, 'findUnique')
       .mockResolvedValue(null);
 
-    await expect(service.leaveChannel({userId: userId, channelId: channelId})).rejects.toThrow(
-      'User is not a member of the channel.',
-    );
+    await expect(
+      service.leaveChannel({ userId: userId, channelId: channelId }),
+    ).rejects.toThrow('User is not a member of the channel.');
     expect(findUniqueSpy).toBeCalledWith({
       where: {
         userId_channelId: {
@@ -375,13 +381,11 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.makeAdmin(
-      {
-        requesterId: ownerId,
-        targetUserId: targetUserId,
-        channelId: channelId,
-      }
-    );
+    const channelMember = await service.makeAdmin({
+      requesterId: ownerId,
+      targetUserId: targetUserId,
+      channelId: channelId,
+    });
 
     expect(channelMember.role).toBe(UserRole.ADMIN);
     expect(findUniqueChannelSpy).toBeCalledWith({
@@ -429,13 +433,11 @@ describe('FriendshipService', () => {
       });
 
     await expect(
-      service.makeAdmin(
-        {
-          requesterId: nonOwnerId,
-          targetUserId: targetUserId,
-          channelId: channelId,
-        }
-        ),
+      service.makeAdmin({
+        requesterId: nonOwnerId,
+        targetUserId: targetUserId,
+        channelId: channelId,
+      }),
     ).rejects.toThrow(
       'Only the owner of the channel can make a user an admin.',
     );
@@ -496,13 +498,11 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.banChannelMember(
-      {
-        requesterId: adminId,
-        targetUserId: targetUserId,
-        channelId: channelId,
-      }
-    );
+    const channelMember = await service.banChannelMember({
+      requesterId: adminId,
+      targetUserId: targetUserId,
+      channelId: channelId,
+    });
 
     expect(channelMember.banned).toBe(true);
     expect(findUniqueChannelSpy).toBeCalledWith({
@@ -590,13 +590,11 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.banChannelMember(
-      {
-        requesterId: ownerId,
-        targetUserId: targetUserId,
-        channelId: channelId,
-      }
-    );
+    const channelMember = await service.banChannelMember({
+      requesterId: ownerId,
+      targetUserId: targetUserId,
+      channelId: channelId,
+    });
 
     expect(channelMember.banned).toBe(true);
     expect(findUniqueChannelSpy).toBeCalledWith({
@@ -663,13 +661,11 @@ describe('FriendshipService', () => {
       });
 
     await expect(
-      service.banChannelMember(
-        {
-          requesterId: nonOwnerId,
-          targetUserId: targetUserId,
-          channelId: channelId,
-        }
-        ),
+      service.banChannelMember({
+        requesterId: nonOwnerId,
+        targetUserId: targetUserId,
+        channelId: channelId,
+      }),
     ).rejects.toThrow(
       'Only the owner or an admin can ban a user from the channel.',
     );
@@ -737,13 +733,11 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.muteChannelMember(
-      {
-        requesterId: adminId,
-        targetUserId: targetUserId,
-        channelId: channelId,
-      }
-    );
+    const channelMember = await service.muteChannelMember({
+      requesterId: adminId,
+      targetUserId: targetUserId,
+      channelId: channelId,
+    });
 
     expect(channelMember.unmuteAt).toBeDefined();
     expect(findUniqueChannelSpy).toBeCalledWith({
@@ -827,13 +821,11 @@ describe('FriendshipService', () => {
         unmuteAt: new Date(),
       });
 
-    const channelMember = await service.muteChannelMember(
-      {
-        requesterId: ownerId,
-        targetUserId: targetUserId,
-        channelId: channelId,
-      }
-    );
+    const channelMember = await service.muteChannelMember({
+      requesterId: ownerId,
+      targetUserId: targetUserId,
+      channelId: channelId,
+    });
 
     expect(channelMember.unmuteAt).toBeDefined();
     expect(findUniqueChannelSpy).toBeCalledWith({
@@ -898,13 +890,11 @@ describe('FriendshipService', () => {
       });
 
     await expect(
-      service.muteChannelMember(
-        {
-          requesterId: nonOwnerId,
-          targetUserId: targetUserId,
-          channelId: channelId,
-        }
-        ),
+      service.muteChannelMember({
+        requesterId: nonOwnerId,
+        targetUserId: targetUserId,
+        channelId: channelId,
+      }),
     ).rejects.toThrow(
       'Only the owner or an admin can mute a user in the channel.',
     );

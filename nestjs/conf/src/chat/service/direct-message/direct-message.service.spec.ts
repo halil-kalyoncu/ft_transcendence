@@ -8,7 +8,11 @@ describe('DirectMessageService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DirectMessageService, PrismaService, MessageService],
+      providers: [
+        DirectMessageService,
+        { provide: PrismaService, useValue: PrismaService.getInstance() },
+        MessageService,
+      ],
     }).compile();
 
     service = module.get<DirectMessageService>(DirectMessageService);

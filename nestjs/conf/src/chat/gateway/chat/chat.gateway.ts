@@ -1,5 +1,6 @@
 import { OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import {
+  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -35,7 +36,10 @@ import { FriendshipDto } from '../../dto/friendship.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:4200'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:4200',
+    ],
   },
 })
 export class ChatGateway
@@ -85,8 +89,10 @@ export class ChatGateway
   }
 
   async handleDisconnect(socket: Socket): Promise<void> {
-    this.updateFriendsOf(socket.data.user.id);
-    await this.connectedUserService.deleteBySocketId(socket.id);
+    if (socket.data && socket.data.user) {
+      this.updateFriendsOf(socket.data.user.id);
+      await this.connectedUserService.deleteBySocketId(socket.id);
+    }
     socket.disconnect();
   }
 
@@ -221,14 +227,14 @@ export class ChatGateway
 
   @SubscribeMessage('createChannel')
   async handleCreateChannel(
-    socket: Socket,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() createChannelDto: CreateChannelDto,
   ): Promise<void> {
     try {
       const newChannel = await this.channelService.createChannel(
         createChannelDto,
       );
-      socket.emit('channelCreated', newChannel);
+      socket.emit('channelCreated', true);
     } catch (error) {
       socket.emit('error', error.message);
     }
