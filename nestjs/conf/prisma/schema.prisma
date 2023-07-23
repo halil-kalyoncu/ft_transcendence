@@ -124,7 +124,7 @@ model Message {
 
 model Channel {
   id         Int               @id @default(autoincrement())
-  name       String
+  name       String            @unique
   password   String?           @default("")
   ownerId    Int
   owner      User              @relation("OwnedChannels", fields: [ownerId], references: [id])

@@ -9,7 +9,7 @@ describe('ConnectedUserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConnectedUserService,
-        { provide: PrismaService, useValue: PrismaService.getInstance() }, 
+        { provide: PrismaService, useValue: PrismaService.getInstance() },
       ],
     }).compile();
 

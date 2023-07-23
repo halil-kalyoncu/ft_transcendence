@@ -1,13 +1,13 @@
 <template>
-<section class="channels">
+  <section class="channels">
     <button class="channel-option-button" @click="openModal">Create Channel</button>
     <Modal
       :isOpened="isModalOpened"
       :title="'Create a Channel'"
       :placeholderText="'Enter channel name'"
       :showVisibilitySelection="true"
-      @submit="handleConfirm" 
-      @close="handleClose" 
+      @submit="handleConfirm"
+      @close="handleClose"
     />
     <button class="channel-option-button">Join Channels</button>
     <button class="channel-option-button">My Channels</button>
@@ -16,17 +16,47 @@
 
 <script setup lang="ts">
 import Chat from './Chat.vue'
-import { computed, watch, ref } from 'vue'
+import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
 import { useUserStore } from '../stores/username'
+import { connectWebSocket, disconnectWebSocket } from '../websocket'
+import { ChannelVisibility } from '../model/channels/createChannel.interface'
+import { useNotificationStore } from '../stores/notification'
+import type {
+  CreateChannelDto,
+  ChannelVisibilityType
+} from '../model/channels/createChannel.interface'
+import { Socket } from 'socket.io-client'
 import Modal from './Modal.vue'
+
+const notificationStore = useNotificationStore()
+
+let socket: Socket | null = null
+onMounted(() => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket = connectWebSocket('http://localhost:3000', accessToken)
+
+  if (socket) {
+    socket.on('channelCreated', (success: boolean) => {
+      notificationStore.showNotification('Channel Succesfully Created!', true)
+    })
+
+    socket.on('error', (error: string) => {
+      notificationStore.showNotification('Error: ' + error, false)
+    })
+  }
+  console.log('socket')
+})
+onBeforeUnmount(() => {
+  disconnectWebSocket()
+})
 
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
 
 interface ModalResult {
-  name: string;
-  password: string;
-  visibility: string;
+  name: string
+  password: string
+  visibility: string
 }
 
 const isModalOpened = ref(false)
@@ -38,9 +68,29 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-const handleConfirm = ({name, password, visibility}: ModalResult) => {
+const handleConfirm = ({ name, password, visibility }: ModalResult) => {
   isModalOpened.value = false
-  console.log(name, password, visibility) 
+
+  if (
+    !Object.values(ChannelVisibility).includes(visibility.toUpperCase() as ChannelVisibilityType)
+  ) {
+    console.error(`Invalid channel visibility:: ${visibility.toUpperCase()}`)
+    return
+  }
+
+  const createChannelDto: CreateChannelDto = {
+    userId: 1,
+    name: name,
+    password: password,
+    channelVisibility: visibility.toUpperCase() as ChannelVisibilityType
+  }
+
+  if (socket) {
+    socket.emit('createChannel', createChannelDto)
+  } else {
+    console.error('Socket is not connected')
+  }
+  console.log(name, password, visibility)
 }
 </script>
 

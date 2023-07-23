@@ -36,10 +36,7 @@ import { FriendshipDto } from '../../dto/friendship.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:4200',
-    ],
+    origin: ['http://localhost:3000', 'http://localhost:4200'],
   },
 })
 export class ChatGateway

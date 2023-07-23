@@ -14,24 +14,24 @@
       </div>
       <div v-if="showVisibilitySelection">
         <div class="radio-button-input-group">
-          <input type="radio" id="public" value="public" v-model="selectedVisibility" hidden />
-          <label for="public">Public</label>
+          <input type="radio" id="Public" value="Public" v-model="selectedVisibility" hidden />
+          <label for="Public">Public</label>
 
           <input
             type="radio"
-            id="protected"
-            value="protected"
+            id="Protected"
+            value="Protected"
             v-model="selectedVisibility"
             hidden
           />
-          <label for="protected">Protected</label>
+          <label for="Protected">Protected</label>
 
-          <input type="radio" id="private" value="private" v-model="selectedVisibility" hidden />
-          <label for="private">Private</label>
+          <input type="radio" id="Private" value="Private" v-model="selectedVisibility" hidden />
+          <label for="Private">Private</label>
         </div>
       </div>
 
-      <div class="input-group" v-if="selectedVisibility === 'protected'">
+      <div class="input-group" v-if="selectedVisibility === 'Protected'">
         <input
           id="input-password"
           v-model="inputPassword"
@@ -53,14 +53,14 @@
 import { ref } from 'vue'
 
 interface ModalResult {
-  name: string;
-  password: string;
-  visibility: string;
+  name: string
+  password: string
+  visibility: string
 }
 
 const inputName = ref('')
 const inputPassword = ref('')
-const selectedVisibility = ref('public')
+const selectedVisibility = ref('Public')
 
 const props = defineProps({
   isOpened: Boolean,
@@ -76,17 +76,17 @@ const submit = () => {
     name: inputName.value,
     password: inputPassword.value,
     visibility: selectedVisibility.value
-  };
-  
-  emit('submit', result);
+  }
 
-  inputName.value = '';
-  inputPassword.value = '';
-  selectedVisibility.value = 'public';
-};
+  emit('submit', result)
+
+  inputName.value = ''
+  inputPassword.value = ''
+  selectedVisibility.value = 'Public'
+}
 
 const handleClickOutside = () => {
-  emit('close');
+  emit('close')
 }
 </script>
 <style>
@@ -102,12 +102,11 @@ const handleClickOutside = () => {
 }
 
 .modal-content {
-  min-width: 350px;
+  max-width: 350px;
   position: relative;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 30%;
   background-color: #2c3e50;
   border: 0.25px solid darkgray;
   padding: 0.5rem 1rem 1rem;
