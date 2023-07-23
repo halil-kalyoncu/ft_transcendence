@@ -1,13 +1,13 @@
 <template>
-  <section class="channels">
+<section class="channels">
     <button class="channel-option-button" @click="openModal">Create Channel</button>
     <Modal
       :isOpened="isModalOpened"
       :title="'Create a Channel'"
       :placeholderText="'Enter channel name'"
       :showVisibilitySelection="true"
-      @confirm="handleConfirm"
-      @close="handleClose"
+      @submit="handleConfirm" 
+      @close="handleClose" 
     />
     <button class="channel-option-button">Join Channels</button>
     <button class="channel-option-button">My Channels</button>
@@ -23,6 +23,12 @@ import Modal from './Modal.vue'
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
 
+interface ModalResult {
+  name: string;
+  password: string;
+  visibility: string;
+}
+
 const isModalOpened = ref(false)
 const openModal = () => {
   isModalOpened.value = true
@@ -32,9 +38,9 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-const handleConfirm = (value) => {
+const handleConfirm = ({name, password, visibility}: ModalResult) => {
   isModalOpened.value = false
-  console.log(value) 
+  console.log(name, password, visibility) 
 }
 </script>
 

@@ -49,35 +49,44 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps({
-  isOpened: Boolean,
-  onConfirm: Function,
-  onClose: Function,
-  title: String,
-  placeholderText: String,
-  showVisibilitySelection: Boolean
-})
+interface ModalResult {
+  name: string;
+  password: string;
+  visibility: string;
+}
 
 const inputName = ref('')
 const inputPassword = ref('')
 const selectedVisibility = ref('public')
 
+const props = defineProps({
+  isOpened: Boolean,
+  title: String,
+  placeholderText: String,
+  showVisibilitySelection: Boolean
+})
+
+const emit = defineEmits(['submit', 'close'])
+
 const submit = () => {
-  props.onConfirm({
+  const result: ModalResult = {
     name: inputName.value,
     password: inputPassword.value,
     visibility: selectedVisibility.value
-  })
-  inputName.value = ''
-  inputPassword.value = ''
-  selectedVisibility.value = 'public'
-}
+  };
+  
+  emit('submit', result);
+
+  inputName.value = '';
+  inputPassword.value = '';
+  selectedVisibility.value = 'public';
+};
 
 const handleClickOutside = () => {
-  props.onClose()
+  emit('close');
 }
 </script>
 <style>
