@@ -36,15 +36,14 @@ export class ChannelService {
     password?: string;
     channelVisibility: ChannelVisibility;
   }): Promise<Channel> {
-
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
     });
-  
+
     if (existingChannel) {
       throw new Error('Channel name already exists');
     }
-  
+
     const channel = await this.prisma.channel.create({
       data: {
         name: name,

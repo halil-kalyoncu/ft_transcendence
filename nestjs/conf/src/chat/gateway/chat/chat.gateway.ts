@@ -23,7 +23,6 @@ import {
   AdminActionDto,
   ChannelMembershipDto,
 } from '../../dto/channel.dto';
-
 import {
   ChannelVisibility,
   ConnectedUser,
@@ -86,15 +85,8 @@ export class ChatGateway
   }
 
   async handleDisconnect(socket: Socket): Promise<void> {
-    if (socket.data && socket.data.user) {
-      this.updateFriendsOf(socket.data.user.id);
-      
-      const connectedUser = await this.connectedUserService.findByUser(socket.data.user);
-  
-      if (connectedUser) {
-        await this.connectedUserService.deleteBySocketId(socket.id);
-      }
-    }
+    this.updateFriendsOf(socket.data.user.id);
+    await this.connectedUserService.deleteBySocketId(socket.id);
     socket.disconnect();
   }
 
@@ -215,6 +207,7 @@ export class ChatGateway
     const messages = await this.directMessageService.getConversation(
       socket.data.user.id,
       userId2,
+      10,
     );
     return messages;
   }
@@ -224,7 +217,20 @@ export class ChatGateway
     socket: Socket,
     createDirectMessageDto: CreateDirectMessageDto,
   ): Promise<void> {
-    await this.directMessageService.create(createDirectMessageDto);
+    const newMessage = await this.directMessageService.create(
+      createDirectMessageDto,
+    );
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(
+        createDirectMessageDto.receiverId,
+      );
+
+    socket.emit('newDirectMessage', newMessage);
+    if (!!receiverOnline) {
+      this.server
+        .to(receiverOnline.socketId)
+        .emit('newDirectMessage', newMessage);
+    }
   }
 
   @SubscribeMessage('createChannel')

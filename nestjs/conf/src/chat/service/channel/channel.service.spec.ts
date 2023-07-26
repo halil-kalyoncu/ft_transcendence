@@ -45,24 +45,24 @@ describe('FriendshipService', () => {
       password: 'hashedmagic',
       visibility: ChannelVisibility.PUBLIC,
     };
-  
+
     const findFirstSpy = jest
       .spyOn(prismaService.channel, 'findFirst')
       .mockResolvedValue(null);
-  
+
     const createChannelSpy = jest
       .spyOn(prismaService.channel, 'create')
       .mockResolvedValue(result);
-  
+
     const createMemberSpy = jest
       .spyOn(prismaService.channelMember, 'create')
       .mockResolvedValue(undefined);
-  
+
     const userId = 11;
     const name = 'Mock Channel';
     const password = 'hashedmagic';
     const channelVisibility = ChannelVisibility.PUBLIC;
-  
+
     expect(
       await service.createChannel({
         userId,
@@ -71,11 +71,11 @@ describe('FriendshipService', () => {
         channelVisibility,
       }),
     ).toEqual(result);
-    
-    expect(findFirstSpy).toBeCalledWith({ 
+
+    expect(findFirstSpy).toBeCalledWith({
       where: { name: name },
     });
-  
+
     expect(createChannelSpy).toBeCalledWith({
       data: {
         name,
@@ -84,7 +84,7 @@ describe('FriendshipService', () => {
         visibility: channelVisibility,
       },
     });
-  
+
     expect(createMemberSpy).toBeCalledWith({
       data: {
         userId,
@@ -92,7 +92,7 @@ describe('FriendshipService', () => {
         role: UserRole.OWNER,
       },
     });
-  
+
     findFirstSpy.mockRestore();
     createChannelSpy.mockRestore();
     createMemberSpy.mockRestore();

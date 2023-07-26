@@ -8,62 +8,80 @@ import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 
 const props = defineProps({
-  friend: {
+  selectedFriendEntry: {
     type: Object as () => FriendshipEntryI | null,
     required: true
   }
 })
 
-const user: UserI | null = props.friend?.friend ?? null
+const selectedUser: UserI | null = props.selectedFriendEntry?.friend ?? null
 const messages = ref<directMessageI[]>([])
 const newMessage = ref('')
 
-watch(
-  () => props.friend,
-  async (newFriend) => {
-    if (newFriend) {
-      const accessToken = localStorage.getItem('ponggame') ?? ''
-      const socket = connectWebSocket('http://localhost:3000', accessToken)
+const accessToken = localStorage.getItem('ponggame') ?? ''
+const socket = connectWebSocket('http://localhost:3000', accessToken)
 
-      socket.emit('directMessages', newFriend.friend.id, (responseData: directMessageI[]) => {
-        messages.value = responseData
-      })
+const loading = ref(true)
+
+//getting user from the access token, maybe do this differently
+const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+const loggedUser: { id: number; username: string } = decodedToken.user as {
+  id: number
+  username: string
+}
+
+watch(
+  () => props.selectedFriendEntry,
+  (friendEntry) => {
+    //remove
+    console.log('changing friendEntry ' + friendEntry)
+    if (!friendEntry) {
+      return
     }
+
+    console.log('frontend emit directMessage')
+    socket.emit('directMessages', friendEntry.friend.id, (responseData: directMessageI[]) => {
+      messages.value = responseData
+      loading.value = false
+    })
   }
 )
 
+socket.on('newDirectMessage', (newMessageData: directMessageI) => {
+  messages.value.unshift(newMessageData)
+})
+
 const sendMessage = () => {
-  if (newMessage.value.trim() === '' || !user) {
+  if (newMessage.value.trim() === '' || !selectedUser) {
     return
   }
 
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
-  //maybe do this differently
-  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-  const loser: { id: number; username: string } = decodedToken.user as {
-    id: number
-    username: string
-  }
   socket.emit('sendDirectMessage', {
-    senderId: loser.id,
-    receiverId: user.id,
+    senderId: loggedUser.id,
+    receiverId: selectedUser.id,
     message: newMessage.value
   })
-  socket.emit('directMessages', user.id, (responseData: directMessageI[]) => {
-    messages.value = responseData
-  })
   newMessage.value = ''
+}
+
+const isOwnMessage = (senderId: number | undefined) => {
+  return senderId !== undefined && senderId === loggedUser.id
 }
 </script>
 
 <template>
   <div class="chat">
-    <h2 v-if="user">{{ user.username }}</h2>
+    <h2 v-if="selectedUser">{{ selectedUser.username }}</h2>
     <h2 v-else>User not selected</h2>
-    <div class="messages">
-      <Message v-for="message in messages" :key="message.id" :directMessage="message" />
+    <div class="messages" v-if="!loading" ref="chatContainerRef">
+      <Message
+        v-for="message in messages"
+        :key="message.id"
+        :directMessage="message"
+        :isOwnMessage="isOwnMessage(message.sender.id)"
+      />
     </div>
+    <div v-else>Loading messages...</div>
     <div class="chat-input">
       <input type="text" v-model="newMessage" placeholder="Type your message here..." />
       <button @click="sendMessage">Send</button>
@@ -76,14 +94,16 @@ const sendMessage = () => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-top: 20px;
+  padding-top: 30px;
 }
 
 .chat .messages {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  flex: 1 0 auto;
+  flex-direction: column-reverse;
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  height: calc(100% - 30px - 30px);
 }
 
 .chat .chat-input {

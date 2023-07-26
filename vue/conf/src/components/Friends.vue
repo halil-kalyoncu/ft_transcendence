@@ -203,7 +203,7 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
     <div v-if="showChat" class="chat-container">
       <div class="chat-component">
         <button class="close-button" @click="showChat = false">X</button>
-        <Chat :friend="selectedFriend" />
+        <Chat :selectedFriendEntry="selectedFriend" />
       </div>
     </div>
   </section>

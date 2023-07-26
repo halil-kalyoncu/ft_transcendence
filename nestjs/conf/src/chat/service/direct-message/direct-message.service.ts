@@ -23,12 +23,18 @@ export class DirectMessageService {
         receiver: { connect: { id: receiverId } },
         message: { connect: { id: createdMessage.id } },
       },
+      include: {
+        sender: true,
+        receiver: true,
+        message: true,
+      },
     });
   }
 
   async getConversation(
     userId1: number,
     userId2: number,
+    loadCount: number,
   ): Promise<DirectMessage[]> {
     return this.prisma.directMessage.findMany({
       where: {
@@ -42,6 +48,12 @@ export class DirectMessageService {
         receiver: true,
         message: true,
       },
+      orderBy: {
+        message: {
+          createdAt: 'desc',
+        },
+      },
+      take: loadCount,
     });
   }
 }
