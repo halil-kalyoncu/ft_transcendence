@@ -215,6 +215,7 @@ describe('FriendshipService', () => {
     const createSpy = jest
       .spyOn(prismaService.channelMember, 'create')
       .mockResolvedValue({
+        id: 1,
         userId: userId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -255,6 +256,7 @@ describe('FriendshipService', () => {
     const channelId = 1;
 
     const existingMembership = {
+      id: 1,
       userId: userId,
       channelId: channelId,
       role: UserRole.MEMBER,
@@ -288,6 +290,7 @@ describe('FriendshipService', () => {
     const findUniqueSpy = jest
       .spyOn(prismaService.channelMember, 'findUnique')
       .mockResolvedValue({
+        id: 1,
         userId: userId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -298,6 +301,7 @@ describe('FriendshipService', () => {
     const deleteSpy = jest
       .spyOn(prismaService.channelMember, 'delete')
       .mockResolvedValue({
+        id: 1,
         userId: userId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -374,6 +378,7 @@ describe('FriendshipService', () => {
     const findUniqueMemberSpy = jest
       .spyOn(prismaService.channelMember, 'findUnique')
       .mockResolvedValue({
+        id: 1,
         userId: targetUserId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -384,6 +389,7 @@ describe('FriendshipService', () => {
     const updateSpy = jest
       .spyOn(prismaService.channelMember, 'update')
       .mockResolvedValue({
+        id: 1,
         userId: targetUserId,
         channelId: channelId,
         role: UserRole.ADMIN,
@@ -400,6 +406,7 @@ describe('FriendshipService', () => {
     expect(channelMember.role).toBe(UserRole.ADMIN);
     expect(findUniqueChannelSpy).toBeCalledWith({
       where: { id: channelId },
+      include: { owner: true },
     });
     expect(findUniqueMemberSpy).toBeCalledWith({
       where: {
@@ -454,6 +461,7 @@ describe('FriendshipService', () => {
 
     expect(findUniqueChannelSpy).toBeCalledWith({
       where: { id: channelId },
+      include: { owner: true },
     });
 
     findUniqueChannelSpy.mockRestore();
@@ -480,6 +488,7 @@ describe('FriendshipService', () => {
       .mockImplementation((async (args: any) => {
         if (args.where.userId_channelId.userId === adminId) {
           return {
+            id: 1,
             userId: adminId,
             channelId: channelId,
             role: UserRole.ADMIN,
@@ -489,6 +498,7 @@ describe('FriendshipService', () => {
         }
         if (args.where.userId_channelId.userId === targetUserId) {
           return {
+            id: 1,
             userId: targetUserId,
             channelId: channelId,
             role: UserRole.MEMBER,
@@ -501,6 +511,7 @@ describe('FriendshipService', () => {
     const updateSpy = jest
       .spyOn(prismaService.channelMember, 'update')
       .mockResolvedValue({
+        id: 1,
         userId: targetUserId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -517,6 +528,7 @@ describe('FriendshipService', () => {
     expect(channelMember.banned).toBe(true);
     expect(findUniqueChannelSpy).toBeCalledWith({
       where: { id: channelId },
+      include: { owner: true },
     });
     expect(findUniqueMemberSpy).toHaveBeenCalledTimes(2);
     expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(1, {
@@ -572,6 +584,7 @@ describe('FriendshipService', () => {
       .mockImplementation((async (args: any) => {
         if (args.where.userId_channelId.userId === ownerId) {
           return {
+            id: 1,
             userId: ownerId,
             channelId: channelId,
             role: UserRole.OWNER,
@@ -581,6 +594,7 @@ describe('FriendshipService', () => {
         }
         if (args.where.userId_channelId.userId === targetUserId) {
           return {
+            id: 1,
             userId: targetUserId,
             channelId: channelId,
             role: UserRole.MEMBER,
@@ -593,6 +607,7 @@ describe('FriendshipService', () => {
     const updateSpy = jest
       .spyOn(prismaService.channelMember, 'update')
       .mockResolvedValue({
+        id: 1,
         userId: targetUserId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -609,6 +624,7 @@ describe('FriendshipService', () => {
     expect(channelMember.banned).toBe(true);
     expect(findUniqueChannelSpy).toBeCalledWith({
       where: { id: channelId },
+      include: { owner: true },
     });
     expect(findUniqueMemberSpy).toHaveBeenCalledTimes(2);
     expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(1, {
@@ -663,6 +679,7 @@ describe('FriendshipService', () => {
     const findUniqueMemberSpy = jest
       .spyOn(prismaService.channelMember, 'findUnique')
       .mockResolvedValue({
+        id: 1,
         userId: nonOwnerId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -682,6 +699,7 @@ describe('FriendshipService', () => {
 
     expect(findUniqueChannelSpy).toBeCalledWith({
       where: { id: channelId },
+      include: { owner: true },
     });
     expect(findUniqueMemberSpy).toBeCalledWith({
       where: {
@@ -717,6 +735,7 @@ describe('FriendshipService', () => {
       .mockImplementation((async (args: any) => {
         if (args.where.userId_channelId.userId === adminId) {
           return {
+            id: 1,
             userId: adminId,
             channelId: channelId,
             role: UserRole.ADMIN,
@@ -725,6 +744,7 @@ describe('FriendshipService', () => {
           };
         }
         return {
+          id: 2,
           userId: targetUserId,
           channelId: channelId,
           role: UserRole.MEMBER,
@@ -736,6 +756,7 @@ describe('FriendshipService', () => {
     const updateSpy = jest
       .spyOn(prismaService.channelMember, 'update')
       .mockResolvedValue({
+        id: channelId,
         userId: targetUserId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -752,6 +773,7 @@ describe('FriendshipService', () => {
     expect(channelMember.unmuteAt).toBeDefined();
     expect(findUniqueChannelSpy).toBeCalledWith({
       where: { id: channelId },
+      include: { owner: true },
     });
     expect(findUniqueMemberSpy).toHaveBeenCalledTimes(2);
     expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(1, {
@@ -805,6 +827,7 @@ describe('FriendshipService', () => {
       .mockImplementation((async (args: any) => {
         if (args.where.userId_channelId.userId === ownerId) {
           return {
+            id: 1,
             userId: ownerId,
             channelId: channelId,
             role: UserRole.ADMIN,
@@ -813,6 +836,7 @@ describe('FriendshipService', () => {
           };
         }
         return {
+          id: 2,
           userId: targetUserId,
           channelId: channelId,
           role: UserRole.MEMBER,
@@ -824,6 +848,7 @@ describe('FriendshipService', () => {
     const updateSpy = jest
       .spyOn(prismaService.channelMember, 'update')
       .mockResolvedValue({
+        id: channelId,
         userId: targetUserId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -840,6 +865,7 @@ describe('FriendshipService', () => {
     expect(channelMember.unmuteAt).toBeDefined();
     expect(findUniqueChannelSpy).toBeCalledWith({
       where: { id: channelId },
+      include: { owner: true },
     });
     expect(findUniqueMemberSpy).toHaveBeenCalledTimes(2);
     expect(findUniqueMemberSpy).toHaveBeenNthCalledWith(1, {
@@ -892,6 +918,7 @@ describe('FriendshipService', () => {
     const findUniqueMemberSpy = jest
       .spyOn(prismaService.channelMember, 'findUnique')
       .mockResolvedValue({
+        id: 2,
         userId: nonOwnerId,
         channelId: channelId,
         role: UserRole.MEMBER,
@@ -911,6 +938,7 @@ describe('FriendshipService', () => {
 
     expect(findUniqueChannelSpy).toBeCalledWith({
       where: { id: channelId },
+      include: { owner: true },
     });
     expect(findUniqueMemberSpy).toBeCalledWith({
       where: {

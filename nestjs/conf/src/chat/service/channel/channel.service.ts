@@ -5,6 +5,7 @@ import {
   ChannelMember,
   ChannelVisibility,
   Prisma,
+  User,
   UserRole,
 } from '@prisma/client';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
@@ -65,10 +66,7 @@ export class ChannelService {
   }
 
   async setPassword(setPasswordDto: SetPasswordDto): Promise<Channel> {
-    const channel = await this.prisma.channel.findUnique({
-      where: { id: setPasswordDto.channelId },
-      include: { owner: true },
-    });
+    const channel = await this.find(setPasswordDto.channelId);
 
     if (!channel || channel.ownerId !== setPasswordDto.userId) {
       throw new Error('Only the owner of the channel can set the password.');
@@ -85,10 +83,7 @@ export class ChannelService {
   }
 
   async deletePassword(deletePasswordDto: DeletePasswordDto): Promise<Channel> {
-    const channel = await this.prisma.channel.findUnique({
-      where: { id: deletePasswordDto.channelId },
-      include: { owner: true },
-    });
+    const channel = await this.find(deletePasswordDto.channelId);
 
     if (!channel || channel.ownerId !== deletePasswordDto.userId) {
       throw new Error('Only the owner of the channel can delete the password.');
@@ -105,14 +100,10 @@ export class ChannelService {
   async joinChannel(
     channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
-    const existingMembership = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: channelMembershipDto.userId,
-          channelId: channelMembershipDto.channelId,
-        },
-      },
-    });
+    const existingMembership = await this.findMember(
+      channelMembershipDto.userId,
+      channelMembershipDto.channelId,
+    );
 
     if (existingMembership) {
       throw new Error('You are already a member of this channel.');
@@ -130,14 +121,10 @@ export class ChannelService {
   async leaveChannel(
     channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
-    const member = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: channelMembershipDto.userId,
-          channelId: channelMembershipDto.channelId,
-        },
-      },
-    });
+    const member = await this.findMember(
+      channelMembershipDto.userId,
+      channelMembershipDto.channelId,
+    );
 
     if (!member) {
       throw new Error('User is not a member of the channel.');
@@ -154,9 +141,7 @@ export class ChannelService {
   }
 
   async makeAdmin(adminActionDto: AdminActionDto): Promise<ChannelMember> {
-    const channel = await this.prisma.channel.findUnique({
-      where: { id: adminActionDto.channelId },
-    });
+    const channel = await this.find(adminActionDto.channelId);
 
     if (!channel || channel.ownerId !== adminActionDto.requesterId) {
       throw new Error(
@@ -164,14 +149,10 @@ export class ChannelService {
       );
     }
 
-    const targetMembership = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.targetUserId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-    });
+    const targetMembership = await this.findMember(
+      adminActionDto.targetUserId,
+      adminActionDto.channelId,
+    );
 
     if (!targetMembership) {
       throw new Error('Target user is not a member of the channel.');
@@ -193,18 +174,12 @@ export class ChannelService {
   async kickChannelMember(
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
-    const channel = await this.prisma.channel.findUnique({
-      where: { id: adminActionDto.channelId },
-    });
+    const channel = await this.find(adminActionDto.channelId);
 
-    const requesterMembership = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.requesterId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-    });
+    const requesterMembership = await this.findMember(
+      adminActionDto.requesterId,
+      adminActionDto.channelId,
+    );
 
     if (
       !channel ||
@@ -217,14 +192,10 @@ export class ChannelService {
       );
     }
 
-    const targetMembership = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.targetUserId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-    });
+    const targetMembership = await this.findMember(
+      adminActionDto.targetUserId,
+      adminActionDto.channelId,
+    );
 
     if (!targetMembership) {
       throw new Error('Target user is not a member of the channel.');
@@ -243,18 +214,11 @@ export class ChannelService {
   async banChannelMember(
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
-    const channel = await this.prisma.channel.findUnique({
-      where: { id: adminActionDto.channelId },
-    });
-
-    const requesterMembership = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.requesterId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-    });
+    const channel = await this.find(adminActionDto.channelId);
+    const requesterMembership = await this.findMember(
+      adminActionDto.requesterId,
+      adminActionDto.channelId,
+    );
 
     if (
       !channel ||
@@ -266,14 +230,10 @@ export class ChannelService {
       );
     }
 
-    const targetMembership = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.targetUserId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-    });
+    const targetMembership = await this.findMember(
+      adminActionDto.targetUserId,
+      adminActionDto.channelId,
+    );
 
     if (!targetMembership) {
       throw new Error('Target user is not a member of the channel.');
@@ -295,18 +255,11 @@ export class ChannelService {
   async muteChannelMember(
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
-    const channel = await this.prisma.channel.findUnique({
-      where: { id: adminActionDto.channelId },
-    });
-
-    const requesterMembership = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.requesterId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-    });
+    const channel = await this.find(adminActionDto.channelId);
+    const requesterMembership = await this.findMember(
+      adminActionDto.requesterId,
+      adminActionDto.channelId,
+    );
 
     if (
       !channel ||
@@ -318,14 +271,10 @@ export class ChannelService {
       );
     }
 
-    const targetMembership = await this.prisma.channelMember.findUnique({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.targetUserId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-    });
+    const targetMembership = await this.findMember(
+      adminActionDto.targetUserId,
+      adminActionDto.channelId,
+    );
 
     if (!targetMembership) {
       throw new Error('Target user is not a member of the channel.');
@@ -345,5 +294,36 @@ export class ChannelService {
         unmuteAt: unmuteAt,
       },
     });
+  }
+
+  async find(channelId: number): Promise<Channel> {
+    return await this.prisma.channel.findUnique({
+      where: { id: channelId },
+      include: { owner: true },
+    });
+  }
+
+  async findMember(userId: number, channelId: number) {
+    return this.prisma.channelMember.findUnique({
+      where: {
+        userId_channelId: {
+          userId,
+          channelId,
+        },
+      },
+    });
+  }
+
+  async getMembers(channelId: number): Promise<User[]> {
+    const members = await this.prisma.channelMember.findMany({
+      where: {
+        channelId,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    return members.map((member) => member.user);
   }
 }

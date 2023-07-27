@@ -62,7 +62,7 @@ model UserChatroom {
   chatroomId  Int
   joinedAt    DateTime   @default(now())
 
-  sendMessages ChatroomMessage[]
+  //sendMessages ChannelMessage[]
 
   user     User     @relation(fields: [userId], references: [id])
   chatroom Chatroom @relation(fields: [chatroomId], references: [id])
@@ -91,6 +91,8 @@ model Friendship {
 
   sender   User @relation("Sender", fields: [senderId], references: [id])
   receiver User @relation("Receiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
 }
 
 model DirectMessage {
@@ -104,13 +106,15 @@ model DirectMessage {
   receiver User    @relation("Receiver", fields: [receiverId], references: [id])
 }
 
-model ChatroomMessage {
+model ChannelMessage {
   id        Int @id @default(autoincrement())
   messageId Int @unique
   senderId  Int
 
-  message Message      @relation(fields: [messageId], references: [id])
-  sender  UserChatroom @relation(fields: [senderId], references: [id])
+  message Message       @relation(fields: [messageId], references: [id])
+  sender  ChannelMember @relation(fields: [senderId], references: [id])
+
+  @@unique([messageId, senderId])
 }
 
 model Message {
@@ -119,7 +123,7 @@ model Message {
   createdAt DateTime @default(now())
 
   directMessage   DirectMessage?
-  chatroomMessage ChatroomMessage?
+  channelMessage  ChannelMessage?
 }
 
 model Channel {
@@ -133,6 +137,7 @@ model Channel {
 }
 
 model ChannelMember {
+  id        Int @id @default(autoincrement())
   userId    Int
   channelId Int
   role      UserRole
@@ -141,7 +146,9 @@ model ChannelMember {
   user      User     @relation(fields: [userId], references: [id])
   channel   Channel  @relation(fields: [channelId], references: [id])
 
-  @@id([userId, channelId])
+  sendMessages ChannelMessage[]
+
+  @@unique([userId, channelId])
 }
 
 enum ChannelVisibility {

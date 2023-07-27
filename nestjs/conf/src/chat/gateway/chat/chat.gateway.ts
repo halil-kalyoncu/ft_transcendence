@@ -32,6 +32,8 @@ import {
   User,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
+import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
+import { CreateChannelMessageDto } from '../../dto/create-channel-message.dto';
 
 @WebSocketGateway({
   cors: {
@@ -51,6 +53,7 @@ export class ChatGateway
     private channelService: ChannelService,
     private connectedUserService: ConnectedUserService,
     private directMessageService: DirectMessageService,
+    private channelMessageService: ChannelMessageService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -85,10 +88,16 @@ export class ChatGateway
   }
 
   async handleDisconnect(socket: Socket): Promise<void> {
-    this.updateFriendsOf(socket.data.user.id);
+    if (socket.data && socket.data.user) {
+      this.updateFriendsOf(socket.data.user.id);
+    }
     await this.connectedUserService.deleteBySocketId(socket.id);
     socket.disconnect();
   }
+
+  /*****************
+   *** Friendlist ***
+   ******************/
 
   @SubscribeMessage('sendFriendRequest')
   async sendFriendRequest(
@@ -103,20 +112,6 @@ export class ChatGateway
         throw new Error('User not found');
       } else if (socket.data.user.username === receiverUsername) {
         throw new Error("Can't add yourself");
-      }
-
-      const checkFriendship: Friendship = await this.friendshipService.findOne(
-        socket.data.user.id,
-        receiver.id,
-      );
-      if (checkFriendship) {
-        if (checkFriendship.status === FriendshipStatus.PENDING) {
-          throw new Error('Already send a request');
-        } else if (checkFriendship.status === FriendshipStatus.ACCEPTED) {
-          throw new Error('Already friends');
-        } else if (checkFriendship.status === FriendshipStatus.REJECTED) {
-          await this.friendshipService.remove(checkFriendship.id);
-        }
       }
 
       const friendship: Friendship = await this.friendshipService.create({
@@ -202,14 +197,17 @@ export class ChatGateway
     }
   }
 
+  /*********************
+   *** DirectMessages ***
+   **********************/
+
   @SubscribeMessage('directMessages')
   async getDirectMessages(socket: Socket, userId2: number) {
-    const messages = await this.directMessageService.getConversation(
+    return await this.directMessageService.getConversation(
       socket.data.user.id,
       userId2,
       10,
     );
-    return messages;
   }
 
   @SubscribeMessage('sendDirectMessage')
@@ -232,6 +230,10 @@ export class ChatGateway
         .emit('newDirectMessage', newMessage);
     }
   }
+
+  /**************
+   *** Channel ***
+   ***************/
 
   @SubscribeMessage('createChannel')
   async handleCreateChannel(
@@ -363,6 +365,40 @@ export class ChatGateway
       socket.emit('error', error.message);
     }
   }
+
+  /**********************
+   *** ChannelMessages ***
+   ***********************/
+
+  @SubscribeMessage('groupMessages')
+  async getGroupMessages(socket: Socket, channelId: number) {
+    return await this.channelMessageService.getGroupMessages(channelId);
+  }
+
+  @SubscribeMessage('sendGroupMessage')
+  async sendGroupMessage(
+    socket: Socket,
+    createChannelMessageDto: CreateChannelMessageDto,
+  ): Promise<void> {
+    const newMessage = await this.channelMessageService.create(
+      createChannelMessageDto,
+    );
+
+    const members: User[] = await this.channelService.getMembers(
+      createChannelMessageDto.channelId,
+    );
+    for (const member of members) {
+      const memberOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(member.id);
+      if (memberOnline) {
+        socket.to(memberOnline.socketId).emit('newGroupMessage', newMessage);
+      }
+    }
+  }
+
+  /**********************
+   *** Helperfunctions ***
+   ***********************/
 
   private async sendFriendsToClient(
     connectedUser: ConnectedUser,

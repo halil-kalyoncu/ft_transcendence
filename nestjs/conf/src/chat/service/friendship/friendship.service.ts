@@ -12,12 +12,26 @@ export class FriendshipService {
   ) {}
 
   async create(friendship: Prisma.FriendshipCreateInput): Promise<Friendship> {
+    const checkFriendship: Friendship = await this.find(
+      friendship.sender.connect.id,
+      friendship.receiver.connect.id,
+    );
+
+    if (checkFriendship) {
+      if (checkFriendship.status === FriendshipStatus.PENDING) {
+        throw new Error('Already send a request');
+      } else if (checkFriendship.status === FriendshipStatus.ACCEPTED) {
+        throw new Error('Already friends');
+      } else if (checkFriendship.status === FriendshipStatus.REJECTED) {
+        await this.remove(checkFriendship.id);
+      }
+    }
     return this.prisma.friendship.create({
       data: friendship,
     });
   }
 
-  async findOne(userId1: number, userId2: number): Promise<Friendship | null> {
+  async find(userId1: number, userId2: number): Promise<Friendship | null> {
     return await this.prisma.friendship.findFirst({
       where: {
         OR: [

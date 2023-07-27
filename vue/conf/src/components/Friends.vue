@@ -19,8 +19,6 @@ const showContextMenuFlag = ref(false)
 const contextMenuPosition = ref({ top: 0, left: 0 })
 const selectedFriend = ref<FriendshipEntryI | null>(null)
 
-const errorMessage = ref('')
-
 const showChat = ref(false)
 
 onMounted(() => {
@@ -52,10 +50,8 @@ const addFriend = () => {
     newFriend.value,
     (response: FriendshipEntryI | { error: string }) => {
       if ('error' in response) {
-        errorMessage.value = response.error
         notificationStore.showNotification(response.error, false)
       } else {
-        errorMessage.value = ''
         notificationStore.showNotification(
           'Friend Request was sent to ' + response.friend.username,
           true
@@ -195,9 +191,6 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
           <li @click="removeFriendContextMenu(selectedFriend)">Remove Friend</li>
         </ul>
       </div>
-
-      <!-- TODO: replace this with error notification -->
-      <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
     </div>
 
     <div v-if="showChat" class="chat-container">
@@ -308,11 +301,6 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
 
 .channels > * {
   flex: 1;
-}
-
-.friends.error {
-  color: red;
-  margin-top: 10px;
 }
 
 /* chat */

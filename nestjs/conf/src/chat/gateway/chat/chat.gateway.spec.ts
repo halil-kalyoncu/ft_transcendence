@@ -10,6 +10,7 @@ import { DirectMessageService } from '../../../chat/service/direct-message/direc
 import { MessageService } from '../../../chat/service/message/message.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateChannelDto } from '../../dto/channel.dto';
+import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
 import { Socket } from 'socket.io';
 
 describe('ChatGateaway', () => {
@@ -28,6 +29,7 @@ describe('ChatGateaway', () => {
         DirectMessageService,
         MessageService,
         ChannelService,
+        ChannelMessageService,
         {
           provide: ChannelService,
           useValue: mockChannelService,

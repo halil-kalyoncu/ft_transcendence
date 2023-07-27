@@ -7,6 +7,7 @@ import { ChannelService } from './service/channel/channel.service';
 import { AuthModule } from '../auth/auth.module';
 import { DirectMessageService } from './service/direct-message/direct-message.service';
 import { MessageService } from './service/message/message.service';
+import { ChannelMessageService } from './service/channel-message/channel-message.service';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -17,6 +18,7 @@ import { MessageService } from './service/message/message.service';
     ConnectedUserService,
     DirectMessageService,
     MessageService,
+    ChannelMessageService,
   ],
   controllers: [],
   exports: [FriendshipService, ConnectedUserService],
