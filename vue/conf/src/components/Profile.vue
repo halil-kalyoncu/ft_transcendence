@@ -2,6 +2,7 @@
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
+import ScrollViewer from './utils/ScrollViewer.vue'
 </script>
 
 <template>
@@ -10,7 +11,7 @@ import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
     <section class="detailed-info">
       <div class="achievements">
         <h2 class="profile-title">achievements</h2>
-        <div class="achievements-scrollview">
+        <ScrollViewer :maxHeight="'50vh'">
           <!-- todo: replace with foreach -->
           <ProfileAchievementItem
             :achievementType="1"
@@ -27,11 +28,11 @@ import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
             :achievementTitle="'Second Achievement'"
             :achievementDescription="'This is the second achievement'"
           />
-        </div>
+        </ScrollViewer>
       </div>
       <div class="match-history">
         <h2 class="profile-title">match history</h2>
-        <div class="match-history-scrollview">
+        <ScrollViewer :maxHeight="'50vh'">
           <!-- todo: replace with foreach -->
           <ProfileMatchHistoryItem
             :score="'5 : 3'"
@@ -69,7 +70,7 @@ import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
             :playerAvatar="'src/assets/avatar-1.png'"
             :opponentAvatar="'src/assets/avatar-2.png'"
           />
-        </div>
+        </ScrollViewer>
       </div>
     </section>
   </article>
