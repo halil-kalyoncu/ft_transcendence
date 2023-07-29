@@ -1,6 +1,6 @@
 <template>
   <section class="channels">
-    <template v-if="!showAvailableChannels && !showJoinedChannels">
+    <template v-if="!showAvailableChannels && !showJoinedChannels && !showChannelManagerAndChat">
       <button class="channel-option-button" @click="openModal">Create Channel</button>
       <Modal
         :isOpened="isModalOpened"
@@ -19,14 +19,19 @@
           <font-awesome-icon :icon="['fas', 'arrow-left']" /> go back
         </button>
       </div>
-      <AvailableChannels v-if="showAvailableChannels" />
-      <JoinedChannels v-if="showJoinedChannels" :username="username" />
+      <AvailableChannels v-if="showAvailableChannels" @channel-entered="handleChannelEntered"/>
+      <JoinedChannels v-if="showJoinedChannels" :username="username" @channel-entered="handleChannelEntered"/>
+      <div v-if="showChannelManagerAndChat">
+        <ChannelManager :channelId="joinedChannelId" />
+        <!-- <Chat :channelId="joinedChannelId" /> -->
+      </div>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import Chat from './Chat.vue'
+import Chat from '../chat/Chat.vue'
+import ChannelManager from './ChannelManager.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -110,8 +115,11 @@ const handleConfirm = ({ name, password, visibility }: ModalResult) => {
   console.log(name, password, visibility)
 }
 
+const showChannelManagerAndChat = ref(false)
+const joinedChannelId = ref(0)
 const showAvailableChannels = ref(false)
 const showJoinedChannels = ref(false)
+
 
 const openJoinChannels = () => {
   showAvailableChannels.value = true
@@ -121,10 +129,32 @@ const openMyChannels = () => {
   showJoinedChannels.value = true
 }
 
-const goBack = () => {
+const closeJoinChannels = () => {
   showAvailableChannels.value = false
+}
+
+const closeMyChannels = () => {
   showJoinedChannels.value = false
 }
+
+const closeChannelManagerAndChat = () =>{
+  showChannelManagerAndChat.value = false
+}
+
+const goBack = () => {
+  closeJoinChannels()
+  closeMyChannels()
+  closeChannelManagerAndChat()
+}
+
+const handleChannelEntered = (channelId: number) => {
+  joinedChannelId.value = channelId
+  closeJoinChannels()
+  closeMyChannels()
+  showChannelManagerAndChat.value = true
+  console.log("why" + showChannelManagerAndChat.value + " " + joinedChannelId.value);
+}
+
 </script>
 
 <style scoped>

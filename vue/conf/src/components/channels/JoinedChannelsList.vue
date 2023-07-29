@@ -7,6 +7,7 @@
           :channelName="channel.channelName"
           :ownerName="username"
           :joinChannelButtonName="'Enter'"
+          @channel-entered="handleChannelEntered"
         />
       </div>
     </ScrollViewer>
@@ -16,6 +17,12 @@
 <script setup lang="ts">
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import ChannelListItem from './ChannelListItem.vue'
+
+const emit = defineEmits(["channel-entered"])
+const handleChannelEntered = (channelId: number) => {
+  emit("channel-entered", channelId)
+  console.log("nope")
+}
 
 const dummyChannelData = [
   {

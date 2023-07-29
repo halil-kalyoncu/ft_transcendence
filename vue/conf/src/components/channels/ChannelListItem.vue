@@ -37,6 +37,7 @@ const props = defineProps({
   channelId: Number
 })
 
+const emit = defineEmits(["channel-entered"])
 let showPasswordField = ref(false)
 let password = ref('')
 
@@ -54,6 +55,7 @@ const handleJoin = () => {
         ', channelId: ' +
         props.channelId
     )
+    emit("channel-entered", props.channelId)
   }
 }
 
