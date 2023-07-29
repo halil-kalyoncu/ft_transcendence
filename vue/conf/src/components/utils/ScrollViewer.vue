@@ -47,16 +47,16 @@ onUnmounted(() => {
 }
 
 .scrollview::-webkit-scrollbar {
-  width: 8px;
+  width: 8px !important;
 }
 
 .scrollview::-webkit-scrollbar-track {
-  background-color: #303030;
-  border-radius: 10px;
+  background-color: #303030 !important;
+  border-radius: 10px !important;
 }
 
 .scrollview::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 10px;
+  background-color: #888 !important;
+  border-radius: 10px !important;
 }
 </style>
