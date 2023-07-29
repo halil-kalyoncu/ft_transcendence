@@ -1,26 +1,43 @@
 <template>
   <section class="channels">
-    <button class="channel-option-button" @click="openModal">Create Channel</button>
-    <Modal
-      :isOpened="isModalOpened"
-      :title="'Create a Channel'"
-      :placeholderText="'Enter channel name'"
-      :showVisibilitySelection="true"
-      @submit="handleConfirm"
-      @close="handleClose"
-    />
-    <button class="channel-option-button">Join Channels</button>
-    <button class="channel-option-button">My Channels</button>
+    <template v-if="!showAvailableChannels && !showJoinedChannels">
+      <button class="channel-option-button" @click="openModal">Create Channel</button>
+      <Modal
+        :isOpened="isModalOpened"
+        :title="'Create a Channel'"
+        :placeholderText="'Enter channel name'"
+        :showVisibilitySelection="true"
+        @submit="handleConfirm"
+        @close="handleClose"
+      />
+      <button class="channel-option-button" @click="openJoinChannels">Join Channels</button>
+      <button class="channel-option-button" @click="openMyChannels">My Channels</button>
+    </template>
+    <template v-else>
+      <div class="back-button-container">
+        <button class="back-button" @click="goBack">
+          <font-awesome-icon :icon="['fas', 'arrow-left']" /> go back
+        </button>
+      </div>
+      <AvailableChannels v-if="showAvailableChannels" />
+      <JoinedChannels v-if="showJoinedChannels" />
+    </template>
   </section>
 </template>
 
 <script setup lang="ts">
 import Chat from './Chat.vue'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
 import { useUserStore } from '../stores/username'
 import { connectWebSocket, disconnectWebSocket } from '../websocket'
 import { ChannelVisibility } from '../model/channels/createChannel.interface'
 import { useNotificationStore } from '../stores/notification'
+import JoinedChannels from './channels/JoinedChannelsList.vue'
+import AvailableChannels from './channels/AvailableChannelsList.vue'
 import type {
   CreateChannelDto,
   ChannelVisibilityType
@@ -92,9 +109,25 @@ const handleConfirm = ({ name, password, visibility }: ModalResult) => {
   }
   console.log(name, password, visibility)
 }
+
+const showAvailableChannels = ref(false)
+const showJoinedChannels = ref(false)
+
+const openJoinChannels = () => {
+  showAvailableChannels.value = true
+}
+
+const openMyChannels = () => {
+  showJoinedChannels.value = true
+}
+
+const goBack = () => {
+  showAvailableChannels.value = false
+  showJoinedChannels.value = false
+}
 </script>
 
-<style>
+<style scoped>
 .channels {
   height: calc(100% - 50px);
   padding: 1.5rem 0.5rem 0.5rem 0.5rem;
@@ -118,5 +151,28 @@ const handleConfirm = ({ name, password, visibility }: ModalResult) => {
   color: aliceblue;
   border: 1px solid #ea9f42;
   font-weight: bold;
+}
+
+.channels .back-button-container {
+  text-align: right;
+}
+
+.channels .back-button {
+  background: none;
+  border: 0.5px solid aliceblue;
+  font-size: 0.75rem;
+  font-weight: light;
+  color: #fff;
+  box-sizing: border-box;
+  padding: 0.25rem .5rem;
+  cursor: pointer;
+  transition: 0.25s color ease-out, border 0.25s ease-out;
+  margin: 0 0 1rem 0;
+
+}
+.channels .back-button:hover {
+  color: aliceblue;
+  border: 0.5px solid #ea9f42;
+  text-shadow: 0px 0px 1px aliceblue;
 }
 </style>
