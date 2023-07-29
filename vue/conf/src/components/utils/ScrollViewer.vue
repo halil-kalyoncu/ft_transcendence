@@ -2,14 +2,13 @@
   <div
     class="scrollview"
     :style="{ 'max-height': maxHeight, 'padding-right': scrollbarActive ? paddingRight : '0' }"
-    @scroll="handleScroll"
-  >
+    @scroll="handleScroll">
     <slot></slot>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watchEffect } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, nextTick } from 'vue'
 
 const props = defineProps({
   maxHeight: String,
@@ -22,12 +21,16 @@ const handleScroll = () => {
   scrollbarActive.value = true
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await nextTick()
   watchEffect(() => {
-    const scrollHeight = document.querySelector('.scrollview').scrollHeight
-    const clientHeight = document.querySelector('.scrollview').clientHeight
+    const scrollview = document.querySelector('.scrollview')
+    if (scrollview) {
+      const scrollHeight = scrollview.scrollHeight
+      const clientHeight = scrollview.clientHeight
 
-    scrollbarActive.value = scrollHeight > clientHeight
+      scrollbarActive.value = scrollHeight > clientHeight
+    }
   })
 })
 
