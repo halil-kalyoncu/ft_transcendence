@@ -4,17 +4,19 @@
       <p class="channel-name">{{ channelName }}</p>
       <div class="channel-owner-container">
         <font-awesome-icon class="icon" :icon="['fas', 'user']" />
-        <span class="channel-owner">{{ ownerName }}</span>
+        <p class="channel-owner">{{ ownerName }}</p>
       </div>
+        <input v-if="showPasswordField" v-model="password" placeholder="Enter password" type="password" class="password-input">
     </div>
     <div class="channel-button-container">
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
-      <button class="join-channel-button">{{ joinChannelButtonName }}</button>
+      <button class="join-channel-button" @click="handleJoin">{{ joinChannelButtonName }}</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -27,6 +29,23 @@ const props = defineProps({
   ownerName: String,
   joinChannelButtonName: String
 })
+
+let showPasswordField = ref(false)
+let password = ref('')
+
+const handleJoin = () => {
+  if (props.isPasswordProtected && password.value === '') {
+    showPasswordField.value = true
+  } else {
+    console.log("password: " + password.value + ", channel name: " + props.channelName + "owner: " + props.ownerName)
+  }
+}
+
+watch(password, (newValue) => {
+  if (newValue) {
+  }
+})
+
 </script>
 
 <style>
@@ -103,5 +122,10 @@ const props = defineProps({
   margin: 0 0.5rem 0.25rem 0;
   color: #c0c0c0;
   font-size: 0.75rem;
+}
+
+.password-input{
+    display: block;
+    max-width: 150px;
 }
 </style>
