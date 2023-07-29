@@ -2,7 +2,7 @@
   <section class="general-info">
     <div class="profile-section">
       <img class="profile-image" src="../../assets/avatar-1.png" alt="Profile" />
-      <span class="header-username profile-username">Username</span>
+      <span class="header-username profile-username">{{ username }}</span>
     </div>
     <div class="stats-section">
       <div class="stat-item">
@@ -16,6 +16,12 @@
     </div>
   </section>
 </template>
+
+<script lang="ts" setup>
+const props = defineProps({
+  username: String
+})
+</script>
 
 <style>
 .general-info {

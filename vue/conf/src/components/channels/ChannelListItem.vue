@@ -1,5 +1,5 @@
 <template>
-  <div class="available-channels-item">
+  <div class="channel-list-item">
     <div class="channel-info">
       <p class="channel-name">{{ channelName }}</p>
       <div class="channel-owner-container">
@@ -37,7 +37,7 @@ const props = defineProps({
   channelId: Number
 })
 
-const emit = defineEmits(["channel-entered"])
+const emit = defineEmits(['channel-entered'])
 let showPasswordField = ref(false)
 let password = ref('')
 
@@ -55,7 +55,7 @@ const handleJoin = () => {
         ', channelId: ' +
         props.channelId
     )
-    emit("channel-entered", props.channelId)
+    emit('channel-entered', props.channelId)
   }
 }
 
@@ -66,7 +66,7 @@ watch(password, (newValue) => {
 </script>
 
 <style>
-.available-channels-item {
+.channel-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;

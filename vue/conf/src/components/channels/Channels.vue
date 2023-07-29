@@ -19,8 +19,12 @@
           <font-awesome-icon :icon="['fas', 'arrow-left']" /> go back
         </button>
       </div>
-      <AvailableChannels v-if="showAvailableChannels" @channel-entered="handleChannelEntered"/>
-      <JoinedChannels v-if="showJoinedChannels" :username="username" @channel-entered="handleChannelEntered"/>
+      <AvailableChannels v-if="showAvailableChannels" @channel-entered="handleChannelEntered" />
+      <JoinedChannels
+        v-if="showJoinedChannels"
+        :username="username"
+        @channel-entered="handleChannelEntered"
+      />
       <div v-if="showChannelManagerAndChat">
         <ChannelManager :channelId="joinedChannelId" />
         <!-- <Chat :channelId="joinedChannelId" /> -->
@@ -120,7 +124,6 @@ const joinedChannelId = ref(0)
 const showAvailableChannels = ref(false)
 const showJoinedChannels = ref(false)
 
-
 const openJoinChannels = () => {
   showAvailableChannels.value = true
 }
@@ -137,7 +140,7 @@ const closeMyChannels = () => {
   showJoinedChannels.value = false
 }
 
-const closeChannelManagerAndChat = () =>{
+const closeChannelManagerAndChat = () => {
   showChannelManagerAndChat.value = false
 }
 
@@ -152,9 +155,7 @@ const handleChannelEntered = (channelId: number) => {
   closeJoinChannels()
   closeMyChannels()
   showChannelManagerAndChat.value = true
-  console.log("why" + showChannelManagerAndChat.value + " " + joinedChannelId.value);
 }
-
 </script>
 
 <style scoped>

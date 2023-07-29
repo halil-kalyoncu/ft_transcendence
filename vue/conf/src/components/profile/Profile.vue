@@ -3,11 +3,15 @@ import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+
+const props = defineProps({
+  username: String
+})
 </script>
 
 <template>
   <article class="profile">
-    <ProfileGeneralInfo />
+    <ProfileGeneralInfo :username="username" />
     <section class="detailed-info">
       <div class="achievements">
         <h2 class="profile-title">achievements</h2>
@@ -40,8 +44,8 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
             :playerName="'username'"
             :opponentName="'Opponent 1'"
             :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'src/assets/avatar-1.png'"
-            :opponentAvatar="'src/assets/avatar-2.png'"
+            :playerAvatar="'../src/assets/avatar-1.png'"
+            :opponentAvatar="'../src/assets/avatar-2.png'"
           />
           <ProfileMatchHistoryItem
             :score="'1 : 5'"
@@ -49,8 +53,8 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
             :playerName="'username'"
             :opponentName="'Opponent 2'"
             :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'src/assets/avatar-1.png'"
-            :opponentAvatar="'src/assets/avatar-3.png'"
+            :playerAvatar="'../src/assets/avatar-1.png'"
+            :opponentAvatar="'../src/assets/avatar-3.png'"
           />
           <ProfileMatchHistoryItem
             :score="'5 : 4'"
@@ -58,8 +62,8 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
             :playerName="'username'"
             :opponentName="'Opponent 2'"
             :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'src/assets/avatar-1.png'"
-            :opponentAvatar="'src/assets/avatar-3.png'"
+            :playerAvatar="'../src/assets/avatar-1.png'"
+            :opponentAvatar="'../src/assets/avatar-3.png'"
           />
           <ProfileMatchHistoryItem
             :score="'5 : 0'"
@@ -67,8 +71,8 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
             :playerName="'username'"
             :opponentName="'Opponent 1'"
             :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'src/assets/avatar-1.png'"
-            :opponentAvatar="'src/assets/avatar-2.png'"
+            :playerAvatar="'../src/assets/avatar-1.png'"
+            :opponentAvatar="'../src/assets/avatar-2.png'"
           />
         </ScrollViewer>
       </div>

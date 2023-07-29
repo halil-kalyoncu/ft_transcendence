@@ -1,7 +1,7 @@
 <template>
   <div class="achievement">
     <img
-      :src="`src/assets/achievement-${achievementType}.png`"
+      :src="`../src/assets/achievement-${achievementType}.png`"
       alt="Achievement"
       class="achievement-image"
     />

@@ -60,7 +60,7 @@ const router = createRouter({
       ): void => jwtGuard(to, from, next)
     },
     {
-      path: '/profile',
+      path: '/profile/:username',
       component: MainLayout,
       children: [
         {

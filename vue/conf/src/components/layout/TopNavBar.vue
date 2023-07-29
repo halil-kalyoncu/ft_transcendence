@@ -10,7 +10,7 @@ const username = computed(() => userStore.username)
 
 const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
-const showProfilePage = computed(() => route.path === '/profile')
+const showProfilePage = computed(() => route.path.startsWith('/profile'))
 
 const logout = () => {
   localStorage.removeItem('ponggame')
@@ -26,12 +26,15 @@ const logout = () => {
         <RouterLink class="navButton" to="/home" :class="{ selected: showHomePage }"
           >Home</RouterLink
         >
-        <RouterLink class="navButton" :class="{ selected: showProfilePage }" to="/profile"
+        <RouterLink
+          class="navButton"
+          :class="{ selected: showProfilePage }"
+          :to="`/profile/${username}`"
           >Profile</RouterLink
         >
       </div>
       <div>
-        <RouterLink class="navButton header-username" to="/profile">{{
+        <RouterLink class="navButton header-username" :to="`/profile/${username}`">{{
           username ? username : 'TBD'
         }}</RouterLink>
         <a class="navButtonLogout" @click="logout">Logout</a>
