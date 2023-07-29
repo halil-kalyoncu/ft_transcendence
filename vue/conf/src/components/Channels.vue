@@ -20,7 +20,7 @@
         </button>
       </div>
       <AvailableChannels v-if="showAvailableChannels" />
-      <JoinedChannels v-if="showJoinedChannels" />
+      <JoinedChannels v-if="showJoinedChannels" :username="username" />
     </template>
   </section>
 </template>
@@ -164,11 +164,10 @@ const goBack = () => {
   font-weight: light;
   color: #fff;
   box-sizing: border-box;
-  padding: 0.25rem .5rem;
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
   transition: 0.25s color ease-out, border 0.25s ease-out;
   margin: 0 0 1rem 0;
-
 }
 .channels .back-button:hover {
   color: aliceblue;

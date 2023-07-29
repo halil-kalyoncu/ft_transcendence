@@ -1,14 +1,14 @@
 <template>
   <div class="available-channels">
-    <ScrollViewer :maxHeight="'80vh'" :paddingRight="'.5rem'">
-    <div v-for="(channel, index) in dummyChannelData" :key="index">
-      <ChannelListItem
-        :isPasswordProtected="channel.isPasswordProtected"
-        :channelName="channel.channelName"
-        :ownerName="channel.ownerName"
-        :joinChannelButtonName="channel.joinChannelButtonName"
-      />
-    </div>
+    <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
+      <div v-for="(channel, index) in dummyChannelData" :key="index">
+        <ChannelListItem
+          :isPasswordProtected="channel.isPasswordProtected"
+          :channelName="channel.channelName"
+          :ownerName="channel.ownerName"
+          :joinChannelButtonName="'Join'"
+        />
+      </div>
     </ScrollViewer>
   </div>
 </template>
@@ -21,62 +21,52 @@ const dummyChannelData = [
   {
     isPasswordProtected: true,
     channelName: 'Channel 1',
-    ownerName: 'Max',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Max'
   },
   {
     isPasswordProtected: false,
     channelName: 'Channel 2',
-    ownerName: 'Halil',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Halil'
   },
   {
     isPasswordProtected: true,
     channelName: 'Channel 3',
-    ownerName: 'Lorenz',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Lorenz'
   },
   {
     isPasswordProtected: false,
     channelName: 'Channel 4',
-    ownerName: 'Ezra',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Ezra'
   },
   {
     isPasswordProtected: true,
     channelName: 'Channel 5',
-    ownerName: 'Vytautas',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Vytautas'
   },
-    {
+  {
     isPasswordProtected: true,
     channelName: 'Channel 6',
-    ownerName: 'Max',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Max'
   },
   {
     isPasswordProtected: false,
     channelName: 'Channel 7',
-    ownerName: 'Halil',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Halil'
   },
   {
     isPasswordProtected: true,
     channelName: 'Channel 8',
-    ownerName: 'Lorenz',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Lorenz'
   },
   {
     isPasswordProtected: false,
     channelName: 'Channel 9',
-    ownerName: 'Ezra',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Ezra'
   },
   {
     isPasswordProtected: true,
     channelName: 'Channel 10',
-    ownerName: 'Vytautas',
-    joinChannelButtonName: 'Join'
+    ownerName: 'Vytautas'
   }
 ]
 </script>
@@ -84,7 +74,5 @@ const dummyChannelData = [
 <style>
 .available-channels {
   height: calc(100% - 50px);
-  margin: 0 -1rem 0 0;
 }
-
 </style>

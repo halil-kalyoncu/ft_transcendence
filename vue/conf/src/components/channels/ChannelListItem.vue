@@ -1,15 +1,15 @@
 <template>
   <div class="available-channels-item">
     <div class="channel-info">
-        <p class="channel-name">{{ channelName }}</p>
-        <div class="channel-owner-container">
-          <font-awesome-icon class="icon" :icon="['fas', 'user']" />
-          <span class="channel-owner">{{ ownerName }}</span>
-        </div>
+      <p class="channel-name">{{ channelName }}</p>
+      <div class="channel-owner-container">
+        <font-awesome-icon class="icon" :icon="['fas', 'user']" />
+        <span class="channel-owner">{{ ownerName }}</span>
+      </div>
     </div>
     <div class="channel-button-container">
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
-         <button class="join-channel-button">{{ joinChannelButtonName }}</button>
+      <button class="join-channel-button">{{ joinChannelButtonName }}</button>
     </div>
   </div>
 </template>
@@ -54,31 +54,31 @@ const props = defineProps({
 .channel-button-container .icon {
   margin-right: 0.5rem;
   color: #c0c0c0;
-  font-size: .75rem;
+  font-size: 0.75rem;
 }
 
 .channel-name {
   margin: 0;
   padding: 0;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: bold;
 }
 
 .channel-owner {
   margin: 0;
   padding: 0;
-  font-size: .8rem;
+  font-size: 0.8rem;
   color: #ea9f42;
 }
 
 .join-channel-button {
-  background: #428DEA;
+  background: #428dea;
   border: 0.5px solid aliceblue;
   font-size: 0.75rem;
   font-weight: light;
   color: #fff;
   box-sizing: border-box;
-  padding: 0.25rem .5rem;
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
   transition: 0.125s background-color ease-out, border 0.25s ease-out;
 }
@@ -89,7 +89,7 @@ const props = defineProps({
   background: #ea9f42;
 }
 
-.channel-info{
+.channel-info {
   display: flex;
   flex-direction: column;
 }
@@ -100,9 +100,8 @@ const props = defineProps({
 }
 
 .channel-owner-container .icon {
-  margin: 0 .5rem .25rem 0;
+  margin: 0 0.5rem 0.25rem 0;
   color: #c0c0c0;
-  font-size: .75rem;
+  font-size: 0.75rem;
 }
-
 </style>
