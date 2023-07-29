@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MainLayout from '../components/MainLayout.vue'
-import ErrorLayout from '../components/ErrorLayout.vue'
+import MainLayout from '../components/layout/MainLayout.vue'
+import ErrorLayout from '../components/layout/ErrorLayout.vue'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
@@ -45,11 +45,11 @@ const router = createRouter({
     },
     {
       path: '/home',
-      name: 'home',
       component: MainLayout,
       children: [
         {
           path: '',
+          name: 'home',
           component: HomeView
         }
       ],
@@ -61,11 +61,11 @@ const router = createRouter({
     },
     {
       path: '/profile',
-      name: 'profile',
       component: MainLayout,
       children: [
         {
           path: '',
+          name: 'profile',
           component: () => import('../views/ProfileView.vue') //lazy load
         }
       ],
@@ -77,11 +77,11 @@ const router = createRouter({
     },
     {
       path: '/game',
-      name: 'game',
       component: MainLayout,
       children: [
         {
           path: '',
+          name: 'game',
           component: () => import('../views/GameView.vue') //lazy load
         }
       ],
@@ -93,11 +93,11 @@ const router = createRouter({
     },
     {
       path: '/:catchAll(.*)',
-      name: 'NotFound',
       component: ErrorLayout,
       children: [
         {
           path: '',
+          name: 'NotFound',
           component: () => import('../views/NotFound.vue') //lazy load
         }
       ]

@@ -32,18 +32,18 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
-import { useUserStore } from '../stores/username'
-import { connectWebSocket, disconnectWebSocket } from '../websocket'
-import { ChannelVisibility } from '../model/channels/createChannel.interface'
-import { useNotificationStore } from '../stores/notification'
-import JoinedChannels from './channels/JoinedChannelsList.vue'
-import AvailableChannels from './channels/AvailableChannelsList.vue'
+import { useUserStore } from '../../stores/username'
+import { connectWebSocket, disconnectWebSocket } from '../../websocket'
+import { ChannelVisibility } from '../../model/channels/createChannel.interface'
+import { useNotificationStore } from '../../stores/notification'
+import JoinedChannels from './JoinedChannelsList.vue'
+import AvailableChannels from './AvailableChannelsList.vue'
 import type {
   CreateChannelDto,
   ChannelVisibilityType
-} from '../model/channels/createChannel.interface'
+} from '../../model/channels/createChannel.interface'
 import { Socket } from 'socket.io-client'
-import Modal from './Modal.vue'
+import Modal from '../utils/Modal.vue'
 
 const notificationStore = useNotificationStore()
 

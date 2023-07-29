@@ -19,21 +19,27 @@ import ChannelListItem from './ChannelListItem.vue'
 
 const dummyChannelData = [
   {
+    channelId: 1,
     channelName: 'My Channel 1'
   },
   {
+    channelId: 2,
     channelName: 'My Channel 2'
   },
   {
+    channelId: 3,
     channelName: 'My Channel 3'
   },
   {
+    channelId: 4,
     channelName: 'My Channel 4'
   },
   {
+    channelId: 5,
     channelName: 'My Channel 5'
   },
   {
+    channelId: 6,
     channelName: 'My Channel 6'
   }
 ]

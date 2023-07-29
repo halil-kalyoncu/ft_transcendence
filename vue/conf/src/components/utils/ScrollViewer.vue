@@ -2,7 +2,8 @@
   <div
     class="scrollview"
     :style="{ 'max-height': maxHeight, 'padding-right': scrollbarActive ? paddingRight : '0' }"
-    @scroll="handleScroll">
+    @scroll="handleScroll"
+  >
     <slot></slot>
   </div>
 </template>

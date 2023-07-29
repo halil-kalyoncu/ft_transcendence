@@ -2,8 +2,8 @@
 import { RouterLink, RouterView } from 'vue-router'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useUserStore } from '../stores/username'
-import router from '../router'
+import { useUserStore } from '../../stores/username'
+import router from '../../router'
 
 const userStore = useUserStore()
 const username = computed(() => userStore.username)

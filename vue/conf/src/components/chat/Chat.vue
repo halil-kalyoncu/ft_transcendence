@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { connectWebSocket } from '../websocket'
-import type { FriendshipEntryI } from '../model/friendshipEntry.interface'
-import type { UserI } from '../model/user.interface'
-import type { directMessageI } from '../model/directMessage.interface'
+import { connectWebSocket } from '../../websocket'
+import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
+import type { UserI } from '../../model/user.interface'
+import type { directMessageI } from '../../model/directMessage.interface'
 import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 

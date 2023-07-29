@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { directMessageI } from '../model/directMessage.interface'
-import type { UserI } from '../model/user.interface'
-import type { MessageI } from '../model/message.interface'
+import type { directMessageI } from '../../model/directMessage.interface'
+import type { UserI } from '../../model/user.interface'
+import type { MessageI } from '../../model/message.interface'
 
 const props = defineProps({
   directMessage: {

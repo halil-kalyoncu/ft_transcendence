@@ -6,7 +6,13 @@
         <font-awesome-icon class="icon" :icon="['fas', 'user']" />
         <p class="channel-owner">{{ ownerName }}</p>
       </div>
-        <input v-if="showPasswordField" v-model="password" placeholder="Enter password" type="password" class="password-input">
+      <input
+        v-if="showPasswordField"
+        v-model="password"
+        placeholder="Enter password"
+        type="password"
+        class="password-input"
+      />
     </div>
     <div class="channel-button-container">
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
@@ -27,7 +33,8 @@ const props = defineProps({
   isPasswordProtected: Boolean,
   channelName: String,
   ownerName: String,
-  joinChannelButtonName: String
+  joinChannelButtonName: String,
+  channelId: Number
 })
 
 let showPasswordField = ref(false)
@@ -37,7 +44,16 @@ const handleJoin = () => {
   if (props.isPasswordProtected && password.value === '') {
     showPasswordField.value = true
   } else {
-    console.log("password: " + password.value + ", channel name: " + props.channelName + "owner: " + props.ownerName)
+    console.log(
+      'password: ' +
+        password.value +
+        ', channel name: ' +
+        props.channelName +
+        ', owner: ' +
+        props.ownerName +
+        ', channelId: ' +
+        props.channelId
+    )
   }
 }
 
@@ -45,7 +61,6 @@ watch(password, (newValue) => {
   if (newValue) {
   }
 })
-
 </script>
 
 <style>
@@ -124,8 +139,15 @@ watch(password, (newValue) => {
   font-size: 0.75rem;
 }
 
-.password-input{
-    display: block;
-    max-width: 150px;
+.password-input {
+  display: block;
+  max-width: 150px;
+  border: none;
+  background-color: lightgray;
+  margin-top: 0.25rem;
+}
+
+.password-input:focus {
+  outline: solid 0.25px #ea9f42;
 }
 </style>

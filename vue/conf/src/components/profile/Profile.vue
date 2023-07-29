@@ -2,7 +2,7 @@
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
-import ScrollViewer from './utils/ScrollViewer.vue'
+import ScrollViewer from '../utils/ScrollViewer.vue'
 </script>
 
 <template>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import Chat from './Chat.vue'
+import Chat from '../chat/Chat.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { connectWebSocket, disconnectWebSocket } from '../websocket'
-import { useNotificationStore } from '../stores/notification'
-import type { UserI } from '../model/user.interface'
-import type { FriendshipEntryI } from '../model/friendshipEntry.interface'
+import { connectWebSocket, disconnectWebSocket } from '../../websocket'
+import { useNotificationStore } from '../../stores/notification'
+import type { UserI } from '../../model/user.interface'
+import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
 
 const notificationStore = useNotificationStore()
 

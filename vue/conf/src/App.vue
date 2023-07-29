@@ -5,8 +5,8 @@ import { useRoute } from 'vue-router'
 
 import Login from './components/Login.vue'
 import SideBar from './components/SideBar.vue'
-import TopNavBar from './components/TopNavBar.vue'
-import Notification from './components/Notification.vue'
+import TopNavBar from './components/layout/TopNavBar.vue'
+import Notification from './components/utils/Notification.vue'
 
 const route = useRoute()
 const showLoginPage = computed(() => route.path === '/')

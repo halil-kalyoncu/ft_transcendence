@@ -1,7 +1,7 @@
 <template>
   <section class="general-info">
     <div class="profile-section">
-      <img class="profile-image" src="../assets/avatar-1.png" alt="Profile" />
+      <img class="profile-image" src="../../assets/avatar-1.png" alt="Profile" />
       <span class="header-username profile-username">Username</span>
     </div>
     <div class="stats-section">

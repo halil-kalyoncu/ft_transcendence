@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import { mount } from '@vue/test-utils'
-import SideBar from '@/components/SideBar.vue'
-import Friends from '@/components/Friends.vue'
-import Channels from '@/components/Channels.vue'
+import SideBar from '@/components/layout/SideBar.vue'
+import Friends from '@/components/friends/Friends.vue'
+import Channels from '@/components/channels/Channels.vue'
 import { createPinia } from 'pinia'
 
 //('.navButton')[0] is Friends Button

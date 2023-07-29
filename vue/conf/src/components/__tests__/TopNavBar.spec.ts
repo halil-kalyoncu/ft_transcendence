@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { config } from '@vue/test-utils'
-import TopNavBar from '../TopNavBar.vue'
+import TopNavBar from '../layout/TopNavBar.vue'
 import { beforeEach, describe, expect, test } from 'vitest'
 import { createPinia } from 'pinia'
 
