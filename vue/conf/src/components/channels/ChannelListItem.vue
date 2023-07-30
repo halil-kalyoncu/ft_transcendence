@@ -38,8 +38,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['channel-entered'])
-let showPasswordField = ref(false)
-let password = ref('')
+const showPasswordField = ref(false)
+const password = ref('')
 
 const handleJoin = () => {
   if (props.isPasswordProtected && password.value === '') {
