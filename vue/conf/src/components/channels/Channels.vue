@@ -16,7 +16,7 @@
     <template v-else>
       <div class="back-button-container">
         <button class="back-button" @click="goBack">
-          <font-awesome-icon :icon="['fas', 'arrow-left']" /> go back
+          <font-awesome-icon :icon="['fas', 'arrow-left']" /> 
         </button>
       </div>
       <AvailableChannels v-if="showAvailableChannels" @channel-entered="handleChannelEntered" />

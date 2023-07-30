@@ -3,7 +3,7 @@
     <div class="channel-owner-container" :title="`Joined at: ${date}`" @click="goToProfile">
       <font-awesome-icon
         class="icon"
-        :icon="['fas', 'user']"
+        :icon="getRoleIcon(role)"
       />
       <p class="channel-owner">{{ username }}</p>
       <input
@@ -17,6 +17,12 @@
     </div>
 
     <div class="actions">
+      <template v-if="currentUserRole === 'owner' && role === 'member'">
+        <button class="action-button-make-admin" @click="makeAdmin" title="Make Admin">
+          <font-awesome-icon :icon="['fas', 'crown']" />
+        </button>
+      </template>
+      <template v-if="currentUserRole === 'owner' || currentUserRole === 'admin' && role !== 'owner'">
       <button class="action-button-kick" @click="kickUser" title="Kick">
         <font-awesome-icon :icon="['fas', 'futbol']" />
       </button>
@@ -31,13 +37,14 @@
       >
         <font-awesome-icon :icon="isUserMuted ? ['fas', 'volume-mute'] : ['fas', 'volume-up']" />
       </button>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref, watch } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -52,15 +59,23 @@ const maxValue = ref(100)
 const isUserMuted = ref(false)
 const muteTitle = ref('Mute')
 
+const props = defineProps({
+  username: String,
+  date: String,
+  roleProp: String,
+  currentUserRole: String
+})
+
+const role = ref(props.roleProp);
+
+watchEffect(() => {
+  role.value = props.roleProp;
+});
+
 watch(minutesMuted, (newValue) => {
   if (newValue > maxValue.value) {
     minutesMuted.value = maxValue.value
   }
-})
-
-const props = defineProps({
-  username: String,
-  date: String
 })
 
 const goToProfile = () => {
@@ -80,6 +95,15 @@ const banUser = () => {
 
   if (banned) {
     notificationStore.showNotification(props.username + ' was banned', true)
+  }
+}
+
+const makeAdmin = () => {
+  let madeAdmin = true
+
+  if (madeAdmin) {
+    notificationStore.showNotification(props.username + ' became Admin', true)
+    role.value = 'admin'
   }
 }
 
@@ -118,6 +142,21 @@ const unmuteUser = () => {
   isUserMuted.value = false
   muteTitle.value = 'Mute'
 }
+
+const getRoleIcon = (role: string | undefined) => {
+  switch (role) {
+    case 'admin':
+      return ['fas', 'crown'];
+    case 'member':
+      return ['fas', 'user'];
+    case 'owner':
+      return ['fas', 'star'];
+    default:
+      return ['fas', 'question'];
+  }
+};
+
+
 </script>
 
 <style scoped>
@@ -140,7 +179,8 @@ const unmuteUser = () => {
 
 .action-button-kick,
 .action-button-ban,
-.action-button-mute {
+.action-button-mute,
+.action-button-make-admin {
   background: none;
   border: none;
   cursor: pointer;
@@ -168,5 +208,10 @@ const unmuteUser = () => {
 .disableMuteOption {
   color: red !important;
   cursor: auto;
+}
+
+.action-button-make-admin
+{
+  color: gold;
 }
 </style>
