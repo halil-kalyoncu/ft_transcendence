@@ -3,7 +3,7 @@
     <div class="channel-info">
       <p class="channel-name">{{ channelName }}</p>
       <div class="channel-owner-container">
-        <font-awesome-icon class="icon" :icon="['fas', 'user']" />
+        <font-awesome-icon class="icon" :icon="['fas', 'star']" />
         <p class="channel-owner">{{ ownerName }}</p>
       </div>
       <input

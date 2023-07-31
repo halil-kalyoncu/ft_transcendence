@@ -5,7 +5,7 @@
         <ChannelListItem
           :isPasswordProtected="false"
           :channelName="channel.channelName"
-          :ownerName="username"
+          :ownerName="channel.ownerName"
           :joinChannelButtonName="'Enter'"
           @channel-entered="handleChannelEntered"
         />
@@ -26,27 +26,33 @@ const handleChannelEntered = (channelId: number) => {
 const dummyChannelData = [
   {
     channelId: 1,
-    channelName: 'My Channel 1'
+    channelName: 'My Channel 1',
+    ownerName: 'Halil'
   },
   {
     channelId: 2,
+    ownerName: 'Max',
     channelName: 'My Channel 2'
   },
   {
     channelId: 3,
-    channelName: 'My Channel 3'
+    channelName: 'My Channel 3',
+    ownerName: 'Ezra'
   },
   {
     channelId: 4,
-    channelName: 'My Channel 4'
+    channelName: 'My Channel 4',
+    ownerName: 'Vytautas'
   },
   {
     channelId: 5,
-    channelName: 'My Channel 5'
+    channelName: 'My Channel 5',
+    ownerName: 'Lorenz'
   },
   {
     channelId: 6,
-    channelName: 'My Channel 6'
+    channelName: 'My Channel 6',
+    ownerName: 'Thomas'
   }
 ]
 
