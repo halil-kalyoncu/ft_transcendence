@@ -1,42 +1,40 @@
 <template>
   <div class="channel-list-item">
     <div class="channel-owner-container" :title="`Joined at: ${date}`" @click="goToProfile">
-      <font-awesome-icon
-        class="icon"
-        :icon="getRoleIcon(role)"
-      />
+      <font-awesome-icon class="icon" :icon="getRoleIcon(role)" />
       <p class="channel-owner">{{ username }}</p>
-      <input
-        v-if="showMinutesMutedField"
-        v-model="minutesMuted"
-        type="number"
-        max="100"
-        min="0"
-        class="password-input"
-      />
     </div>
-
+    <input
+      v-if="showMinutesMutedField"
+      v-model="minutesMuted"
+      type="number"
+      max="100"
+      min="0"
+      class="password-input"
+    />
     <div class="actions">
       <template v-if="currentUserRole === 'owner' && role === 'member'">
         <button class="action-button-make-admin" @click="makeAdmin" title="Make Admin">
           <font-awesome-icon :icon="['fas', 'crown']" />
         </button>
       </template>
-      <template v-if="currentUserRole === 'owner' || currentUserRole === 'admin' && role !== 'owner'">
-      <button class="action-button-kick" @click="kickUser" title="Kick">
-        <font-awesome-icon :icon="['fas', 'futbol']" />
-      </button>
-      <button class="action-button-ban" @click="banUser" title="Ban">
-        <font-awesome-icon :icon="['fas', 'ban']" />
-      </button>
-      <button
-        class="action-button-mute"
-        @click="muteUser"
-        :title="muteTitle"
-        :class="isUserMuted ? 'disableMuteOption' : ''"
+      <template
+        v-if="currentUserRole === 'owner' || (currentUserRole === 'admin' && role !== 'owner')"
       >
-        <font-awesome-icon :icon="isUserMuted ? ['fas', 'volume-mute'] : ['fas', 'volume-up']" />
-      </button>
+        <button class="action-button-kick" @click="kickUser" title="Kick">
+          <font-awesome-icon :icon="['fas', 'futbol']" />
+        </button>
+        <button class="action-button-ban" @click="banUser" title="Ban">
+          <font-awesome-icon :icon="['fas', 'ban']" />
+        </button>
+        <button
+          class="action-button-mute"
+          @click="muteUser"
+          :title="muteTitle"
+          :class="isUserMuted ? 'disableMuteOption' : ''"
+        >
+          <font-awesome-icon :icon="isUserMuted ? ['fas', 'volume-mute'] : ['fas', 'volume-up']" />
+        </button>
       </template>
     </div>
   </div>
@@ -66,11 +64,11 @@ const props = defineProps({
   currentUserRole: String
 })
 
-const role = ref(props.roleProp);
+const role = ref(props.roleProp)
 
 watchEffect(() => {
-  role.value = props.roleProp;
-});
+  role.value = props.roleProp
+})
 
 watch(minutesMuted, (newValue) => {
   if (newValue > maxValue.value) {
@@ -108,10 +106,8 @@ const makeAdmin = () => {
 }
 
 const muteUser = () => {
-
-  if (isUserMuted.value === true)
-  {
-    return;
+  if (isUserMuted.value === true) {
+    return
   }
 
   if (showMinutesMutedField.value === false) {
@@ -146,17 +142,15 @@ const unmuteUser = () => {
 const getRoleIcon = (role: string | undefined) => {
   switch (role) {
     case 'admin':
-      return ['fas', 'crown'];
+      return ['fas', 'crown']
     case 'member':
-      return ['fas', 'user'];
+      return ['fas', 'user']
     case 'owner':
-      return ['fas', 'star'];
+      return ['fas', 'star']
     default:
-      return ['fas', 'question'];
+      return ['fas', 'question']
   }
-};
-
-
+}
 </script>
 
 <style scoped>
@@ -193,15 +187,14 @@ const getRoleIcon = (role: string | undefined) => {
   margin: 0 0 0 0.5rem;
 }
 
-.action-button-ban
-{
+.action-button-ban {
   color: red;
 }
-.action-button-kick{
+.action-button-kick {
   color: yellow;
 }
 
-.action-button-mute{
+.action-button-mute {
   color: green;
 }
 
@@ -210,8 +203,7 @@ const getRoleIcon = (role: string | undefined) => {
   cursor: auto;
 }
 
-.action-button-make-admin
-{
+.action-button-make-admin {
   color: gold;
 }
 </style>
