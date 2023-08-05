@@ -52,7 +52,7 @@ const getMockChannelMessages = (): MockMessageI[] => {
     }
   ]
 }
-
+onMounted(fetchChannelMessages)
 const messages = ref<directMessageI[]>([])
 const newMessage = ref('')
 

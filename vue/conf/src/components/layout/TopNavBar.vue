@@ -3,7 +3,12 @@ import { RouterLink, RouterView } from 'vue-router'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '../../stores/username'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fas } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import router from '../../router'
+
+library.add(fas)
 
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
@@ -33,11 +38,19 @@ const logout = () => {
           >Profile</RouterLink
         >
       </div>
+      <RouterLink class="navButton header-username" :to="`/profile/${username}`">
+        <div class="link-content">
+          {{ username ? username : 'TBD' }}
+          <img class="profile-image" src="../../assets/avatar-1.png" alt="Profile" />
+        </div>
+      </RouterLink>
       <div>
-        <RouterLink class="navButton header-username" :to="`/profile/${username}`">{{
-          username ? username : 'TBD'
-        }}</RouterLink>
-        <a class="navButtonLogout" @click="logout">Logout</a>
+        <button class="settings-button">
+          <font-awesome-icon class="icon" icon="cog" title="Settings" />
+        </button>
+        <a class="navButtonLogout" @click="logout" title="Logout">
+          <font-awesome-icon class="icon" icon="sign-out-alt" />
+        </a>
       </div>
     </nav>
   </header>
@@ -62,18 +75,19 @@ const logout = () => {
   text-decoration: none;
 }
 
-.navButtonLogout {
+.navButtonLogout,
+.settings-button {
   padding: 0.5rem;
   font-size: 1rem;
-  color: #747c86;
   cursor: pointer;
-  color: #ea9f42;
+  color: lightgreen;
   padding: 0 0 0 1rem;
   transition: color 0.15s ease-in-out;
 }
 
-.navButtonLogout:hover {
-  color: red;
+.navButtonLogout:hover,
+.settings-button:hover {
+  color: yellow;
 }
 
 .header-username {
@@ -82,5 +96,33 @@ const logout = () => {
   font-family: Helvetica, sans-serif;
   padding: 0;
   text-align: bottom;
+}
+
+.settings-button {
+  background-color: transparent;
+  width: fit-content;
+  border: none;
+  margin-left: 5.4rem;
+}
+
+.settings-button .icon {
+  color: lightgray;
+}
+
+.link-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link-content .profile-image {
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-left: 1rem;
+  object-fit: cover;
+}
+
+.header .header-username:hover {
+  color: yellow;
 }
 </style>

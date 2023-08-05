@@ -138,7 +138,7 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
 <template>
   <section class="friends" @click="handleClickOutsideContextMenu">
     <div class="friendsList">
-      <h2>Friends</h2>
+      <h2 v-if="friends.length === 0" class="friends-empty-notification">Friend list is empty</h2>
       <ul class="friendsList">
         <li v-for="entry in friends" :key="entry.id" @contextmenu="showContextMenu($event, entry)">
           <div class="friendInfo">
@@ -328,5 +328,11 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
   background: none;
   border: none;
   cursor: pointer;
+}
+
+.friends-empty-notification {
+  color: gray;
+  padding: 1rem 1rem 1rem 0;
+  font-size: 1rem;
 }
 </style>

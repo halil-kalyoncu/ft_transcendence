@@ -1,16 +1,14 @@
 <template>
   <div class="chat-component">
-    <div class="messages">
-      <FriendsMessages v-if="displayMode === 'friends'" />
-      <ChannelMessages v-if="displayMode === 'channel'" />
-    </div>
+    <FriendMessages v-if="displayMode === 'friends'" />
+    <ChannelMessages v-if="displayMode === 'channel'" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import FriendsMessages from './FriendsMessages.vue'
-import ChannelMessages from './ChannelsMessages.vue'
+import FriendMessages from './FriendMessages.vue'
+import ChannelMessages from './ChannelMessages.vue'
 
 const props = defineProps({
   displayMode: String
