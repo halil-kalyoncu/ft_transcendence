@@ -24,35 +24,34 @@ import { ref, watch, onMounted } from 'vue'
 import { connectWebSocket } from '../../websocket'
 import type { UserI } from '../../model/user.interface'
 import type { directMessageI } from '../../model/directMessage.interface'
+import type { MockMessageI } from '../../model/mockMessage.interface'
 import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 
-const channelMessages = ref([])
 const inputMessage = ref('')
+
+const channelMessages = ref<MockMessageI[]>([])
 
 const fetchChannelMessages = async () => {
   const messages = getMockChannelMessages()
   channelMessages.value = messages
 }
 
-const getMockChannelMessages = () => {
-  console.log('getMockChannelMessages')
+const getMockChannelMessages = (): MockMessageI[] => {
   return [
     { message: 'Knock Knock', sender: 'Eric', createdAt: 'two minutes ago', isOwnMessage: false },
     { message: "Who's there?", sender: 'Clapton', createdAt: 'one minute ago', isOwnMessage: true },
     { message: 'Race Condition', sender: 'Eric', createdAt: 'one minute ago', isOwnMessage: false },
     {
       message:
-        '... and a rather long text for testing purposes. To see if it would not distorttheviewinanyunexpected and unwanted way. \n ... and a bit more long text',
+        '... and a rather long text for testing purposes. To see if it would not distort the view in any unexpected and unwanted way. \n ... and a bit more long text',
       sender: 'Eric',
       createdAt: 'one second ago',
       isOwnMessage: false
     }
   ]
 }
-
-onMounted(fetchChannelMessages)
 
 const messages = ref<directMessageI[]>([])
 const newMessage = ref('')

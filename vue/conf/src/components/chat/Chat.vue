@@ -17,7 +17,6 @@ const props = defineProps({
 })
 
 const messageToSend = ref('')
-
 </script>
 
 <style scoped>
