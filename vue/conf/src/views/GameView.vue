@@ -1,15 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+	import GameField from '../components/game/GameField.vue'
+</script>
 
 <template>
-  <div class="game">
-    <h1>Game View</h1>
-  </div>
+	<GameField />
 </template>
-
-<style scoped>
-.game {
-  width: 100%;
-  height: calc(100vh - 50.8px);
-  background-color: #171717;
-}
-</style>
