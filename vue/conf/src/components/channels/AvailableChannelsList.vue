@@ -41,7 +41,7 @@ const dummyChannelData = [
     isPasswordProtected: true,
     channelName: 'Channel 3',
     channelId: 3,
-    ownerName: 'Lorenz'
+    ownerName: 'Leo'
   },
   {
     isPasswordProtected: false,
@@ -71,7 +71,7 @@ const dummyChannelData = [
     isPasswordProtected: true,
     channelName: 'Channel 8',
     channelId: 8,
-    ownerName: 'Lorenz'
+    ownerName: 'Leo'
   },
   {
     isPasswordProtected: false,

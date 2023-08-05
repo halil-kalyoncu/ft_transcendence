@@ -191,7 +191,7 @@ const getRoleIcon = (role: string | undefined) => {
   color: red;
 }
 .action-button-kick {
-  color: yellow;
+  color: white;
 }
 
 .action-button-mute {
