@@ -113,6 +113,9 @@ const logout = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 0.5rem 0 1rem;
+  background-color: #186dd6;
+  border-radius: 0.5rem;
 }
 
 .link-content .profile-image {

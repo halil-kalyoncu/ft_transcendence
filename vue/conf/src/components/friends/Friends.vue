@@ -5,6 +5,7 @@ import { connectWebSocket, disconnectWebSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import type { UserI } from '../../model/user.interface'
 import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
+import FriendsListItem from './FriendsListItem.vue'
 
 const notificationStore = useNotificationStore()
 
@@ -139,17 +140,19 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
   <section class="friends" @click="handleClickOutsideContextMenu">
     <div class="friendsList">
       <h2 v-if="friends.length === 0" class="friends-empty-notification">Friend list is empty</h2>
-      <ul class="friendsList">
-        <li v-for="entry in friends" :key="entry.id" @contextmenu="showContextMenu($event, entry)">
-          <div class="friendInfo">
-            <span>{{ entry.friend.username }}</span>
-            <div
-              class="statusIndicator"
-              :class="{ online: entry.isOnline, offline: !entry.isOnline }"
-            ></div>
-          </div>
-        </li>
-      </ul>
+      <ScrollViewer
+        :maxHeight="'70vh'"
+        :paddingRight="'.5rem'"
+        class="friendsList"
+        :class="'messages-scrollviewer'"
+      >
+        <div v-for="entry in friends" :key="entry.id" @contextmenu="showContextMenu($event, entry)">
+          <FriendsListItem
+            :status="entry.isOnline ? 'online' : 'offline'"
+            :username="entry.friend.username"
+          />
+        </div>
+      </ScrollViewer>
       <h2 v-if="friendRequests.length > 0">Friend Requests</h2>
       <ul v-if="friendRequests.length > 0" class="friendRequestsList">
         <li v-for="request in friendRequests" :key="request.id">
@@ -221,10 +224,6 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
   margin: 0;
 }
 
-.friendsList li {
-  margin-bottom: 10px;
-}
-
 .suggestionList {
   flex: 1;
   display: flex;
@@ -249,7 +248,6 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
 .statusIndicator {
   width: 10px;
   height: 10px;
-  margin-right: 10px;
   border-radius: 50%;
 }
 
@@ -259,6 +257,10 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
 
 .offline {
   background-color: #e2411f;
+}
+
+.inGame {
+  background-color: orange;
 }
 
 .friendRequestsList {

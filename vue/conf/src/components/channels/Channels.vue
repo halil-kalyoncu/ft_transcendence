@@ -166,7 +166,7 @@ const handleChannelLeft = () => {
 <style scoped>
 .channels {
   height: calc(100% - 50px);
-  padding: 1.5rem 0.5rem 0.5rem 0.5rem;
+  padding: 1rem 0.5rem 0.5rem 0.5rem;
 }
 .channel-option-button {
   font-family: 'Courier New', Courier, monospace !important;
