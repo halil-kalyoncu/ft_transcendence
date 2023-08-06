@@ -70,7 +70,6 @@ onMounted(() => {
       notificationStore.showNotification('Error: ' + error, false)
     })
   }
-  console.log('socket')
 })
 onBeforeUnmount(() => {
   disconnectWebSocket()
@@ -163,7 +162,7 @@ const handleChannelLeft = () => {
 }
 </script>
 
-<style scoped>
+<style>
 .channels {
   height: calc(100% - 50px);
   padding: 1rem 0.5rem 0.5rem 0.5rem;
@@ -172,7 +171,7 @@ const handleChannelLeft = () => {
   font-family: 'Courier New', Courier, monospace !important;
   display: block;
   width: calc(100%);
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
   background: transparent;
@@ -189,11 +188,12 @@ const handleChannelLeft = () => {
   font-weight: bold;
 }
 
-.channels .back-button-container {
+.back-button-container {
   text-align: right;
+  height: 2.25rem;
 }
 
-.channels .back-button {
+.back-button {
   background: none;
   border: 0.5px solid aliceblue;
   font-size: 0.75rem;
@@ -205,7 +205,8 @@ const handleChannelLeft = () => {
   transition: 0.25s color ease-out, border 0.25s ease-out;
   margin: 0 0 1rem 0;
 }
-.channels .back-button:hover {
+
+.back-button:hover {
   color: aliceblue;
   border: 0.5px solid #ea9f42;
   text-shadow: 0px 0px 1px aliceblue;

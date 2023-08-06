@@ -153,7 +153,7 @@ const getRoleIcon = (role: string | undefined) => {
 }
 </script>
 
-<style scoped>
+<style>
 .channel-owner-container {
   cursor: pointer;
 }

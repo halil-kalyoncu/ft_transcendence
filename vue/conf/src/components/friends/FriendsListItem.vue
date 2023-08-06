@@ -4,15 +4,25 @@
       <font-awesome-icon class="icon" :icon="['fas', 'user']" />
       <p class="friend-name">{{ username }}</p>
     </div>
-    <div
-      :title="status === 'online' ? 'Online' : status === 'offline' ? 'Offline' : 'In Game'"
-      class="statusIndicator"
-      :class="{
-        online: status === 'online',
-        offline: status === 'offline',
-        inGame: status === 'inGame'
-      }"
-    ></div>
+    <div class="friends-actions-container">
+      <div v-if="showActions">
+        <button class="action-button-ban" @click="unfriendUser" title="Unfriend">
+          <font-awesome-icon :icon="['fas', 'fa-user-times']" />
+        </button>
+        <button class="action-button-ban" @click="banUser" title="Ban">
+          <font-awesome-icon :icon="['fas', 'ban']" />
+        </button>
+      </div>
+      <div
+        :title="status === 'online' ? 'Online' : status === 'offline' ? 'Offline' : 'In Game'"
+        class="statusIndicator"
+        :class="{
+          online: status === 'online',
+          offline: status === 'offline',
+          inGame: status === 'inGame'
+        }"
+      ></div>
+    </div>
   </div>
 </template>
 
@@ -27,10 +37,19 @@ const router = useRouter()
 
 const props = defineProps({
   username: String,
-  status: String
+  status: String,
+  showActions: Boolean
 })
 
-console.log(status + ',,')
+const emit = defineEmits(['handle-unfriend', 'handle-block'])
+
+const unfriendUser = () => {
+  emit('handle-unfriend')
+}
+
+const banUser = () => {
+  emit('handle-block')
+}
 </script>
 
 <style scoped>
@@ -41,7 +60,7 @@ console.log(status + ',,')
   align-items: center;
   border: 0.5px solid aliceblue;
   padding: 0.5rem 1rem;
-  margin: 1rem 0.5rem 0 0.5rem;
+  margin: 0.5rem 0 0 0;
 }
 
 .friend-container {
@@ -63,5 +82,13 @@ console.log(status + ',,')
 
 .friend-list-item .statusIndicator {
   text-align: center;
+  height: 0.75rem;
+  width: 0.75rem;
+  margin: 1px 6px 2.5px 6px;
+}
+
+.friends-actions-container {
+  display: flex;
+  align-items: center;
 }
 </style>

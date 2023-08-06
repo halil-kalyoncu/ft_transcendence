@@ -72,7 +72,7 @@ watch(password, (newValue) => {
   align-items: center;
   font-family: 'Courier New', Courier, monospace !important;
   width: calc(100%);
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   box-sizing: border-box;
   padding: 0.5rem 1rem;
   background: transparent;

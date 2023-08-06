@@ -22,10 +22,15 @@
               :key="suggestion.id"
               @mousedown="selectSuggestion(suggestion)"
               class="suggested-item"
-            ><span class="suggested-item-username">
-              {{ suggestion.username }}
+            >
+              <span class="suggested-item-username">
+                {{ suggestion.username }}
               </span>
-              <font-awesome-icon class="icon" :icon="['fas', 'eye']"  @mousedown="goToProfile(suggestion.username)" />
+              <font-awesome-icon
+                class="icon"
+                :icon="['fas', 'eye']"
+                @mousedown="goToProfile(suggestion.username)"
+              />
             </li>
           </ul>
         </ScrollViewer>
@@ -102,12 +107,10 @@ const findUserSuggestions = async (username: string) => {
     }
   )
   const data = await response.json()
-  console.log(1 + data)
   userSuggestions.value = data
 }
 
 const selectSuggestion = (suggestion: UserI) => {
-  console.log("select")
   inputName.value = suggestion.username || ''
 }
 
@@ -124,11 +127,10 @@ watch(inputName, (newValue) => {
 })
 
 const goToProfile = (username: String | undefined) => {
-  console.log("u9")
+  console.log('u9')
 
-  if (username === undefined)
-  {
-    return;
+  if (username === undefined) {
+    return
   }
   router.push(`/profile/${username}`)
 }
@@ -280,19 +282,18 @@ const goToProfile = (username: String | undefined) => {
   background-color: #4c4e52;
 }
 
-.suggestionList li .icon{
+.suggestionList li .icon {
   text-align: right;
-  transition: color .25s ease-out;
+  transition: color 0.25s ease-out;
 }
 
-.suggestionList li .icon:hover{
+.suggestionList li .icon:hover {
   color: lightgreen;
 }
 
-.suggestionList li .suggested-item-username{
+.suggestionList li .suggested-item-username {
   text-align: right;
 }
-
 
 .statusIndicator {
   width: 10px;

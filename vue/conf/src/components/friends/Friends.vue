@@ -8,6 +8,12 @@ import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
 import FriendsListItem from './FriendsListItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import FriendsModal from './FriendsModal.vue'
+import FriendMessages from '../chat/FriendMessages.vue'
+import FriendManager from './FriendManager.vue'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
 
@@ -15,10 +21,8 @@ const friends = ref<FriendshipEntryI[]>([])
 const friendRequests = ref<FriendshipEntryI[]>([])
 
 const modalTitle = ref('')
+const showFriendManagerAndChat = ref(false)
 
-//right click on friend
-const showContextMenuFlag = ref(false)
-const contextMenuPosition = ref({ top: 0, left: 0 })
 const selectedFriend = ref<FriendshipEntryI | null>(null)
 
 const showChat = ref(false)
@@ -104,10 +108,7 @@ const handleBlock = ({ username }: ModalResult) => {
     return
   }
 
-  notificationStore.showNotification(
-    'User ' + username + ' was successfully blocked',
-    true
-  )
+  notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
 }
 
 const handleUnblock = ({ username }: ModalResult) => {
@@ -118,10 +119,17 @@ const handleUnblock = ({ username }: ModalResult) => {
     return
   }
 
-  notificationStore.showNotification(
-    'User ' + username + ' was successfully unblocked',
-    true
-  )
+  notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
+}
+
+const closeFriendManagerAndChat = () => {
+  selectedFriend.value = null
+  showFriendManagerAndChat.value = false
+}
+
+const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
+  selectedFriend.value = friend
+  showFriendManagerAndChat.value = true
 }
 
 const acceptFriendRequest = (requestId: number) => {
@@ -136,88 +144,126 @@ const rejectFriendRequest = (requestId: number) => {
   socket.emit('rejectFriendRequest', requestId)
 }
 
-const showContextMenu = (event: MouseEvent, friend: FriendshipEntryI) => {
-  event.preventDefault()
-  selectedFriend.value = friend
-  showContextMenuFlag.value = true
-  contextMenuPosition.value = { top: event.clientY, left: event.clientX }
-}
-
-const handleClickOutsideContextMenu = (event: MouseEvent) => {
-  const contextMenu = document.querySelector('.contextMenu') as HTMLElement
-  if (contextMenu && !contextMenu.contains(event.target as Node)) {
-    showContextMenuFlag.value = false
-    selectedFriend.value = null
-  }
-}
-
-const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
-  if (friend) {
+const handleUnfriendUser = (username: String, id: Number) => {
+  if (username !== '') {
     const accessToken = localStorage.getItem('ponggame') ?? ''
     const socket = connectWebSocket('http://localhost:3000', accessToken)
-    socket.emit('removeFriend', friend.id)
+    console.log('removeFriend id:' + id + ', username: ' + username)
+    socket
+      .emit('removeFriend', id, (response: any) => {
+        console.log('removeFriend response', response)
+        if (response && 'success' in response) {
+          if (response.success) {
+            notificationStore.showNotification(
+              `User ${username} was removed from friends list`,
+              true
+            )
+            closeFriendManagerAndChat()
+          } else {
+            notificationStore.showNotification(
+              `Error Could not remove ${username} from friends list: ${response.error}`,
+              false
+            )
+          }
+        } else {
+          console.error('removeFriend error', response)
+          notificationStore.showNotification(
+            `Unexpected error occurred while removing ${username} from friends list. Please try again.`,
+            false
+          )
+        }
+      })
+      .on('error', (error) => {
+        // Handle case when socket.emit fails
+        console.error('Socket emit error', error)
+        notificationStore.showNotification(
+          `Network error occurred while removing ${username} from friends list. Please try again.`,
+          false
+        )
+      })
   }
-  showContextMenuFlag.value = false
-  selectedFriend.value = null
+}
+
+const handleBlockUser = (username: String, id: Number) => {
+  if (username !== '') {
+    notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+  }
+  closeFriendManagerAndChat()
+}
+
+const handleInviteToGame = (username: String, id: Number) => {
+  if (username !== '') {
+    notificationStore.showNotification('User ' + username + ' was invited to play', true)
+  }
+}
+
+const goBack = () => {
+  closeFriendManagerAndChat()
 }
 </script>
 
 <template>
-  <section class="friends" @click="handleClickOutsideContextMenu">
-    <FriendsModal
-      :isOpened="isModalOpened"
-      :title="modalTitle"
-      @submit="handleSubmit"
-      @close="handleClose"
-    />
-    <div class="friendsList">
-      <h2 v-if="friends.length === 0" class="friends-empty-notification">Friend list is empty</h2>
-      <ScrollViewer
-        :maxHeight="'68vh'"
-        :paddingRight="'.5rem'"
-        class="friendsList"
-        :class="'messages-scrollviewer'"
-      >
-        <div v-for="entry in friends" :key="entry.id" @contextmenu="showContextMenu($event, entry)">
-          <FriendsListItem
-            :status="entry.isOnline ? 'online' : 'offline'"
-            :username="entry.friend.username"
-          />
-        </div>
-      </ScrollViewer>
-      <h2 v-if="friendRequests.length > 0">Friend Requests</h2>
-      <ul v-if="friendRequests.length > 0" class="friendRequestsList">
-        <li v-for="request in friendRequests" :key="request.id">
-          <div class="friendInfo">
-            <span>{{ request.friend.username }}</span>
-            <button @click="acceptFriendRequest(request.id)">Accept</button>
-            <button @click="rejectFriendRequest(request.id)">Reject</button>
+  <section class="friends">
+    <template v-if="!showFriendManagerAndChat">
+      <FriendsModal
+        :isOpened="isModalOpened"
+        :title="modalTitle"
+        @submit="handleSubmit"
+        @close="handleClose"
+      />
+      <div class="friendsList">
+        <h2 v-if="friends.length === 0" class="friends-empty-notification">Friend list is empty</h2>
+        <ScrollViewer
+          :maxHeight="'68vh'"
+          :paddingRight="'.5rem'"
+          class="friendsList"
+          :class="'messages-scrollviewer'"
+        >
+          <div v-for="entry in friends" :key="entry.id">
+            <FriendsListItem
+              @click="handleFriendManagerOpened(entry)"
+              :status="entry.isOnline ? 'online' : 'offline'"
+              :username="entry.friend.username"
+              :showActions="false"
+            />
           </div>
-        </li>
-      </ul>
-      <button class="add-friend-button" @click="openAddModal">Add Friend</button>
-      <button class="add-friend-button" @click="openBlockModal">Block User</button>
-      <button class="add-friend-button" @click="openUnblockModal">Unblock User</button>
-
-      <!-- Right-click menu for friends -->
-      <div
-        v-show="showContextMenuFlag"
-        :style="{ top: contextMenuPosition.top + 'px', left: contextMenuPosition.left + 'px' }"
-        class="contextMenu"
-      >
-        <ul>
-          <li @click="showChat = !showChat">Send message</li>
-          <li @click="removeFriendContextMenu(selectedFriend)">Remove Friend</li>
+        </ScrollViewer>
+        <h2 v-if="friendRequests.length > 0">Friend Requests</h2>
+        <ul v-if="friendRequests.length > 0" class="friendRequestsList">
+          <li v-for="request in friendRequests" :key="request.id">
+            <div class="friendInfo">
+              <span>{{ request.friend.username }}</span>
+              <button @click="acceptFriendRequest(request.id)">Accept</button>
+              <button @click="rejectFriendRequest(request.id)">Reject</button>
+            </div>
+          </li>
         </ul>
+        <button class="add-friend-button" @click="openAddModal">Add Friend</button>
+        <button class="add-friend-button" @click="openBlockModal">Block User</button>
+        <button class="add-friend-button" @click="openUnblockModal">Unblock User</button>
       </div>
-    </div>
 
-    <div v-if="showChat" class="chat-container">
-      <div class="chat-component">
-        <button class="close-button" @click="showChat = false">X</button>
-        <!-- <Chat :selectedFriendEntry="selectedFriend" /> -->
+      <div v-if="showChat" class="chat-container">
+        <div class="chat-component">
+          <button class="close-button" @click="showChat = false">X</button>
+          <!-- <Chat :selectedFriendEntry="selectedFriend" /> -->
+        </div>
       </div>
-    </div>
+    </template>
+    <template v-else>
+      <div class="back-button-container">
+        <button class="back-button" @click="goBack">
+          <font-awesome-icon :icon="['fas', 'arrow-left']" />
+        </button>
+      </div>
+      <FriendManager
+        @unfriend-user="handleUnfriendUser"
+        @block-user="handleBlockUser"
+        @invite-user-to-game="handleInviteToGame"
+        :selectedFriendEntry="selectedFriend"
+      />
+      <FriendMessages :selectedFriendEntry="selectedFriend" />
+    </template>
   </section>
 </template>
 
@@ -226,13 +272,13 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
   display: flex;
   flex-direction: column;
   height: calc(100% - 50px);
+  padding: 1rem 0.5rem 0.5rem 0.5rem;
 }
 
 .friendsList {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
 }
 
 .friendsList ul {
@@ -244,59 +290,6 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
 .friendInfo {
   display: flex;
   align-items: center;
-}
-
-.friendRequestsList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.friendRequestsList li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.friendRequestsList li button {
-  margin-left: 10px;
-}
-
-.contextMenu {
-  position: absolute;
-  color: black;
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 0;
-  list-style: none;
-  z-index: 1000;
-}
-
-.contextMenu ul {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  margin: 0;
-}
-
-.contextMenu li {
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.chat-container {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 500px;
-  height: 100%;
-  background-color: #0d1117;
-  z-index: 9999;
-}
-
-.chat-component {
-  position: relative;
-  height: 100%;
 }
 
 .friends-empty-notification {
@@ -317,7 +310,7 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
   cursor: pointer;
   font-size: 1rem;
   transition: 0.25s color ease-out, border 0.25s ease-out;
-  margin: 0.5rem 0.5rem 0 0.5rem;
+  margin: 0.5rem 0 0 0;
 }
 
 .add-friend-button:hover {

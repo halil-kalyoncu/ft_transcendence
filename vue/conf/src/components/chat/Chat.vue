@@ -1,6 +1,6 @@
 <template>
   <div class="chat-component">
-    <FriendMessages v-if="displayMode === 'friends'" />
+    <!-- <FriendMessages v-if="displayMode === 'friends'" /> -->
     <ChannelMessages v-if="displayMode === 'channel'" />
   </div>
 </template>
