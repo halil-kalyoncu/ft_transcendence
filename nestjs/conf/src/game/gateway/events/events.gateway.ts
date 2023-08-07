@@ -1,4 +1,4 @@
-import { SubscribeMessage, WebSocketGateway, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer } from '@nestjs/websockets';
+import { SubscribeMessage, WebSocketGateway, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { GameService } from '../../service/game.service';
 import { Room } from '../../service/room.service';
@@ -8,9 +8,11 @@ let ballPos = {x: 0, y: 0};
 
 @WebSocketGateway({
 	cors: {
-	  origin: "http://localhost:4200"
-	},
-	namespace: 'game'
+	  origin: "http://localhost:4200",
+	  methods: ["GET", "POST"],
+	  allowedHeaders: ["authorization"],
+	  credentials: true
+	}
   })
   export class EventsGateway {
 	
@@ -21,7 +23,6 @@ let ballPos = {x: 0, y: 0};
 			this.startGame();
 		}
 		
-		@WebSocketServer()
 		server: Server;
 		
 		gameIsRunning = false;
@@ -127,17 +128,4 @@ let ballPos = {x: 0, y: 0};
 			client.broadcast.emit('startGame');
 			console.log("start");
 		}
-
-		@SubscribeMessage('resize')
-		updateFieldSize(client: any, data:{
-			wid: number,
-			hgt: number
-		}): void {
-			console.log("wid:", data.wid, "hgt:", data.hgt);
-			this.rooms.get("test").ball.setFieldSize(data.wid, data.hgt);
-			this.rooms.get("test").paddleA.setFieldSize(data.wid, data.hgt);
-			this.rooms.get("test").paddleB.setFieldSize(data.wid, data.hgt);
-			this.server.emit('updateFieldSize', data);
-		}
 	}
-
