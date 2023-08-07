@@ -5,8 +5,16 @@ import { Room } from '../../service/room.service';
 
 let ballPos = {x: 0, y: 0};
 
-@WebSocketGateway()
-export class EventsGateway {
+
+@WebSocketGateway({
+	cors: {
+	  origin: "http://localhost:4200",
+	  methods: ["GET", "POST"],
+	  allowedHeaders: ["authorization"],
+	  credentials: true
+	}
+  })
+  export class EventsGateway {
 	
 	constructor(
 		private gameService: GameService,

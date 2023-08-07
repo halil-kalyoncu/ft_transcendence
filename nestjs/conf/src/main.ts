@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as session from 'express-session';
+import { Server } from 'socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
-  app.enableCors();
+  app.enableCors({
+	origin: 'http://localhost:4200'
+  });
   app.useGlobalPipes(new ValidationPipe());
   app.use(
     session({
@@ -17,5 +20,7 @@ async function bootstrap() {
     }),
   );
   await app.listen(3000);
+
 }
 bootstrap();
+
