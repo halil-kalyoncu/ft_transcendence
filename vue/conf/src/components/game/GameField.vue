@@ -83,7 +83,7 @@ export default {
 	methods: {
 		connectToWS() {
 			if (this.socket)
-			this.socket.close();
+				this.socket.close();
 			this.socket = io(`localhost:3000`, { transports: [ 'websocket' ]});
 			
 			this.socket.on("connect", () => {
