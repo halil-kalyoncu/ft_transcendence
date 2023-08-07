@@ -8,11 +8,9 @@ let ballPos = {x: 0, y: 0};
 
 @WebSocketGateway({
 	cors: {
-	  origin: "http://localhost:4200",
-	  methods: ["GET", "POST"],
-	  allowedHeaders: ["authorization"],
-	  credentials: true
-	}
+	  origin: ["http://localhost:4200", "http://localhost:3000"]
+	},
+	namespace: 'game'
   })
   export class EventsGateway {
 	

@@ -84,7 +84,7 @@ export default {
 		connectToWS() {
 			if (this.socket)
 				this.socket.close();
-			this.socket = io(`localhost:3000`, { transports: [ 'websocket' ]});
+			this.socket = io(`localhost:3000/game`, { transports: [ 'websocket' ]});
 			
 			this.socket.on("connect", () => {
 				console.log("Connected to Server");
