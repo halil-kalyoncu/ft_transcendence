@@ -16,6 +16,12 @@ export class Ball {
 		public fieldHeight: number = 600,
 		) {	}
 		
+		setFieldSize(wid: number, hgt: number) {
+			this.fieldWidth = wid;
+			this.fieldHeight = hgt;
+			console.log("w:", wid, "h:", hgt);
+		}
+
 		getBallPosition() {
 			return {
 				x: this.x,

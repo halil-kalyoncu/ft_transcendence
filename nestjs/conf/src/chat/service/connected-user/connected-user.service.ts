@@ -37,11 +37,13 @@ export class ConnectedUserService {
   }
 
   async deleteBySocketId(socketId: string): Promise<ConnectedUser> {
-    return this.prisma.connectedUser.delete({
-      where: {
-        socketId,
-      },
-    });
+	if (this.prisma.connectedUser){
+		return this.prisma.connectedUser.delete({
+		  where: {
+			socketId,
+		  },
+		});
+	}
   }
 
   async deleteAll() {

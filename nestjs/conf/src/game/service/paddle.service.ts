@@ -11,7 +11,12 @@ export class Paddle{
 		public fieldWidth: number = 800,
 		public fieldHeight: number = 600
 		) {}
-		
+
+		setFieldSize(wid: number, hgt: number) {
+			this.fieldWidth = wid;
+			this.fieldHeight = hgt;
+		}
+
 		movePaddleUp() {
 			if (this.y > this.speed)
 				this.y -= this.speed;

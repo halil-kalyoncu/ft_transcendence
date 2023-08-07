@@ -84,7 +84,7 @@ export default {
 		connectToWS() {
 			if (this.socket)
 				this.socket.close();
-			this.socket = io(`localhost:3000`, { transports: [ 'websocket' ]});
+			this.socket = io(`localhost:3000/game`, { transports: [ 'websocket' ]});
 			
 			this.socket.on("connect", () => {
 				console.log("Connected to Server");
@@ -107,6 +107,7 @@ export default {
 					this.$refs.paddleB.setY(newPos);
 					console.log(playerId, ": ", newPos);
 				}
+				this.handleResize();
 			});
 			
 			this.socket.on("ballPosition", ({ x, y }) => {
@@ -114,8 +115,30 @@ export default {
 				this.$refs.ball.setY(y);
 				this.ballCoordinates = ({x, y});
 			});
+
+			this.socket.on("updateFieldSize", ({ wid, hgt }) => {
+				this.fieldWidth = wid;
+				this.fieldHeight = hgt;
+				if (this.$refs.paddleB)
+					this.$refs.paddleB.setX(this.fieldWidth - this.$refs.paddleB.getPaddleWidth() - 1 - 10);
+				// if (this.$refs.ball)
+				// 	this.$refs.ball.setFieldSize(wid, hgt);
+			});
 		},
 		
+		handleResize() {
+			if (this.$refs.gameField){
+				const gameField = this.$refs.gameField
+				const newSize = { wid: gameField.clientWidth, hgt: gameField.clientHeight };
+				
+				console.log(gameField.clientHeight);
+				if (this.socket)
+					this.socket.emit('resize', newSize);
+			}
+			// this.fieldWidth = this.$refs.gameField.clientWidth;
+			// this.fieldHeight = this.$refs.gameField.clientHeight;
+		},
+
 		update() {
 			if (this.isPaused)
 			{
@@ -148,32 +171,34 @@ export default {
 		keyHookDown(e) {
 			switch(e.key) {
 				case 'p':
-				this.isPaused = !this.isPaused;
-				break;
+					this.isPaused = !this.isPaused;
+					break;
 				case 'ArrowUp':
-				this.isMovingUp = true;
-				break;
+					this.isMovingUp = true;
+					break;
 				case 'ArrowDown':
-				this.isMovingDown = true;
-				break;
+					this.isMovingDown = true;
+					break;
 			}
 		},
 		
 		keyHookUp(e) {
 			switch(e.key) {
 				case 'ArrowUp':
-				this.isMovingUp = false;
-				break;
+					this.isMovingUp = false;
+					break;
 				case 'ArrowDown':
-				this.isMovingDown = false;
-				break;
+					this.isMovingDown = false;
+					break;
 			}
 		}
 	},
-	
+
 	created() {
 		window.addEventListener('keydown', this.keyHookDown);
 		window.addEventListener('keyup', this.keyHookUp);
+		// window.addEventListener('resize', this.handleResize);	
+
 	}
 }
 </script>
