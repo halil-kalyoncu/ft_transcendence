@@ -180,8 +180,8 @@ export default {
 
 <style scoped>
 .field {
-	width: 100%;
-	height: 92vh;
+	width: 800px;
+	height: 600px;
 	position: relative;
 	background-color: transparent;
 	border-radius: 0%;
