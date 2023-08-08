@@ -2,6 +2,7 @@ import { SubscribeMessage, WebSocketGateway, OnGatewayInit, OnGatewayConnection,
 import { Server } from 'socket.io';
 import { GameService } from '../../service/game.service';
 import { Room } from '../../service/room.service';
+import { PowerUp } from 'src/game/service/powerup.service';
 
 let ballPos = {x: 0, y: 0};
 
@@ -32,9 +33,12 @@ let ballPos = {x: 0, y: 0};
 			setInterval(() => {
 				if (this.gameIsRunning) {
 					let room = this.rooms.get("test");
-					let newBallPos = room.ball.moveBall(room.paddleA.x, room.paddleA.y,
-					room.paddleB.x, room.paddleB.y,
-					room.paddleA.wid, room.paddleA.hgt);
+
+					let newBallPos = room.ball.moveBall(room.paddleA.x, room.paddleA.y, room.paddleB.x, room.paddleB.y, room.paddleA.wid, room.paddleA.hgt);
+					for (let powerup of room.powerups){
+						powerup.moveDown();
+						this.server.emit('powerUpMove', {id: powerup.id, y: powerup.y});
+					}
 					this.server.emit('ballPosition', newBallPos);
 				}
 			}, 15);
@@ -125,5 +129,21 @@ let ballPos = {x: 0, y: 0};
 		sendStartMessage(client: any): void {
 			client.broadcast.emit('startGame');
 			console.log("start");
+		}
+
+		@SubscribeMessage('spawnPowerUp')
+		createPowerUp(client: any, data: { 
+			id: number,
+			x: number,
+			y: number,
+			speed: number,
+			type: string
+		}): void {
+			const room = this.rooms.get("test");
+			data.speed = 3;
+			const newPowerUp = new PowerUp(data.id, data.x, data.y, data.speed, data.type);
+			room.powerups.push(newPowerUp);
+			this.server.emit('newPowerUp', data);
+			// console.log("powerup spawned at x: ", data.x)
 		}
 	}

@@ -16,6 +16,13 @@
 			:fieldHeight="fieldHeight"
 			:socket="socket"
 			/>
+			<PowerUp
+			v-for="powerup in PowerUps"
+    		:id="powerup.id" 
+			:x="powerup.x"
+			:y="powerup.y"
+			:type="powerup.type"
+			/>
 		</div>
 		<!-- <div class="ball-coordinates" v-if="ballCoordinates">
 			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
@@ -30,13 +37,15 @@
 <script>
 import GamePaddle from './GamePaddle.vue'
 import GameBall from './GameBall.vue'
+import PowerUp from './PowerUp.vue'
 import { io } from "socket.io-client";
 
 export default {
 	name: 'App',
 	components: {
 		GameBall, 
-		GamePaddle
+		GamePaddle,
+		PowerUp
 	},
 	mounted() {
 		this.fieldWidth = this.$refs.gameField.clientWidth;
@@ -76,7 +85,9 @@ export default {
 			
 			side: null,
 			
-			ballCoordinates: null
+			ballCoordinates: null,
+
+			PowerUps: []
 		}
 	},
 	
@@ -114,7 +125,24 @@ export default {
 				this.$refs.ball.setY(y);
 				this.ballCoordinates = ({x, y});
 			});
+
+			// this.socket.on("newPowerUp", ({ id, x, y, type }) => {
+			this.socket.on("newPowerUp", (data) => {
+				this.PowerUps.push(data);
+				// console.log("PU spawn remote");
+			});
+
+			this.socket.on("powerUpMove", ({ id, y }) =>{
+				let powerUp = null;
+				if (this.PowerUps){
+					powerUp = this.PowerUps.find(powerup => powerup.id === id);
+					if (powerUp)
+						powerUp.y = y;
+					// console.log("ID: ", powerUp.id, "Y:", y);
+				}
+			});
 		},
+
 		
 		update() {
 			if (this.isPaused)
@@ -167,7 +195,21 @@ export default {
 				case 'ArrowDown':
 				this.isMovingDown = false;
 				break;
+				case 'n':
+				this.spawnPowerUp();
+				break;
 			}
+		},
+
+		spawnPowerUp() {
+			const newPowerUp = {
+				id: this.PowerUps.length + 1,
+				x: Math.floor(Math.random() * this.fieldWidth),
+				y: -30,
+				type: "blub"
+			};
+			this.socket.emit('spawnPowerUp', newPowerUp);
+			console.log("PU spawn local");
 		}
 	},
 	
