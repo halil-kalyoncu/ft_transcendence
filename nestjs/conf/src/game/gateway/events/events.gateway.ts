@@ -163,7 +163,7 @@ let ballPos = {x: 0, y: 0};
 			}
 			// console.log(data.type, data.player);
 		}
-		@SubscribeMessage('destroyPowerUp')
+		@SubscribeMessage('removePowerUp')
 		removePowerUp(client: any, id: number){
 			// let powerUp = null;
 			const room = this.rooms.get("test");
@@ -175,7 +175,6 @@ let ballPos = {x: 0, y: 0};
 			console.log("index: ", index)
 			if (index !== -1) {
 				room.powerups.splice(index, 1);
-				this.server.emit('removePowerUp', id)
 			}
 		}
 	}

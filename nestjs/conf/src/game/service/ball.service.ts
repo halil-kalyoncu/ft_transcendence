@@ -69,10 +69,10 @@ export class Ball {
 
 		handlePowerUpCollision(nextBallX: number, nextBallY: number, powerup: PowerUp){
 
-			if ((nextBallX + this.wid >= powerup.x && nextBallX < powerup.x + powerup.wid ||
-				nextBallX <= powerup.x + powerup.wid && nextBallX + this.wid > powerup.x) &&
-				(nextBallY + this.hgt >= powerup.y && nextBallY < powerup.y + powerup.hgt ||
-				nextBallY <= powerup.y + powerup.hgt && nextBallY + this.hgt > powerup.y)){
+			if ((nextBallX + this.wid >= powerup.x && nextBallX <= powerup.x + powerup.wid ||
+				nextBallX <= powerup.x + powerup.wid && nextBallX + this.wid >= powerup.x) &&
+				(nextBallY + this.hgt >= powerup.y && nextBallY <= powerup.y + powerup.hgt ||
+				nextBallY <= powerup.y + powerup.hgt && nextBallY + this.hgt >= powerup.y)){
 				return true;
 			}
 			return false;
@@ -107,7 +107,7 @@ export class Ball {
 			for (let powerup of room.powerups){
 				powerup.moveDown();
 				if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)){
-					console.log("powerupid: ", powerup.id)
+					// console.log("powerupid: ", powerup.id)
 					server.emit('destroyPowerUp', {id: powerup.id});
 				}
 				else

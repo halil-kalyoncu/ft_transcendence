@@ -162,7 +162,7 @@ export default {
 				let index = this.PowerUps.findIndex(powerup => powerup.id === id);
 				if (index != -1) {
 					this.PowerUps.splice(index, 1);
-					this.socket.emit('destroyPowerUp', id)
+					this.socket.emit('removePowerUp', id);
 					console.log("PU removed");
 				}
 			});
