@@ -25,3 +25,4 @@ export class PowerUp {
 		return this.y;
 	}
 }
+

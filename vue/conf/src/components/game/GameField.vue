@@ -121,8 +121,11 @@ export default {
 			});
 			
 			this.socket.on("ballPosition", ({ x, y }) => {
-				this.$refs.ball.setX(x);
-				this.$refs.ball.setY(y);
+				if (this.$refs.ball)
+				{
+					this.$refs.ball.setX(x);
+					this.$refs.ball.setY(y);
+				}
 				this.ballCoordinates = ({x, y});
 			});
 
@@ -132,7 +135,7 @@ export default {
 				// console.log("PU spawn remote");
 			});
 
-			this.socket.on("powerUpMove", ({ id, y }) =>{
+			this.socket.on("powerUpMove", ({ id, y }) => {
 				let powerUp = null;
 				if (this.PowerUps){
 					powerUp = this.PowerUps.find(powerup => powerup.id === id);
@@ -140,6 +143,13 @@ export default {
 						powerUp.y = y;
 					// console.log("ID: ", powerUp.id, "Y:", y);
 				}
+			});
+
+			this.socket.on("newPaddleHeight", ({ player, hgt }) => {
+				if (this.$refs.paddleA && player == "left")
+					this.$refs.paddleA.setHgt(hgt);
+				else if (this.$refs.paddleB && player == "right")
+					this.$refs.paddleB.setHgt(hgt);	
 			});
 
 			this.socket.on("destroyPowerUp", ({ id }) => {
@@ -205,14 +215,15 @@ export default {
 		keyHookUp(e) {
 			switch(e.key) {
 				case 'ArrowUp':
-				this.isMovingUp = false;
-				break;
+					this.isMovingUp = false;
+					break;
 				case 'ArrowDown':
-				this.isMovingDown = false;
-				break;
+					this.isMovingDown = false;
+					break;
 				case 'n':
-				this.spawnPowerUp();
-				break;
+					this.spawnPowerUp();
+					// this.socket.emit('activatePowerUp', { type: "increasePaddle", player: "left" })
+					break;
 			}
 		},
 

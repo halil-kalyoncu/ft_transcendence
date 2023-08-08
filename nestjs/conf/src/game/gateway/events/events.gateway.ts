@@ -140,12 +140,28 @@ let ballPos = {x: 0, y: 0};
 			wid: number;
 			hgt: number;
 		}): void {
+			data.speed = 3;
 			const room = this.rooms.get("test");
 			data.speed = 3;
 			const newPowerUp = new PowerUp(data.id, data.x, data.y, data.speed, data.type, data.wid, data.hgt);
 			room.powerups.push(newPowerUp);
 			this.server.emit('newPowerUp', data);
 			// console.log("powerup spawned at x: ", data.x)
+		}
+
+		@SubscribeMessage('activatePowerUp')
+		activatePowerUp(client: any, data: {
+			type: string,
+			player: string
+		}): void {
+			if (data.type == "increasePaddle")
+			{
+				const room = this.rooms.get("test");
+				room.paddleA.setHeight(400);
+				this.server.emit('newPaddleHeight', { player: "left", hgt: 400 });
+				console.log("increase Pad");
+			}
+			// console.log(data.type, data.player);
 		}
 		@SubscribeMessage('destroyPowerUp')
 		removePowerUp(client: any, id: number){
