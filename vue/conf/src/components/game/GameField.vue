@@ -141,6 +141,21 @@ export default {
 					// console.log("ID: ", powerUp.id, "Y:", y);
 				}
 			});
+
+			this.socket.on("destroyPowerUp", ({ id }) => {
+				// let powerUp = null;
+
+				// powerUp = this.PowerUps.find(powerup => powerup.id === id);
+                // if (powerUp) {
+                //     this.powerups.delete(powerUp);
+				// }
+				let index = this.PowerUps.findIndex(powerup => powerup.id === id);
+				if (index != -1) {
+					this.PowerUps.splice(index, 1);
+					this.socket.emit('destroyPowerUp', id)
+					console.log("PU removed");
+				}
+			});
 		},
 
 		
@@ -206,7 +221,9 @@ export default {
 				id: this.PowerUps.length + 1,
 				x: Math.floor(Math.random() * this.fieldWidth),
 				y: -30,
-				type: "blub"
+				type: "blub",
+				wid: 30,
+				hgt: 30
 			};
 			this.socket.emit('spawnPowerUp', newPowerUp);
 			console.log("PU spawn local");

@@ -33,12 +33,11 @@ let ballPos = {x: 0, y: 0};
 			setInterval(() => {
 				if (this.gameIsRunning) {
 					let room = this.rooms.get("test");
-
-					let newBallPos = room.ball.moveBall(room.paddleA.x, room.paddleA.y, room.paddleB.x, room.paddleB.y, room.paddleA.wid, room.paddleA.hgt);
-					for (let powerup of room.powerups){
-						powerup.moveDown();
-						this.server.emit('powerUpMove', {id: powerup.id, y: powerup.y});
-					}
+					let newBallPos = room.ball.moveBall(room, this.server);
+					// for (let powerup of room.powerups){
+					// 	powerup.moveDown();
+					// 	this.server.emit('powerUpMove', {id: powerup.id, y: powerup.y});
+					// }
 					this.server.emit('ballPosition', newBallPos);
 				}
 			}, 15);
@@ -138,12 +137,29 @@ let ballPos = {x: 0, y: 0};
 			y: number,
 			speed: number,
 			type: string
+			wid: number;
+			hgt: number;
 		}): void {
 			const room = this.rooms.get("test");
 			data.speed = 3;
-			const newPowerUp = new PowerUp(data.id, data.x, data.y, data.speed, data.type);
+			const newPowerUp = new PowerUp(data.id, data.x, data.y, data.speed, data.type, data.wid, data.hgt);
 			room.powerups.push(newPowerUp);
 			this.server.emit('newPowerUp', data);
 			// console.log("powerup spawned at x: ", data.x)
+		}
+		@SubscribeMessage('destroyPowerUp')
+		removePowerUp(client: any, id: number){
+			// let powerUp = null;
+			const room = this.rooms.get("test");
+			// powerUp = room.powerups.find(powerup => powerup.id === id);
+			// if (powerUp) {
+			// 	room.powerups.delete(powerUp);
+			// }
+			let index = room.powerups.findIndex(powerup => powerup.id === id);
+			console.log("index: ", index)
+			if (index !== -1) {
+				room.powerups.splice(index, 1);
+				this.server.emit('removePowerUp', id)
+			}
 		}
 	}
