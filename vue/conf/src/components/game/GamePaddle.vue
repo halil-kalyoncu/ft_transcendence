@@ -39,6 +39,14 @@ export default {
 			this.x = newX;
 		},
 
+		setHgt(hgt) {
+			this.hgt = hgt;
+		},
+
+		setWid(wid) {
+			this.wid = wid;
+		},
+
 		getPaddleWidth() {
 			return this.wid;
 		},
