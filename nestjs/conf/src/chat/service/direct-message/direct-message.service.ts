@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MessageService } from '../message/message.service';
 import { CreateDirectMessageDto } from '../../dto/create-direct-message.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { DirectMessage } from '@prisma/client';
+import { DirectMessage, Prisma } from '@prisma/client';
 
 @Injectable()
 export class DirectMessageService {
@@ -34,7 +34,6 @@ export class DirectMessageService {
   async getConversation(
     userId1: number,
     userId2: number,
-    loadCount: number,
   ): Promise<DirectMessage[]> {
     return this.prisma.directMessage.findMany({
       where: {
@@ -53,7 +52,6 @@ export class DirectMessageService {
           createdAt: 'desc',
         },
       },
-      take: loadCount,
     });
   }
 }

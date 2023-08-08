@@ -1,13 +1,15 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../auth/service/auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User, DirectMessage } from '@prisma/client';
+import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private authService: AuthService,
+    private directMessage: DirectMessageService
   ) {}
 
   //remove this, if 42 login works
@@ -57,6 +59,21 @@ export class UserService {
           contains: username,
         },
       },
+    });
+  }
+
+  async deleteFromUnreadMessages(userId1: number, userId2: number): Promise<void> {
+    this.prisma.user.findMany({
+      where: {
+        unreadMessage: {
+          some: {
+            OR: [
+              { senderId: userId1, receiverId: userId2 },
+              { senderId: userId2, receiverId: userId1 },
+            ],
+          }
+        }
+      }
     });
   }
 }

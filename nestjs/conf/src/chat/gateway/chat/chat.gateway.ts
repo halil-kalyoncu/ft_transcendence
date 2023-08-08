@@ -201,15 +201,6 @@ export class ChatGateway
    *** DirectMessages ***
    **********************/
 
-  @SubscribeMessage('directMessages')
-  async getDirectMessages(socket: Socket, userId2: number) {
-    return await this.directMessageService.getConversation(
-      socket.data.user.id,
-      userId2,
-      10,
-    );
-  }
-
   @SubscribeMessage('sendDirectMessage')
   async sendDirectMessage(
     socket: Socket,
@@ -223,8 +214,11 @@ export class ChatGateway
         createDirectMessageDto.receiverId,
       );
 
+    //sender
     socket.emit('newDirectMessage', newMessage);
-    if (!!receiverOnline) {
+    
+    //receiver
+    if (receiverOnline) {
       this.server
         .to(receiverOnline.socketId)
         .emit('newDirectMessage', newMessage);
@@ -435,4 +429,5 @@ export class ChatGateway
     socket.emit('Error', new UnauthorizedException());
     socket.disconnect();
   }
+
 }
