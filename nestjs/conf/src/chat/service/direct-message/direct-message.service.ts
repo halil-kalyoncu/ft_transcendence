@@ -54,4 +54,39 @@ export class DirectMessageService {
       },
     });
   }
+
+  async getAllUnreadMessages(userId: number): Promise<DirectMessage[]> {
+    return this.prisma.directMessage.findMany({
+      where: {
+        receiverId: userId,
+        isRead: false
+      },
+      include: {
+        sender: true,
+        receiver: true,
+        message: true,
+      },
+      orderBy: {
+        message: {
+          createdAt: 'desc',
+        },
+      },
+    });
+  }
+
+  async markConversationAsRead(readerUserId: number, withUserId: number): Promise<DirectMessage[]> {
+    const directMessages = this.prisma.directMessage.updateMany({
+      where: {
+        AND: [
+          { senderId: withUserId },
+          { receiverId: readerUserId }
+        ]
+      },
+      data: {
+        isRead: true,
+      }
+    });
+    return this.getConversation(readerUserId, withUserId);
+  }
+
 }

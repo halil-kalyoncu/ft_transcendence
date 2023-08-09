@@ -1,9 +1,9 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class GetDirectMessagesDto {
+export class UnreadMessagesDto {
   @IsNotEmpty()
-  userId1: number;
+  senderId: number;
 
   @IsNotEmpty()
-  userId2: number;
+  amountUnread: number;
 }

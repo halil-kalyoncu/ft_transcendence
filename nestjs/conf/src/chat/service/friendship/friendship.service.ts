@@ -17,11 +17,7 @@ export class FriendshipService {
       friendship.receiver.connect.id,
     );
 
-    console.log('FriendshipCreateInput');
-    console.log(friendship);
     if (checkFriendship) {
-      console.log('friendship entry');
-      console.log(checkFriendship);
       if (checkFriendship.status === FriendshipStatus.PENDING) {
         throw new Error('Already send a request');
       } else if (checkFriendship.status === FriendshipStatus.ACCEPTED) {
