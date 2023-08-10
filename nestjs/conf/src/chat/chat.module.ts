@@ -9,6 +9,7 @@ import { DirectMessageService } from './service/direct-message/direct-message.se
 import { MessageService } from './service/message/message.service';
 import { ChannelMessageService } from './service/channel-message/channel-message.service';
 import { DirectMessageController } from './controller/direct-message/direct-message.controller';
+import { FriendshipController } from './controller/friendship/friendship.controller';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -21,7 +22,7 @@ import { DirectMessageController } from './controller/direct-message/direct-mess
     MessageService,
     ChannelMessageService,
   ],
-  controllers: [DirectMessageController],
+  controllers: [DirectMessageController, FriendshipController],
   exports: [FriendshipService, ConnectedUserService],
 })
 export class ChatModule {}

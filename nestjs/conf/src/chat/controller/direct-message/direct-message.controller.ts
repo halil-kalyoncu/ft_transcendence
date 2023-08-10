@@ -3,7 +3,10 @@ import { DirectMessageService } from '../../service/direct-message/direct-messag
 import { DirectMessage, User } from '@prisma/client';
 import { DirectConverstationDto } from '../../dto/direct-conversation.dto';
 import { UnreadMessagesDto } from '../../dto/unread-messages.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+
+@ApiTags('Direct message module')
 @Controller('directMessages')
 export class DirectMessageController {
 
@@ -11,9 +14,12 @@ export class DirectMessageController {
         private directMessageService: DirectMessageService,
     ) {}
 
-    @Get()
-    async getDirectMessages(@Body() directConversationDto: DirectConverstationDto): Promise<DirectMessage[]> {
-        return this.directMessageService.getConversation(directConversationDto.readerUserId, directConversationDto.withUserId);
+    @Get("getDirectMessages")
+    async getDirectMessages(
+        @Query('readerUserId', ParseIntPipe) readerUserId: number,
+        @Query('withUserId', ParseIntPipe) withUserId: number): 
+        Promise<DirectMessage[]> {
+        return this.directMessageService.getConversation(readerUserId, withUserId);
     }
 
     // @Get('allUnreadByUserId')

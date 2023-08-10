@@ -95,7 +95,7 @@ export class DirectMessageService {
   }
 
   async markConversationAsRead(readerUserId: number, withUserId: number): Promise<DirectMessage[]> {
-    const directMessages = this.prisma.directMessage.updateMany({
+    const directMessages = await this.prisma.directMessage.updateMany({
       where: {
         AND: [
           { senderId: withUserId },
@@ -106,6 +106,7 @@ export class DirectMessageService {
         isRead: true,
       }
     });
+	console.log(directMessages)
     return this.getConversation(readerUserId, withUserId);
   }
 
