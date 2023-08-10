@@ -30,10 +30,13 @@ import {
   Friendship,
   FriendshipStatus,
   User,
+  Match
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
 import { CreateChannelMessageDto } from '../../dto/create-channel-message.dto';
+import { SendGameInviteDto } from '../../../chat/dto/send-game-invite.dto';
+import { MatchService } from '../../../match/service/match.service';
 
 @WebSocketGateway({
   cors: {
@@ -54,6 +57,7 @@ export class ChatGateway
     private connectedUserService: ConnectedUserService,
     private directMessageService: DirectMessageService,
     private channelMessageService: ChannelMessageService,
+    private matchService: MatchService
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -388,6 +392,79 @@ export class ChatGateway
         socket.to(memberOnline.socketId).emit('newGroupMessage', newMessage);
       }
     }
+  }
+
+  /******************
+  *** GameInvites ***
+  *******************/
+
+  @SubscribeMessage('sendGameInvite')
+  async sendGameInvite(
+    socket: Socket,
+    sendGameInviteDto: SendGameInviteDto
+  ): Promise<void> {
+    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(sendGameInviteDto.invitedUserId);
+  
+    if (!receiverOnline) {
+      socket.emit('Error', 'User is not online');
+      return ;
+    }
+
+    const updatedMatch: Match = await this.matchService.invite(sendGameInviteDto.matchId, sendGameInviteDto.invitedUserId);
+    socket.emit('friendInvited', updatedMatch);
+    socket.to(receiverOnline.socketId).emit('newGameInvite', updatedMatch);
+  }
+
+  @SubscribeMessage('acceptGameInvite')
+  async acceptGameInvite(
+    socket: Socket,
+    matchId: number
+  ): Promise<void> {
+    const match: Match = await this.matchService.findById(matchId);
+    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.leftUserId);
+
+    if (!receiverOnline) {
+      socket.emit('Error', 'Match creator is not online');
+      return ;
+    }
+
+    const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
+    socket.emit('goToGameLobby', updatedMatch);
+    socket.to(receiverOnline.socketId).emit('gameInvitationAccepted', updatedMatch);
+  }
+
+  @SubscribeMessage('rejectGameInvite')
+  async rejectGameInvite(
+    socket: Socket,
+    matchId: number
+  ): Promise<void> {
+    const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
+    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
+    const gameInvitations: Match[] = await this.matchService.getInvites(socket.data.user.id);
+  
+    socket.emit('gameInvites', gameInvitations);
+    if (!receiverOnline) {
+      socket.to(receiverOnline.socketId).emit('gameInvitationRejected', updatedMatch);
+    }
+  }
+
+  //move this somewhere else?
+  @SubscribeMessage('startMatch')
+  async startMatch(
+    socket: Socket,
+    matchId: number
+  ): Promise<void> {
+    const match: Match = await this.matchService.findById(matchId);
+    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.leftUserId);
+
+    if (!receiverOnline) {
+      socket.emit('Error', 'Opponent is not online');
+      return ;
+    }
+
+    const updatedMatch: Match = await this.matchService.startMatch(matchId);
+    socket.emit('playMatch', updatedMatch);
+    socket.to(receiverOnline.socketId).emit('playMatch', updatedMatch);
   }
 
   /**********************

@@ -9,6 +9,7 @@ import { DirectMessageService } from './service/direct-message/direct-message.se
 import { MessageService } from './service/message/message.service';
 import { ChannelMessageService } from './service/channel-message/channel-message.service';
 import { DirectMessageController } from './controller/direct-message/direct-message.controller';
+import { MatchService } from '../match/service/match.service';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -20,6 +21,7 @@ import { DirectMessageController } from './controller/direct-message/direct-mess
     DirectMessageService,
     MessageService,
     ChannelMessageService,
+    MatchService
   ],
   controllers: [DirectMessageController],
   exports: [FriendshipService, ConnectedUserService],

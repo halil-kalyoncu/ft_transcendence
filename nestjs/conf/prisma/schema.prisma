@@ -23,8 +23,10 @@ model User {
   sendDirectMessages     DirectMessage[] @relation("Sender")
   receivedDirectMessages DirectMessage[] @relation("Receiver")
 
-  ownedChannels Channel[]       @relation("OwnedChannels")
   ChannelMember ChannelMember[]
+
+  leftPlayerMatches  Match[] @relation("LeftPlayer")
+  rightPlayerMatches Match[] @relation("RightPlayer")
 }
 
 enum ChatroomStatus {
@@ -62,8 +64,6 @@ model UserChatroom {
   chatroomId  Int
   joinedAt    DateTime   @default(now())
 
-  //sendMessages ChannelMessage[]
-
   user     User     @relation(fields: [userId], references: [id])
   chatroom Chatroom @relation(fields: [chatroomId], references: [id])
 }
@@ -96,11 +96,11 @@ model Friendship {
 }
 
 model DirectMessage {
-  id         Int @id @default(autoincrement())
-  messageId  Int @unique
+  id         Int     @id @default(autoincrement())
+  messageId  Int     @unique
   senderId   Int
   receiverId Int
-  isRead Boolean @default(false)
+  isRead     Boolean @default(false)
 
   message  Message @relation(fields: [messageId], references: [id])
   sender   User    @relation("Sender", fields: [senderId], references: [id])
@@ -121,13 +121,13 @@ model ChannelMessage {
 }
 
 model ChannelMessageReadStatus {
-  id Int @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   messageId Int
-  readerId Int
-  isRead Boolean
+  readerId  Int
+  isRead    Boolean
 
   message ChannelMessage @relation(fields: [messageId], references: [id])
-  reader ChannelMember @relation(fields: [readerId], references: [id])
+  reader  ChannelMember  @relation(fields: [readerId], references: [id])
 }
 
 model Message {
@@ -139,34 +139,111 @@ model Message {
   channelMessage ChannelMessage?
 }
 
-model Channel {
-  id         Int               @id @default(autoincrement())
-  name       String            @unique
-  password   String?           @default("")
-  ownerId    Int
-  owner      User              @relation("OwnedChannels", fields: [ownerId], references: [id])
-  members    ChannelMember[]
-  visibility ChannelVisibility @default(PUBLIC)
+enum ChannelVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model ChannelNew {
+  id           Int               @id @default(autoincrement())
+  name         String            @unique
+  visibility   ChannelVisibility @default(PUBLIC)
+  protected    Boolean
+  passwordHash String?
+
+  members ChannelMember[]
+}
+
+enum ChannelMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ChannelMemberStatus {
+  NORMAL
+  BANNED
+  MUTED
 }
 
 model ChannelMember {
-  id        Int       @id @default(autoincrement())
-  userId    Int
-  channelId Int
-  role      UserRole
-  banned    Boolean   @default(false)
-  unmuteAt  DateTime?
-  user      User      @relation(fields: [userId], references: [id])
-  channel   Channel   @relation(fields: [channelId], references: [id])
+  id          Int                 @id @default(autoincrement())
+  userId      Int
+  channelId   Int
+  role        ChannelMemberRole
+  roleSince   DateTime
+  status      ChannelMemberStatus
+  statusSince DateTime
+  unmuteAt    DateTime?
+  user        User                @relation(fields: [userId], references: [id])
+  channel     ChannelNew          @relation(fields: [channelId], references: [id])
 
   sendMessages ChannelMessage[]
-  readStatus ChannelMessageReadStatus[]
+  readStatus   ChannelMessageReadStatus[]
 
   @@unique([userId, channelId])
 }
 
-enum ChannelVisibility {
-  PUBLIC
-  PROTECTED
-  PRIVATE
+enum MatchType {
+  LADDER
+  CUSTOM
 }
+
+enum MatchState {
+  CREATED
+  INVITED
+  ACCEPTED
+  STARTED
+  DISCONNECTLEFT
+  DISCONNECTRIGHT
+  WINNERLEFT
+  WINNERRIGHT
+}
+
+model Match {
+  id               Int        @id @default(autoincrement())
+  leftUserId       Int
+  rightUserId      Int?
+  type             MatchType
+  state            MatchState @default(CREATED)
+  goalsLeftPlayer  Int        @default(0)
+  goalsRightPlayer Int        @default(0)
+  createdAt        DateTime   @default(now())
+  startedAt        DateTime?
+  finishedAt       DateTime?
+
+  leftUser  User  @relation("LeftPlayer", fields: [leftUserId], references: [id])
+  rightUser User? @relation("RightPlayer", fields: [rightUserId], references: [id])
+}
+
+// model Channel {
+//   id         Int               @id @default(autoincrement())
+//   name       String            @unique
+//   password   String?           @default("")
+//   ownerId    Int
+//   owner      User              @relation("OwnedChannels", fields: [ownerId], references: [id])
+//   members    ChannelMember[]
+//   visibility ChannelVisibility @default(PUBLIC)
+// }
+
+// model ChannelMember {
+//   id        Int       @id @default(autoincrement())
+//   userId    Int
+//   channelId Int
+//   role      UserRole
+//   banned    Boolean   @default(false)
+//   unmuteAt  DateTime?
+//   user      User      @relation(fields: [userId], references: [id])
+//   channel   Channel   @relation(fields: [channelId], references: [id])
+
+//   sendMessages ChannelMessage[]
+//   readStatus ChannelMessageReadStatus[]
+
+//   @@unique([userId, channelId])
+// }
+
+// enum ChannelVisibility {
+//   PUBLIC
+//   PROTECTED
+//   PRIVATE
+// }
