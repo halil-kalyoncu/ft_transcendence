@@ -115,7 +115,19 @@ model ChannelMessage {
   message Message       @relation(fields: [messageId], references: [id])
   sender  ChannelMember @relation(fields: [senderId], references: [id])
 
+  channelMessageReadStatus ChannelMessageReadStatus[]
+
   @@unique([messageId, senderId])
+}
+
+model ChannelMessageReadStatus {
+  id Int @id @default(autoincrement())
+  messageId Int
+  readerId Int
+  isRead Boolean
+
+  message ChannelMessage @relation(fields: [messageId], references: [id])
+  reader ChannelMember @relation(fields: [readerId], references: [id])
 }
 
 model Message {
@@ -148,6 +160,7 @@ model ChannelMember {
   channel   Channel   @relation(fields: [channelId], references: [id])
 
   sendMessages ChannelMessage[]
+  readStatus ChannelMessageReadStatus[]
 
   @@unique([userId, channelId])
 }

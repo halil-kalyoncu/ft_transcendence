@@ -55,6 +55,26 @@ export class DirectMessageService {
     });
   }
 
+  async getUnreadMessages(readerUserId: number, withUserId: number): Promise<DirectMessage[]> {
+    return this.prisma.directMessage.findMany({
+      where: {
+        receiverId: readerUserId,
+        senderId: withUserId,
+        isRead: false
+      },
+      include: {
+        sender: true,
+        receiver: true,
+        message: true
+      },
+      orderBy: {
+        message: {
+          createdAt: 'desc'
+        }
+      }
+    });
+  }
+
   async getAllUnreadMessages(userId: number): Promise<DirectMessage[]> {
     return this.prisma.directMessage.findMany({
       where: {
