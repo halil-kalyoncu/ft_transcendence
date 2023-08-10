@@ -235,7 +235,7 @@ export class ChatGateway
     @MessageBody() createChannelDto: CreateChannelDto,
   ): Promise<void> {
     try {
-      const newChannel = await this.channelService.createChannel(
+      const newChannel = await this.channelService.createProtectedChannel(
         createChannelDto,
       );
       socket.emit('channelCreated', true);

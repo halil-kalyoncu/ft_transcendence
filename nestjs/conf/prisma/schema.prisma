@@ -23,7 +23,6 @@ model User {
   sendDirectMessages     DirectMessage[] @relation("Sender")
   receivedDirectMessages DirectMessage[] @relation("Receiver")
 
-  ownedChannels Channel[]       @relation("OwnedChannels")
   ChannelMember ChannelMember[]
 }
 
@@ -46,7 +45,7 @@ enum UserStatus {
   MUTED
 }
 
-enum UserRole {
+enum ChannelMemberRole {
   OWNER
   ADMIN
   MEMBER
@@ -61,8 +60,6 @@ model UserChatroom {
   userId      Int
   chatroomId  Int
   joinedAt    DateTime   @default(now())
-
-  //sendMessages ChannelMessage[]
 
   user     User     @relation(fields: [userId], references: [id])
   chatroom Chatroom @relation(fields: [chatroomId], references: [id])
@@ -140,20 +137,20 @@ model Message {
 }
 
 model Channel {
-  id         Int               @id @default(autoincrement())
-  name       String            @unique
-  password   String?           @default("")
-  ownerId    Int
-  owner      User              @relation("OwnedChannels", fields: [ownerId], references: [id])
+  id            Int               @id @default(autoincrement())
+  name          String            @unique
+  visibility    ChannelVisibility @default(PUBLIC)
+  protected     Boolean           @default(false)
+  passwordHash  String?
+
   members    ChannelMember[]
-  visibility ChannelVisibility @default(PUBLIC)
 }
 
 model ChannelMember {
   id        Int       @id @default(autoincrement())
   userId    Int
   channelId Int
-  role      UserRole
+  role      ChannelMemberRole
   banned    Boolean   @default(false)
   unmuteAt  DateTime?
   user      User      @relation(fields: [userId], references: [id])
@@ -170,3 +167,6 @@ enum ChannelVisibility {
   PROTECTED
   PRIVATE
 }
+
+
+// CHANNEL MODELS

@@ -6,7 +6,7 @@ import {
   ChannelVisibility,
   Prisma,
   User,
-  UserRole,
+  ChannelMemberRole,
 } from '@prisma/client';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import * as bcrypt from 'bcryptjs';
@@ -26,7 +26,7 @@ export class ChannelService {
     private connectedUserService: ConnectedUserService,
   ) {}
 
-  async createChannel({
+  async createProtectedChannel({
     userId,
     name,
     password,
@@ -44,12 +44,49 @@ export class ChannelService {
     if (existingChannel) {
       throw new Error('Channel name already exists');
     }
+	const hashedPassword = await bcrypt.hash(password, 10);
+    const channel = await this.prisma.channel.create({
+		data: {
+		  name: name,
+		  protected: true,
+		  passwordHash: hashedPassword,
+		  visibility: channelVisibility,
+		  members: {
+			create: [
+			  {
+				userId: userId,
+				role: ChannelMemberRole.OWNER,
+			  },
+			],
+		  },
+		},
+		include: {
+		  members: true, // This ensures that the created channel includes its members
+		},
+	  });
+    return channel;
+  }
 
+  async createUnProtectedChannel({
+    userId,
+    name,
+    channelVisibility,
+  }: {
+    userId: number;
+    name: string;
+    password?: string;
+    channelVisibility: ChannelVisibility;
+  }): Promise<Channel> {
+    const existingChannel = await this.prisma.channel.findFirst({
+      where: { name: name },
+    });
+
+    if (existingChannel) {
+      throw new Error('Channel name already exists');
+    }
     const channel = await this.prisma.channel.create({
       data: {
         name: name,
-        password: password,
-        ownerId: userId,
         visibility: channelVisibility,
       },
     });
@@ -58,12 +95,12 @@ export class ChannelService {
       data: {
         userId: userId,
         channelId: channel.id,
-        role: UserRole.OWNER,
+        role: ChannelMemberRole.OWNER,
       },
     });
-
     return channel;
   }
+
 
   async setPassword(setPasswordDto: SetPasswordDto): Promise<Channel> {
     const channel = await this.find(setPasswordDto.channelId);
@@ -77,7 +114,7 @@ export class ChannelService {
     return this.prisma.channel.update({
       where: { id: setPasswordDto.channelId },
       data: {
-        password: hashedPassword,
+        passwordHash: hashedPassword,
       },
     });
   }
@@ -92,7 +129,7 @@ export class ChannelService {
     return this.prisma.channel.update({
       where: { id: deletePasswordDto.channelId },
       data: {
-        password: null,
+        passwordHash: null,
       },
     });
   }
