@@ -14,6 +14,8 @@ export class DirectMessageController {
         private directMessageService: DirectMessageService,
     ) {}
 
+	//Get all the directMessages between two users with the messages and the participants (receiver and sender) from the message table
+	// Needs the readerUserId and the withUserId as a URL from the frontend, may be changed in the future
     @Get("getDirectMessages")
     async getDirectMessages(
         @Query('readerUserId', ParseIntPipe) readerUserId: number,
@@ -27,6 +29,7 @@ export class DirectMessageController {
     //     return this.directMessageService.getAllUnreadMessages(userId);
     // }
 
+	//Get all the unread messages from the db based on the userId given as a URL from the frontend
     @Get('allUnreadByUserId')
     async getAllUnreadDirectMessages(@Query('userId', ParseIntPipe) userId: number): Promise<UnreadMessagesDto[]> {
         const unreadMessages = await this.directMessageService.getAllUnreadMessages(userId);
