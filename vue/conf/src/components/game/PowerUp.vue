@@ -1,6 +1,6 @@
 <template>
 	<div class="powerup"
-    :style="{ top: `${y}px`, left: `${x}px`, background: `red` }"
+    :style="{ top: `${y}px`, left: `${x}px`, background: `${color}` }"
 	>
 </div>
 </template>
@@ -21,12 +21,17 @@ export default {
 			type: Number,
 			required: true,
 		},
-		type: {
+		color: {
 			type: String,
+			required: true,
+			default: "white",
+		},
+		type: {
+			type: Number,
 			required: true,
 		},
 	},
-	
+
 	methods: {
 		setX(x) {
 			this.x = x;
@@ -34,7 +39,7 @@ export default {
 		
 		setY(y) {
 			this.y = y;
-		},
+		}
 	}
 }
 </script>

@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router'
 <template>
   <div class="home">
     <RouterLink class="navButton" to="/game">PLAY</RouterLink>
+	<RouterLink class="navButton" to="/invite">INVITE</RouterLink>
   </div>
 </template>
 

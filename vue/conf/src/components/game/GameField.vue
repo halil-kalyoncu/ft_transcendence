@@ -22,6 +22,7 @@
 			:x="powerup.x"
 			:y="powerup.y"
 			:type="powerup.type"
+			:color="powerup.color"
 			/>
 		</div>
 		<!-- <div class="ball-coordinates" v-if="ballCoordinates">
@@ -232,12 +233,21 @@ export default {
 				id: this.PowerUps.length + 1,
 				x: Math.floor(Math.random() * this.fieldWidth),
 				y: -30,
-				type: "blub",
+				type: Math.floor(Math.random() * 4),
+				color: "white",
 				wid: 30,
 				hgt: 30
 			};
+			if (newPowerUp.type == "0")
+				newPowerUp.color = "red";
+			else if (newPowerUp.type == "1")
+				newPowerUp.color = "green";
+			else if (newPowerUp.type == "2")
+				newPowerUp.color = "blue";
+			else if (newPowerUp.type == "3")
+				newPowerUp.color = "white";
 			this.socket.emit('spawnPowerUp', newPowerUp);
-			console.log("PU spawn local");
+			console.log("PU spawn local color:", newPowerUp.type);
 		}
 	},
 	

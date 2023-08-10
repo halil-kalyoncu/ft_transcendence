@@ -136,14 +136,15 @@ let ballPos = {x: 0, y: 0};
 			x: number,
 			y: number,
 			speed: number,
-			type: string
-			wid: number;
-			hgt: number;
+			type: number,
+			wid: number,
+			hgt: number,
+			color: string;
 		}): void {
-			data.speed = 3;
 			const room = this.rooms.get("test");
 			data.speed = 3;
-			const newPowerUp = new PowerUp(data.id, data.x, data.y, data.speed, data.type, data.wid, data.hgt);
+			// data.color = "blue";
+			const newPowerUp = new PowerUp(data.id, data.x, data.y, data.speed, data.type, data.wid, data.hgt, data.color);
 			room.powerups.push(newPowerUp);
 			this.server.emit('newPowerUp', data);
 			// console.log("powerup spawned at x: ", data.x)

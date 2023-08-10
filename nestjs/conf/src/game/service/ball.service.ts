@@ -105,13 +105,16 @@ export class Ball {
 				this.y = nextBallY;
 			}
 			for (let powerup of room.powerups){
-				powerup.moveDown();
-				if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)){
+				if (powerup.y > this.fieldHeight)
+					server.emit('destroyPowerUp', {id: powerup.id});
+				else if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)){
 					// console.log("powerupid: ", powerup.id)
 					server.emit('destroyPowerUp', {id: powerup.id});
 				}
-				else
+				else {
+					powerup.moveDown();
 					server.emit('powerUpMove', {id: powerup.id, y: powerup.y});
+				}
 			}
 			return {
 				x: this.x,
