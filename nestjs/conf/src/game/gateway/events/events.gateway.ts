@@ -166,15 +166,10 @@ let ballPos = {x: 0, y: 0};
 		}
 		@SubscribeMessage('removePowerUp')
 		removePowerUp(client: any, id: number){
-			// let powerUp = null;
 			const room = this.rooms.get("test");
-			// powerUp = room.powerups.find(powerup => powerup.id === id);
-			// if (powerUp) {
-			// 	room.powerups.delete(powerUp);
-			// }
-			let index = room.powerups.findIndex(powerup => powerup.id === id);
+			let index = room.powerups.findIndex(powerup => powerup.id == id);
 			console.log("index: ", index)
-			if (index !== -1) {
+			if (index != -1) {
 				room.powerups.splice(index, 1);
 			}
 		}

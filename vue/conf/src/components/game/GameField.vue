@@ -23,6 +23,7 @@
 			:y="powerup.y"
 			:type="powerup.type"
 			:color="powerup.color"
+			:index="powerup.index"
 			/>
 		</div>
 		<!-- <div class="ball-coordinates" v-if="ballCoordinates">
@@ -112,12 +113,12 @@ export default {
 				if (playerId == 'left')
 				{
 					this.$refs.paddleA.setY(newPos);
-					console.log(playerId, ": ", newPos);
+					// console.log(playerId, ": ", newPos);
 				}
 				else
 				{	
 					this.$refs.paddleB.setY(newPos);
-					console.log(playerId, ": ", newPos);
+					// console.log(playerId, ": ", newPos);
 				}
 			});
 			
@@ -154,17 +155,11 @@ export default {
 			});
 
 			this.socket.on("destroyPowerUp", ({ id }) => {
-				// let powerUp = null;
-
-				// powerUp = this.PowerUps.find(powerup => powerup.id === id);
-                // if (powerUp) {
-                //     this.powerups.delete(powerUp);
-				// }
-				let index = this.PowerUps.findIndex(powerup => powerup.id === id);
+				let index = this.PowerUps.findIndex(powerup => powerup.id == id);
 				if (index != -1) {
 					this.PowerUps.splice(index, 1);
 					this.socket.emit('removePowerUp', id);
-					console.log("PU removed");
+					// console.log("PU removed");
 				}
 			});
 		},
@@ -230,7 +225,7 @@ export default {
 
 		spawnPowerUp() {
 			const newPowerUp = {
-				id: this.PowerUps.length + 1,
+				id: Math.floor(Date.now()),
 				x: Math.floor(Math.random() * this.fieldWidth),
 				y: -30,
 				type: Math.floor(Math.random() * 4),
@@ -238,16 +233,24 @@ export default {
 				wid: 30,
 				hgt: 30
 			};
-			if (newPowerUp.type == "0")
+			if (newPowerUp.type == 0){
 				newPowerUp.color = "red";
-			else if (newPowerUp.type == "1")
+				newPowerUp.index = 0;
+			}
+			else if (newPowerUp.type == 1){
 				newPowerUp.color = "green";
-			else if (newPowerUp.type == "2")
+				newPowerUp.index = 3;
+			}
+			else if (newPowerUp.type == 2){
 				newPowerUp.color = "blue";
-			else if (newPowerUp.type == "3")
+				newPowerUp.index = 2;
+			}
+			else if (newPowerUp.type == 3){
 				newPowerUp.color = "white";
+				newPowerUp.index = 1;
+			}
 			this.socket.emit('spawnPowerUp', newPowerUp);
-			console.log("PU spawn local color:", newPowerUp.type);
+			console.log("PU spawn local");
 		}
 	},
 	
