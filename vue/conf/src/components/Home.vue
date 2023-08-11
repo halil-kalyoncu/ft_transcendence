@@ -35,7 +35,7 @@ const handleInviteClick = async () => {
       const responseData = await response.json()
       console.log('Response of create match')
       console.log(responseData)
-      const matchId: string = (responseData.id as string)
+      const matchId = String(responseData.data.id);
       console.log(matchId)
 
       router.push(`/invite/${matchId}`)
