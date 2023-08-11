@@ -17,6 +17,7 @@ import {
   ChannelMembershipDto,
   AdminActionDto,
 } from '../../dto/channel.dto';
+import { ChannelMemberService } from '../channel-member/channel-member.service'
 
 @Injectable()
 export class ChannelService {
@@ -24,6 +25,7 @@ export class ChannelService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => ConnectedUserService))
     private connectedUserService: ConnectedUserService,
+    private channelMemberService: ChannelMemberService
   ) {}
 
   async createProtectedChannel({
@@ -104,8 +106,9 @@ export class ChannelService {
 
   async setPassword(setPasswordDto: SetPasswordDto): Promise<Channel> {
     const channel = await this.find(setPasswordDto.channelId);
+    const channelOwner = await this.channelMemberService.findOwner(channel.id);
 
-    if (!channel || channel.ownerId !== setPasswordDto.userId) {
+    if (!channel || channelOwner.userId !== setPasswordDto.userId) {
       throw new Error('Only the owner of the channel can set the password.');
     }
 
@@ -121,8 +124,9 @@ export class ChannelService {
 
   async deletePassword(deletePasswordDto: DeletePasswordDto): Promise<Channel> {
     const channel = await this.find(deletePasswordDto.channelId);
+    const channelOwner = await this.channelMemberService.findOwner(channel.id);
 
-    if (!channel || channel.ownerId !== deletePasswordDto.userId) {
+    if (!channel || channelOwner.userId !== deletePasswordDto.userId) {
       throw new Error('Only the owner of the channel can delete the password.');
     }
 
@@ -150,7 +154,7 @@ export class ChannelService {
       data: {
         userId: channelMembershipDto.userId,
         channelId: channelMembershipDto.channelId,
-        role: UserRole.MEMBER,
+        role: ChannelMemberRole.MEMBER,
       },
     });
   }
@@ -179,8 +183,9 @@ export class ChannelService {
 
   async makeAdmin(adminActionDto: AdminActionDto): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
+    const channelOwner = await this.channelMemberService.findOwner(channel.id);
 
-    if (!channel || channel.ownerId !== adminActionDto.requesterId) {
+    if (!channel || channelOwner.userId !== adminActionDto.requesterId) {
       throw new Error(
         'Only the owner of the channel can make a user an admin.',
       );
@@ -203,7 +208,7 @@ export class ChannelService {
         },
       },
       data: {
-        role: UserRole.ADMIN,
+        role: ChannelMemberRole.ADMIN,
       },
     });
   }
@@ -212,7 +217,7 @@ export class ChannelService {
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
-
+    const channelOwner = await this.channelMemberService.findOwner(channel.id);
     const requesterMembership = await this.findMember(
       adminActionDto.requesterId,
       adminActionDto.channelId,
@@ -220,9 +225,9 @@ export class ChannelService {
 
     if (
       !channel ||
-      (channel.ownerId !== adminActionDto.requesterId &&
-        requesterMembership?.role !== UserRole.ADMIN) ||
-      requesterMembership?.role !== UserRole.OWNER
+      (channelOwner.userId !== adminActionDto.requesterId &&
+        requesterMembership?.role !== ChannelMemberRole.ADMIN) ||
+      requesterMembership?.role !== ChannelMemberRole.OWNER
     ) {
       throw new Error(
         'Only the owner or an admin can kick a user from the channel.',
@@ -252,6 +257,7 @@ export class ChannelService {
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
+    const channelOwner = await this.channelMemberService.findOwner(channel.id);
     const requesterMembership = await this.findMember(
       adminActionDto.requesterId,
       adminActionDto.channelId,
@@ -259,8 +265,8 @@ export class ChannelService {
 
     if (
       !channel ||
-      (channel.ownerId !== adminActionDto.requesterId &&
-        requesterMembership?.role !== UserRole.ADMIN)
+      (channelOwner.userId !== adminActionDto.requesterId &&
+        requesterMembership?.role !== ChannelMemberRole.ADMIN)
     ) {
       throw new Error(
         'Only the owner or an admin can ban a user from the channel.',
@@ -293,6 +299,7 @@ export class ChannelService {
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
+    const channelOwner = await this.channelMemberService.findOwner(channel.id);
     const requesterMembership = await this.findMember(
       adminActionDto.requesterId,
       adminActionDto.channelId,
@@ -300,8 +307,8 @@ export class ChannelService {
 
     if (
       !channel ||
-      (channel.ownerId !== adminActionDto.requesterId &&
-        requesterMembership?.role !== UserRole.ADMIN)
+      (channelOwner.userId !== adminActionDto.requesterId &&
+        requesterMembership?.role !== ChannelMemberRole.ADMIN)
     ) {
       throw new Error(
         'Only the owner or an admin can mute a user in the channel.',
@@ -335,8 +342,7 @@ export class ChannelService {
 
   async find(channelId: number): Promise<Channel> {
     return await this.prisma.channel.findUnique({
-      where: { id: channelId },
-      include: { owner: true },
+      where: { id: channelId }
     });
   }
 
