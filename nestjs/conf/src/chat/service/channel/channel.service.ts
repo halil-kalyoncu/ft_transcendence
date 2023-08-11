@@ -7,6 +7,7 @@ import {
   Prisma,
   User,
   ChannelMemberRole,
+  ChannelMemberStatus,
 } from '@prisma/client';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import * as bcrypt from 'bcryptjs';
@@ -266,7 +267,7 @@ export class ChannelService {
     if (
       !channel ||
       (channelOwner.userId !== adminActionDto.requesterId &&
-        requesterMembership?.role !== ChannelMemberRole.ADMIN)
+        requesterMembership?.role === ChannelMemberRole.MEMBER)
     ) {
       throw new Error(
         'Only the owner or an admin can ban a user from the channel.',
@@ -290,7 +291,8 @@ export class ChannelService {
         },
       },
       data: {
-        banned: true,
+        status: ChannelMemberStatus.BANNED,
+		statusSince: new Date(),
       },
     });
   }
@@ -308,7 +310,8 @@ export class ChannelService {
     if (
       !channel ||
       (channelOwner.userId !== adminActionDto.requesterId &&
-        requesterMembership?.role !== ChannelMemberRole.ADMIN)
+        requesterMembership?.role !
+		=== ChannelMemberRole.MEMBER)
     ) {
       throw new Error(
         'Only the owner or an admin can mute a user in the channel.',
