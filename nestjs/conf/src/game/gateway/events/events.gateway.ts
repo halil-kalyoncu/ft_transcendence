@@ -2,6 +2,7 @@ import { SubscribeMessage, WebSocketGateway, OnGatewayInit, OnGatewayConnection,
 import { Server } from 'socket.io';
 import { GameService } from '../../service/game.service';
 import { Room } from '../../service/room.service';
+import { PowerUp } from 'src/game/service/powerup.service';
 
 let ballPos = {x: 0, y: 0};
 
@@ -32,9 +33,11 @@ let ballPos = {x: 0, y: 0};
 			setInterval(() => {
 				if (this.gameIsRunning) {
 					let room = this.rooms.get("test");
-					let newBallPos = room.ball.moveBall(room.paddleA.x, room.paddleA.y,
-					room.paddleB.x, room.paddleB.y,
-					room.paddleA.wid, room.paddleA.hgt);
+					let newBallPos = room.ball.moveBall(room, this.server);
+					// for (let powerup of room.powerups){
+					// 	powerup.moveDown();
+					// 	this.server.emit('powerUpMove', {id: powerup.id, y: powerup.y});
+					// }
 					this.server.emit('ballPosition', newBallPos);
 				}
 			}, 15);
@@ -125,5 +128,54 @@ let ballPos = {x: 0, y: 0};
 		sendStartMessage(client: any): void {
 			client.broadcast.emit('startGame');
 			console.log("start");
+		}
+
+		@SubscribeMessage('spawnPowerUp')
+		createPowerUp(client: any, data: { 
+			id: number,
+			x: number,
+			y: number,
+			speed: number,
+			type: number,
+			wid: number,
+			hgt: number,
+			color: string;
+		}): void {
+			const room = this.rooms.get("test");
+			data.speed = 3;
+			// data.color = "blue";
+			const newPowerUp = new PowerUp(data.id, data.x, data.y, data.speed, data.type, data.wid, data.hgt, data.color);
+			room.powerups.push(newPowerUp);
+			this.server.emit('newPowerUp', data);
+			// console.log("powerup spawned at x: ", data.x)
+		}
+
+		@SubscribeMessage('activatePowerUp')
+		activatePowerUp(client: any, data: {
+			type: string,
+			player: string
+		}): void {
+			if (data.type == "increasePaddle")
+			{
+				const room = this.rooms.get("test");
+				room.paddleA.setHeight(400);
+				this.server.emit('newPaddleHeight', { player: "left", hgt: 400 });
+				console.log("increase Pad");
+			}
+			// console.log(data.type, data.player);
+		}
+		@SubscribeMessage('removePowerUp')
+		removePowerUp(client: any, id: number){
+			// let powerUp = null;
+			const room = this.rooms.get("test");
+			// powerUp = room.powerups.find(powerup => powerup.id === id);
+			// if (powerUp) {
+			// 	room.powerups.delete(powerUp);
+			// }
+			let index = room.powerups.findIndex(powerup => powerup.id === id);
+			console.log("index: ", index)
+			if (index !== -1) {
+				room.powerups.splice(index, 1);
+			}
 		}
 	}
