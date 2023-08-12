@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { connectWebSocket } from '../../websocket'
 import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
 import type { UserI } from '../../model/user.interface'
@@ -7,6 +7,7 @@ import type { directMessageI } from '../../model/directMessage.interface'
 import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+import { useUserStore } from '../../stores/userInfo'
 
 const props = defineProps({
   selectedFriendEntry: {
@@ -14,6 +15,9 @@ const props = defineProps({
     required: true
   }
 })
+
+const userStore = useUserStore()
+const userId = computed(() => userStore.userId)
 const selectedUser: UserI | null = props.selectedFriendEntry?.friend ?? null
 const messages = ref<directMessageI[]>([])
 const newMessage = ref('')
@@ -27,27 +31,43 @@ const loggedUser: { id: number; username: string } = decodedToken.user as {
   username: string
 }
 
-watch(
-  () => props.selectedFriendEntry,
-  (friendEntry) => {
-    //remove
-    if (!friendEntry) {
-      return
+const setDirectMessages = async () => {
+  if (!props.selectedFriendEntry || !props.selectedFriendEntry.friend) {
+    return
+  }
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
     }
-    socket.emit('directMessages', friendEntry.friend.id, (responseData: directMessageI[]) => {
-      messages.value = responseData
-      loading.value = false
-    })
-  },
-  { immediate: true }
-)
+    const data = await response.json()
+    if (Array.isArray(data)) {
+      messages.value = data
+    } else {
+      console.error('Expected an array from the API but received:', data)
+    }
+  } catch (error: any) {
+    console.error('Expected an array from the API but received:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(setDirectMessages)
+
 socket.on('newDirectMessage', (newMessageData: directMessageI) => {
   messages.value.unshift(newMessageData)
 })
+
 const sendMessage = () => {
   if (newMessage.value.trim() === '' || !selectedUser) {
     return
   }
+
+  console.log(loggedUser.id + ' ' + selectedUser.id + ' ' + newMessage.value)
 
   socket.emit('sendDirectMessage', {
     senderId: loggedUser.id,

@@ -14,7 +14,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
-
+import { Socket } from 'socket.io-client';
 import jwtDecode from 'jwt-decode'
 library.add(faArrowLeft)
 
@@ -22,6 +22,8 @@ const notificationStore = useNotificationStore()
 
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
+
+const socket = ref<Socket | null>(null)
 
 const friends = ref<FriendshipEntryI[]>([])
 const friendRequests = ref<FriendshipEntryI[]>([])
@@ -32,6 +34,11 @@ const showFriendManagerAndChat = ref(false)
 const selectedFriend = ref<FriendshipEntryI | null>(null)
 
 const showChat = ref(false)
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
 
 const setFriendData = async () => {
   try {
@@ -68,6 +75,7 @@ const setFriendRequestData = async () => {
 }
 
 onMounted(() => {
+  initSocket()
   setFriendData()
   setFriendRequestData()
 })
@@ -112,24 +120,29 @@ const handleSubmit = computed(() => {
 
 const handleAdd = ({ username }: ModalResult) => {
   isModalOpened.value = false
-
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return;
+  }
   if (username.trim() === '') {
     notificationStore.showNotification('Error: friend name cannot be empty', false)
     return
   }
 
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
-  socket.emit('sendFriendRequest', username, (response: FriendshipEntryI | { error: string }) => {
-    if ('error' in response) {
-      notificationStore.showNotification(response.error, false)
-    } else {
-      notificationStore.showNotification(
-        'Friend Request was sent to ' + response.friend.username,
-        true
-      )
+  socket.value.emit(
+    'sendFriendRequest',
+    username,
+    (response: FriendshipEntryI | { error: string }) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error, false)
+      } else {
+        notificationStore.showNotification(
+          'Friend Request was sent to ' + response.friend.username,
+          true
+        )
+      }
     }
-  })
+  )
 }
 
 const handleBlock = ({ username }: ModalResult) => {
@@ -165,9 +178,13 @@ const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
 }
 
 const acceptFriendRequest = (requestId: number) => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
-  socket.emit('acceptFriendRequest', requestId)
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return;
+
+  }
+
+  socket.value.emit('acceptFriendRequest', requestId)
   setTimeout(() => {
     setFriendData()
     setFriendRequestData()
@@ -176,9 +193,12 @@ const acceptFriendRequest = (requestId: number) => {
 }
 
 const rejectFriendRequest = (requestId: number) => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
-  socket.emit('rejectFriendRequest', requestId)
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return;
+
+  }
+  socket.value.emit('rejectFriendRequest', requestId)
   setTimeout(() => {
     setFriendRequestData()
     notificationStore.showNotification(`You have rejected friend request`, true)
@@ -186,11 +206,14 @@ const rejectFriendRequest = (requestId: number) => {
 }
 
 const handleUnfriendUser = (username: String, id: Number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return;
+
+  }
   if (username !== '') {
-    const accessToken = localStorage.getItem('ponggame') ?? ''
-    const socket = connectWebSocket('http://localhost:3000', accessToken)
     console.log('removeFriend id:' + id + ', username: ' + username)
-    socket
+    socket.value
       .emit('removeFriend', id, (response: any) => {
         console.log('removeFriend response', response)
         if (response && 'success' in response) {
@@ -214,7 +237,7 @@ const handleUnfriendUser = (username: String, id: Number) => {
           )
         }
       })
-      .on('error', (error) => {
+      .on('error', (error: any) => {
         // Handle case when socket.emit fails
         console.error('Socket emit error', error)
         notificationStore.showNotification(
