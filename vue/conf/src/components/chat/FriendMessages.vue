@@ -75,7 +75,7 @@ const isOwnMessage = (senderId: number | undefined) => {
           :isOwnMessage="isOwnMessage(message.sender.id)"
         />
       </div>
-      <div v-else>Loading messages...</div>
+      <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
     <div class="chat-input">
       <input type="text" v-model="newMessage" placeholder="Type your message here..." />
@@ -134,5 +134,10 @@ const isOwnMessage = (senderId: number | undefined) => {
 }
 .chat .chat-input button:hover {
   background-color: #ed901c;
+}
+
+.chat .loading-text {
+  font-size: 0.8rem;
+  padding-left: 0.75rem;
 }
 </style>

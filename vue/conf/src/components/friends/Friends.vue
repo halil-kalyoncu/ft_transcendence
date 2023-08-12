@@ -13,28 +13,25 @@ import FriendManager from './FriendManager.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { useUserStore } from '../../stores/userInfo'
+
 import jwtDecode from 'jwt-decode'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
 
+const userStore = useUserStore()
+const userId = computed(() => userStore.userId)
+
 const friends = ref<FriendshipEntryI[]>([])
 const friendRequests = ref<FriendshipEntryI[]>([])
 
-const userId = ref(0)
 const modalTitle = ref('')
 const showFriendManagerAndChat = ref(false)
 
 const selectedFriend = ref<FriendshipEntryI | null>(null)
 
 const showChat = ref(false)
-
-const initUserId = () => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-  const loggedUser: UserI = decodedToken.user as UserI
-  userId.value = loggedUser.id as number
-}
 
 const setFriendData = async () => {
   try {
@@ -48,8 +45,8 @@ const setFriendData = async () => {
 
     const data = await response.json()
     friends.value = data
-  } catch (error) {
-    console.error('There was a problem with the fetch operation:', error.message)
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
   }
 }
 
@@ -65,20 +62,14 @@ const setFriendRequestData = async () => {
 
     const data = await response.json()
     friendRequests.value = data
-  } catch (error) {
-    console.error('There was a problem with the fetch operation:', error.message)
+  } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, true)
   }
 }
 
 onMounted(() => {
-  try {
-    initUserId()
-    setFriendData()
-    setFriendRequestData()
-  } catch (error) {
-    console.error('There was a problem with the axios request:', error)
-  }
+  setFriendData()
+  setFriendRequestData()
 })
 
 onBeforeUnmount(() => {
@@ -296,7 +287,6 @@ const goBack = () => {
       <div v-if="showChat" class="chat-container">
         <div class="chat-component">
           <button class="close-button" @click="showChat = false">X</button>
-          <!-- <Chat :selectedFriendEntry="selectedFriend" /> -->
         </div>
       </div>
     </template>

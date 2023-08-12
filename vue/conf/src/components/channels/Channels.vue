@@ -41,7 +41,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
-import { useUserStore } from '../../stores/username'
+import { useUserStore } from '../../stores/userInfo'
 import { connectWebSocket, disconnectWebSocket } from '../../websocket'
 import { ChannelVisibility } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
