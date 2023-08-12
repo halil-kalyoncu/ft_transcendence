@@ -7,7 +7,7 @@ import { createPinia } from 'pinia'
 
 //('.navButton')[0] is Friends Button
 //('.navButton')[1] is Channels Button
-
+//commit test
 describe('SideBar', () => {
   test('toggles Friends and Channels visibility correctly', async () => {
     const wrapper = mount(SideBar, {
