@@ -97,7 +97,7 @@ const handleClose = () => {
 const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResult) => {
   isModalOpened.value = false
   if (visibility === undefined) {
-    visibility = ChannelVisibility.PUBLIC;
+    visibility = ChannelVisibility.PUBLIC
   }
   if (
     !Object.values(ChannelVisibility).includes(visibility.toUpperCase() as ChannelVisibilityType)
@@ -106,14 +106,12 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
     return
   }
 
-
-
   const createChannelDto: CreateChannelDto = {
     userId: 1,
     name: name || '',
     password: password || '',
     channelVisibility: visibility.toUpperCase() as ChannelVisibilityType
-                         }
+  }
 
   if (socket) {
     socket.emit('createChannel', createChannelDto)

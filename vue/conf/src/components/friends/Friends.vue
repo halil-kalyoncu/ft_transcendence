@@ -13,6 +13,7 @@ import FriendManager from './FriendManager.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import jwtDecode from 'jwt-decode'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
@@ -20,6 +21,7 @@ const notificationStore = useNotificationStore()
 const friends = ref<FriendshipEntryI[]>([])
 const friendRequests = ref<FriendshipEntryI[]>([])
 
+const userId = ref(0)
 const modalTitle = ref('')
 const showFriendManagerAndChat = ref(false)
 
@@ -27,17 +29,56 @@ const selectedFriend = ref<FriendshipEntryI | null>(null)
 
 const showChat = ref(false)
 
-onMounted(() => {
+const initUserId = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  // const socket = connectWebSocket('http://localhost:3000', accessToken)
+  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+  const loggedUser: UserI = decodedToken.user as UserI
+  userId.value = loggedUser.id as number
+}
 
-  // socket.on('friends', (responseData: FriendshipEntryI[]) => {
-  //   friends.value = responseData
-  // })
+const setFriendData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/friendships/get-accepted-friends?userId=${userId.value}`
+    )
 
-  // socket.on('friendRequests', (responseData: FriendshipEntryI[]) => {
-  //   friendRequests.value = responseData
-  // })
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    friends.value = data
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error.message)
+  }
+}
+
+const setFriendRequestData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    friendRequests.value = data
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error.message)
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
+onMounted(() => {
+  try {
+    initUserId()
+    setFriendData()
+    setFriendRequestData()
+  } catch (error) {
+    console.error('There was a problem with the axios request:', error)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -136,12 +177,21 @@ const acceptFriendRequest = (requestId: number) => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   const socket = connectWebSocket('http://localhost:3000', accessToken)
   socket.emit('acceptFriendRequest', requestId)
+  setTimeout(() => {
+    setFriendData()
+    setFriendRequestData()
+    notificationStore.showNotification(`A new friend has been added successfully`, true)
+  }, 1250)
 }
 
 const rejectFriendRequest = (requestId: number) => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   const socket = connectWebSocket('http://localhost:3000', accessToken)
   socket.emit('rejectFriendRequest', requestId)
+  setTimeout(() => {
+    setFriendRequestData()
+    notificationStore.showNotification(`You have rejected friend request`, true)
+  }, 1250)
 }
 
 const handleUnfriendUser = (username: String, id: Number) => {
