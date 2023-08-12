@@ -68,7 +68,7 @@ interface ModalResult {
   name?: string
   password?: string
   visibility?: string
-  minutesOfMute?: string
+  minutesOfMute?: Number
 }
 
 const inputName = ref('')

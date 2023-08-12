@@ -159,7 +159,7 @@ const handleClose = () => {
 const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResult) => {
   isModalOpened.value = false
 
-  minutesMuted.value = minutesOfMute
+  minutesMuted.value = minutesOfMute !== undefined ? minutesOfMute : 0
   muteUser()
 }
 </script>

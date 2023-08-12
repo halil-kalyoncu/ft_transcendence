@@ -94,9 +94,11 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-const handleConfirm = ({ name, password, visibility }: ModalResult) => {
+const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResult) => {
   isModalOpened.value = false
-
+  if (visibility === undefined) {
+    visibility = ChannelVisibility.PUBLIC;
+  }
   if (
     !Object.values(ChannelVisibility).includes(visibility.toUpperCase() as ChannelVisibilityType)
   ) {
@@ -104,19 +106,20 @@ const handleConfirm = ({ name, password, visibility }: ModalResult) => {
     return
   }
 
+
+
   const createChannelDto: CreateChannelDto = {
     userId: 1,
-    name: name,
-    password: password,
+    name: name || '',
+    password: password || '',
     channelVisibility: visibility.toUpperCase() as ChannelVisibilityType
-  }
+                         }
 
   if (socket) {
     socket.emit('createChannel', createChannelDto)
   } else {
     console.error('Socket is not connected')
   }
-  console.log(name, password, visibility)
 }
 
 const showChannelManagerAndChat = ref(false)
