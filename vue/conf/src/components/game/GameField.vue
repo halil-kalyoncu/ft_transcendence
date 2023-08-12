@@ -16,6 +16,14 @@
 			:fieldHeight="fieldHeight"
 			:socket="socket"
 			/>
+			<PowerUp
+			v-for="powerup in PowerUps"
+    		:id="powerup.id" 
+			:x="powerup.x"
+			:y="powerup.y"
+			:type="powerup.type"
+			:color="powerup.color"
+			/>
 		</div>
 		<!-- <div class="ball-coordinates" v-if="ballCoordinates">
 			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
@@ -30,13 +38,15 @@
 <script>
 import GamePaddle from './GamePaddle.vue'
 import GameBall from './GameBall.vue'
+import PowerUp from './PowerUp.vue'
 import { io } from "socket.io-client";
 
 export default {
 	name: 'App',
 	components: {
 		GameBall, 
-		GamePaddle
+		GamePaddle,
+		PowerUp
 	},
 	mounted() {
 		this.fieldWidth = this.$refs.gameField.clientWidth;
@@ -76,7 +86,9 @@ export default {
 			
 			side: null,
 			
-			ballCoordinates: null
+			ballCoordinates: null,
+
+			PowerUps: []
 		}
 	},
 	
@@ -110,11 +122,53 @@ export default {
 			});
 			
 			this.socket.on("ballPosition", ({ x, y }) => {
-				this.$refs.ball.setX(x);
-				this.$refs.ball.setY(y);
+				if (this.$refs.ball)
+				{
+					this.$refs.ball.setX(x);
+					this.$refs.ball.setY(y);
+				}
 				this.ballCoordinates = ({x, y});
 			});
+
+			// this.socket.on("newPowerUp", ({ id, x, y, type }) => {
+			this.socket.on("newPowerUp", (data) => {
+				this.PowerUps.push(data);
+				// console.log("PU spawn remote");
+			});
+
+			this.socket.on("powerUpMove", ({ id, y }) => {
+				let powerUp = null;
+				if (this.PowerUps){
+					powerUp = this.PowerUps.find(powerup => powerup.id === id);
+					if (powerUp)
+						powerUp.y = y;
+					// console.log("ID: ", powerUp.id, "Y:", y);
+				}
+			});
+
+			this.socket.on("newPaddleHeight", ({ player, hgt }) => {
+				if (this.$refs.paddleA && player == "left")
+					this.$refs.paddleA.setHgt(hgt);
+				else if (this.$refs.paddleB && player == "right")
+					this.$refs.paddleB.setHgt(hgt);	
+			});
+
+			this.socket.on("destroyPowerUp", ({ id }) => {
+				// let powerUp = null;
+
+				// powerUp = this.PowerUps.find(powerup => powerup.id === id);
+                // if (powerUp) {
+                //     this.powerups.delete(powerUp);
+				// }
+				let index = this.PowerUps.findIndex(powerup => powerup.id === id);
+				if (index != -1) {
+					this.PowerUps.splice(index, 1);
+					this.socket.emit('removePowerUp', id);
+					console.log("PU removed");
+				}
+			});
 		},
+
 		
 		update() {
 			if (this.isPaused)
@@ -162,12 +216,38 @@ export default {
 		keyHookUp(e) {
 			switch(e.key) {
 				case 'ArrowUp':
-				this.isMovingUp = false;
-				break;
+					this.isMovingUp = false;
+					break;
 				case 'ArrowDown':
-				this.isMovingDown = false;
-				break;
+					this.isMovingDown = false;
+					break;
+				case 'n':
+					this.spawnPowerUp();
+					// this.socket.emit('activatePowerUp', { type: "increasePaddle", player: "left" })
+					break;
 			}
+		},
+
+		spawnPowerUp() {
+			const newPowerUp = {
+				id: this.PowerUps.length + 1,
+				x: Math.floor(Math.random() * this.fieldWidth),
+				y: -30,
+				type: Math.floor(Math.random() * 4),
+				color: "white",
+				wid: 30,
+				hgt: 30
+			};
+			if (newPowerUp.type == "0")
+				newPowerUp.color = "red";
+			else if (newPowerUp.type == "1")
+				newPowerUp.color = "green";
+			else if (newPowerUp.type == "2")
+				newPowerUp.color = "blue";
+			else if (newPowerUp.type == "3")
+				newPowerUp.color = "white";
+			this.socket.emit('spawnPowerUp', newPowerUp);
+			console.log("PU spawn local color:", newPowerUp.type);
 		}
 	},
 	

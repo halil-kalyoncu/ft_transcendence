@@ -1,17 +1,14 @@
 -- CreateEnum
-CREATE TYPE "ChatroomStatus" AS ENUM ('PUBLIC', 'PRIVATE');
-
--- CreateEnum
-CREATE TYPE "UserStatus" AS ENUM ('NORMAL', 'BANNED', 'MUTED');
-
--- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('OWNER', 'ADMIN', 'MEMBER');
-
--- CreateEnum
 CREATE TYPE "FriendshipStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
 
 -- CreateEnum
-CREATE TYPE "ChannelVisibility" AS ENUM ('PUBLIC', 'PROTECTED', 'PRIVATE');
+CREATE TYPE "ChannelVisibility" AS ENUM ('PUBLIC', 'PRIVATE');
+
+-- CreateEnum
+CREATE TYPE "ChannelMemberRole" AS ENUM ('OWNER', 'ADMIN', 'MEMBER');
+
+-- CreateEnum
+CREATE TYPE "ChannelMemberStatus" AS ENUM ('NORMAL', 'MUTED', 'BANNED');
 
 -- CreateEnum
 CREATE TYPE "MatchType" AS ENUM ('LADDER', 'CUSTOM');
@@ -25,30 +22,6 @@ CREATE TABLE "User" (
     "username" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Chatroom" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "status" "ChatroomStatus" NOT NULL DEFAULT 'PUBLIC',
-    "passwordHash" TEXT NOT NULL,
-
-    CONSTRAINT "Chatroom_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "UserChatroom" (
-    "id" SERIAL NOT NULL,
-    "status" "UserStatus" NOT NULL DEFAULT 'NORMAL',
-    "statusSince" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "role" "UserRole" NOT NULL DEFAULT 'MEMBER',
-    "roleSince" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "userId" INTEGER NOT NULL,
-    "chatroomId" INTEGER NOT NULL,
-    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "UserChatroom_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -114,9 +87,9 @@ CREATE TABLE "Message" (
 CREATE TABLE "Channel" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "password" TEXT DEFAULT '',
-    "ownerId" INTEGER NOT NULL,
     "visibility" "ChannelVisibility" NOT NULL DEFAULT 'PUBLIC',
+    "protected" BOOLEAN NOT NULL DEFAULT false,
+    "passwordHash" TEXT,
 
     CONSTRAINT "Channel_pkey" PRIMARY KEY ("id")
 );
@@ -126,7 +99,10 @@ CREATE TABLE "ChannelMember" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "channelId" INTEGER NOT NULL,
-    "role" "UserRole" NOT NULL,
+    "role" "ChannelMemberRole" NOT NULL,
+    "roleSince" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "status" "ChannelMemberStatus" NOT NULL DEFAULT 'NORMAL',
+    "statusSince" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "banned" BOOLEAN NOT NULL DEFAULT false,
     "unmuteAt" TIMESTAMP(3),
 
@@ -153,9 +129,6 @@ CREATE TABLE "Match" (
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Chatroom_name_key" ON "Chatroom"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "ConnectedUser_socketId_key" ON "ConnectedUser"("socketId");
 
 -- CreateIndex
@@ -178,12 +151,6 @@ CREATE UNIQUE INDEX "Channel_name_key" ON "Channel"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ChannelMember_userId_channelId_key" ON "ChannelMember"("userId", "channelId");
-
--- AddForeignKey
-ALTER TABLE "UserChatroom" ADD CONSTRAINT "UserChatroom_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "UserChatroom" ADD CONSTRAINT "UserChatroom_chatroomId_fkey" FOREIGN KEY ("chatroomId") REFERENCES "Chatroom"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ConnectedUser" ADD CONSTRAINT "ConnectedUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -214,9 +181,6 @@ ALTER TABLE "ChannelMessageReadStatus" ADD CONSTRAINT "ChannelMessageReadStatus_
 
 -- AddForeignKey
 ALTER TABLE "ChannelMessageReadStatus" ADD CONSTRAINT "ChannelMessageReadStatus_readerId_fkey" FOREIGN KEY ("readerId") REFERENCES "ChannelMember"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Channel" ADD CONSTRAINT "Channel_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ChannelMember" ADD CONSTRAINT "ChannelMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -15,7 +15,6 @@ model User {
   username String @unique
 
   connectedUser ConnectedUser?
-  chatrooms     UserChatroom[]
 
   sentFriendships     Friendship[] @relation("Sender")
   receivedFriendships Friendship[] @relation("Receiver")
@@ -27,45 +26,6 @@ model User {
 
   leftPlayerMatches  Match[] @relation("LeftPlayer")
   rightPlayerMatches Match[] @relation("RightPlayer")
-}
-
-enum ChatroomStatus {
-  PUBLIC
-  PRIVATE
-}
-
-model Chatroom {
-  id           Int            @id @default(autoincrement())
-  name         String         @unique
-  status       ChatroomStatus @default(PUBLIC)
-  passwordHash String
-  members      UserChatroom[]
-}
-
-enum UserStatus {
-  NORMAL
-  BANNED
-  MUTED
-}
-
-enum UserRole {
-  OWNER
-  ADMIN
-  MEMBER
-}
-
-model UserChatroom {
-  id          Int        @id @default(autoincrement())
-  status      UserStatus @default(NORMAL)
-  statusSince DateTime   @default(now())
-  role        UserRole   @default(MEMBER)
-  roleSince   DateTime   @default(now())
-  userId      Int
-  chatroomId  Int
-  joinedAt    DateTime   @default(now())
-
-  user     User     @relation(fields: [userId], references: [id])
-  chatroom Chatroom @relation(fields: [chatroomId], references: [id])
 }
 
 model ConnectedUser {
@@ -144,11 +104,11 @@ enum ChannelVisibility {
   PRIVATE
 }
 
-model ChannelNew {
+model Channel {
   id           Int               @id @default(autoincrement())
   name         String            @unique
   visibility   ChannelVisibility @default(PUBLIC)
-  protected    Boolean
+  protected    Boolean           @default(false)
   passwordHash String?
 
   members ChannelMember[]
@@ -162,8 +122,8 @@ enum ChannelMemberRole {
 
 enum ChannelMemberStatus {
   NORMAL
-  BANNED
   MUTED
+  BANNED
 }
 
 model ChannelMember {
@@ -171,12 +131,13 @@ model ChannelMember {
   userId      Int
   channelId   Int
   role        ChannelMemberRole
-  roleSince   DateTime
-  status      ChannelMemberStatus
-  statusSince DateTime
+  roleSince   DateTime            @default(now())
+  status      ChannelMemberStatus @default(NORMAL)
+  statusSince DateTime            @default(now())
+  banned      Boolean             @default(false)
   unmuteAt    DateTime?
   user        User                @relation(fields: [userId], references: [id])
-  channel     ChannelNew          @relation(fields: [channelId], references: [id])
+  channel     Channel             @relation(fields: [channelId], references: [id])
 
   sendMessages ChannelMessage[]
   readStatus   ChannelMessageReadStatus[]
