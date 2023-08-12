@@ -36,6 +36,7 @@ const setFriendsVisible = (value: boolean) => {
 <style>
 .sideBar {
   width: 300px;
+  height: 100vh;
   min-width: 300px;
   background-color: #0d1117;
   padding: 0 0.5rem;

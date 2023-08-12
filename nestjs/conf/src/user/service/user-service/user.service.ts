@@ -1,7 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../auth/service/auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User, DirectMessage } from '@prisma/client';
+import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
 
 @Injectable()
 export class UserService {
@@ -59,4 +60,5 @@ export class UserService {
       },
     });
   }
+
 }

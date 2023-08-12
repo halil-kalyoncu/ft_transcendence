@@ -4,6 +4,9 @@ import { UserModule } from './user/user.module';
 import { ChatModule } from './chat/chat.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { GameService } from './game/service/game.service';
+import { EventsGateway } from './game/gateway/events/events.gateway';
+import { MatchModule } from './match/match.module';
 
 @Module({
   imports: [
@@ -12,8 +15,12 @@ import { PrismaModule } from './prisma/prisma.module';
     ChatModule,
     AuthModule,
     PrismaModule,
+    MatchModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+	EventsGateway,
+	GameService,
+  ],
 })
 export class AppModule {}

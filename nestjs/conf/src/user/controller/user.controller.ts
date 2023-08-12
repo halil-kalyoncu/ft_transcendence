@@ -4,7 +4,9 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { Prisma, User } from '@prisma/client';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('User module')
 @Controller('users')
 export class UserController {
   constructor(

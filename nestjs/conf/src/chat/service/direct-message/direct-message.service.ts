@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MessageService } from '../message/message.service';
 import { CreateDirectMessageDto } from '../../dto/create-direct-message.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { DirectMessage } from '@prisma/client';
+import { DirectMessage, Prisma } from '@prisma/client';
 
 @Injectable()
 export class DirectMessageService {
@@ -34,7 +34,6 @@ export class DirectMessageService {
   async getConversation(
     userId1: number,
     userId2: number,
-    loadCount: number,
   ): Promise<DirectMessage[]> {
     return this.prisma.directMessage.findMany({
       where: {
@@ -53,7 +52,62 @@ export class DirectMessageService {
           createdAt: 'desc',
         },
       },
-      take: loadCount,
     });
   }
+
+  async getUnreadMessages(readerUserId: number, withUserId: number): Promise<DirectMessage[]> {
+    return this.prisma.directMessage.findMany({
+      where: {
+        receiverId: readerUserId,
+        senderId: withUserId,
+        isRead: false
+      },
+      include: {
+        sender: true,
+        receiver: true,
+        message: true
+      },
+      orderBy: {
+        message: {
+          createdAt: 'desc'
+        }
+      }
+    });
+  }
+
+  async getAllUnreadMessages(userId: number): Promise<DirectMessage[]> {
+    return this.prisma.directMessage.findMany({
+      where: {
+        receiverId: userId,
+        isRead: false
+      },
+      include: {
+        sender: true,
+        receiver: true,
+        message: true,
+      },
+      orderBy: {
+        message: {
+          createdAt: 'desc',
+        },
+      },
+    });
+  }
+
+  async markConversationAsRead(readerUserId: number, withUserId: number): Promise<DirectMessage[]> {
+    const directMessages = await this.prisma.directMessage.updateMany({
+      where: {
+        AND: [
+          { senderId: withUserId },
+          { receiverId: readerUserId }
+        ]
+      },
+      data: {
+        isRead: true,
+      }
+    });
+	console.log(directMessages)
+    return this.getConversation(readerUserId, withUserId);
+  }
+
 }

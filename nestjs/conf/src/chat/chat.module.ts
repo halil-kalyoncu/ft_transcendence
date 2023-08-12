@@ -8,6 +8,11 @@ import { AuthModule } from '../auth/auth.module';
 import { DirectMessageService } from './service/direct-message/direct-message.service';
 import { MessageService } from './service/message/message.service';
 import { ChannelMessageService } from './service/channel-message/channel-message.service';
+import { DirectMessageController } from './controller/direct-message/direct-message.controller';
+import { MatchService } from '../match/service/match.service';
+import { FriendshipController } from './controller/friendship/friendship.controller';
+import { ChannelController } from './controller/channel/channel.controller';
+import { ChannelMemberService } from './service/channel-member/channel-member.service';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -19,8 +24,10 @@ import { ChannelMessageService } from './service/channel-message/channel-message
     DirectMessageService,
     MessageService,
     ChannelMessageService,
+    MatchService,
+    ChannelMemberService,
   ],
-  controllers: [],
+  controllers: [DirectMessageController, FriendshipController, ChannelController],
   exports: [FriendshipService, ConnectedUserService],
 })
 export class ChatModule {}
