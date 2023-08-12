@@ -10,14 +10,14 @@ import { useRouter } from 'vue-router'
 import jwtDecode from 'jwt-decode'
 
 const props = defineProps({
-    matchId: {
-        type: String,
-        required: true
-    }
+  matchId: {
+    type: String,
+    required: true
+  }
 })
 
 const notificationStore = useNotificationStore()
-const router = useRouter();
+const router = useRouter()
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const socket = connectWebSocket('http://localhost:3000', accessToken)
@@ -28,53 +28,57 @@ const rightPlayer = ref<UserI>({})
 const userIsHost = ref(false)
 
 async function fetchMatchData(matchId: string): Promise<void> {
-    try {
-        console.log('fetching id ' + matchId)
-        const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-        })
+  try {
+    console.log('fetching id ' + matchId)
+    const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
 
-        if (response.ok) {
-            const matchData = await response.json();
-            match.value = matchData;
-            leftPlayer.value = matchData.leftUser
-            rightPlayer.value = matchData.rightUser
-        }
-        else {
-            console.log('response wrong')
-            notificationStore.showNotification('Something went wrong while fetching the match data', false)
-            router.push('/home')
-        }
+    if (response.ok) {
+      const matchData = await response.json()
+      match.value = matchData
+      leftPlayer.value = matchData.leftUser
+      rightPlayer.value = matchData.rightUser
+    } else {
+      console.log('response wrong')
+      notificationStore.showNotification(
+        'Something went wrong while fetching the match data',
+        false
+      )
+      router.push('/home')
     }
-    catch (error) {
-        console.log('error')
-        notificationStore.showNotification('Something went wrong while fetching the match data', false)
-        router.push('/home')
-    }
+  } catch (error) {
+    console.log('error')
+    notificationStore.showNotification('Something went wrong while fetching the match data', false)
+    router.push('/home')
+  }
 }
 
 async function deleteMatch(matchId: string): Promise<void> {
-    try {
-        const response = await fetch(`http://localhost:3000/api/matches/delete-by-id?id=${matchId}`, {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-        })
+  try {
+    const response = await fetch(`http://localhost:3000/api/matches/delete-by-id?id=${matchId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
 
-        if (response.ok) {
-            
-        }
-        else {
-            notificationStore.showNotification('Something went wrong while delete the match from the database', false)
-        }
+    if (response.ok) {
+    } else {
+      notificationStore.showNotification(
+        'Something went wrong while delete the match from the database',
+        false
+      )
     }
-    catch (error) {
-        notificationStore.showNotification('Something went wrong while delete the match from the database', false)
-    }
+  } catch (error) {
+    notificationStore.showNotification(
+      'Something went wrong while delete the match from the database',
+      false
+    )
+  }
 }
 
 socket.on('friendInvited', (updatedMatch: MatchI) => {
@@ -82,32 +86,32 @@ socket.on('friendInvited', (updatedMatch: MatchI) => {
 })
 
 onMounted(async () => {
-    console.log(props);
-    const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-    const user: UserI = (decodedToken.user as UserI)
+  console.log(props)
+  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+  const user: UserI = decodedToken.user as UserI
 
-    console.log(props.matchId)
-    await fetchMatchData(props.matchId)
+  console.log(props.matchId)
+  await fetchMatchData(props.matchId)
 
-    if (user.id === leftPlayer.value.id) {
-        userIsHost.value = true
-    }
+  if (user.id === leftPlayer.value.id) {
+    userIsHost.value = true
+  }
 })
 
 onBeforeUnmount(() => {
-    deleteMatch(props.matchId)
+  deleteMatch(props.matchId)
 })
 </script>
 
 <template>
-    <article class="createCustomGame">
-        <span>{{ match.id }}</span>
-        <span v-if="userIsHost">This is the host</span>
-        <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer"/>
-        <div v-else>Something went wrong</div>
-        <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer"/>
-        <InviteFriend v-else :matchId="match.id!"/>
-    </article>
+  <article class="createCustomGame">
+    <span>{{ match.id }}</span>
+    <span v-if="userIsHost">This is the host</span>
+    <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer" />
+    <div v-else>Something went wrong</div>
+    <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" />
+    <InviteFriend v-else :matchId="match.id!" />
+  </article>
 </template>
 
 <style>
@@ -118,7 +122,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
-} 
+}
 
 .suggestionList {
   flex: 1;
@@ -135,5 +139,4 @@ onBeforeUnmount(() => {
 .suggestionList li {
   margin-bottom: 10px;
 }
-
 </style>

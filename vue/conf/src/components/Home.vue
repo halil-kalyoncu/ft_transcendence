@@ -2,8 +2,8 @@
 import { useRouter } from 'vue-router'
 import type { MatchI } from '../model/match/match.interface'
 import jwtDecode from 'jwt-decode'
-import type { UserI } from '../model/user.interface';
-import type { MatchTypeType } from '../model/match/match.interface';
+import type { UserI } from '../model/user.interface'
+import type { MatchTypeType } from '../model/match/match.interface'
 import type { CreateMatchDto } from '../model/match/create-match.dto'
 import { useNotificationStore } from '../stores/notification'
 
@@ -15,36 +15,33 @@ const handleInviteClick = async () => {
     //getting user from the access token, maybe do this differently
     const accessToken = localStorage.getItem('ponggame') ?? ''
     const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-    const loggedUser: UserI = (decodedToken.user as UserI)
+    const loggedUser: UserI = decodedToken.user as UserI
     const createMatchDto: CreateMatchDto = {
       userId: loggedUser.id as number,
       matchType: 'CUSTOM' as MatchTypeType
     }
 
-    const response = await fetch(
-      'http://localhost:3000/api/matches/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(createMatchDto)
-      }
-    )
+    const response = await fetch('http://localhost:3000/api/matches/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(createMatchDto)
+    })
 
     if (response.ok) {
       const responseData = await response.json()
       console.log('Response of create match')
       console.log(responseData)
-      const matchId = String(responseData.id);
+      const matchId = String(responseData.id)
       console.log(matchId)
 
       router.push(`/invite/${matchId}`)
-    }
-    else {
-      notificationStore.showNotification("Failed to create a game", false)
+    } else {
+      notificationStore.showNotification('Failed to create a game', false)
     }
   } catch (error) {
-    notificationStore.showNotification("Failed to create a game", false)
+    notificationStore.showNotification('Failed to create a game', false)
   }
 }
 </script>
@@ -52,7 +49,7 @@ const handleInviteClick = async () => {
 <template>
   <div class="home">
     <RouterLink class="navButton" to="/game">PLAY</RouterLink>
-	  <button class="navButton" @click="handleInviteClick">INVITE TO CUSTOM GAME</button>
+    <button class="navButton" @click="handleInviteClick">INVITE TO CUSTOM GAME</button>
   </div>
 </template>
 

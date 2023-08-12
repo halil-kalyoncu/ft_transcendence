@@ -29,15 +29,15 @@ const showChat = ref(false)
 
 onMounted(() => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
+  // const socket = connectWebSocket('http://localhost:3000', accessToken)
 
-  socket.on('friends', (responseData: FriendshipEntryI[]) => {
-    friends.value = responseData
-  })
+  // socket.on('friends', (responseData: FriendshipEntryI[]) => {
+  //   friends.value = responseData
+  // })
 
-  socket.on('friendRequests', (responseData: FriendshipEntryI[]) => {
-    friendRequests.value = responseData
-  })
+  // socket.on('friendRequests', (responseData: FriendshipEntryI[]) => {
+  //   friendRequests.value = responseData
+  // })
 })
 
 onBeforeUnmount(() => {
@@ -212,14 +212,14 @@ const goBack = () => {
         @close="handleClose"
       />
       <div class="friendsList">
-        <h2 v-if="friends.length === 0" class="friends-empty-notification">Friend list is empty</h2>
-        <ScrollViewer
-          :maxHeight="'68vh'"
-          :paddingRight="'.5rem'"
-          class="friendsList"
-          :class="'messages-scrollviewer'"
+        <h2
+          v-if="friends === undefined || friends?.length === 0"
+          class="friends-empty-notification"
         >
-          <div v-for="entry in friends" :key="entry.id">
+          Friend list is empty
+        </h2>
+        <ScrollViewer :maxHeight="'68vh'" class="friendsList" :class="'messages-scrollviewer'">
+          <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
             <FriendsListItem
               @click="handleFriendManagerOpened(entry)"
               :status="entry.isOnline ? 'online' : 'offline'"
@@ -228,8 +228,8 @@ const goBack = () => {
             />
           </div>
         </ScrollViewer>
-        <h2 v-if="friendRequests.length > 0">Friend Requests</h2>
-        <ul v-if="friendRequests.length > 0" class="friendRequestsList">
+        <h2 v-if="friendRequests?.length > 0">Friend Requests</h2>
+        <ul v-if="friendRequests?.length > 0" class="friendRequestsList">
           <li v-for="request in friendRequests" :key="request.id">
             <div class="friendInfo">
               <span>{{ request.friend.username }}</span>

@@ -4,13 +4,13 @@
       <font-awesome-icon class="icon" :icon="getRoleIcon(role)" />
       <p class="channel-owner">{{ username }}</p>
     </div>
-    <input
-      v-if="showMinutesMutedField"
-      v-model="minutesMuted"
-      type="number"
-      max="100"
-      min="0"
-      class="password-input"
+    <Modal
+      :isOpened="isModalOpened"
+      :title="'Enter Mute duration in minutes'"
+      :showVisibilitySelection="false"
+      :isNumberSelection="true"
+      @submit="handleConfirm"
+      @close="handleClose"
     />
     <div class="actions">
       <template v-if="currentUserRole === 'owner' && role === 'member'">
@@ -29,7 +29,7 @@
         </button>
         <button
           class="action-button-mute"
-          @click="muteUser"
+          @click="openModal"
           :title="muteTitle"
           :class="isUserMuted ? 'disableMuteOption' : ''"
         >
@@ -47,11 +47,11 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
+import Modal from '../utils/Modal.vue'
 
 library.add(fas)
 const router = useRouter()
 const notificationStore = useNotificationStore()
-const showMinutesMutedField = ref(false)
 const minutesMuted = ref(0)
 const maxValue = ref(100)
 const isUserMuted = ref(false)
@@ -68,12 +68,6 @@ const role = ref(props.roleProp)
 
 watchEffect(() => {
   role.value = props.roleProp
-})
-
-watch(minutesMuted, (newValue) => {
-  if (newValue > maxValue.value) {
-    minutesMuted.value = maxValue.value
-  }
 })
 
 const goToProfile = () => {
@@ -106,15 +100,6 @@ const makeAdmin = () => {
 }
 
 const muteUser = () => {
-  if (isUserMuted.value === true) {
-    return
-  }
-
-  if (showMinutesMutedField.value === false) {
-    showMinutesMutedField.value = true
-    return
-  }
-
   if (minutesMuted.value === 0) {
     notificationStore.showNotification('Error: Minutes to be muted cannot be 0', false)
     return
@@ -130,7 +115,6 @@ const muteUser = () => {
     isUserMuted.value = true
     muteTitle.value = 'User is muted'
   }
-  showMinutesMutedField.value = false
   minutesMuted.value = 0
 }
 
@@ -150,6 +134,33 @@ const getRoleIcon = (role: string | undefined) => {
     default:
       return ['fas', 'question']
   }
+}
+
+interface ModalResult {
+  name?: string
+  password?: string
+  visibility?: string
+  minutesOfMute?: number
+}
+
+const isModalOpened = ref(false)
+const openModal = () => {
+  if (isUserMuted.value === true) {
+    unmuteUser()
+    return
+  }
+  isModalOpened.value = true
+}
+
+const handleClose = () => {
+  isModalOpened.value = false
+}
+
+const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResult) => {
+  isModalOpened.value = false
+
+  minutesMuted.value = minutesOfMute
+  muteUser()
 }
 </script>
 
@@ -205,5 +216,9 @@ const getRoleIcon = (role: string | undefined) => {
 
 .action-button-make-admin {
   color: gold;
+}
+
+.max-width-helper {
+  width: 50px;
 }
 </style>

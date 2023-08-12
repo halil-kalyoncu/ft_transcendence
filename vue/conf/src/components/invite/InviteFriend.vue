@@ -6,10 +6,10 @@ import { useNotificationStore } from '../../stores/notification'
 import { connectWebSocket } from '../../websocket'
 
 const props = defineProps({
-    matchId: {
-        type: Number,
-        required: true
-    }
+  matchId: {
+    type: Number,
+    required: true
+  }
 })
 
 const notificationStore = useNotificationStore()
@@ -58,61 +58,58 @@ watch(invitedUsername, (newValue) => {
 })
 
 const sendInvite = async () => {
-    try {
-        if (invitedUsername.value.trim() === '') {
-          return
-        }
-
-        console.log('invite: ' + invitedUsername.value)
-        const response = await fetch(
-          `http://localhost:3000/api/users/find-by-username?username=${invitedUsername.value}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        )
-        if (response.ok) {
-            const userData = await response.json()
-            invitedUser.value = userData
-        }
-        else {
-            notificationStore.showNotification('User not found', false)
-            return 
-        }
-
-        socket.emit('sendGameInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
+  try {
+    if (invitedUsername.value.trim() === '') {
+      return
     }
-    catch (error) {
-      const errorMessage = error instanceof Error ? error.toString() : 'An error occurred';
-      notificationStore.showNotification(errorMessage, false)
+
+    console.log('invite: ' + invitedUsername.value)
+    const response = await fetch(
+      `http://localhost:3000/api/users/find-by-username?username=${invitedUsername.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (response.ok) {
+      const userData = await response.json()
+      invitedUser.value = userData
+    } else {
+      notificationStore.showNotification('User not found', false)
+      return
     }
+
+    socket.emit('sendGameInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.toString() : 'An error occurred'
+    notificationStore.showNotification(errorMessage, false)
+  }
   invitedUsername.value = ''
 }
-
 </script>
 
 <template>
-    <div>
-        <input
-          type="text"
-          v-model="invitedUsername"
-          placeholder="Enter username"
-          @focus="showSuggestions"
-          @blur="hideSuggestions"
-        />
-        <div class="suggestionList" v-if="showSuggestionList">
-        <ul v-if="userSuggestions.length" class="suggestionList">
-          <li
-            v-for="suggestion in userSuggestions"
-            :key="suggestion.id"
-            @mousedown="selectSuggestion(suggestion)"
-          >
-            {{ suggestion.username }}
-          </li>
-        </ul>
-        </div>
-        <button @click="sendInvite">Send Game Invitation</button>
-      </div>
+  <div>
+    <input
+      type="text"
+      v-model="invitedUsername"
+      placeholder="Enter username"
+      @focus="showSuggestions"
+      @blur="hideSuggestions"
+    />
+    <div class="suggestionList" v-if="showSuggestionList">
+      <ul v-if="userSuggestions.length" class="suggestionList">
+        <li
+          v-for="suggestion in userSuggestions"
+          :key="suggestion.id"
+          @mousedown="selectSuggestion(suggestion)"
+        >
+          {{ suggestion.username }}
+        </li>
+      </ul>
+    </div>
+    <button @click="sendInvite">Send Game Invitation</button>
+  </div>
 </template>

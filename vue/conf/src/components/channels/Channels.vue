@@ -79,9 +79,10 @@ const userStore = useUserStore()
 const username = computed(() => userStore.username)
 
 interface ModalResult {
-  name: string
-  password: string
-  visibility: string
+  name?: string
+  password?: string
+  visibility?: string
+  minutesOfMute?: number
 }
 
 const isModalOpened = ref(false)

@@ -2,9 +2,19 @@
   <div v-if="isOpened" class="modal" @click="handleClickOutside">
     <div class="modal-content" @click.stop>
       <h2 class="modal-title">{{ title }}</h2>
-
       <div class="input-group">
         <input
+          v-show="isNumberSelection"
+          id="number-value"
+          v-model="numberValue"
+          type="number"
+          :placeholder="placeholderText"
+          max="100"
+          min="0"
+          class="input-text"
+        />
+        <input
+          v-show="!isNumberSelection"
           id="input-name"
           v-model="inputName"
           :placeholder="placeholderText"
@@ -12,7 +22,7 @@
           class="input-text"
         />
       </div>
-      <div v-if="showVisibilitySelection">
+      <div v-if="showVisibilitySelection && !isNumberSelection">
         <div class="radio-button-input-group">
           <input type="radio" id="Public" value="Public" v-model="selectedVisibility" hidden />
           <label for="Public">Public</label>
@@ -42,7 +52,9 @@
       </div>
 
       <div class="button-group">
-        <button class="submit-button" @click="submit">OK</button>
+        <button class="submit-button" @click="isNumberSelection ? submitNumber() : submit()">
+          OK
+        </button>
         <button class="cancel-button" @click="handleClickOutside">Cancel</button>
       </div>
     </div>
@@ -50,23 +62,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 interface ModalResult {
-  name: string
-  password: string
-  visibility: string
+  name?: string
+  password?: string
+  visibility?: string
+  minutesOfMute?: string
 }
 
 const inputName = ref('')
 const inputPassword = ref('')
 const selectedVisibility = ref('Public')
+const numberValue = ref(0)
+const maxValue = ref(100)
 
 const props = defineProps({
   isOpened: Boolean,
   title: String,
   placeholderText: String,
-  showVisibilitySelection: Boolean
+  showVisibilitySelection: Boolean,
+  isNumberSelection: Boolean
 })
 
 const emit = defineEmits(['submit', 'close'])
@@ -85,9 +101,25 @@ const submit = () => {
   selectedVisibility.value = 'Public'
 }
 
+const submitNumber = () => {
+  const result: ModalResult = {
+    minutesOfMute: numberValue.value
+  }
+
+  emit('submit', result)
+
+  numberValue.value = 0
+}
+
 const handleClickOutside = () => {
   emit('close')
 }
+
+watch(numberValue, (newValue) => {
+  if (newValue > maxValue.value) {
+    numberValue.value = maxValue.value
+  }
+})
 </script>
 <style>
 .modal {

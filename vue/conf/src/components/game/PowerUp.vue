@@ -1,46 +1,42 @@
 <template>
-	<div class="powerup"
-    :style="{ top: `${y}px`, left: `${x}px`, background: `${color}` }"
-	>
-</div>
+  <div class="powerup" :style="{ top: `${y}px`, left: `${x}px`, background: `${color}` }"></div>
 </template>
 
 <script>
-
 export default {
-	props: {
-		id: {
-			type: Number,
-			required: true
-		},
-		x: {
-			type: Number,
-			required: true,
-		},
-		y: {
-			type: Number,
-			required: true,
-		},
-		color: {
-			type: String,
-			required: true,
-			default: "white",
-		},
-		type: {
-			type: Number,
-			required: true,
-		},
-	},
+  props: {
+    id: {
+      type: Number,
+      required: true
+    },
+    x: {
+      type: Number,
+      required: true
+    },
+    y: {
+      type: Number,
+      required: true
+    },
+    color: {
+      type: String,
+      required: true,
+      default: 'white'
+    },
+    type: {
+      type: Number,
+      required: true
+    }
+  },
 
-	methods: {
-		setX(x) {
-			this.x = x;
-		},
-		
-		setY(y) {
-			this.y = y;
-		}
-	}
+  methods: {
+    setX(x) {
+      this.x = x
+    },
+
+    setY(y) {
+      this.y = y
+    }
+  }
 }
 </script>
 
