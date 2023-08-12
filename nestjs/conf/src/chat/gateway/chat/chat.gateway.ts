@@ -474,18 +474,18 @@ export class ChatGateway
   private async sendFriendsToClient(
     connectedUser: ConnectedUser,
   ): Promise<void> {
-    const friends: FriendshipDto[] = await this.friendshipService.getFriends(
-      connectedUser.userId,
-    );
-    this.server.to(connectedUser.socketId).emit('friends', friends);
+    // const friends: FriendshipDto[] = await this.friendshipService.getFriends(
+    //   connectedUser.userId,
+    // );
+    this.server.to(connectedUser.socketId).emit('friends');
   }
 
   private async sendFriendRequestsToClient(
     connectedUser: ConnectedUser,
   ): Promise<void> {
-    const requests: FriendshipDto[] =
-      await this.friendshipService.getFriendRequests(connectedUser.userId);
-    this.server.to(connectedUser.socketId).emit('friendRequests', requests);
+    // const requests: FriendshipDto[] =
+    //   await this.friendshipService.getFriendRequests(connectedUser.userId);
+    this.server.to(connectedUser.socketId).emit('friendRequests');
   }
 
   private async updateFriendsOf(aboutClientId: number): Promise<void> {
