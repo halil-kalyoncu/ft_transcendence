@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Chat from '../chat/Chat.vue'
 import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
 import { connectWebSocket, disconnectWebSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
@@ -14,7 +13,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
-import { Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client'
 import jwtDecode from 'jwt-decode'
 library.add(faArrowLeft)
 
@@ -40,6 +39,18 @@ const initSocket = () => {
   socket.value = connectWebSocket('http://localhost:3000', accessToken)
 }
 
+const updateSelectedFriend = () => {
+  if (!selectedFriend.value) return
+
+  const updatedFriend = friends.value.find((f) => f.friend.id === selectedFriend.value?.friend.id)
+
+  if (updatedFriend) {
+    selectedFriend.value = updatedFriend
+  } else {
+    closeFriendManagerAndChat()
+  }
+}
+
 const setFriendData = async () => {
   try {
     const response = await fetch(
@@ -52,6 +63,7 @@ const setFriendData = async () => {
 
     const data = await response.json()
     friends.value = data
+    updateSelectedFriend()
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, true)
   }
@@ -74,14 +86,42 @@ const setFriendRequestData = async () => {
   }
 }
 
+const setFriendsListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.on('friends', () => {
+    console.log('friends listener fired')
+    setFriendData()
+  })
+}
+
+const setFriendRequestListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  socket.value.on('friendRequests', () => {
+    console.log('friendRequests listener fired')
+    setFriendRequestData()
+  })
+}
+
 onMounted(() => {
   initSocket()
+
+  setFriendsListener()
+  setFriendRequestListener()
+
   setFriendData()
   setFriendRequestData()
 })
 
 onBeforeUnmount(() => {
   disconnectWebSocket()
+  console.log('onBeforeUnmount friends')
 })
 
 interface ModalResult {
@@ -122,7 +162,7 @@ const handleAdd = ({ username }: ModalResult) => {
   isModalOpened.value = false
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
-    return;
+    return
   }
   if (username.trim() === '') {
     notificationStore.showNotification('Error: friend name cannot be empty', false)
@@ -168,8 +208,8 @@ const handleUnblock = ({ username }: ModalResult) => {
 }
 
 const closeFriendManagerAndChat = () => {
-  selectedFriend.value = null
   showFriendManagerAndChat.value = false
+  selectedFriend.value = null
 }
 
 const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
@@ -180,8 +220,7 @@ const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
 const acceptFriendRequest = (requestId: number) => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
-    return;
-
+    return
   }
 
   socket.value.emit('acceptFriendRequest', requestId)
@@ -195,8 +234,7 @@ const acceptFriendRequest = (requestId: number) => {
 const rejectFriendRequest = (requestId: number) => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
-    return;
-
+    return
   }
   socket.value.emit('rejectFriendRequest', requestId)
   setTimeout(() => {
@@ -208,8 +246,7 @@ const rejectFriendRequest = (requestId: number) => {
 const handleUnfriendUser = (username: String, id: Number) => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
-    return;
-
+    return
   }
   if (username !== '') {
     console.log('removeFriend id:' + id + ', username: ' + username)

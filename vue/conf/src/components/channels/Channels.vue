@@ -27,15 +27,15 @@
       />
       <div v-if="showChannelManagerAndChat">
         <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" />
-        <Chat :displayMode="'channel'" />
+        <ChannelMessages />
       </div>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import Chat from '../chat/Chat.vue'
 import ChannelManager from './ChannelManager.vue'
+import ChannelMessages from '../chat/ChannelMessages.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'

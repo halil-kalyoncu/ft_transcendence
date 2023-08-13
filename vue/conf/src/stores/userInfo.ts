@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 
 export const useUserStore = defineStore('user', () => {
   const username = ref<string>('')
-  const userId = ref<Number>(0)
+  const userId = ref<number>(0)
 
   function setUsername(newUsername: string) {
     username.value = newUsername
@@ -13,7 +13,7 @@ export const useUserStore = defineStore('user', () => {
     username.value = ''
   }
 
-  function setUserId(newUserId: Number) {
+  function setUserId(newUserId: number) {
     userId.value = newUserId
   }
 
