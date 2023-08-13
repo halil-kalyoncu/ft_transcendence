@@ -142,7 +142,7 @@ export class ChannelService {
     });
   }
 
-  async joinChannel(
+  async addUserToChannel(
     channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
     const existingMembership = await this.findMember(
@@ -151,7 +151,7 @@ export class ChannelService {
     );
 
     if (existingMembership) {
-      throw new Error('You are already a member of this channel.');
+      throw new Error('User is already a member of this channel.');
     }
 
     return this.prisma.channelMember.create({
@@ -163,7 +163,7 @@ export class ChannelService {
     });
   }
 
-  async leaveChannel(
+  async removeUserFromChannel(
     channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
     const member = await this.findMember(

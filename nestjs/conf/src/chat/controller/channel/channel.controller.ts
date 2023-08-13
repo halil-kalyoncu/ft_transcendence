@@ -1,9 +1,9 @@
-import { Body, Controller, Get, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, ParseIntPipe, Post, Query, Patch } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Channel } from '@prisma/client';
 import { ChannelService } from '../../service/channel/channel.service';
-import { CreateChannelDto } from 'src/chat/dto/channel.dto';
+import { CreateChannelDto, ChannelMembershipDto, AdminActionDto } from 'src/chat/dto/channel.dto';
 
 
 @ApiTags('Channel module')
@@ -49,5 +49,26 @@ export class ChannelController {
 	@Post("createUnProtectedChannel")
 	async createUnProtectedChannel(@Body() CreateChannelDto: CreateChannelDto): Promise<void> {
 		await this.ChannelService.createUnProtectedChannel(CreateChannelDto)
+	}
+
+	//Patch Functions to change existing Channel properties
+	@Patch("addUserToChannel")
+	async addUserToChannel(@Body() ChannelMembershipDto: ChannelMembershipDto): Promise<void> {
+		await this.ChannelService.addUserToChannel(ChannelMembershipDto)
+	}
+
+	@Patch("removeUserFromChannel")
+	async removeUserFromChannel(@Body() ChannelMembershipDto: ChannelMembershipDto): Promise<void> {
+		await this.ChannelService.removeUserFromChannel(ChannelMembershipDto)
+	}
+
+	@Patch("MakeUserAdmin")
+	async MakeUserAdmin(@Body() AdminActionDto: AdminActionDto): Promise<void> {
+		await this.ChannelService.makeAdmin(AdminActionDto)
+	}
+
+	@Patch("KickUser")
+	async KickUser(@Body() AdminActionDto: AdminActionDto): Promise<void> {
+		await this.ChannelService.kickChannelMember(AdminActionDto)
 	}
 }

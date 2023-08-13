@@ -278,7 +278,7 @@ export class ChatGateway
     @MessageBody() channelMembershipDto: ChannelMembershipDto,
   ): Promise<void> {
     try {
-      const membership = await this.channelService.joinChannel(
+      const membership = await this.channelService.addUserToChannel(
         channelMembershipDto,
       );
       socket.emit('joinedChannel', membership);
@@ -293,7 +293,7 @@ export class ChatGateway
     @MessageBody() channelMembershipDto: ChannelMembershipDto,
   ): Promise<void> {
     try {
-      const membership = await this.channelService.leaveChannel(
+      const membership = await this.channelService.removeUserFromChannel(
         channelMembershipDto,
       );
       socket.emit('leftChannel', membership);
