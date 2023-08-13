@@ -66,7 +66,7 @@ const handleInviteClick = async () => {
 .home a {
   padding: 0 2.5rem;
   font-size: 2rem;
-  background-color: #19c37d;
+  background-color: #32a852;
   color: #ffffff;
   border: none;
   transition: all 0.25s ease-in;

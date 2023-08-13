@@ -122,7 +122,7 @@ const isOwnMessage = (senderId: number | undefined) => {
 
 .chat-input button {
   height: 100%;
-  background-color: #19c37d;
+  background-color: #32a852;
   border: none;
   color: white;
   padding: 0.25rem 0.5rem;

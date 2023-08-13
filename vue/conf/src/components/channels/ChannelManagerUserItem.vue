@@ -199,7 +199,7 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
 }
 
 .action-button-ban {
-  color: red;
+  color: #a83232;
 }
 .action-button-kick {
   color: white;
@@ -210,7 +210,7 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
 }
 
 .disableMuteOption {
-  color: red !important;
+  color: #a83232 !important;
   cursor: auto;
 }
 

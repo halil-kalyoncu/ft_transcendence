@@ -45,7 +45,7 @@ const handleInvite = () => {
 
 <style>
 .game-invite-button {
-  background-color: #19c37d;
+  background-color: #32a852;
   border: none;
   color: #ffffff;
   padding: 0.25rem 0.5rem;

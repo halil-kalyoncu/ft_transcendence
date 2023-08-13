@@ -45,16 +45,16 @@ const logout = () => {
         </div>
       </RouterLink>
       <div>
-      <RouterLink class="navButton header-username" to="/activity-center">
-        <button class="settings-button">
-          <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
-        </button>
-      </RouterLink>
-      <RouterLink class="navButton header-username" to="/settings">
-        <button class="settings-button">
-          <font-awesome-icon class="icon" icon="cog" title="Settings" />
-        </button>
-      </RouterLink>
+        <RouterLink class="navButton header-username" to="/activity-center">
+          <button class="settings-button">
+            <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
+          </button>
+        </RouterLink>
+        <RouterLink class="navButton header-username" to="/settings">
+          <button class="settings-button">
+            <font-awesome-icon class="icon" icon="cog" title="Settings" />
+          </button>
+        </RouterLink>
         <a class="navButtonLogout" @click="logout" title="Logout">
           <font-awesome-icon class="icon" icon="sign-out-alt" />
         </a>

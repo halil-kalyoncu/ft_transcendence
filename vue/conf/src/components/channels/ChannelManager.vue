@@ -114,7 +114,7 @@ const changePassword = () => {
   width: 100%;
   min-width: none;
   max-width: none;
-  background-color: #19c37d;
+  background-color: #32a852;
   border: none;
   transition: background-color 0.25s ease-out;
 }
