@@ -12,11 +12,10 @@
     </div>
   </ScrollViewer>
   <div class="channel-manager-info">
-    <div>
+    <div class="change-password-container">
       <button
         v-show="currentUserRole === 'owner'"
         class="join-channel-button"
-        :class="'change-password'"
         @click="changePassword"
       >
         Change Password
@@ -30,7 +29,9 @@
       />
     </div>
 
-    <button class="join-channel-button" @click="leaveChannel">Leave</button>
+    <button :class="['join-channel-button', 'leave-channel-button']" @click="leaveChannel">
+      Leave
+    </button>
   </div>
 </template>
 
@@ -81,14 +82,14 @@ const leaveChannel = () => {
 const changePassword = () => {
   if (!showPasswordField.value) {
     showPasswordField.value = true
-  }
-  else
-  {
+  } else {
     //todo: fix notification to not share password
-    notificationStore.showNotification('Password has been successfully changed to: ' + password.value, true)
+    notificationStore.showNotification(
+      'Password has been successfully changed to: ' + password.value,
+      true
+    )
     showPasswordField.value = false
   }
-
 }
 </script>
 
@@ -102,30 +103,39 @@ const changePassword = () => {
 }
 
 .channel-manager-info {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: flex-start;
-  margin: 0.5rem 0 0.5rem 0;
+  margin: 0.25rem 0 0 0;
+  min-height: 2.75rem;
 }
 
 .channel-manager-info .join-channel-button {
-  background-color: red;
+  width: 100%;
+  min-width: none;
+  max-width: none;
+  background-color: #19c37d;
   border: none;
-  transition: opacity 0.25s ease-out;
+  transition: background-color 0.25s ease-out;
 }
 
 .channel-manager-info .join-channel-button:hover {
-  background-color: red;
   border: none;
-  opacity: 0.75;
+}
+
+.channel-manager-info .leave-channel-button {
+  background-color: #f64456;
 }
 
 .channel-manager-info .password-input {
   margin: 0;
-  max-width: 114px;
+  width: 100%;
 }
 
-.change-password {
-  background-color: green !important;
+.change-password-container {
+  width: 100%;
+  margin: -1.25px 0 0 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 </style>

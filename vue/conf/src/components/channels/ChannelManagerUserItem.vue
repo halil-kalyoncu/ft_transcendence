@@ -153,7 +153,7 @@ const getRoleIcon = (role: string | undefined) => {
 }
 </script>
 
-<style scoped>
+<style>
 .channel-owner-container {
   cursor: pointer;
 }
@@ -191,7 +191,7 @@ const getRoleIcon = (role: string | undefined) => {
   color: red;
 }
 .action-button-kick {
-  color: yellow;
+  color: white;
 }
 
 .action-button-mute {
