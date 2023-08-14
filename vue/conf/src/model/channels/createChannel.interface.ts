@@ -1,4 +1,4 @@
-import { UserI } from "../user.interface"
+import type { UserI } from "../user.interface"
 
 export const ChannelVisibility = {
   PUBLIC: 'PUBLIC' as const,

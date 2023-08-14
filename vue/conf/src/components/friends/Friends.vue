@@ -15,7 +15,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
 import jwtDecode from 'jwt-decode'
-import { MatchI } from '../../model/match/match.interface'
+import type { MatchI } from '../../model/match/match.interface'
 import { useRouter } from 'vue-router';
 library.add(faArrowLeft)
 
@@ -398,9 +398,10 @@ const goBack = () => {
         <ul v-if="matchInvites?.length > 0">
           <li v-for="invite in matchInvites" :key="invite.id">
             <div class="friendInfo">
-              <span>Custom game invite from {{ invite.leftUser.username }} </span>
-              <button @click="acceptMatchInvite(invite.id)">Accept</button>
-              <button @click="rejectMatchInvite(invite.id)">Reject</button>
+              <span>Custom game invite from {{ invite.leftUser?.username }} </span>
+			  <button @click="invite.id !== undefined ? acceptMatchInvite(invite.id) : null">Accept</button>
+				<button @click="invite.id !== undefined ? rejectMatchInvite(invite.id) : null">Reject</button>
+
             </div>
           </li>
         </ul>
