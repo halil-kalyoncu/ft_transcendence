@@ -20,18 +20,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { connectWebSocket } from '../../websocket'
 import type { UserI } from '../../model/user.interface'
 import type { directMessageI } from '../../model/directMessage.interface'
 import type { MockMessageI } from '../../model/mockMessage.interface'
+import { Socket } from 'socket.io-client'
 import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+import { useNotificationStore } from '../../stores/notification'
+import { useUserStore } from '../../stores/userInfo'
 
+const userStore = useUserStore()
+const userId = computed<number>(() => userStore.userId)
+const username = computed<string>(() => userStore.username)
+const notificationStore = useNotificationStore()
 const inputMessage = ref('')
 
 const channelMessages = ref<MockMessageI[]>([])
+const socket = ref<Socket | null>(null)
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
 
 const fetchChannelMessages = async () => {
   const messages = getMockChannelMessages()
@@ -52,22 +65,13 @@ const getMockChannelMessages = (): MockMessageI[] => {
     }
   ]
 }
-onMounted(fetchChannelMessages)
+onMounted(() => {
+  initSocket()
+  fetchChannelMessages()
+})
+
 const messages = ref<directMessageI[]>([])
 const newMessage = ref('')
-
-const accessToken = localStorage.getItem('ponggame') ?? ''
-const socket = connectWebSocket('http://localhost:3000', accessToken)
-
-const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-const loggedUser: { id: number; username: string } = decodedToken.user as {
-  id: number
-  username: string
-}
-
-socket.on('newDirectMessage', (newMessageData: directMessageI) => {
-  messages.value.unshift(newMessageData)
-})
 
 const sendMessage = () => {
   newMessage.value = ''
@@ -118,7 +122,7 @@ const isOwnMessage = (senderId: number | undefined) => {
 
 .chat-input button {
   height: 100%;
-  background-color: #19c37d;
+  background-color: #32a852;
   border: none;
   color: white;
   padding: 0.25rem 0.5rem;

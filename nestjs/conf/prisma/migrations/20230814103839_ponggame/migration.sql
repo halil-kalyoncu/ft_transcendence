@@ -10,6 +10,12 @@ CREATE TYPE "ChannelMemberRole" AS ENUM ('OWNER', 'ADMIN', 'MEMBER');
 -- CreateEnum
 CREATE TYPE "ChannelMemberStatus" AS ENUM ('NORMAL', 'MUTED', 'BANNED');
 
+-- CreateEnum
+CREATE TYPE "MatchState" AS ENUM ('CREATED', 'INVITED', 'ACCEPTED', 'STARTED', 'DISCONNECTLEFT', 'DISCONNECTRIGHT', 'WINNERLEFT', 'WINNERRIGHT');
+
+-- CreateEnum
+CREATE TYPE "MatchType" AS ENUM ('LADDER', 'CUSTOM');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -95,12 +101,27 @@ CREATE TABLE "ChannelMember" (
     "channelId" INTEGER NOT NULL,
     "role" "ChannelMemberRole" NOT NULL,
     "roleSince" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "status" "ChannelMemberStatus" NOT NULL,
+    "status" "ChannelMemberStatus" NOT NULL DEFAULT 'NORMAL',
     "statusSince" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "banned" BOOLEAN NOT NULL DEFAULT false,
     "unmuteAt" TIMESTAMP(3),
 
     CONSTRAINT "ChannelMember_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Match" (
+    "id" SERIAL NOT NULL,
+    "leftUserId" INTEGER NOT NULL,
+    "rightUserId" INTEGER,
+    "type" "MatchType" NOT NULL,
+    "state" "MatchState" NOT NULL DEFAULT 'CREATED',
+    "goalsLeftPlayer" INTEGER NOT NULL DEFAULT 0,
+    "goalsRightPlayer" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "startedAt" TIMESTAMP(3),
+    "finishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Match_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -165,3 +186,9 @@ ALTER TABLE "ChannelMember" ADD CONSTRAINT "ChannelMember_userId_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "ChannelMember" ADD CONSTRAINT "ChannelMember_channelId_fkey" FOREIGN KEY ("channelId") REFERENCES "Channel"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Match" ADD CONSTRAINT "Match_leftUserId_fkey" FOREIGN KEY ("leftUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Match" ADD CONSTRAINT "Match_rightUserId_fkey" FOREIGN KEY ("rightUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

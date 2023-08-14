@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { connectWebSocket } from '../../websocket'
 import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
 import type { UserI } from '../../model/user.interface'
@@ -7,6 +7,9 @@ import type { directMessageI } from '../../model/directMessage.interface'
 import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+import { useUserStore } from '../../stores/userInfo'
+import { useNotificationStore } from '../../stores/notification'
+import { Socket } from 'socket.io-client'
 
 const props = defineProps({
   selectedFriendEntry: {
@@ -14,50 +17,95 @@ const props = defineProps({
     required: true
   }
 })
+
+const userStore = useUserStore()
+const userId = computed<number>(() => userStore.userId)
+const username = computed<string>(() => userStore.username)
+const socket = ref<Socket | null>(null)
+const notificationStore = useNotificationStore()
 const selectedUser: UserI | null = props.selectedFriendEntry?.friend ?? null
 const messages = ref<directMessageI[]>([])
 const newMessage = ref('')
-const accessToken = localStorage.getItem('ponggame') ?? ''
-const socket = connectWebSocket('http://localhost:3000', accessToken)
 const loading = ref(true)
-//getting user from the access token, maybe do this differently
-const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-const loggedUser: { id: number; username: string } = decodedToken.user as {
+
+type User = {
   id: number
   username: string
 }
 
-watch(
-  () => props.selectedFriendEntry,
-  (friendEntry) => {
-    //remove
-    if (!friendEntry) {
-      return
+const loggedUser = computed<User>(() => ({
+  id: userId.value,
+  username: username.value
+}))
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
+
+const setNewDirectMessageListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  socket.value.on('newDirectMessage', (newMessageData: directMessageI) => {
+    console.log('newDirectMessage listener fired')
+    messages.value.unshift(newMessageData)
+  })
+}
+
+const setDirectMessages = async () => {
+  if (!props.selectedFriendEntry || !props.selectedFriendEntry.friend) {
+    return
+  }
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
     }
-    socket.emit('directMessages', friendEntry.friend.id, (responseData: directMessageI[]) => {
-      messages.value = responseData
-      loading.value = false
-    })
-  },
-  { immediate: true }
-)
-socket.on('newDirectMessage', (newMessageData: directMessageI) => {
-  messages.value.unshift(newMessageData)
+    const data = await response.json()
+    if (Array.isArray(data)) {
+      messages.value = data
+    } else {
+      console.error('Expected an array from the API but received:', data)
+    }
+  } catch (error: any) {
+    console.error('Expected an array from the API but received:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  initSocket()
+  setDirectMessages()
+  setNewDirectMessageListener()
 })
+
 const sendMessage = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
   if (newMessage.value.trim() === '' || !selectedUser) {
     return
   }
 
-  socket.emit('sendDirectMessage', {
-    senderId: loggedUser.id,
+  console.log(loggedUser.value.id + ' ' + selectedUser.id + ' ' + newMessage.value)
+
+  socket.value.emit('sendDirectMessage', {
+    senderId: loggedUser.value.id,
     receiverId: selectedUser.id,
     message: newMessage.value
   })
   newMessage.value = ''
 }
 const isOwnMessage = (senderId: number | undefined) => {
-  return senderId !== undefined && senderId === loggedUser.id
+  return senderId !== undefined && senderId === loggedUser.value.id
 }
 </script>
 
@@ -75,7 +123,7 @@ const isOwnMessage = (senderId: number | undefined) => {
           :isOwnMessage="isOwnMessage(message.sender.id)"
         />
       </div>
-      <div v-else>Loading messages...</div>
+      <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
     <div class="chat-input">
       <input type="text" v-model="newMessage" placeholder="Type your message here..." />
@@ -88,13 +136,13 @@ const isOwnMessage = (senderId: number | undefined) => {
 .chat {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Aligns items to the start of the flex container */
+  justify-content: flex-start;
   height: calc(100%);
   margin-top: 0.5rem;
 }
 
 .chat > div:first-child {
-  flex-grow: 1; /* This pushes the rest of the items to the bottom */
+  flex-grow: 1;
 }
 
 .chat .messages-scrollviewer {
@@ -134,5 +182,10 @@ const isOwnMessage = (senderId: number | undefined) => {
 }
 .chat .chat-input button:hover {
   background-color: #ed901c;
+}
+
+.chat .loading-text {
+  font-size: 0.8rem;
+  padding-left: 0.75rem;
 }
 </style>

@@ -39,7 +39,7 @@
 import { computed, ref } from 'vue'
 import ChannelManagerUserItem from './ChannelManagerUserItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
-import { useUserStore } from '../../stores/username'
+import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 
 const notificationStore = useNotificationStore()
@@ -114,7 +114,7 @@ const changePassword = () => {
   width: 100%;
   min-width: none;
   max-width: none;
-  background-color: #19c37d;
+  background-color: #32a852;
   border: none;
   transition: background-color 0.25s ease-out;
 }

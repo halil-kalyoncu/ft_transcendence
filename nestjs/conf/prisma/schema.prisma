@@ -23,7 +23,7 @@ model User {
   receivedDirectMessages DirectMessage[] @relation("Receiver")
 
   ChannelMember ChannelMember[]
-  
+
   leftPlayerMatches  Match[] @relation("LeftPlayer")
   rightPlayerMatches Match[] @relation("RightPlayer")
 }
@@ -144,37 +144,4 @@ model ChannelMember {
   @@unique([userId, channelId])
 }
 
-enum MatchState {
-  CREATED
-  INVITED
-  ACCEPTED
-  STARTED
-  DISCONNECTLEFT
-  DISCONNECTRIGHT
-  WINNERLEFT
-  WINNERRIGHT
-}
-
-enum MatchType {
-  LADDER
-  CUSTOM
-}
-
-model Match {
-  id               Int        @id @default(autoincrement())
-  leftUserId       Int
-  rightUserId      Int?
-  type             MatchType
-  state            MatchState @default(CREATED)
-  goalsLeftPlayer  Int        @default(0)
-  goalsRightPlayer Int        @default(0)
-  createdAt        DateTime   @default(now())
-  startedAt        DateTime?
-  finishedAt       DateTime?
-  leftUser  User  @relation("LeftPlayer", fields: [leftUserId], references: [id])
-  rightUser User? @relation("RightPlayer", fields: [rightUserId], references: [id])
-}
-
-
-
-
+// CHANNEL MODELS

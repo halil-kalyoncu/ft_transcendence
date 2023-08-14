@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { GameService } from './game/service/game.service';
 import { EventsGateway } from './game/gateway/events/events.gateway';
+import { MatchModule } from './match/match.module';
 
 @Module({
   imports: [
@@ -14,11 +15,12 @@ import { EventsGateway } from './game/gateway/events/events.gateway';
     ChatModule,
     AuthModule,
     PrismaModule,
+    MatchModule,
   ],
   controllers: [],
   providers: [
 	EventsGateway,
-	GameService
+	GameService,
   ],
 })
 export class AppModule {}

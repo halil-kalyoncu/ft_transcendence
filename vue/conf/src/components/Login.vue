@@ -11,8 +11,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '../stores/username'
+import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
+import type { UserI } from '../model/user.interface'
+import jwtDecode from 'jwt-decode'
 
 const username = ref('')
 const router = useRouter()
@@ -35,6 +37,14 @@ const submitForm = async () => {
       console.log('access_token: ' + access_token)
       //save jwt into local storage
       localStorage.setItem('ponggame', access_token)
+      try {
+        const decodedToken: Record<string, unknown> = jwtDecode(access_token)
+        const loggedUser: UserI = decodedToken.user as UserI
+        userStore.setUserId(loggedUser.id as number)
+      } catch (error: any) {
+        console.error('Invalid token:', error)
+        notificationStore.showNotification('Invalid Token', false)
+      }
       userStore.setUsername(username.value)
       router.push('/home')
     } else {

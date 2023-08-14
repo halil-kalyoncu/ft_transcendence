@@ -2,7 +2,7 @@
 import { RouterLink, RouterView } from 'vue-router'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useUserStore } from '../../stores/username'
+import { useUserStore } from '../../stores/userInfo'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -45,9 +45,16 @@ const logout = () => {
         </div>
       </RouterLink>
       <div>
-        <button class="settings-button">
-          <font-awesome-icon class="icon" icon="cog" title="Settings" />
-        </button>
+        <RouterLink class="navButton header-username" to="/activity-center">
+          <button class="settings-button">
+            <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
+          </button>
+        </RouterLink>
+        <RouterLink class="navButton header-username" to="/settings">
+          <button class="settings-button">
+            <font-awesome-icon class="icon" icon="cog" title="Settings" />
+          </button>
+        </RouterLink>
         <a class="navButtonLogout" @click="logout" title="Logout">
           <font-awesome-icon class="icon" icon="sign-out-alt" />
         </a>
@@ -77,7 +84,6 @@ const logout = () => {
 
 .navButtonLogout,
 .settings-button {
-  padding: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
   color: lightgreen;
@@ -102,7 +108,6 @@ const logout = () => {
   background-color: transparent;
   width: fit-content;
   border: none;
-  margin-left: 5.4rem;
 }
 
 .settings-button .icon {
@@ -116,6 +121,7 @@ const logout = () => {
   padding: 0 0.5rem 0 1rem;
   background-color: #186dd6;
   border-radius: 0.5rem;
+  margin-right: 5.4rem;
 }
 
 .link-content .profile-image {

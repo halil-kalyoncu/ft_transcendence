@@ -19,4 +19,7 @@ describe('ConnectedUserService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it.skip('Not writing tests is a bad practice', () => {
+  });
 });

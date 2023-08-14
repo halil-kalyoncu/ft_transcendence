@@ -261,6 +261,7 @@ const goToProfile = (username: String | undefined) => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  margin: 0 0.5rem 0 0;
 }
 
 .suggestionList ul {
