@@ -18,9 +18,15 @@ export class MatchController {
         return await this.matchService.findById(id);
     }
 
-    @Delete('delete-by-id')
-    async deleteById(@Query('id', ParseIntPipe) id: number): Promise<Match> {
-        return await this.matchService.deleteById(id);
+    //not used
+    // @Delete('delete-by-id')
+    // async deleteById(@Query('id', ParseIntPipe) id: number): Promise<Match> {
+    //     return await this.matchService.deleteById(id);
+    // }
+
+    @Get('invites-by-userId')
+    async getInvitesByUserId(@Query('userId', ParseIntPipe) userId: number): Promise<Match[]> {
+        return await this.matchService.getInvites(userId);
     }
 
     private createMatchDtoToEntity(createMatchDto: CreateMatchDto): Prisma.MatchCreateInput {

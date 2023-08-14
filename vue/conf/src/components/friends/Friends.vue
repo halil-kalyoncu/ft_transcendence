@@ -15,9 +15,12 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
 import jwtDecode from 'jwt-decode'
+import { MatchI } from '../../model/match/match.interface'
+import { useRouter } from 'vue-router';
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
+const router = useRouter()
 
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
@@ -26,6 +29,7 @@ const socket = ref<Socket | null>(null)
 
 const friends = ref<FriendshipEntryI[]>([])
 const friendRequests = ref<FriendshipEntryI[]>([])
+const matchInvites = ref<MatchI[]>([])
 
 const modalTitle = ref('')
 const showFriendManagerAndChat = ref(false)
@@ -86,6 +90,23 @@ const setFriendRequestData = async () => {
   }
 }
 
+const setMatchInviteData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/matches/invites-by-userId?userId=${userId.value}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    matchInvites.value = data
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
 const setFriendsListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
@@ -109,14 +130,27 @@ const setFriendRequestListener = () => {
   })
 }
 
+const setMatchInviteListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  socket.value.on('matchInvites', () => {
+    console.log('matchInvites listener fired')
+    setMatchInviteData()
+  })
+}
+
 onMounted(() => {
   initSocket()
 
   setFriendsListener()
   setFriendRequestListener()
+  setMatchInviteListener()
 
   setFriendData()
   setFriendRequestData()
+  setMatchInviteData()
 })
 
 onBeforeUnmount(() => {
@@ -224,6 +258,7 @@ const acceptFriendRequest = (requestId: number) => {
   }
 
   socket.value.emit('acceptFriendRequest', requestId)
+  //TODO: change this
   setTimeout(() => {
     setFriendData()
     setFriendRequestData()
@@ -237,10 +272,30 @@ const rejectFriendRequest = (requestId: number) => {
     return
   }
   socket.value.emit('rejectFriendRequest', requestId)
+  //TODO: change this
   setTimeout(() => {
     setFriendRequestData()
     notificationStore.showNotification(`You have rejected friend request`, true)
   }, 1250)
+}
+
+const acceptMatchInvite = (matchId: number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.emit('acceptMatchInvite', matchId)
+  router.push(`/invite/${matchId}`)
+}
+
+const rejectMatchInvite = (matchId: number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.emit('rejectMatchInvite', matchId)
 }
 
 const handleUnfriendUser = (username: String, id: Number) => {
@@ -336,6 +391,16 @@ const goBack = () => {
               <span>{{ request.friend.username }}</span>
               <button @click="acceptFriendRequest(request.id)">Accept</button>
               <button @click="rejectFriendRequest(request.id)">Reject</button>
+            </div>
+          </li>
+        </ul>
+        <h2 v-if="matchInvites?.length > 0">MatchInvites</h2>
+        <ul v-if="matchInvites?.length > 0">
+          <li v-for="invite in matchInvites" :key="invite.id">
+            <div class="friendInfo">
+              <span>Custom game invite from {{ invite.leftUser.username }} </span>
+              <button @click="acceptMatchInvite(invite.id)">Accept</button>
+              <button @click="rejectMatchInvite(invite.id)">Reject</button>
             </div>
           </li>
         </ul>

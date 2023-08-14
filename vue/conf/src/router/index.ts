@@ -74,38 +74,6 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => jwtGuard(to, from, next)
     },
-    {
-      path: '/settings',
-      component: MainLayout,
-      children: [
-        {
-          path: '',
-          name: 'settings',
-          component: () => import('../views/SettingsView.vue') //lazy load
-        }
-      ],
-      beforeEnter: (
-        to: RouteLocationNormalized,
-        from: RouteLocationNormalized,
-        next: NavigationGuardNext
-      ): void => jwtGuard(to, from, next)
-    },
-    {
-      path: '/activity-center',
-      component: MainLayout,
-      children: [
-        {
-          path: '',
-          name: 'activity-center',
-          component: () => import('../views/ActivityCenterView.vue') //lazy load
-        }
-      ],
-      beforeEnter: (
-        to: RouteLocationNormalized,
-        from: RouteLocationNormalized,
-        next: NavigationGuardNext
-      ): void => jwtGuard(to, from, next)
-    },
     // {
     //   path: '/profile/:matchId',
     //   component: MainLayout,
@@ -123,7 +91,7 @@ const router = createRouter({
     //   ): void => jwtGuard(to, from, next)
     // },
     {
-      path: '/game',
+      path: '/game/:matchId',
       component: MainLayout,
       children: [
         {
@@ -148,7 +116,6 @@ const router = createRouter({
           component: () => import('../views/InviteView.vue') //lazy load
         }
       ],
-      props: true,
       beforeEnter: (
         to: RouteLocationNormalized,
         from: RouteLocationNormalized,

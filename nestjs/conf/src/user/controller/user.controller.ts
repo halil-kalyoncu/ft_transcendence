@@ -39,6 +39,13 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @Get('find')
+  async find(
+    @Query('username') username: string,
+  ): Promise<User> {
+    return this.userService.findByUsername(username);
+  }
+
   @Get('find-by-username')
   async findAllByUsername(
     @Query('username') username: string,

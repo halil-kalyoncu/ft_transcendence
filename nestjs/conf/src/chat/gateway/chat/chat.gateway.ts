@@ -395,10 +395,10 @@ export class ChatGateway
   }
 
   /******************
-  *** GameInvites ***
+  *** MatchInvites ***
   *******************/
 
-  @SubscribeMessage('sendGameInvite')
+  @SubscribeMessage('sendMatchInvite')
   async sendGameInvite(
     socket: Socket,
     sendGameInviteDto: SendGameInviteDto
@@ -409,13 +409,15 @@ export class ChatGateway
       socket.emit('Error', 'User is not online');
       return ;
     }
-
+  
+    console.log(receiverOnline);
     const updatedMatch: Match = await this.matchService.invite(sendGameInviteDto.matchId, sendGameInviteDto.invitedUserId);
-    socket.emit('friendInvited', updatedMatch);
-    socket.to(receiverOnline.socketId).emit('newGameInvite', updatedMatch);
+    console.log(updatedMatch);
+    socket.emit('matchInviteSent', updatedMatch);
+    socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
   }
 
-  @SubscribeMessage('acceptGameInvite')
+  @SubscribeMessage('acceptMatchInvite')
   async acceptGameInvite(
     socket: Socket,
     matchId: number
@@ -429,33 +431,63 @@ export class ChatGateway
     }
 
     const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
-    socket.emit('goToGameLobby', updatedMatch);
-    socket.to(receiverOnline.socketId).emit('gameInvitationAccepted', updatedMatch);
+    socket.emit('matchInvites');
+    //remove
+    console.log(match.leftUserId + ' ' + receiverOnline.userId);
+    socket.to(receiverOnline.socketId).emit('matchInviteAccepted', updatedMatch);
   }
 
-  @SubscribeMessage('rejectGameInvite')
+  @SubscribeMessage('rejectMatchInvite')
   async rejectGameInvite(
     socket: Socket,
     matchId: number
   ): Promise<void> {
-    const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
+    const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
     const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
-    const gameInvitations: Match[] = await this.matchService.getInvites(socket.data.user.id);
   
-    socket.emit('gameInvites', gameInvitations);
-    if (!receiverOnline) {
-      socket.to(receiverOnline.socketId).emit('gameInvitationRejected', updatedMatch);
+    socket.emit('matchInvites');
+    if (receiverOnline) {
+      //remove
+      console.log(updatedMatch.leftUserId);
+      socket.to(receiverOnline.socketId).emit('matchInviteRejected', updatedMatch);
     }
   }
 
-  //move this somewhere else?
+  @SubscribeMessage('hostLeaveMatch')
+  async hostLeaveMatch(
+    socket: Socket,
+    matchId: number
+  ): Promise<void> {
+    const match: Match = await this.matchService.findById(matchId);
+    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.rightUserId);
+
+    if (receiverOnline) {
+      console.log('sending hostLeftMatch to ' + receiverOnline.userId);
+      socket.to(receiverOnline.socketId).emit('hostLeftMatch');
+    }
+    this.matchService.deleteById(match.id);
+  }
+
+  @SubscribeMessage('leaveMatch')
+  async leaveMatch(
+    socket: Socket,
+    matchId: number
+  ): Promise<void> {
+    const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
+    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
+
+    if (receiverOnline) {
+      socket.to(receiverOnline.socketId).emit('leftMatch', updatedMatch);
+    }
+  }
+
   @SubscribeMessage('startMatch')
   async startMatch(
     socket: Socket,
     matchId: number
   ): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.leftUserId);
+    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.rightUserId);
 
     if (!receiverOnline) {
       socket.emit('Error', 'Opponent is not online');
@@ -463,8 +495,8 @@ export class ChatGateway
     }
 
     const updatedMatch: Match = await this.matchService.startMatch(matchId);
-    socket.emit('playMatch', updatedMatch);
-    socket.to(receiverOnline.socketId).emit('playMatch', updatedMatch);
+    socket.emit('goToGame', updatedMatch);
+    socket.to(receiverOnline.socketId).emit('goToGame', updatedMatch);
   }
 
   /**********************

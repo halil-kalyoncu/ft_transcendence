@@ -29,7 +29,7 @@ const findUserSuggestions = async (username: string) => {
   }
 
   const response = await fetch(
-    `http://localhost:3000/api/users/find-like-username?username=${username}`,
+    `http://localhost:3000/api/users/find-by-username?username=${username}`,
     {
       method: 'GET',
       headers: {
@@ -63,9 +63,8 @@ const sendInvite = async () => {
       return
     }
 
-    console.log('invite: ' + invitedUsername.value)
     const response = await fetch(
-      `http://localhost:3000/api/users/find-by-username?username=${invitedUsername.value}`,
+      `http://localhost:3000/api/users/find?username=${invitedUsername.value}`,
       {
         method: 'GET',
         headers: {
@@ -81,7 +80,8 @@ const sendInvite = async () => {
       return
     }
 
-    socket.emit('sendGameInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
+    console.log('sending invite for match: ' + props.matchId + ' to invitedUser: ' + invitedUser.value.id)
+    socket.emit('sendMatchInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.toString() : 'An error occurred'
     notificationStore.showNotification(errorMessage, false)

@@ -9,7 +9,11 @@ export class MatchService {
 
     async create(newMatch: Prisma.MatchCreateInput): Promise<Match> {
         return await this.prisma.match.create({
-            data: newMatch
+            data: newMatch, 
+            include: {
+                leftUser: true,
+                rightUser: true
+            }
         })
     }
 
@@ -26,6 +30,10 @@ export class MatchService {
     async deleteById(id: number): Promise<Match | null> {
         return await this.prisma.match.delete({
             where: { id },
+            include: {
+                leftUser: true,
+                rightUser: true
+            }
         });
     }
 
@@ -35,6 +43,10 @@ export class MatchService {
             data: {
                 rightUser: { connect: { id: invitedUserId } },
                 state: 'INVITED'
+            },
+            include: {
+                leftUser: true,
+                rightUser: true
             }
         })
     }
@@ -44,6 +56,10 @@ export class MatchService {
             where: { id },
             data: {
                 state: 'ACCEPTED'
+            },
+            include: {
+                leftUser: true,
+                rightUser: true
             }
         });
     }
@@ -54,6 +70,10 @@ export class MatchService {
             data: {
                 rightUser: null,
                 state: 'CREATED'
+            },
+            include: {
+                leftUser: true,
+                rightUser: true
             }
         });
     }
@@ -61,7 +81,12 @@ export class MatchService {
     async getInvites(userId: number): Promise<Match[]> {
         return await this.prisma.match.findMany({
             where: {
-                rightUserId: userId
+                rightUserId: userId,
+                state: 'INVITED'
+            },
+            include: {
+                leftUser: true,
+                rightUser: true
             }
         });
     }
@@ -71,6 +96,10 @@ export class MatchService {
             where: { id },
             data: {
                 state: 'STARTED'
+            }, 
+            include: {
+                leftUser: true,
+                rightUser: true
             }
         });
     }
