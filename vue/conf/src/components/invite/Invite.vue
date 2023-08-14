@@ -86,6 +86,10 @@ const handleStartMatch = () => {
 
 onMounted(async () => {
     initSocket();
+    if (!socket || !socket.value) {
+        notificationStore.showNotification(`Error: Connection problems`, true)
+        return
+    }
     const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
     const user: UserI = (decodedToken.user as UserI)
 
@@ -103,7 +107,7 @@ onMounted(async () => {
 
     socket.value.on('matchInviteAccepted', (updatedMatch: MatchI) => {
         match.value = updatedMatch
-        rightPlayer.value = match.value.rightUser
+        rightPlayer.value = match.value.rightUser as UserI
         console.log('matchInviteAccepted')
         console.log(updatedMatch)
     })
@@ -116,7 +120,7 @@ onMounted(async () => {
 
     socket.value.on('hostLeftMatch', () => {
         if (!userIsHost.value) {
-            notificationStore.showNotification('Host ' + match.value.rightUser.username + ' left the match', false)
+            notificationStore.showNotification('Host ' + match.value.rightUser!.username + ' left the match', false)
             lobbyIsFinished.value = true;
             router.push('/home')
         }
@@ -124,7 +128,7 @@ onMounted(async () => {
 
     socket.value.on('leftMatch', (updatedMatch: MatchI) => {
         if (userIsHost.value) {
-            notificationStore.showNotification(match.value.rightUser.username + ' left the match', false)
+            notificationStore.showNotification(match.value.rightUser!.username + ' left the match', false)
             match.value = updatedMatch
         }
     })
@@ -146,11 +150,11 @@ onBeforeUnmount(() => {
     }
     if (userIsHost.value) {
         console.log('host left')
-        handleHostLeaveMatch(match.value.id);
+        handleHostLeaveMatch(match.value.id!);
     }
     else {
         console.log('user left')
-        handleLeaveMatch(match.value.id);
+        handleLeaveMatch(match.value.id!);
     }
 })
 </script>

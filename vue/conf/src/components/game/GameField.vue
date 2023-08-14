@@ -42,7 +42,6 @@ import GameBall from './GameBall.vue'
 import PowerUp from './PowerUp.vue'
 import { io } from 'socket.io-client' 
 
-
 export default {
 	name: 'App',
 	components: {

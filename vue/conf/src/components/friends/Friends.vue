@@ -398,10 +398,9 @@ const goBack = () => {
         <ul v-if="matchInvites?.length > 0">
           <li v-for="invite in matchInvites" :key="invite.id">
             <div class="friendInfo">
-              <span>Custom game invite from {{ invite.leftUser?.username }} </span>
-			  <button @click="invite.id !== undefined ? acceptMatchInvite(invite.id) : null">Accept</button>
-				<button @click="invite.id !== undefined ? rejectMatchInvite(invite.id) : null">Reject</button>
-
+              <span v-if="invite.leftUser">Custom game invite from {{ invite.leftUser.username }} </span>
+              <button @click="acceptMatchInvite(invite.id as number)">Accept</button>
+              <button @click="rejectMatchInvite(invite.id as number)">Reject</button>
             </div>
           </li>
         </ul>
