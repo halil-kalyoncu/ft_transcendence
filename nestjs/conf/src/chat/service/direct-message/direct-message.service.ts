@@ -55,31 +55,15 @@ export class DirectMessageService {
     });
   }
 
-  async getUnreadMessages(readerUserId: number, withUserId: number): Promise<DirectMessage[]> {
+  async getUnreadMessages(
+    readerUserId: number,
+    withUserId: number,
+  ): Promise<DirectMessage[]> {
     return this.prisma.directMessage.findMany({
       where: {
         receiverId: readerUserId,
         senderId: withUserId,
-        isRead: false
-      },
-      include: {
-        sender: true,
-        receiver: true,
-        message: true
-      },
-      orderBy: {
-        message: {
-          createdAt: 'desc'
-        }
-      }
-    });
-  }
-
-  async getAllUnreadMessages(userId: number): Promise<DirectMessage[]> {
-    return this.prisma.directMessage.findMany({
-      where: {
-        receiverId: userId,
-        isRead: false
+        isRead: false,
       },
       include: {
         sender: true,
@@ -94,20 +78,38 @@ export class DirectMessageService {
     });
   }
 
-  async markConversationAsRead(readerUserId: number, withUserId: number): Promise<DirectMessage[]> {
+  async getAllUnreadMessages(userId: number): Promise<DirectMessage[]> {
+    return this.prisma.directMessage.findMany({
+      where: {
+        receiverId: userId,
+        isRead: false,
+      },
+      include: {
+        sender: true,
+        receiver: true,
+        message: true,
+      },
+      orderBy: {
+        message: {
+          createdAt: 'desc',
+        },
+      },
+    });
+  }
+
+  async markConversationAsRead(
+    readerUserId: number,
+    withUserId: number,
+  ): Promise<DirectMessage[]> {
     const directMessages = await this.prisma.directMessage.updateMany({
       where: {
-        AND: [
-          { senderId: withUserId },
-          { receiverId: readerUserId }
-        ]
+        AND: [{ senderId: withUserId }, { receiverId: readerUserId }],
       },
       data: {
         isRead: true,
-      }
+      },
     });
-	console.log(directMessages)
+    console.log(directMessages);
     return this.getConversation(readerUserId, withUserId);
   }
-
 }

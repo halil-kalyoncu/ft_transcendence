@@ -18,9 +18,6 @@ import { MatchModule } from './match/match.module';
     MatchModule,
   ],
   controllers: [],
-  providers: [
-	EventsGateway,
-	GameService,
-  ],
+  providers: [EventsGateway, GameService],
 })
 export class AppModule {}

@@ -27,7 +27,11 @@ import { ChannelMemberService } from './service/channel-member/channel-member.se
     MatchService,
     ChannelMemberService,
   ],
-  controllers: [DirectMessageController, FriendshipController, ChannelController],
+  controllers: [
+    DirectMessageController,
+    FriendshipController,
+    ChannelController,
+  ],
   exports: [FriendshipService, ConnectedUserService],
 })
 export class ChatModule {}

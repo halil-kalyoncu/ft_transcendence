@@ -6,10 +6,8 @@ import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [AuthModule, UserModule],
-  providers: [
-    MatchService,
-  ],
+  providers: [MatchService],
   controllers: [MatchController],
-  exports: [MatchService]
+  exports: [MatchService],
 })
 export class MatchModule {}

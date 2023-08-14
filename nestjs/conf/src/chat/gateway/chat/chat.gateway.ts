@@ -30,7 +30,7 @@ import {
   Friendship,
   FriendshipStatus,
   User,
-  Match
+  Match,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
@@ -57,7 +57,7 @@ export class ChatGateway
     private connectedUserService: ConnectedUserService,
     private directMessageService: DirectMessageService,
     private channelMessageService: ChannelMessageService,
-    private matchService: MatchService
+    private matchService: MatchService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -220,7 +220,7 @@ export class ChatGateway
 
     //sender
     socket.emit('newDirectMessage', newMessage);
-    
+
     //receiver
     if (receiverOnline) {
       this.server
@@ -395,71 +395,75 @@ export class ChatGateway
   }
 
   /******************
-  *** MatchInvites ***
-  *******************/
+   *** MatchInvites ***
+   *******************/
 
   @SubscribeMessage('sendMatchInvite')
   async sendGameInvite(
     socket: Socket,
-    sendGameInviteDto: SendGameInviteDto
+    sendGameInviteDto: SendGameInviteDto,
   ): Promise<void> {
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(sendGameInviteDto.invitedUserId);
-  
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(
+        sendGameInviteDto.invitedUserId,
+      );
+
     if (!receiverOnline) {
       socket.emit('Error', 'User is not online');
-      return ;
+      return;
     }
-  
+
     console.log(receiverOnline);
-    const updatedMatch: Match = await this.matchService.invite(sendGameInviteDto.matchId, sendGameInviteDto.invitedUserId);
+    const updatedMatch: Match = await this.matchService.invite(
+      sendGameInviteDto.matchId,
+      sendGameInviteDto.invitedUserId,
+    );
     console.log(updatedMatch);
     socket.emit('matchInviteSent', updatedMatch);
     socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
   }
 
   @SubscribeMessage('acceptMatchInvite')
-  async acceptGameInvite(
-    socket: Socket,
-    matchId: number
-  ): Promise<void> {
+  async acceptGameInvite(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.leftUserId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(match.leftUserId);
 
     if (!receiverOnline) {
       socket.emit('Error', 'Match creator is not online');
-      return ;
+      return;
     }
 
     const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
     socket.emit('matchInvites');
     //remove
     console.log(match.leftUserId + ' ' + receiverOnline.userId);
-    socket.to(receiverOnline.socketId).emit('matchInviteAccepted', updatedMatch);
+    socket
+      .to(receiverOnline.socketId)
+      .emit('matchInviteAccepted', updatedMatch);
   }
 
   @SubscribeMessage('rejectMatchInvite')
-  async rejectGameInvite(
-    socket: Socket,
-    matchId: number
-  ): Promise<void> {
+  async rejectGameInvite(socket: Socket, matchId: number): Promise<void> {
     const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
-  
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
+
     socket.emit('matchInvites');
     if (receiverOnline) {
       //remove
       console.log(updatedMatch.leftUserId);
-      socket.to(receiverOnline.socketId).emit('matchInviteRejected', updatedMatch);
+      socket
+        .to(receiverOnline.socketId)
+        .emit('matchInviteRejected', updatedMatch);
     }
   }
 
   @SubscribeMessage('hostLeaveMatch')
-  async hostLeaveMatch(
-    socket: Socket,
-    matchId: number
-  ): Promise<void> {
+  async hostLeaveMatch(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.rightUserId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(match.rightUserId);
 
     if (receiverOnline) {
       console.log('sending hostLeftMatch to ' + receiverOnline.userId);
@@ -469,12 +473,10 @@ export class ChatGateway
   }
 
   @SubscribeMessage('leaveMatch')
-  async leaveMatch(
-    socket: Socket,
-    matchId: number
-  ): Promise<void> {
+  async leaveMatch(socket: Socket, matchId: number): Promise<void> {
     const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
 
     if (receiverOnline) {
       socket.to(receiverOnline.socketId).emit('leftMatch', updatedMatch);
@@ -482,16 +484,14 @@ export class ChatGateway
   }
 
   @SubscribeMessage('startMatch')
-  async startMatch(
-    socket: Socket,
-    matchId: number
-  ): Promise<void> {
+  async startMatch(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.rightUserId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(match.rightUserId);
 
     if (!receiverOnline) {
       socket.emit('Error', 'Opponent is not online');
-      return ;
+      return;
     }
 
     const updatedMatch: Match = await this.matchService.startMatch(matchId);
@@ -538,5 +538,4 @@ export class ChatGateway
     socket.emit('Error', new UnauthorizedException());
     socket.disconnect();
   }
-
 }

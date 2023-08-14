@@ -29,7 +29,7 @@
 import GamePaddle from './GamePaddle.vue'
 import GameBall from './GameBall.vue'
 import PowerUp from './PowerUp.vue'
-import { io } from 'socket.io-client'
+import { io } from 'socket.io-client' 
 
 const matchId = route.params.matchId as string;
 
