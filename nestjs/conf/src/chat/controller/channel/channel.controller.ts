@@ -41,21 +41,21 @@ export class ChannelController {
   @Get('getAllChannelsWhereUserAdmin')
   async getAllChannelsWhereUserAdmin(
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<Channel[]> {
+  ): Promise<ChannelInfoDto[]> {
     return await this.ChannelService.getChannelsforId(userId, 'admin');
   }
 
   @Get('getAllChannelsWhereUserOwner')
   async getAllChannelsWhereUserOwner(
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<Channel[]> {
+  ): Promise<ChannelInfoDto[]> {
     return await this.ChannelService.getChannelsforId(userId, 'owner');
   }
 
   @Get('getAllChannelsWhereUserMember')
   async getAllChannelsWhereUserMember(
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<Channel[]> {
+  ): Promise<ChannelInfoDto[]> {
     return await this.ChannelService.getChannelsforId(userId, 'member');
   }
 

@@ -1,6 +1,6 @@
 <template>
   <div class="joinned-channels">
-    <!-- <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
+    <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
       <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
           :isPasswordProtected="channel.channel.protected"
@@ -10,7 +10,7 @@
           @channel-entered="handleChannelEntered(channel.channel.id)"
         />
       </div>
-    </ScrollViewer> -->
+    </ScrollViewer>
   </div>
 </template>
 
@@ -30,18 +30,10 @@ const channelData = ref<ChannelInfoI[]>([])
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
 
-onMounted(async () => {
-  try {
-    const response = await fetch(`/api/getAllChannelsFromUser?userId=${userId}`)
-	if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
-    }
-    const data = await response.json()
-    channelData.value = data
-  } catch (error) {
-    console.error('Error fetching user channels:', error)
-  }
-})
+
+const response =  fetch(`/api/getAllChannelsFromUser?userId=${userId}`)
+const data =  response
+channelData.value = data
 </script>
 
 <style>

@@ -376,24 +376,30 @@ export class ChannelService {
     return members.map((member) => member.user);
   }
 
-  async getOwner(channelId: number): Promise<User> {
-    const owner = await this.prisma.channelMember.findFirst({
-      where: {
-        channelId: channelId,
-        role: ChannelMemberRole.OWNER,
-      },
-      include: {
-        user: true,
-      },
-    });
+  async getOwner(channelId: number): Promise<User | null> {
+	const channelMember = await this.prisma.channelMember.findFirst({
+	  where: {
+		channelId: channelId,
+		role: ChannelMemberRole.OWNER,
+	  },
+	  include: {
+		user: true,
+	  },
+	});
+  
+	if (channelMember) {
+	  return channelMember.user;
+	} else {
+	  return null;
+	}
   }
+  
 
   async getChannelsforId(
     userId: number,
     role = 'all',
   ): Promise<ChannelInfoDto[]> {
     let memberships;
-
     switch (role) {
       case 'all':
         memberships = await this.prisma.channelMember.findMany({
@@ -446,10 +452,13 @@ export class ChannelService {
         throw new Error('Invalid role value');
     }
 
-    return memberships.map((membership) => {
+    const MembershipEntries: ChannelInfoDto[] = await Promise.all (
+      memberships.map(async (membership) => {
       const channel = membership.channel;
-      const owner = this.getOwner(membership.channelId);
-      return { channel, owner };
-    });
+      const owner = 
+	  	await this.getOwner(membership.channelId);
+      return { channel:channel, owner:owner };
+    }));
+	return MembershipEntries;
   }
 }
