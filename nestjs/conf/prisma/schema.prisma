@@ -23,7 +23,6 @@ model User {
   receivedDirectMessages DirectMessage[] @relation("Receiver")
 
   ChannelMember ChannelMember[]
-  
   leftPlayerMatches  Match[] @relation("LeftPlayer")
   rightPlayerMatches Match[] @relation("RightPlayer")
 }
@@ -144,6 +143,11 @@ model ChannelMember {
   @@unique([userId, channelId])
 }
 
+enum MatchType {
+  LADDER
+  CUSTOM
+}
+
 enum MatchState {
   CREATED
   INVITED
@@ -153,11 +157,6 @@ enum MatchState {
   DISCONNECTRIGHT
   WINNERLEFT
   WINNERRIGHT
-}
-
-enum MatchType {
-  LADDER
-  CUSTOM
 }
 
 model Match {
@@ -174,7 +173,4 @@ model Match {
   leftUser  User  @relation("LeftPlayer", fields: [leftUserId], references: [id])
   rightUser User? @relation("RightPlayer", fields: [rightUserId], references: [id])
 }
-
-
-
 

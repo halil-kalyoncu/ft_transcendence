@@ -8,6 +8,7 @@ import SideBar from './components/SideBar.vue'
 import TopNavBar from './components/layout/TopNavBar.vue'
 import Notification from './components/utils/Notification.vue'
 import GameField from './components/game/GameField.vue'
+import InviteView from './components/invite/InviteView.vue'
 
 const route = useRoute()
 const showLoginPage = computed(() => route.path === '/')

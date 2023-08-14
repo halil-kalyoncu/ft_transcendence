@@ -1,7 +1,7 @@
 <script setup lang="ts">
-	import GameField from '../components/game/GameField.vue'
+import GameField from '../components/game/GameField.vue'
 </script>
 
 <template>
-	<GameField />
+  <GameField />
 </template>

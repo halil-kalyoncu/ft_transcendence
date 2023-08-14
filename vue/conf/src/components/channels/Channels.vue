@@ -27,21 +27,21 @@
       />
       <div v-if="showChannelManagerAndChat">
         <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" />
-        <!-- <Chat :channelId="joinedChannelId" /> -->
+        <ChannelMessages />
       </div>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import Chat from '../chat/Chat.vue'
 import ChannelManager from './ChannelManager.vue'
+import ChannelMessages from '../chat/ChannelMessages.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
-import { useUserStore } from '../../stores/username'
+import { useUserStore } from '../../stores/userInfo'
 import { connectWebSocket, disconnectWebSocket } from '../../websocket'
 import { ChannelVisibility } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
@@ -70,7 +70,6 @@ onMounted(() => {
       notificationStore.showNotification('Error: ' + error, false)
     })
   }
-  console.log('socket')
 })
 onBeforeUnmount(() => {
   disconnectWebSocket()
@@ -80,9 +79,10 @@ const userStore = useUserStore()
 const username = computed(() => userStore.username)
 
 interface ModalResult {
-  name: string
-  password: string
-  visibility: string
+  name?: string
+  password?: string
+  visibility?: string
+  minutesOfMute?: number
 }
 
 const isModalOpened = ref(false)
@@ -94,9 +94,11 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-const handleConfirm = ({ name, password, visibility }: ModalResult) => {
+const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResult) => {
   isModalOpened.value = false
-
+  if (visibility === undefined) {
+    visibility = ChannelVisibility.PUBLIC
+  }
   if (
     !Object.values(ChannelVisibility).includes(visibility.toUpperCase() as ChannelVisibilityType)
   ) {
@@ -106,8 +108,8 @@ const handleConfirm = ({ name, password, visibility }: ModalResult) => {
 
   const createChannelDto: CreateChannelDto = {
     userId: 1,
-    name: name,
-    password: password,
+    name: name || '',
+    password: password || '',
     channelVisibility: visibility.toUpperCase() as ChannelVisibilityType
   }
 
@@ -116,7 +118,6 @@ const handleConfirm = ({ name, password, visibility }: ModalResult) => {
   } else {
     console.error('Socket is not connected')
   }
-  console.log(name, password, visibility)
 }
 
 const showChannelManagerAndChat = ref(false)
@@ -163,16 +164,16 @@ const handleChannelLeft = () => {
 }
 </script>
 
-<style scoped>
+<style>
 .channels {
   height: calc(100% - 50px);
-  padding: 1.5rem 0.5rem 0.5rem 0.5rem;
+  padding: 1rem 0.5rem 0.5rem 0.5rem;
 }
 .channel-option-button {
   font-family: 'Courier New', Courier, monospace !important;
   display: block;
   width: calc(100%);
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
   background: transparent;
@@ -189,11 +190,12 @@ const handleChannelLeft = () => {
   font-weight: bold;
 }
 
-.channels .back-button-container {
+.back-button-container {
   text-align: right;
+  height: 2.25rem;
 }
 
-.channels .back-button {
+.back-button {
   background: none;
   border: 0.5px solid aliceblue;
   font-size: 0.75rem;
@@ -205,7 +207,8 @@ const handleChannelLeft = () => {
   transition: 0.25s color ease-out, border 0.25s ease-out;
   margin: 0 0 1rem 0;
 }
-.channels .back-button:hover {
+
+.back-button:hover {
   color: aliceblue;
   border: 0.5px solid #ea9f42;
   text-shadow: 0px 0px 1px aliceblue;

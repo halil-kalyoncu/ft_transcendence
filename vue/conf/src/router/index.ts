@@ -15,7 +15,6 @@ const jwtGuard = (
   if (accessToken) {
     try {
       const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-      console.log(decodedToken)
       const expirationTime: number = (decodedToken.exp as number) * 1000
 
       if (Date.now() >= expirationTime) {
@@ -75,14 +74,46 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => jwtGuard(to, from, next)
     },
+    // {
+    //   path: '/profile/:matchId',
+    //   component: MainLayout,
+    //   children: [
+    //     {
+    //       path: '',
+    //       name: 'invite',
+    //       component: () => import('../components/invite/Invite.vue') //lazy load
+    //     }
+    //   ],
+    //   beforeEnter: (
+    //     to: RouteLocationNormalized,
+    //     from: RouteLocationNormalized,
+    //     next: NavigationGuardNext
+    //   ): void => jwtGuard(to, from, next)
+    // },
     {
-      path: '/game',
+      path: '/game/:matchId',
       component: MainLayout,
       children: [
         {
           path: '',
           name: 'game',
           component: () => import('../views/GameView.vue') //lazy load
+        }
+      ],
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => jwtGuard(to, from, next)
+    },
+    {
+      path: '/invite/:matchId',
+      component: MainLayout,
+      children: [
+        {
+          path: '',
+          name: 'invite',
+          component: () => import('../views/InviteView.vue') //lazy load
         }
       ],
       beforeEnter: (

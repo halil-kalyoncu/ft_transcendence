@@ -1,53 +1,211 @@
 <script setup lang="ts">
-import Chat from '../chat/Chat.vue'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
 import { connectWebSocket, disconnectWebSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import type { UserI } from '../../model/user.interface'
 import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
+import FriendsListItem from './FriendsListItem.vue'
+import ScrollViewer from '../utils/ScrollViewer.vue'
+import FriendsModal from './FriendsModal.vue'
+import FriendMessages from '../chat/FriendMessages.vue'
+import FriendManager from './FriendManager.vue'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { useUserStore } from '../../stores/userInfo'
+import { Socket } from 'socket.io-client'
+import jwtDecode from 'jwt-decode'
+import { MatchI } from '../../model/match/match.interface'
+import { useRouter } from 'vue-router';
+library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
+const router = useRouter()
+
+const userStore = useUserStore()
+const userId = computed(() => userStore.userId)
+
+const socket = ref<Socket | null>(null)
 
 const friends = ref<FriendshipEntryI[]>([])
-const newFriend = ref('')
-const userSuggestions = ref<UserI[]>([])
-const showSuggestionList = ref(false)
 const friendRequests = ref<FriendshipEntryI[]>([])
+const matchInvites = ref<MatchI[]>([])
 
-//right click on friend
-const showContextMenuFlag = ref(false)
-const contextMenuPosition = ref({ top: 0, left: 0 })
+const modalTitle = ref('')
+const showFriendManagerAndChat = ref(false)
+
 const selectedFriend = ref<FriendshipEntryI | null>(null)
 
 const showChat = ref(false)
 
-onMounted(() => {
+const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
 
-  socket.on('friends', (responseData: FriendshipEntryI[]) => {
-    friends.value = responseData
-  })
+const updateSelectedFriend = () => {
+  if (!selectedFriend.value) return
 
-  socket.on('friendRequests', (responseData: FriendshipEntryI[]) => {
-    friendRequests.value = responseData
+  const updatedFriend = friends.value.find((f) => f.friend.id === selectedFriend.value?.friend.id)
+
+  if (updatedFriend) {
+    selectedFriend.value = updatedFriend
+  } else {
+    closeFriendManagerAndChat()
+  }
+}
+
+const setFriendData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/friendships/get-accepted-friends?userId=${userId.value}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    friends.value = data
+    updateSelectedFriend()
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
+const setFriendRequestData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    friendRequests.value = data
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
+const setMatchInviteData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/matches/invites-by-userId?userId=${userId.value}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    matchInvites.value = data
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
+const setFriendsListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.on('friends', () => {
+    console.log('friends listener fired')
+    setFriendData()
   })
+}
+
+const setFriendRequestListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  socket.value.on('friendRequests', () => {
+    console.log('friendRequests listener fired')
+    setFriendRequestData()
+  })
+}
+
+const setMatchInviteListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  socket.value.on('matchInvites', () => {
+    console.log('matchInvites listener fired')
+    setMatchInviteData()
+  })
+}
+
+onMounted(() => {
+  initSocket()
+
+  setFriendsListener()
+  setFriendRequestListener()
+  setMatchInviteListener()
+
+  setFriendData()
+  setFriendRequestData()
+  setMatchInviteData()
 })
 
 onBeforeUnmount(() => {
   disconnectWebSocket()
+  console.log('onBeforeUnmount friends')
 })
 
-const addFriend = () => {
-  if (newFriend.value.trim() === '') {
+interface ModalResult {
+  username: string
+}
+
+const isModalOpened = ref(false)
+const openAddModal = () => {
+  modalTitle.value = 'Add a Friend'
+  isModalOpened.value = true
+}
+
+const openBlockModal = () => {
+  modalTitle.value = 'Block a User'
+  isModalOpened.value = true
+}
+
+const openUnblockModal = () => {
+  modalTitle.value = 'Unblock a User'
+  isModalOpened.value = true
+}
+
+const handleClose = () => {
+  isModalOpened.value = false
+}
+
+const handleSubmit = computed(() => {
+  if (modalTitle.value === 'Add a Friend') {
+    return handleAdd
+  } else if (modalTitle.value === 'Block a User') {
+    return handleBlock
+  } else {
+    return handleUnblock
+  }
+})
+
+const handleAdd = ({ username }: ModalResult) => {
+  isModalOpened.value = false
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  if (username.trim() === '') {
+    notificationStore.showNotification('Error: friend name cannot be empty', false)
     return
   }
 
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
-  socket.emit(
+  socket.value.emit(
     'sendFriendRequest',
-    newFriend.value,
+    username,
     (response: FriendshipEntryI | { error: string }) => {
       if ('error' in response) {
         notificationStore.showNotification(response.error, false)
@@ -59,146 +217,218 @@ const addFriend = () => {
       }
     }
   )
-  newFriend.value = ''
 }
 
-const findUserSuggestions = async (username: string) => {
+const handleBlock = ({ username }: ModalResult) => {
+  isModalOpened.value = false
+
   if (username.trim() === '') {
-    userSuggestions.value = []
+    notificationStore.showNotification('Error: user name cannot be empty', false)
     return
   }
 
-  const response = await fetch(
-    `http://localhost:3000/api/users/find-by-username?username=${username}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
-  )
-  const data = await response.json()
-  userSuggestions.value = data
+  notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
 }
 
-const selectSuggestion = (suggestion: UserI) => {
-  newFriend.value = suggestion.username || ''
+const handleUnblock = ({ username }: ModalResult) => {
+  isModalOpened.value = false
+
+  if (username.trim() === '') {
+    notificationStore.showNotification('Error: user name cannot be empty', false)
+    return
+  }
+
+  notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
 }
 
-const showSuggestions = () => {
-  showSuggestionList.value = true
+const closeFriendManagerAndChat = () => {
+  showFriendManagerAndChat.value = false
+  selectedFriend.value = null
 }
 
-const hideSuggestions = () => {
-  showSuggestionList.value = false
+const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
+  selectedFriend.value = friend
+  showFriendManagerAndChat.value = true
 }
-
-watch(newFriend, (newValue) => {
-  findUserSuggestions(newValue)
-})
 
 const acceptFriendRequest = (requestId: number) => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
-  socket.emit('acceptFriendRequest', requestId)
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.emit('acceptFriendRequest', requestId)
+  //TODO: change this
+  setTimeout(() => {
+    setFriendData()
+    setFriendRequestData()
+    notificationStore.showNotification(`A new friend has been added successfully`, true)
+  }, 1250)
 }
 
 const rejectFriendRequest = (requestId: number) => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  const socket = connectWebSocket('http://localhost:3000', accessToken)
-  socket.emit('rejectFriendRequest', requestId)
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  socket.value.emit('rejectFriendRequest', requestId)
+  //TODO: change this
+  setTimeout(() => {
+    setFriendRequestData()
+    notificationStore.showNotification(`You have rejected friend request`, true)
+  }, 1250)
 }
 
-const showContextMenu = (event: MouseEvent, friend: FriendshipEntryI) => {
-  event.preventDefault()
-  selectedFriend.value = friend
-  showContextMenuFlag.value = true
-  contextMenuPosition.value = { top: event.clientY, left: event.clientX }
+const acceptMatchInvite = (matchId: number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.emit('acceptMatchInvite', matchId)
+  router.push(`/invite/${matchId}`)
 }
 
-const handleClickOutsideContextMenu = (event: MouseEvent) => {
-  const contextMenu = document.querySelector('.contextMenu') as HTMLElement
-  if (contextMenu && !contextMenu.contains(event.target as Node)) {
-    showContextMenuFlag.value = false
-    selectedFriend.value = null
+const rejectMatchInvite = (matchId: number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.emit('rejectMatchInvite', matchId)
+}
+
+const handleUnfriendUser = (username: String, id: Number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  if (username !== '') {
+    console.log('removeFriend id:' + id + ', username: ' + username)
+    socket.value
+      .emit('removeFriend', id, (response: any) => {
+        console.log('removeFriend response', response)
+        if (response && 'success' in response) {
+          if (response.success) {
+            notificationStore.showNotification(
+              `User ${username} was removed from friends list`,
+              true
+            )
+            closeFriendManagerAndChat()
+          } else {
+            notificationStore.showNotification(
+              `Error Could not remove ${username} from friends list: ${response.error}`,
+              false
+            )
+          }
+        } else {
+          console.error('removeFriend error', response)
+          notificationStore.showNotification(
+            `Unexpected error occurred while removing ${username} from friends list. Please try again.`,
+            false
+          )
+        }
+      })
+      .on('error', (error: any) => {
+        // Handle case when socket.emit fails
+        console.error('Socket emit error', error)
+        notificationStore.showNotification(
+          `Network error occurred while removing ${username} from friends list. Please try again.`,
+          false
+        )
+      })
   }
 }
 
-const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
-  if (friend) {
-    const accessToken = localStorage.getItem('ponggame') ?? ''
-    const socket = connectWebSocket('http://localhost:3000', accessToken)
-    socket.emit('removeFriend', friend.id)
+const handleBlockUser = (username: String, id: Number) => {
+  if (username !== '') {
+    notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
   }
-  showContextMenuFlag.value = false
-  selectedFriend.value = null
+  closeFriendManagerAndChat()
+}
+
+const handleInviteToGame = (username: String, id: Number) => {
+  if (username !== '') {
+    notificationStore.showNotification('User ' + username + ' was invited to play', true)
+  }
+}
+
+const goBack = () => {
+  closeFriendManagerAndChat()
 }
 </script>
 
 <template>
-  <section class="friends" @click="handleClickOutsideContextMenu">
-    <div class="friendsList">
-      <h2>Friends</h2>
-      <ul class="friendsList">
-        <li v-for="entry in friends" :key="entry.id" @contextmenu="showContextMenu($event, entry)">
-          <div class="friendInfo">
-            <span>{{ entry.friend.username }}</span>
-            <div
-              class="statusIndicator"
-              :class="{ online: entry.isOnline, offline: !entry.isOnline }"
-            ></div>
-          </div>
-        </li>
-      </ul>
-      <h2 v-if="friendRequests.length > 0">Friend Requests</h2>
-      <ul v-if="friendRequests.length > 0" class="friendRequestsList">
-        <li v-for="request in friendRequests" :key="request.id">
-          <div class="friendInfo">
-            <span>{{ request.friend.username }}</span>
-            <button @click="acceptFriendRequest(request.id)">Accept</button>
-            <button @click="rejectFriendRequest(request.id)">Reject</button>
-          </div>
-        </li>
-      </ul>
-      <input
-        type="text"
-        v-model="newFriend"
-        placeholder="Enter username"
-        @focus="showSuggestions"
-        @blur="hideSuggestions"
+  <section class="friends">
+    <template v-if="!showFriendManagerAndChat">
+      <FriendsModal
+        :isOpened="isModalOpened"
+        :title="modalTitle"
+        @submit="handleSubmit"
+        @close="handleClose"
       />
-      <div class="suggestionList" v-if="showSuggestionList">
-        <ul v-if="userSuggestions.length" class="suggestionList">
-          <li
-            v-for="suggestion in userSuggestions"
-            :key="suggestion.id"
-            @mousedown="selectSuggestion(suggestion)"
-          >
-            {{ suggestion.username }}
+      <div class="friendsList">
+        <h2
+          v-if="friends === undefined || friends?.length === 0"
+          class="friends-empty-notification"
+        >
+          Friend list is empty
+        </h2>
+        <ScrollViewer :maxHeight="'68vh'" class="friendsList" :class="'messages-scrollviewer'">
+          <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
+            <FriendsListItem
+              @click="handleFriendManagerOpened(entry)"
+              :status="entry.isOnline ? 'online' : 'offline'"
+              :username="entry.friend.username"
+              :showActions="false"
+            />
+          </div>
+        </ScrollViewer>
+        <h2 v-if="friendRequests?.length > 0">Friend Requests</h2>
+        <ul v-if="friendRequests?.length > 0" class="friendRequestsList">
+          <li v-for="request in friendRequests" :key="request.id">
+            <div class="friendInfo">
+              <span>{{ request.friend.username }}</span>
+              <button @click="acceptFriendRequest(request.id)">Accept</button>
+              <button @click="rejectFriendRequest(request.id)">Reject</button>
+            </div>
           </li>
         </ul>
-      </div>
-      <button @click="addFriend">Add Friend</button>
-
-      <!-- Right-click menu for friends -->
-      <div
-        v-show="showContextMenuFlag"
-        :style="{ top: contextMenuPosition.top + 'px', left: contextMenuPosition.left + 'px' }"
-        class="contextMenu"
-      >
-        <ul>
-          <li @click="showChat = !showChat">Send message</li>
-          <li @click="removeFriendContextMenu(selectedFriend)">Remove Friend</li>
+        <h2 v-if="matchInvites?.length > 0">MatchInvites</h2>
+        <ul v-if="matchInvites?.length > 0">
+          <li v-for="invite in matchInvites" :key="invite.id">
+            <div class="friendInfo">
+              <span>Custom game invite from {{ invite.leftUser.username }} </span>
+              <button @click="acceptMatchInvite(invite.id)">Accept</button>
+              <button @click="rejectMatchInvite(invite.id)">Reject</button>
+            </div>
+          </li>
         </ul>
+        <button class="add-friend-button" @click="openAddModal">Add Friend</button>
+        <button class="add-friend-button" @click="openBlockModal">Block User</button>
+        <button class="add-friend-button" @click="openUnblockModal">Unblock User</button>
       </div>
-    </div>
 
-    <div v-if="showChat" class="chat-container">
-      <div class="chat-component">
-        <button class="close-button" @click="showChat = false">X</button>
-        <Chat :selectedFriendEntry="selectedFriend" />
+      <div v-if="showChat" class="chat-container">
+        <div class="chat-component">
+          <button class="close-button" @click="showChat = false">X</button>
+        </div>
       </div>
-    </div>
+    </template>
+    <template v-else>
+      <div class="back-button-container">
+        <button class="back-button" @click="goBack">
+          <font-awesome-icon :icon="['fas', 'arrow-left']" />
+        </button>
+      </div>
+      <FriendManager
+        @unfriend-user="handleUnfriendUser"
+        @block-user="handleBlockUser"
+        @invite-user-to-game="handleInviteToGame"
+        :selectedFriendEntry="selectedFriend"
+      />
+      <FriendMessages :selectedFriendEntry="selectedFriend" />
+    </template>
   </section>
 </template>
 
@@ -207,6 +437,7 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
   display: flex;
   flex-direction: column;
   height: calc(100% - 50px);
+  padding: 1rem 0.5rem 0.5rem 0.5rem;
 }
 
 .friendsList {
@@ -221,112 +452,35 @@ const removeFriendContextMenu = (friend: FriendshipEntryI | null) => {
   margin: 0;
 }
 
-.friendsList li {
-  margin-bottom: 10px;
-}
-
-.suggestionList {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.suggestionList ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.suggestionList li {
-  margin-bottom: 10px;
-}
-
 .friendInfo {
   display: flex;
   align-items: center;
 }
 
-.statusIndicator {
-  width: 10px;
-  height: 10px;
-  margin-right: 10px;
-  border-radius: 50%;
+.friends-empty-notification {
+  color: gray;
+  padding: 1rem 1rem 1rem 0;
+  font-size: 1rem;
 }
 
-.online {
-  background-color: green;
-}
-
-.offline {
-  background-color: #e2411f;
-}
-
-.friendRequestsList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.friendRequestsList li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.friendRequestsList li button {
-  margin-left: 10px;
-}
-
-.contextMenu {
-  position: absolute;
-  color: black;
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 0;
-  list-style: none;
-  z-index: 1000;
-}
-
-.contextMenu ul {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  margin: 0;
-}
-
-.contextMenu li {
-  padding: 5px 10px;
+.add-friend-button {
+  font-family: 'Courier New', Courier, monospace !important;
+  display: block;
+  min-width: 90%;
+  box-sizing: border-box;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  color: aliceblue;
+  border: 0.5px solid aliceblue;
   cursor: pointer;
+  font-size: 1rem;
+  transition: 0.25s color ease-out, border 0.25s ease-out;
+  margin: 0.5rem 0 0 0;
 }
 
-.channels > * {
-  flex: 1;
-}
-
-/* chat */
-.chat-container {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 500px;
-  height: 100%;
-  background-color: #0d1117;
-  z-index: 9999;
-}
-
-.chat-component {
-  position: relative;
-  height: 100%;
-}
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 16px;
-  color: #333;
-  background: none;
-  border: none;
-  cursor: pointer;
+.add-friend-button:hover {
+  color: aliceblue;
+  border: 1px solid #ea9f42;
+  font-weight: bold;
 }
 </style>

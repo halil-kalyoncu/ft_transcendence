@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Ball } from "./ball.service";
 import { Paddle } from "./paddle.service";
+import { PowerUp } from "./powerup.service";
 
 @Injectable()
 export class Room {
@@ -9,6 +10,7 @@ export class Room {
 	paddleA: Paddle;
 	paddleB: Paddle;
 	players: Map<string, string>;
+	powerups: PowerUp[];
 
 	constructor(id: string) {
 		this.id = id;
@@ -16,6 +18,7 @@ export class Room {
 		this.paddleA = new Paddle(1, 100, 15, 100, 7, 800, 600);
 		this.paddleB = new Paddle(785, 100, 15, 100, 7, 800, 600);
 		this.players = new Map();
+		this.powerups = [];
 	}
 
 }

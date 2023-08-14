@@ -11,7 +11,9 @@ const router = createRouter({
   routes: [
     { path: '/', component: {} },
     { path: '/home', component: {} },
-    { path: '/profile', component: {} }
+    { path: '/profile', component: {} },
+    { path: '/settings', component: {} },
+    { path: '/activity-center', component: {} }
   ]
 })
 

@@ -5,39 +5,35 @@ FRIENDLIST (Sidebar)
 VARIABLES
 
 friends[]: FriendshipEntryI (custom)
-unreadDirectMessages[]: (custom)
-unreadGroupMessages[]: (custom)
+unreadDirectMessages[]: UnreadMessagesI (custom)
+// unreadGroupMessages[]: UnreadMessagesI (custom)
 friendRequests[]: Friendship
-gameInvitations[]: Match
+// gameInvitations[]: Match
+
+ON MOUNT
+
+friends[] -> GET /api/friendships/get-accepted-friends
+unreadDirectMessages[] -> GET /api/directMessages/allUnreadByUserId
+// unreadGroupMessages[]
+friendRequests[] -> GET /api/friendships/get-friend-requests
+// gameInvitations[]
 
 LISTENING ON EVENTS
 
-friendlist: ?
-- update the friendlist with the api call (GET /api/friendships)
+friendlist: no payload
+- update the friendlist with the api call (GET /api/friendships/get-accepted-friends)
 
 newDirectMessage: DirectMessage
-- update unreadDirectMessages with api call ()
+- update unreadDirectMessages with api call (GET /api/directMessages/allUnreadByUserId)
 
-newGroupMessage: GroupMessage
-- update unreadGroupMessages with api call ()
+// newGroupMessage: GroupMessage
+// - update unreadGroupMessages with api call ()
 
-friendRequest: ?
-- update friendRequests with api call ()
+friendRequest: no payload
+- update friendRequests with api call (GET /api/friendships/get-friend-requests)
 
-gameInvitation: ?
-- update gameInvitations with api call ()
-
-API calls
-
-GET /api/friendships
-
-GET /api/directMessages
-
-GET /api/groupMessages
-
-GET /api/friendship
-
-GET /api/match/
+// gameInvitation: no payload
+// - update gameInvitations with api call ()
 
 ---------------------
 DIRECT CHAT (Sidebar)
@@ -46,6 +42,13 @@ DIRECT CHAT (Sidebar)
 VARIABLES
 
 messages[]: DirectMessage
+
+ON MOUNT
+
+messages[] -> POST /api/directMessages/markAsRead (or GET /api/directMessages/getDirectMessages)
+    - if you want to signalize new messages call GET /api/directMessages/getDirectMessages
+    - but don't forget to call afterwards POST /api/directMessages/markAsRead
+        - this call also returns the whole conversation buts sets the read flag
 
 LISTENING ON EVENTS
 
@@ -58,10 +61,8 @@ newDirectMessage: DirectMessage
         - idea behind this is that you could signalize that messages are new
         - use this until the user interacts with the chat for the first time and then use the other api call to get the conversation
 
-
 SENDING EVENTS
-- sendDirectMessage
-    -
+- parameter CreateDirectMessageDto
     - at the end this events sends out newDirectMessage to the two clients
 
 API calls
@@ -151,4 +152,19 @@ interface FriendshipEntryI
     id: number,
     user: UserI,
     status: FriendshipStatus
+}
+
+----------------------------------
+
+interface UnreadMessagesI {
+  senderId: number,
+  amountUnread: number
+}
+
+----------------------------------
+
+interface CreateDirectMessageDto {
+  senderId: number,
+  receiverId: number,
+  message: string,
 }

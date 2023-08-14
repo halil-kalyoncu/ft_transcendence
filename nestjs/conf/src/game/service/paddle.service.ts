@@ -47,4 +47,8 @@ export class Paddle{
 			this.x = x;
 			this.y = y;
 		}
+
+		setHeight(hgt: number) {
+			this.hgt = hgt
+		}
 	}

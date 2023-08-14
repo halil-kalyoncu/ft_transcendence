@@ -47,7 +47,7 @@ const dummyChannelData = [
   {
     channelId: 5,
     channelName: 'My Channel 5',
-    ownerName: 'Lorenz'
+    ownerName: 'Leo'
   },
   {
     channelId: 6,
