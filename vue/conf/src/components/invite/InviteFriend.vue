@@ -80,7 +80,7 @@ const sendInvite = async () => {
       return
     }
 
-    console.log('sending invite for match: ' + props.matchId + ' to invitedUser: ' + invitedUser.value.id)
+    console.log('sending invite for match: ' + props.matchId + ' to invitedUser: ' + invitedUser.value!.id)
     socket.emit('sendMatchInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.toString() : 'An error occurred'

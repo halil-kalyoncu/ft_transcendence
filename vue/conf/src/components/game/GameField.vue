@@ -31,8 +31,6 @@ import GameBall from './GameBall.vue'
 import PowerUp from './PowerUp.vue'
 import { io } from 'socket.io-client'
 
-const matchId = route.params.matchId as string;
-
 export default {
   name: 'App',
   components: {
