@@ -17,7 +17,7 @@ import {
   ChannelMembershipDto,
   AdminActionDto,
 } from '../../dto/channel.dto';
-import { ChannelMemberService } from '../channel-member/channel-member.service'
+import { ChannelMemberService } from '../channel-member/channel-member.service';
 
 @Injectable()
 export class ChannelService {
@@ -25,7 +25,7 @@ export class ChannelService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => ConnectedUserService))
     private connectedUserService: ConnectedUserService,
-    private channelMemberService: ChannelMemberService
+    private channelMemberService: ChannelMemberService,
   ) {}
 
   async createProtectedChannel({
@@ -46,26 +46,26 @@ export class ChannelService {
     if (existingChannel) {
       throw new Error('Channel name already exists');
     }
-	const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const channel = await this.prisma.channel.create({
-		data: {
-		  name: name,
-		  protected: true,
-		  passwordHash: hashedPassword,
-		  visibility: channelVisibility,
-		  members: {
-			create: [
-			  {
-				userId: userId,
-				role: ChannelMemberRole.OWNER,
-			  },
-			],
-		  },
-		},
-		include: {
-		  members: true, // This ensures that the created channel includes its members
-		},
-	  });
+      data: {
+        name: name,
+        protected: true,
+        passwordHash: hashedPassword,
+        visibility: channelVisibility,
+        members: {
+          create: [
+            {
+              userId: userId,
+              role: ChannelMemberRole.OWNER,
+            },
+          ],
+        },
+      },
+      include: {
+        members: true, // This ensures that the created channel includes its members
+      },
+    });
     return channel;
   }
 
@@ -102,7 +102,6 @@ export class ChannelService {
     });
     return channel;
   }
-
 
   async setPassword(setPasswordDto: SetPasswordDto): Promise<Channel> {
     const channel = await this.find(setPasswordDto.channelId);
@@ -342,7 +341,7 @@ export class ChannelService {
 
   async find(channelId: number): Promise<Channel> {
     return await this.prisma.channel.findUnique({
-      where: { id: channelId }
+      where: { id: channelId },
     });
   }
 

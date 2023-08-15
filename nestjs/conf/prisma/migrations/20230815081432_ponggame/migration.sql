@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "FriendshipStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
+CREATE TYPE "FriendshipStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'BLOCKED');
 
 -- CreateEnum
 CREATE TYPE "ChannelVisibility" AS ENUM ('PUBLIC', 'PRIVATE');

@@ -6,8 +6,7 @@ import { ConnectedUserService } from '../connected-user/connected-user.service';
 describe('FriendshipService', () => {
   let service: FriendshipService;
 
-  it.skip('Not writing tests is a bad practice', () => {
-  });
+  it.skip('Not writing tests is a bad practice', () => {});
 
   // beforeEach(async () => {
   //   const module: TestingModule = await Test.createTestingModule({

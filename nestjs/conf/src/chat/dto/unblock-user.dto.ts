@@ -1,9 +1,9 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class SendGameInviteDto {
+export class UnblockUserDto {
   @IsNotEmpty()
-  matchId: number;
+  userId: number;
 
   @IsNotEmpty()
-  invitedUserId: number;
+  unblockUserId: number;
 }

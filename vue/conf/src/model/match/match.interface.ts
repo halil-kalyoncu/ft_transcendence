@@ -1,4 +1,4 @@
-import type { UserI } from "../user.interface"
+import type { UserI } from '../user.interface'
 
 export const MatchType = {
   LADDER: 'LADDER' as const,

@@ -6,6 +6,34 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import jwtDecode from 'jwt-decode'
 
+const redirectToHomeIfLoggedIn = (
+  to: RouteLocationNormalized,
+  from: RouteLocationNormalized,
+  next: NavigationGuardNext
+): void => {
+  const accessToken = localStorage.getItem('ponggame')
+  if (accessToken) {
+    try {
+      const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+      const expirationTime: number = (decodedToken.exp as number) * 1000
+
+      if (Date.now() >= expirationTime) {
+        // Token has expired
+        next()
+      } else {
+        // Token is valid
+        next('/home')
+      }
+    } catch (error) {
+      // Token verification failed
+      next()
+    }
+  } else {
+    // Token does not exist
+    next()
+  }
+}
+
 const jwtGuard = (
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
@@ -40,7 +68,12 @@ const router = createRouter({
     {
       path: '/',
       name: 'login',
-      component: LoginView
+      component: LoginView,
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => redirectToHomeIfLoggedIn(to, from, next)
     },
     {
       path: '/home',

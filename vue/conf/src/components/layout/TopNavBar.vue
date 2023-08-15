@@ -7,6 +7,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import router from '../../router'
+import { disconnectWebSocket } from '../../websocket'
 
 library.add(fas)
 
@@ -20,6 +21,7 @@ const showProfilePage = computed(() => route.path.startsWith('/profile'))
 const logout = () => {
   localStorage.removeItem('ponggame')
   userStore.clearUsername()
+  disconnectWebSocket()
   router.push('/')
 }
 </script>

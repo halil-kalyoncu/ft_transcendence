@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client'
-import type { FriendshipEntryI } from './model/friendshipEntry.interface'
+import type { FriendshipEntryI } from './model/friendship/friendshipEntry.interface'
 import type { directMessageI } from './model/directMessage.interface'
 import type { UserI } from './model/user.interface'
 import { describe, test } from 'vitest'

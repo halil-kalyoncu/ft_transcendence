@@ -8,8 +8,7 @@ import { ConnectedUserService } from '../connected-user/connected-user.service';
 describe('ChannelMessageService', () => {
   let service: ChannelMessageService;
 
-  it.skip('Not writing tests is a bad practice', () => {
-  });
+  it.skip('Not writing tests is a bad practice', () => {});
 
   // beforeEach(async () => {
   //   const module: TestingModule = await Test.createTestingModule({

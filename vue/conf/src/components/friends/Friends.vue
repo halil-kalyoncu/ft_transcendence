@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
-import { connectWebSocket, disconnectWebSocket } from '../../websocket'
+import { onMounted, ref, computed } from 'vue'
+import { connectWebSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import type { UserI } from '../../model/user.interface'
-import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
+import type { FriendshipI } from '../../model/friendship/friendship.interface'
+import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import FriendsListItem from './FriendsListItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import FriendsModal from './FriendsModal.vue'
@@ -14,9 +15,9 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
-import jwtDecode from 'jwt-decode'
 import type { MatchI } from '../../model/match/match.interface'
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+import type { ErrorI } from '../../model/error.interface'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
@@ -53,6 +54,16 @@ const updateSelectedFriend = () => {
   } else {
     closeFriendManagerAndChat()
   }
+}
+
+const fetchUser = async (username: string): Promise<UserI> => {
+  const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`)
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`)
+  }
+
+  return await response.json()
 }
 
 const setFriendData = async () => {
@@ -153,11 +164,6 @@ onMounted(() => {
   setMatchInviteData()
 })
 
-onBeforeUnmount(() => {
-  disconnectWebSocket()
-  console.log('onBeforeUnmount friends')
-})
-
 interface ModalResult {
   username: string
 }
@@ -203,23 +209,24 @@ const handleAdd = ({ username }: ModalResult) => {
     return
   }
 
-  socket.value.emit(
-    'sendFriendRequest',
-    username,
-    (response: FriendshipEntryI | { error: string }) => {
-      if ('error' in response) {
-        notificationStore.showNotification(response.error, false)
-      } else {
-        notificationStore.showNotification(
-          'Friend Request was sent to ' + response.friend.username,
-          true
-        )
-      }
+  socket.value.emit('sendFriendRequest', username, (response: FriendshipI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(
+        'Friend Request was sent to ' + response.receiver!.username,
+        true
+      )
     }
-  )
+  })
 }
 
-const handleBlock = ({ username }: ModalResult) => {
+const handleBlock = async ({ username }: ModalResult) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
   isModalOpened.value = false
 
   if (username.trim() === '') {
@@ -227,18 +234,57 @@ const handleBlock = ({ username }: ModalResult) => {
     return
   }
 
-  notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+  try {
+    const blockUser: UserI = await fetchUser(username)
+    if (!blockUser) {
+      throw new Error("Couldn't find user " + username)
+    }
+    socket.value.emit('blockUser', blockUser.id!, (response: FriendshipI | ErrorI) => {
+      if ('error' in response) {
+        notificationStore.showNotification(
+          `Error Could not block ${username}: ${response.error}`,
+          false
+        )
+      } else {
+        notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+      }
+    })
+  } catch (error: any) {
+    notificationStore.showNotification('Error: ' + error.message, false)
+  }
 }
 
-const handleUnblock = ({ username }: ModalResult) => {
+const handleUnblock = async ({ username }: ModalResult) => {
   isModalOpened.value = false
 
   if (username.trim() === '') {
     notificationStore.showNotification('Error: user name cannot be empty', false)
     return
   }
+  try {
+    console.log(username)
+    const unblockUser: UserI = await fetchUser(username)
+    if (!unblockUser) {
+      throw new Error("Couldn't find user " + username)
+    }
+    const response = await fetch('http://localhost:3000/api/friendships/unblock-user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: userId.value,
+        unblockUserId: unblockUser.id
+      })
+    })
 
-  notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
+  } catch (error: any) {
+    notificationStore.showNotification('Error: ' + error.message, false)
+  }
 }
 
 const closeFriendManagerAndChat = () => {
@@ -257,13 +303,16 @@ const acceptFriendRequest = (requestId: number) => {
     return
   }
 
-  socket.value.emit('acceptFriendRequest', requestId)
-  //TODO: change this
-  setTimeout(() => {
-    setFriendData()
-    setFriendRequestData()
-    notificationStore.showNotification(`A new friend has been added successfully`, true)
-  }, 1250)
+  socket.value.emit('acceptFriendRequest', requestId, (response: FriendshipI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(
+        response.sender!.username + 'has been added as a friend',
+        true
+      )
+    }
+  })
 }
 
 const rejectFriendRequest = (requestId: number) => {
@@ -271,12 +320,16 @@ const rejectFriendRequest = (requestId: number) => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.emit('rejectFriendRequest', requestId)
-  //TODO: change this
-  setTimeout(() => {
-    setFriendRequestData()
-    notificationStore.showNotification(`You have rejected friend request`, true)
-  }, 1250)
+  socket.value.emit('rejectFriendRequest', requestId, (response: FriendshipI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(
+        'The friend request from ' + response.sender!.username + 'has been rejected',
+        true
+      )
+    }
+  })
 }
 
 const acceptMatchInvite = (matchId: number) => {
@@ -298,51 +351,41 @@ const rejectMatchInvite = (matchId: number) => {
   socket.value.emit('rejectMatchInvite', matchId)
 }
 
-const handleUnfriendUser = (username: String, id: Number) => {
+const handleUnfriendUser = (username: String, friendshipId: Number) => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
   if (username !== '') {
-    console.log('removeFriend id:' + id + ', username: ' + username)
-    socket.value
-      .emit('removeFriend', id, (response: any) => {
-        console.log('removeFriend response', response)
-        if (response && 'success' in response) {
-          if (response.success) {
-            notificationStore.showNotification(
-              `User ${username} was removed from friends list`,
-              true
-            )
-            closeFriendManagerAndChat()
-          } else {
-            notificationStore.showNotification(
-              `Error Could not remove ${username} from friends list: ${response.error}`,
-              false
-            )
-          }
-        } else {
-          console.error('removeFriend error', response)
-          notificationStore.showNotification(
-            `Unexpected error occurred while removing ${username} from friends list. Please try again.`,
-            false
-          )
-        }
-      })
-      .on('error', (error: any) => {
-        // Handle case when socket.emit fails
-        console.error('Socket emit error', error)
+    socket.value.emit('removeFriend', friendshipId, (response: FriendshipI | ErrorI) => {
+      if ('error' in response) {
         notificationStore.showNotification(
-          `Network error occurred while removing ${username} from friends list. Please try again.`,
+          `Error Could not remove ${username} from friends list: ${response.error}`,
           false
         )
-      })
+      } else {
+        notificationStore.showNotification(`User ${username} was removed from friends list`, true)
+      }
+    })
   }
 }
 
-const handleBlockUser = (username: String, id: Number) => {
+const handleBlockUser = (username: String, blockUserId: Number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
   if (username !== '') {
-    notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+    socket.value.emit('blockUser', blockUserId, (response: FriendshipI | ErrorI) => {
+      if ('error' in response) {
+        notificationStore.showNotification(
+          `Error Could not remove ${username} from friends list: ${response.error}`,
+          false
+        )
+      } else {
+        notificationStore.showNotification(`User ${username} was removed from friends list`, true)
+      }
+    })
   }
   closeFriendManagerAndChat()
 }
@@ -398,7 +441,9 @@ const goBack = () => {
         <ul v-if="matchInvites?.length > 0">
           <li v-for="invite in matchInvites" :key="invite.id">
             <div class="friendInfo">
-              <span v-if="invite.leftUser">Custom game invite from {{ invite.leftUser.username }} </span>
+              <span v-if="invite.leftUser"
+                >Custom game invite from {{ invite.leftUser.username }}
+              </span>
               <button @click="acceptMatchInvite(invite.id as number)">Accept</button>
               <button @click="rejectMatchInvite(invite.id as number)">Reject</button>
             </div>

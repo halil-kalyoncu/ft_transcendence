@@ -13,6 +13,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
+import { connectWebSocket } from '../websocket'
 import type { UserI } from '../model/user.interface'
 import jwtDecode from 'jwt-decode'
 
@@ -46,6 +47,7 @@ const submitForm = async () => {
         notificationStore.showNotification('Invalid Token', false)
       }
       userStore.setUsername(username.value)
+      connectWebSocket('http://localhost:3000', access_token)
       router.push('/home')
     } else {
       console.error('Login failed!! ' + response.status + ': ' + response.statusText)
