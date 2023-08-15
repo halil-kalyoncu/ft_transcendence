@@ -177,34 +177,3 @@ model Match {
   rightUser User? @relation("RightPlayer", fields: [rightUserId], references: [id])
 }
 
-// model Channel {
-//   id         Int               @id @default(autoincrement())
-//   name       String            @unique
-//   password   String?           @default("")
-//   ownerId    Int
-//   owner      User              @relation("OwnedChannels", fields: [ownerId], references: [id])
-//   members    ChannelMember[]
-//   visibility ChannelVisibility @default(PUBLIC)
-// }
-
-// model ChannelMember {
-//   id        Int       @id @default(autoincrement())
-//   userId    Int
-//   channelId Int
-//   role      UserRole
-//   banned    Boolean   @default(false)
-//   unmuteAt  DateTime?
-//   user      User      @relation(fields: [userId], references: [id])
-//   channel   Channel   @relation(fields: [channelId], references: [id])
-
-//   sendMessages ChannelMessage[]
-//   readStatus ChannelMessageReadStatus[]
-
-//   @@unique([userId, channelId])
-// }
-
-// enum ChannelVisibility {
-//   PUBLIC
-//   PROTECTED
-//   PRIVATE
-// }

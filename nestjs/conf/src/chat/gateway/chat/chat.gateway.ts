@@ -30,7 +30,7 @@ import {
   Friendship,
   FriendshipStatus,
   User,
-  Match
+  Match,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
@@ -57,7 +57,7 @@ export class ChatGateway
     private connectedUserService: ConnectedUserService,
     private directMessageService: DirectMessageService,
     private channelMessageService: ChannelMessageService,
-    private matchService: MatchService
+    private matchService: MatchService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -220,7 +220,7 @@ export class ChatGateway
 
     //sender
     socket.emit('newDirectMessage', newMessage);
-    
+
     //receiver
     if (receiverOnline) {
       this.server
@@ -239,7 +239,7 @@ export class ChatGateway
     @MessageBody() createChannelDto: CreateChannelDto,
   ): Promise<void> {
     try {
-      const newChannel = await this.channelService.createProtectedChannel(
+      const newChannel = await this.channelService.createUnProtectedChannel(
         createChannelDto,
       );
       socket.emit('channelCreated', true);
@@ -282,7 +282,7 @@ export class ChatGateway
     @MessageBody() channelMembershipDto: ChannelMembershipDto,
   ): Promise<void> {
     try {
-      const membership = await this.channelService.joinChannel(
+      const membership = await this.channelService.addUserToChannel(
         channelMembershipDto,
       );
       socket.emit('joinedChannel', membership);
@@ -297,7 +297,7 @@ export class ChatGateway
     @MessageBody() channelMembershipDto: ChannelMembershipDto,
   ): Promise<void> {
     try {
-      const membership = await this.channelService.leaveChannel(
+      const membership = await this.channelService.removeUserFromChannel(
         channelMembershipDto,
       );
       socket.emit('leftChannel', membership);
@@ -395,76 +395,109 @@ export class ChatGateway
   }
 
   /******************
-  *** GameInvites ***
-  *******************/
+   *** MatchInvites ***
+   *******************/
 
-  @SubscribeMessage('sendGameInvite')
+  @SubscribeMessage('sendMatchInvite')
   async sendGameInvite(
     socket: Socket,
-    sendGameInviteDto: SendGameInviteDto
+    sendGameInviteDto: SendGameInviteDto,
   ): Promise<void> {
+    if (sendGameInviteDto.invitedUserId === socket.data.user.id) {
+      socket.emit('Error', "Can't invite yourself to a game");
+      return ;
+    }
     const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(sendGameInviteDto.invitedUserId);
   
     if (!receiverOnline) {
       socket.emit('Error', 'User is not online');
-      return ;
+      return;
     }
 
-    const updatedMatch: Match = await this.matchService.invite(sendGameInviteDto.matchId, sendGameInviteDto.invitedUserId);
-    socket.emit('friendInvited', updatedMatch);
-    socket.to(receiverOnline.socketId).emit('newGameInvite', updatedMatch);
+    console.log(receiverOnline);
+    const updatedMatch: Match = await this.matchService.invite(
+      sendGameInviteDto.matchId,
+      sendGameInviteDto.invitedUserId,
+    );
+    console.log(updatedMatch);
+    socket.emit('matchInviteSent', updatedMatch);
+    socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
   }
 
-  @SubscribeMessage('acceptGameInvite')
-  async acceptGameInvite(
-    socket: Socket,
-    matchId: number
-  ): Promise<void> {
+  @SubscribeMessage('acceptMatchInvite')
+  async acceptGameInvite(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.leftUserId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(match.leftUserId);
 
     if (!receiverOnline) {
       socket.emit('Error', 'Match creator is not online');
-      return ;
+      return;
     }
 
     const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
-    socket.emit('goToGameLobby', updatedMatch);
-    socket.to(receiverOnline.socketId).emit('gameInvitationAccepted', updatedMatch);
+    socket.emit('matchInvites');
+    //remove
+    console.log(match.leftUserId + ' ' + receiverOnline.userId);
+    socket
+      .to(receiverOnline.socketId)
+      .emit('matchInviteAccepted', updatedMatch);
   }
 
-  @SubscribeMessage('rejectGameInvite')
-  async rejectGameInvite(
-    socket: Socket,
-    matchId: number
-  ): Promise<void> {
-    const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
-    const gameInvitations: Match[] = await this.matchService.getInvites(socket.data.user.id);
-  
-    socket.emit('gameInvites', gameInvitations);
-    if (!receiverOnline) {
-      socket.to(receiverOnline.socketId).emit('gameInvitationRejected', updatedMatch);
+  @SubscribeMessage('rejectMatchInvite')
+  async rejectGameInvite(socket: Socket, matchId: number): Promise<void> {
+    const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
+
+    socket.emit('matchInvites');
+    if (receiverOnline) {
+      //remove
+      console.log(updatedMatch.leftUserId);
+      socket
+        .to(receiverOnline.socketId)
+        .emit('matchInviteRejected', updatedMatch);
     }
   }
 
-  //move this somewhere else?
-  @SubscribeMessage('startMatch')
-  async startMatch(
-    socket: Socket,
-    matchId: number
-  ): Promise<void> {
+  @SubscribeMessage('hostLeaveMatch')
+  async hostLeaveMatch(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(match.leftUserId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(match.rightUserId);
+
+    if (receiverOnline) {
+      console.log('sending hostLeftMatch to ' + receiverOnline.userId);
+      socket.to(receiverOnline.socketId).emit('hostLeftMatch');
+    }
+    this.matchService.deleteById(match.id);
+  }
+
+  @SubscribeMessage('leaveMatch')
+  async leaveMatch(socket: Socket, matchId: number): Promise<void> {
+    const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
+
+    if (receiverOnline) {
+      socket.to(receiverOnline.socketId).emit('leftMatch', updatedMatch);
+    }
+  }
+
+  @SubscribeMessage('startMatch')
+  async startMatch(socket: Socket, matchId: number): Promise<void> {
+    const match: Match = await this.matchService.findById(matchId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(match.rightUserId);
 
     if (!receiverOnline) {
       socket.emit('Error', 'Opponent is not online');
-      return ;
+      return;
     }
 
     const updatedMatch: Match = await this.matchService.startMatch(matchId);
-    socket.emit('playMatch', updatedMatch);
-    socket.to(receiverOnline.socketId).emit('playMatch', updatedMatch);
+    socket.emit('goToGame', updatedMatch);
+    socket.to(receiverOnline.socketId).emit('goToGame', updatedMatch);
   }
 
   /**********************
@@ -506,5 +539,4 @@ export class ChatGateway
     socket.emit('Error', new UnauthorizedException());
     socket.disconnect();
   }
-
 }

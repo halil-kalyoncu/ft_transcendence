@@ -77,6 +77,7 @@ onBeforeUnmount(() => {
 
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
+const userId = computed(() => userStore.userId)
 
 interface ModalResult {
   name?: string
@@ -107,7 +108,7 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
   }
 
   const createChannelDto: CreateChannelDto = {
-    userId: 1,
+    userId: userId.value,
     name: name || '',
     password: password || '',
     channelVisibility: visibility.toUpperCase() as ChannelVisibilityType

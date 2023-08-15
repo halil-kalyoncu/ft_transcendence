@@ -7,6 +7,7 @@ import {
   Prisma,
   User,
   ChannelMemberRole,
+  ChannelMemberStatus,
 } from '@prisma/client';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import * as bcrypt from 'bcryptjs';
@@ -16,8 +17,9 @@ import {
   CreateChannelDto,
   ChannelMembershipDto,
   AdminActionDto,
+  ChannelInfoDto,
 } from '../../dto/channel.dto';
-import { ChannelMemberService } from '../channel-member/channel-member.service'
+import { ChannelMemberService } from '../channel-member/channel-member.service';
 
 @Injectable()
 export class ChannelService {
@@ -25,7 +27,7 @@ export class ChannelService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => ConnectedUserService))
     private connectedUserService: ConnectedUserService,
-    private channelMemberService: ChannelMemberService
+    private channelMemberService: ChannelMemberService,
   ) {}
 
   async createProtectedChannel({
@@ -46,26 +48,28 @@ export class ChannelService {
     if (existingChannel) {
       throw new Error('Channel name already exists');
     }
-	const hashedPassword = await bcrypt.hash(password, 10);
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create the channel without the members initially
     const channel = await this.prisma.channel.create({
-		data: {
-		  name: name,
-		  protected: true,
-		  passwordHash: hashedPassword,
-		  visibility: channelVisibility,
-		  members: {
-			create: [
-			  {
-				userId: userId,
-				role: ChannelMemberRole.OWNER,
-			  },
-			],
-		  },
-		},
-		include: {
-		  members: true, // This ensures that the created channel includes its members
-		},
-	  });
+      data: {
+        name: name,
+        protected: true,
+        passwordHash: hashedPassword,
+        visibility: channelVisibility,
+      },
+    });
+
+    // Add the user creating the channel as a member (owner)
+    await this.prisma.channelMember.create({
+      data: {
+        userId: userId,
+        channelId: channel.id,
+        role: ChannelMemberRole.OWNER,
+      },
+    });
+
     return channel;
   }
 
@@ -76,7 +80,6 @@ export class ChannelService {
   }: {
     userId: number;
     name: string;
-    password?: string;
     channelVisibility: ChannelVisibility;
   }): Promise<Channel> {
     const existingChannel = await this.prisma.channel.findFirst({
@@ -86,6 +89,7 @@ export class ChannelService {
     if (existingChannel) {
       throw new Error('Channel name already exists');
     }
+
     const channel = await this.prisma.channel.create({
       data: {
         name: name,
@@ -93,6 +97,7 @@ export class ChannelService {
       },
     });
 
+    // Add the user creating the channel as a member (owner)
     await this.prisma.channelMember.create({
       data: {
         userId: userId,
@@ -100,9 +105,9 @@ export class ChannelService {
         role: ChannelMemberRole.OWNER,
       },
     });
+
     return channel;
   }
-
 
   async setPassword(setPasswordDto: SetPasswordDto): Promise<Channel> {
     const channel = await this.find(setPasswordDto.channelId);
@@ -138,7 +143,7 @@ export class ChannelService {
     });
   }
 
-  async joinChannel(
+  async addUserToChannel(
     channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
     const existingMembership = await this.findMember(
@@ -147,7 +152,7 @@ export class ChannelService {
     );
 
     if (existingMembership) {
-      throw new Error('You are already a member of this channel.');
+      throw new Error('User is already a member of this channel.');
     }
 
     return this.prisma.channelMember.create({
@@ -159,7 +164,7 @@ export class ChannelService {
     });
   }
 
-  async leaveChannel(
+  async removeUserFromChannel(
     channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
     const member = await this.findMember(
@@ -266,7 +271,7 @@ export class ChannelService {
     if (
       !channel ||
       (channelOwner.userId !== adminActionDto.requesterId &&
-        requesterMembership?.role !== ChannelMemberRole.ADMIN)
+        requesterMembership?.role === ChannelMemberRole.MEMBER)
     ) {
       throw new Error(
         'Only the owner or an admin can ban a user from the channel.',
@@ -290,7 +295,8 @@ export class ChannelService {
         },
       },
       data: {
-        banned: true,
+        status: ChannelMemberStatus.BANNED,
+        statusSince: new Date(),
       },
     });
   }
@@ -308,7 +314,7 @@ export class ChannelService {
     if (
       !channel ||
       (channelOwner.userId !== adminActionDto.requesterId &&
-        requesterMembership?.role !== ChannelMemberRole.ADMIN)
+        requesterMembership?.role! === ChannelMemberRole.MEMBER)
     ) {
       throw new Error(
         'Only the owner or an admin can mute a user in the channel.',
@@ -342,7 +348,7 @@ export class ChannelService {
 
   async find(channelId: number): Promise<Channel> {
     return await this.prisma.channel.findUnique({
-      where: { id: channelId }
+      where: { id: channelId },
     });
   }
 
@@ -368,5 +374,91 @@ export class ChannelService {
     });
 
     return members.map((member) => member.user);
+  }
+
+  async getOwner(channelId: number): Promise<User | null> {
+	const channelMember = await this.prisma.channelMember.findFirst({
+	  where: {
+		channelId: channelId,
+		role: ChannelMemberRole.OWNER,
+	  },
+	  include: {
+		user: true,
+	  },
+	});
+  
+	if (channelMember) {
+	  return channelMember.user;
+	} else {
+	  return null;
+	}
+  }
+  
+
+  async getChannelsforId(
+    userId: number,
+    role = 'all',
+  ): Promise<ChannelInfoDto[]> {
+    let memberships;
+    switch (role) {
+      case 'all':
+        memberships = await this.prisma.channelMember.findMany({
+          where: {
+            userId: userId,
+          },
+          include: {
+            channel: true,
+          },
+        });
+        break;
+
+      case 'admin':
+        memberships = await this.prisma.channelMember.findMany({
+          where: {
+            userId: userId,
+            role: ChannelMemberRole.ADMIN,
+          },
+          include: {
+            channel: true,
+          },
+        });
+        break;
+
+      case 'owner':
+        memberships = await this.prisma.channelMember.findMany({
+          where: {
+            userId: userId,
+            role: ChannelMemberRole.OWNER,
+          },
+          include: {
+            channel: true,
+          },
+        });
+        break;
+
+      case 'member':
+        memberships = await this.prisma.channelMember.findMany({
+          where: {
+            userId: userId,
+            role: ChannelMemberRole.MEMBER,
+          },
+          include: {
+            channel: true,
+          },
+        });
+        break;
+
+      default:
+        throw new Error('Invalid role value');
+    }
+
+    const MembershipEntries: ChannelInfoDto[] = await Promise.all (
+      memberships.map(async (membership) => {
+      const channel = membership.channel;
+      const owner = 
+	  	await this.getOwner(membership.channelId);
+      return { channel:channel, owner:owner };
+    }));
+	return MembershipEntries;
   }
 }

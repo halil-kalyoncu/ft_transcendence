@@ -1,68 +1,57 @@
 <template>
-  <div class="joinned-channels">
-    <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
-      <div v-for="(channel, index) in dummyChannelData" :key="index">
-        <ChannelListItem
-          :isPasswordProtected="false"
-          :channelName="channel.channelName"
-          :ownerName="channel.ownerName"
-          :joinChannelButtonName="'Enter'"
-          @channel-entered="handleChannelEntered"
-        />
-      </div>
-    </ScrollViewer>
-  </div>
-</template>
-
-<script setup lang="ts">
-import ScrollViewer from '../utils/ScrollViewer.vue'
-import ChannelListItem from './ChannelListItem.vue'
-
-const emit = defineEmits(['channel-entered'])
-const handleChannelEntered = (channelId: number) => {
-  emit('channel-entered', channelId)
-}
-
-const dummyChannelData = [
-  {
-    channelId: 1,
-    channelName: 'My Channel 1',
-    ownerName: 'Halil'
-  },
-  {
-    channelId: 2,
-    ownerName: 'Max',
-    channelName: 'My Channel 2'
-  },
-  {
-    channelId: 3,
-    channelName: 'My Channel 3',
-    ownerName: 'Ezra'
-  },
-  {
-    channelId: 4,
-    channelName: 'My Channel 4',
-    ownerName: 'Vytautas'
-  },
-  {
-    channelId: 5,
-    channelName: 'My Channel 5',
-    ownerName: 'Leo'
-  },
-  {
-    channelId: 6,
-    channelName: 'My Channel 6',
-    ownerName: 'Thomas'
+	<div class="joinned-channels">
+	  <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
+		<div v-for="channel in channelData" :key="channel.channel.id">
+		  <ChannelListItem
+			:isPasswordProtected="channel.channel.protected"
+			:channelName="channel.channel.name"
+			:ownerName="channel.owner.username"
+		  />
+		</div>
+	  </ScrollViewer>
+	</div>
+  </template>
+  
+  <script setup lang="ts">
+  import ScrollViewer from '../utils/ScrollViewer.vue'
+  import ChannelListItem from './ChannelListItem.vue'
+  import { onMounted, computed, ref} from 'vue'
+  import { useUserStore } from '../../stores/userInfo'
+  import type {ChannelInfoI} from  '../../model/channels/createChannel.interface'
+  import { useNotificationStore } from '../../stores/notification'
+  
+  //How to use this? 
+  const emit = defineEmits(['channel-entered'])
+  const handleChannelEntered = (channelId: number) => {
+	emit('channel-entered', channelId)
   }
-]
-
-const props = defineProps({
-  username: String
-})
-</script>
-
-<style>
-.available-channels {
-  height: calc(100% - 50px);
-}
-</style>
+  
+  const channelData = ref<ChannelInfoI[]>([])
+  const userStore = useUserStore()
+  const userId = computed(() => userStore.userId)
+  const notificationStore = useNotificationStore()
+  
+  onMounted(async () => {
+	  try{
+		console.log("USER")
+	console.log(userId)
+		const response =  await fetch(`http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}`)
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json()
+	  	channelData.value = data
+	  }
+	  catch (error: any) {
+	  notificationStore.showNotification(`Error` + error.message, true)
+	}
+	  }
+  )
+  </script>
+  
+  <style>
+  .available-channels {
+	height: calc(100% - 50px);
+  }
+  </style>
+  

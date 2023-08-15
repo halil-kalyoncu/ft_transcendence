@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
-import { ChannelVisibility } from '@prisma/client';
+import { ChannelVisibility, Channel, User } from '@prisma/client';
 
 export class CreateChannelDto {
   @IsNotEmpty()
@@ -52,4 +52,9 @@ export class AdminActionDto {
 
   @IsNotEmpty()
   channelId: number;
+}
+
+export class ChannelInfoDto {
+  channel: Channel;
+  owner: User;
 }
