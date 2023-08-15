@@ -68,7 +68,7 @@ export class MatchService {
         return await this.prisma.match.update({
             where: { id },
             data: {
-                rightUser: null,
+                rightUserId: null,
                 state: 'CREATED'
             },
             include: {
