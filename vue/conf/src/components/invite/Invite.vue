@@ -22,7 +22,7 @@ const socket = ref<Socket | null>(null)
 
 const match = ref<MatchI>({})
 const leftPlayer = ref<UserI>({})
-const rightPlayer = ref<UserI>({})
+const rightPlayer = ref<UserI | null>(null)
 const userIsHost = ref(false)
 
 const lobbyIsFinished = ref(false)
@@ -101,21 +101,15 @@ onMounted(async () => {
 
     socket.value.on('matchInviteSent', (updatedMatch: MatchI) => {
         match.value = updatedMatch
-        console.log('matchInviteSent')
-        console.log(updatedMatch)
     })
 
     socket.value.on('matchInviteAccepted', (updatedMatch: MatchI) => {
         match.value = updatedMatch
         rightPlayer.value = match.value.rightUser as UserI
-        console.log('matchInviteAccepted')
-        console.log(updatedMatch)
     })
 
     socket.value.on('matchInviteRejected', (updatedMatch: MatchI) => {
         match.value = updatedMatch
-        console.log('matchInviteRejected')
-        console.log(updatedMatch)
     })
 
     socket.value.on('hostLeftMatch', () => {
@@ -130,30 +124,26 @@ onMounted(async () => {
         if (userIsHost.value) {
             notificationStore.showNotification(match.value.rightUser!.username + ' left the match', false)
             match.value = updatedMatch
+            rightPlayer.value = null;
         }
     })
 
     socket.value.on('goToGame', (updatedMatch: MatchI) => {
         match.value = updatedMatch
         lobbyIsFinished.value = true
-        console.log('start Game')
         console.log(match.value)
         //router.push(`/game/${matchId}`)
     })
 })
 
 onBeforeUnmount(() => {
-    console.log('onBeforeUnmount Invite')
-    console.log(lobbyIsFinished.value)
     if (lobbyIsFinished.value) {
         return ;
     }
     if (userIsHost.value) {
-        console.log('host left')
         handleHostLeaveMatch(match.value.id!);
     }
     else {
-        console.log('user left')
         handleLeaveMatch(match.value.id!);
     }
 })

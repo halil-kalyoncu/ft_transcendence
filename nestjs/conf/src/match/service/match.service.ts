@@ -77,18 +77,45 @@ export class MatchService {
     });
   }
 
-  async getInvites(userId: number): Promise<Match[]> {
-    return await this.prisma.match.findMany({
-      where: {
-        rightUserId: userId,
-        state: 'INVITED',
-      },
-      include: {
-        leftUser: true,
-        rightUser: true,
-      },
-    });
-  }
+    async rejectInvite(id: number): Promise<Match> {
+        return await this.prisma.match.update({
+            where: { id },
+            data: {
+                rightUserId: null,
+                state: 'CREATED'
+            },
+            include: {
+                leftUser: true,
+                rightUser: true
+            }
+        });
+    }
+
+    async getInvites(userId: number): Promise<Match[]> {
+        return await this.prisma.match.findMany({
+            where: {
+                rightUserId: userId,
+                state: 'INVITED'
+            },
+            include: {
+                leftUser: true,
+                rightUser: true
+            }
+        });
+    }
+
+    async startMatch(id: number): Promise<Match> {
+        return await this.prisma.match.update({
+            where: { id },
+            data: {
+                state: 'STARTED'
+            }, 
+            include: {
+                leftUser: true,
+                rightUser: true
+            }
+        });
+    }
 
   async startMatch(id: number): Promise<Match> {
     return await this.prisma.match.update({

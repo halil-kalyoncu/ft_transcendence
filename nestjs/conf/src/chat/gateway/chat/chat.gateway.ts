@@ -403,11 +403,12 @@ export class ChatGateway
     socket: Socket,
     sendGameInviteDto: SendGameInviteDto,
   ): Promise<void> {
-    const receiverOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(
-        sendGameInviteDto.invitedUserId,
-      );
-
+    if (sendGameInviteDto.invitedUserId === socket.data.user.id) {
+      socket.emit('Error', "Can't invite yourself to a game");
+      return ;
+    }
+    const receiverOnline: ConnectedUser = await this.connectedUserService.findByUserId(sendGameInviteDto.invitedUserId);
+  
     if (!receiverOnline) {
       socket.emit('Error', 'User is not online');
       return;
