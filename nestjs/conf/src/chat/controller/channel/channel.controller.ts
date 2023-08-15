@@ -58,6 +58,11 @@ import {
 	): Promise<ChannelInfoDto[]> {
 	  return await this.ChannelService.getChannelsforId(userId, 'member');
 	}
+
+	@Get ('getAllPublicChannels')
+	async getAllPublicChannels(): Promise<ChannelInfoDto[]>{
+		return await this.ChannelService.getAllPublicChannels();
+	}
   
 	//Post Functions to create Channels
 	@Post('createProtectedChannel')

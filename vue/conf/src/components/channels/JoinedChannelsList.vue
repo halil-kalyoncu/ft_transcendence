@@ -6,6 +6,8 @@
 			:isPasswordProtected="channel.channel.protected"
 			:channelName="channel.channel.name"
 			:ownerName="channel.owner.username"
+			:joinChannelButtonName="'Join'"
+            @channel-entered="handleChannelEntered(channel.channelId)"
 		  />
 		</div>
 	  </ScrollViewer>
@@ -30,12 +32,11 @@
   const userStore = useUserStore()
   const userId = computed(() => userStore.userId)
   const notificationStore = useNotificationStore()
+  const role = 'all'
   
   onMounted(async () => {
 	  try{
-		console.log("USER")
-	console.log(userId)
-		const response =  await fetch(`http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}`)
+		const response =  await fetch(`http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`)
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
