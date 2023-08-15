@@ -5,7 +5,7 @@
         <ChannelListItem
           :isPasswordProtected="channel.channel.protected"
           :channelName="channel.channel.name"
-          :ownerName="channel.owner.name"
+          :ownerName="channel.owner.username"
           :joinChannelButtonName="'Enter'"
           @channel-entered="handleChannelEntered(channel.channel.id)"
         />
@@ -20,6 +20,7 @@ import ChannelListItem from './ChannelListItem.vue'
 import { onMounted, computed, ref} from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import type {ChannelInfoI} from  '../../model/channels/createChannel.interface'
+import { useNotificationStore } from '../../stores/notification'
 
 const emit = defineEmits(['channel-entered'])
 const handleChannelEntered = (channelId: number) => {
@@ -29,11 +30,23 @@ const handleChannelEntered = (channelId: number) => {
 const channelData = ref<ChannelInfoI[]>([])
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
+const notificationStore = useNotificationStore()
 
+onMounted(async () => {
+	try{
+		const response =  await fetch(`/api/getAllChannelsFromUser?userId=${userId}`)
 
-const response =  fetch(`/api/getAllChannelsFromUser?userId=${userId}`)
-const data =  response
-channelData.value = data
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+	const data = await response.json()
+	channelData.value = data
+	}
+	catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+	}
+)
 </script>
 
 <style>
