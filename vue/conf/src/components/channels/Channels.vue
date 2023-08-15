@@ -49,7 +49,8 @@ import JoinedChannels from './JoinedChannelsList.vue'
 import AvailableChannels from './AvailableChannelsList.vue'
 import type {
   CreateChannelDto,
-  ChannelVisibilityType
+  ChannelVisibilityType,
+  ChannelMemberI
 } from '../../model/channels/createChannel.interface'
 import { Socket } from 'socket.io-client'
 import Modal from '../utils/Modal.vue'
@@ -126,6 +127,27 @@ const joinedChannelId = ref(0)
 const showAvailableChannels = ref(false)
 const showJoinedChannels = ref(false)
 
+const joinChannel = async(userID, channelID) => {
+	const payload = {
+		useriD: userID,
+		channeliD: channelID
+	};
+	const response = await fetch('/api/channels/addUserToChannel', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.ok) {
+    // Handle success
+  } else {
+    // Handle error
+  }
+};
+
+
 const openJoinChannels = () => {
   showAvailableChannels.value = true
 }
@@ -154,7 +176,8 @@ const goBack = () => {
 }
 
 const handleChannelEntered = (channelId: number) => {
-  joinedChannelId.value = channelId
+	joinedChannelId.value = channelId
+	joinChannel(userId.value, channelId)
   closeJoinChannels()
   closeMyChannels()
   showChannelManagerAndChat.value = true

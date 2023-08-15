@@ -9,7 +9,7 @@ import {
   } from '@nestjs/common';
   import { ApiTags } from '@nestjs/swagger';
   import { PrismaService } from '../../../prisma/prisma.service';
-  import { Channel } from '@prisma/client';
+  import { Channel, ChannelMember } from '@prisma/client';
   import { ChannelService } from '../../service/channel/channel.service';
   import {
 	CreateChannelDto,
@@ -83,8 +83,8 @@ import {
 	@Patch('addUserToChannel')
 	async addUserToChannel(
 	  @Body() ChannelMembershipDto: ChannelMembershipDto,
-	): Promise<void> {
-	  await this.ChannelService.addUserToChannel(ChannelMembershipDto);
+	): Promise<ChannelMember> {
+	  return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
 	}
   
 	@Patch('removeUserFromChannel')
