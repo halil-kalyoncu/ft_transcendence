@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../auth/service/auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, User, DirectMessage } from '@prisma/client';
-import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
+import { Prisma, User } from '@prisma/client';
+import * as fs from 'fs';
 
 @Injectable()
 export class UserService {
@@ -60,4 +60,26 @@ export class UserService {
       },
     });
   }
+
+  async uploadAvatar(file: Express.Multer.File, userId: number): Promise<User> {
+    const user: User = await this.findById(userId);
+  
+    if (!user) {
+      throw new Error('user not found');
+    }
+
+    if (user.avatarId) {
+      fs.unlinkSync(user.avatarId);
+    }
+    
+    return this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        avatarId: file.path
+      }
+    });
+  }
+
 }

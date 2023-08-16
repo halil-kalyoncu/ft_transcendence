@@ -7,7 +7,7 @@
       <input type="text" id="username" :class="'secondary-btn'" v-model="username" />
     </div>
 
-    <div class="input-group">
+    <!-- <div class="input-group">
       <label class="username" for="username">Select Avatar:</label>
 
       <div class="carousel-container" :class="'secondary-btn'">
@@ -38,7 +38,7 @@
           →
         </button>
       </div>
-    </div>
+    </div> -->
 
     <div class="input-group">
       <label class="username" for="avatar">Upload Avatar:</label>
@@ -78,6 +78,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
+import { useNotificationStore } from '../../stores/notification'
+import { useUserStore } from '../../stores/userInfo'
+
+const notificationStore = useNotificationStore()
+
+const userStore = useUserStore()
+const userId = computed(() => userStore.userId)
 
 const username = ref('')
 const enable2FA = ref(false)
@@ -114,10 +121,33 @@ const previousImages = () => {
     startIndex.value -= displayedCount
   }
 }
-const handleAvatarUpload = () => {
+const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {
     selectedFileName.value = avatarInput.value.files[0].name
     uploadedAvatarFile.value = avatarInput.value.files[0]
+
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadedAvatarFile.value);
+
+      const response = await fetch(`http://localhost:3000/api/users/avatar?userId=${userId.value}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: formData
+      })
+
+      console.log(response)
+      if (response.ok) {
+        notificationStore.showNotification('Success upload image', true)
+      } else {
+        notificationStore.showNotification('Failed to upload image', false)
+      }
+    }
+    catch (error: any) {
+      notificationStore.showNotification(`Error` + error.message, false)
+    }
   }
 }
 
