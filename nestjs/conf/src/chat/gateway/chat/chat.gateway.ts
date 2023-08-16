@@ -370,7 +370,7 @@ export class ChatGateway
 
   @SubscribeMessage('groupMessages')
   async getGroupMessages(socket: Socket, channelId: number) {
-    return await this.channelMessageService.getGroupMessages(channelId);
+    return await this.channelMessageService.getChannelMessagesforChannel(channelId);
   }
 
   @SubscribeMessage('sendGroupMessage')

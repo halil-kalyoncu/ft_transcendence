@@ -13,6 +13,7 @@ import { MatchService } from '../match/service/match.service';
 import { FriendshipController } from './controller/friendship/friendship.controller';
 import { ChannelController } from './controller/channel/channel.controller';
 import { ChannelMemberService } from './service/channel-member/channel-member.service';
+import { ChannelMessageController } from './controller/channel-message/channel-message.controller';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -27,7 +28,7 @@ import { ChannelMemberService } from './service/channel-member/channel-member.se
     MatchService,
     ChannelMemberService,
   ],
-  controllers: [DirectMessageController, FriendshipController, ChannelController],
+  controllers: [DirectMessageController, FriendshipController, ChannelController, ChannelMessageController],
   exports: [FriendshipService, ConnectedUserService],
 })
 export class ChatModule {}

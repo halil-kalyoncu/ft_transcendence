@@ -46,7 +46,7 @@ export interface ChannelI {
 
 	members: ChannelMemberI[]
 }
-export interface ChannelInfoI{
+export interface ChannelEntryI{
 	channel: ChannelI
 	owner: UserI
 }

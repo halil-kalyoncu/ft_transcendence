@@ -1,7 +1,7 @@
 <template>
   <div class="messages-container">
     <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'" class="messages-scrollviewer">
-      <div class="messages">
+      <!-- <div class="messages">
         <Message
           v-for="(message, index) in channelMessages"
           :key="index"
@@ -10,77 +10,108 @@
           :createdAt="message.createdAt"
           :sender="message.sender"
         />
-      </div>
+      </div> -->
     </ScrollViewer>
-    <div class="chat-input">
+    <!-- <div class="chat-input">
       <textarea v-model="newMessage" placeholder="Type your message here..." rows="1"></textarea>
       <button @click="sendMessage">Send</button>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
-import { connectWebSocket } from '../../websocket'
-import type { UserI } from '../../model/user.interface'
-import type { directMessageI } from '../../model/directMessage.interface'
-import type { MockMessageI } from '../../model/mockMessage.interface'
-import { Socket } from 'socket.io-client'
-import jwtDecode from 'jwt-decode'
-import Message from './Message.vue'
-import ScrollViewer from '../utils/ScrollViewer.vue'
-import { useNotificationStore } from '../../stores/notification'
-import { useUserStore } from '../../stores/userInfo'
+// import { ref, watch, onMounted, computed } from 'vue'
+// import { connectWebSocket } from '../../websocket'
+// import type { UserI } from '../../model/user.interface'
+// import type { directMessageI } from '../../model/directMessage.interface'
+// import type { MockMessageI } from '../../model/mockMessage.interface'
+// import { Socket } from 'socket.io-client'
+// import jwtDecode from 'jwt-decode'
+// import Message from './Message.vue'
+// import ScrollViewer from '../utils/ScrollViewer.vue'
+// import { useNotificationStore } from '../../stores/notification'
+// import { useUserStore } from '../../stores/userInfo' 
+// import type {ChannelMessageI} from '../../model/channels/channelMessage.interface.ts'
+// import type {ChannelEntryI, ChannelI} from  '../../model/channels/createChannel.interface'
 
-const userStore = useUserStore()
-const userId = computed<number>(() => userStore.userId)
-const username = computed<string>(() => userStore.username)
-const notificationStore = useNotificationStore()
-const inputMessage = ref('')
+// const props = defineProps({
+// 	selectedChannelEntry: {
+// 		type: Object as () => ChannelEntryI | null,
+// 		required: true
+// 	}
+// })
 
-const channelMessages = ref<MockMessageI[]>([])
-const socket = ref<Socket | null>(null)
+// const userStore = useUserStore()
+// const userId = computed<number>(() => userStore.userId)
+// const username = computed<string>(() => userStore.username)
+// const socket = ref<Socket | null>(null)
+// const notificationStore = useNotificationStore()
+// const selectedChannel: ChannelI | null = props.selectedChannelEntry?.channel ?? null
+// const channelMessages = ref<ChannelMessageI[]>([])
+// const newchannelMessages = ref('')
+// const loading = ref(true)
 
-const initSocket = () => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
-}
 
-const fetchChannelMessages = async () => {
-  const messages = getMockChannelMessages()
-  channelMessages.value = messages
-}
+// const initSocket = () => {
+//   const accessToken = localStorage.getItem('ponggame') ?? ''
+//   socket.value = connectWebSocket('http://localhost:3000', accessToken)
+// }
 
-const getMockChannelMessages = (): MockMessageI[] => {
-  return [
-    { message: 'Knock Knock', sender: 'Eric', createdAt: 'two minutes ago', isOwnMessage: false },
-    { message: "Who's there?", sender: 'Clapton', createdAt: 'one minute ago', isOwnMessage: true },
-    { message: 'Race Condition', sender: 'Eric', createdAt: 'one minute ago', isOwnMessage: false },
-    {
-      message:
-        '... and a rather long text for testing purposes. To see if it would not distort the view in any unexpected and unwanted way. \n ... and a bit more long text',
-      sender: 'Eric',
-      createdAt: 'one second ago',
-      isOwnMessage: false
-    }
-  ]
-}
-onMounted(() => {
-  initSocket()
-  fetchChannelMessages()
-})
+// const setNewChannelMessageListener = () => {
+// 	if(!socket || !socket.value) {
+// 		notificationStore.showNotification('Error: Connection problems', true)
+// 		return
+// 	}
+// 	socket.value.on('newChannelMessage', (newChannelMessageData: ChannelMessageI) => {
+// 		console.log('newChannelMessage fired')
+// 		channelMessages.value.unshif(newChannelMessageData)
+// 	})
+// }
 
-const messages = ref<directMessageI[]>([])
-const newMessage = ref('')
+// // const setChannelMessages = async () => {
+// // 	if (!selectedChannel) {
+// // 		return
+// // 	}
+// // 	try {
+// // 		const response = await fetch(`http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`)
+// // 	}
+// // }
 
-const sendMessage = () => {
-  newMessage.value = ''
-}
+// const fetchChannelMessages = () => {
+//   const messages = getMockChannelMessages()
+//   channelMessages.value = messages
+// }
 
-const isOwnMessage = (senderId: number | undefined) => {
-  return undefined
-}
-</script>
+// const getMockChannelMessages = (): MockMessageI[] => {
+//   return [
+//     { message: 'Knock Knock', sender: 'Eric', createdAt: 'two minutes ago', isOwnMessage: false },
+//     { message: "Who's there?", sender: 'Clapton', createdAt: 'one minute ago', isOwnMessage: true },
+//     { message: 'Race Condition', sender: 'Eric', createdAt: 'one minute ago', isOwnMessage: false },
+//     {
+//       message:
+//         '... and a rather long text for testing purposes. To see if it would not distort the view in any unexpected and unwanted way. \n ... and a bit more long text',
+//       sender: 'Eric',
+//       createdAt: 'one second ago',
+//       isOwnMessage: false
+//     }
+//   ]
+// }
+// onMounted(() => {
+//   initSocket()
+//   fetchChannelMessages()
+// })
+
+// const messages = ref<directMessageI[]>([])
+// const newMessage = ref('')
+
+// const sendMessage = () => {
+//   newMessage.value = ''
+// }
+
+// const isOwnMessage = (senderId: number | undefined) => {
+//   return undefined
+// }
+// </script>
 
 <style scoped>
 .messages-container {

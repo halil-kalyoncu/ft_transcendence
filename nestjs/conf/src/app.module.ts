@@ -8,6 +8,7 @@ import { GameService } from './game/service/game.service';
 import { EventsGateway } from './game/gateway/events/events.gateway';
 import { MatchModule } from './match/match.module';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -17,7 +18,6 @@ import { MatchModule } from './match/match.module';
     PrismaModule,
     MatchModule,
   ],
-  controllers: [],
   providers: [
 	EventsGateway,
 	GameService,

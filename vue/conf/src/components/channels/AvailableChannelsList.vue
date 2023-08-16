@@ -3,12 +3,12 @@
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
       <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
-          :isPasswordProtected="channel.isPasswordProtected"
+          :isPasswordProtected="channel.channel.protected"
           :channelName="channel.channel.name"
           :ownerName="channel.owner.username"
           :joinChannelButtonName="'Join'"
-          :channelId="channel.channelId"
-          @channel-entered="handleChannelEntered(channel.channelId)"
+          :channelId="channel.channel.id"
+		  @channelEntered="handleChannelEntered(channel.channel.id)"
         />
       </div>
     </ScrollViewer>
@@ -19,18 +19,18 @@
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import ChannelListItem from './ChannelListItem.vue'
 import { onMounted, computed, ref} from 'vue'
-  import { useUserStore } from '../../stores/userInfo'
-  import type {ChannelInfoI} from  '../../model/channels/createChannel.interface'
+  import type {ChannelEntryI} from  '../../model/channels/createChannel.interface'
   import { useNotificationStore } from '../../stores/notification'
 
-const emit = defineEmits(['channel-entered'])
+const emit = defineEmits(['channel-entered']);
 const handleChannelEntered = (channelId: number) => {
   emit('channel-entered', channelId)
 }
-const channelData = ref<ChannelInfoI[]>([])
-const notificationStore = useNotificationStore()
+
+const channelData = ref<ChannelEntryI[]>([])
 
 onMounted(async () => {
+	const notificationStore = useNotificationStore()
 	  try{
 		const response =  await fetch(`http://localhost:3000/api/channel/getAllPublicChannels`)
 		if (!response.ok) {

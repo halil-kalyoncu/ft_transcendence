@@ -9,7 +9,7 @@ import {
   } from '@nestjs/common';
   import { ApiTags } from '@nestjs/swagger';
   import { PrismaService } from '../../../prisma/prisma.service';
-  import { Channel, ChannelMember } from '@prisma/client';
+  import { Channel, ChannelMember, ChannelMessage } from '@prisma/client';
   import { ChannelService } from '../../service/channel/channel.service';
   import {
 	CreateChannelDto,
@@ -33,9 +33,10 @@ import {
   
 	@Get('getAllChannelsFromUser')
 	async getAllChannelsFromUser(
-	  @Query('userId', ParseIntPipe) userId: number,
+	  @Query('userId', ParseIntPipe) userId: number, 
+	  @Query('role') role:string
 	): Promise<ChannelInfoDto[]> {
-	  return await this.ChannelService.getChannelsforId(userId);
+	  return await this.ChannelService.getChannelsforId(userId, role);
 	}
   
 	@Get('getAllChannelsWhereUserAdmin')
@@ -63,7 +64,7 @@ import {
 	async getAllPublicChannels(): Promise<ChannelInfoDto[]>{
 		return await this.ChannelService.getAllPublicChannels();
 	}
-  
+
 	//Post Functions to create Channels
 	@Post('createProtectedChannel')
 	async createChannel(

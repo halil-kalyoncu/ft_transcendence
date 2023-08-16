@@ -459,7 +459,6 @@ export class ChannelService {
 		return { channel: channel, owner: owner };
 	  })
 	);
-  
 	return MembershipEntries;
   }
 
@@ -489,3 +488,4 @@ export class ChannelService {
 	 return channelEntries;
 }
 }
+

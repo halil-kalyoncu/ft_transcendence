@@ -43,7 +43,7 @@ export class ChannelMessageService {
     });
   }
 
-  async getGroupMessages(channelId: number): Promise<ChannelMessage[]> {
+  async getChannelMessagesforChannel(channelId: number): Promise<ChannelMessage[]> {
     const channel = await this.channelService.find(channelId);
 
     if (!channel) {
@@ -66,3 +66,5 @@ export class ChannelMessageService {
     });
   }
 }
+
+
