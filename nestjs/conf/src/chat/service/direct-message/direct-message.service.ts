@@ -103,13 +103,14 @@ export class DirectMessageService {
   ): Promise<DirectMessage[]> {
     const directMessages = await this.prisma.directMessage.updateMany({
       where: {
-        AND: [{ senderId: withUserId }, { receiverId: readerUserId }],
+        senderId: withUserId,
+        receiverId: readerUserId,
+        isRead: false,
       },
       data: {
         isRead: true,
       },
     });
-    console.log(directMessages);
     return this.getConversation(readerUserId, withUserId);
   }
 }

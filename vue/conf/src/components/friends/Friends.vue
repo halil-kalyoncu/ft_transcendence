@@ -18,6 +18,8 @@ import { Socket } from 'socket.io-client'
 import type { MatchI } from '../../model/match/match.interface'
 import { useRouter } from 'vue-router'
 import type { ErrorI } from '../../model/error.interface'
+import type { UnreadMessageI } from '../../model/message/unreadMessage.interface'
+import type { DirectConverstationDto } from '../../model/message/directConversation.dto'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
@@ -31,6 +33,7 @@ const socket = ref<Socket | null>(null)
 const friends = ref<FriendshipEntryI[]>([])
 const friendRequests = ref<FriendshipEntryI[]>([])
 const matchInvites = ref<MatchI[]>([])
+const unreadMessages = ref<UnreadMessageI[]>([])
 
 const modalTitle = ref('')
 const showFriendManagerAndChat = ref(false)
@@ -80,7 +83,7 @@ const setFriendData = async () => {
     friends.value = data
     updateSelectedFriend()
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message, false)
   }
 }
 
@@ -97,7 +100,7 @@ const setFriendRequestData = async () => {
     const data = await response.json()
     friendRequests.value = data
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message, false)
   }
 }
 
@@ -114,13 +117,32 @@ const setMatchInviteData = async () => {
     const data = await response.json()
     matchInvites.value = data
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
+}
+
+const setDirectMessageData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/directMessages/allUnreadByUserId?userId=${userId.value}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    unreadMessages.value = data
+    console.log('unreadMessages')
+    console.log(unreadMessages.value)
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
   }
 }
 
 const setFriendsListener = () => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
@@ -132,7 +154,7 @@ const setFriendsListener = () => {
 
 const setFriendRequestListener = () => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   socket.value.on('friendRequests', () => {
@@ -143,7 +165,7 @@ const setFriendRequestListener = () => {
 
 const setMatchInviteListener = () => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   socket.value.on('matchInvites', () => {
@@ -152,16 +174,39 @@ const setMatchInviteListener = () => {
   })
 }
 
+const setDirectMessageListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+  socket.value.on('newDirectMessage', () => {
+    console.log('newDirectMessage listener fired')
+    setDirectMessageData()
+  })
+}
+
+const unreadMessageReactive = computed(() => {
+  const counts: { [key: number]: number } = {}
+
+  for (const message of unreadMessages.value) {
+    counts[message.senderId] = message.amountUnread
+  }
+
+  return counts
+})
+
 onMounted(() => {
   initSocket()
 
   setFriendsListener()
   setFriendRequestListener()
   setMatchInviteListener()
+  setDirectMessageListener()
 
   setFriendData()
   setFriendRequestData()
   setMatchInviteData()
+  setDirectMessageData()
 })
 
 interface ModalResult {
@@ -201,7 +246,7 @@ const handleSubmit = computed(() => {
 const handleAdd = ({ username }: ModalResult) => {
   isModalOpened.value = false
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   if (username.trim() === '') {
@@ -223,7 +268,7 @@ const handleAdd = ({ username }: ModalResult) => {
 
 const handleBlock = async ({ username }: ModalResult) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
@@ -287,8 +332,12 @@ const handleUnblock = async ({ username }: ModalResult) => {
   }
 }
 
-const closeFriendManagerAndChat = () => {
+const closeFriendManagerAndChat = async () => {
   showFriendManagerAndChat.value = false
+  if (selectedFriend.value) {
+    await markConversationAsRead(selectedFriend.value.friend.id!)
+    await setDirectMessageData()
+  }
   selectedFriend.value = null
 }
 
@@ -299,7 +348,7 @@ const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
 
 const acceptFriendRequest = (requestId: number) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
@@ -317,7 +366,7 @@ const acceptFriendRequest = (requestId: number) => {
 
 const rejectFriendRequest = (requestId: number) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   socket.value.emit('rejectFriendRequest', requestId, (response: FriendshipI | ErrorI) => {
@@ -334,7 +383,7 @@ const rejectFriendRequest = (requestId: number) => {
 
 const acceptMatchInvite = (matchId: number) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
@@ -344,7 +393,7 @@ const acceptMatchInvite = (matchId: number) => {
 
 const rejectMatchInvite = (matchId: number) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
@@ -353,7 +402,7 @@ const rejectMatchInvite = (matchId: number) => {
 
 const handleUnfriendUser = (username: String, friendshipId: Number) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   if (username !== '') {
@@ -372,7 +421,7 @@ const handleUnfriendUser = (username: String, friendshipId: Number) => {
 
 const handleBlockUser = (username: String, blockUserId: Number) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   if (username !== '') {
@@ -393,6 +442,34 @@ const handleBlockUser = (username: String, blockUserId: Number) => {
 const handleInviteToGame = (username: String, id: Number) => {
   if (username !== '') {
     notificationStore.showNotification('User ' + username + ' was invited to play', true)
+  }
+}
+
+const markConversationAsRead = async (withUserId: number) => {
+  try {
+    const directConversationDto: DirectConverstationDto = {
+      readerUserId: userId.value as number,
+      withUserId: withUserId
+    }
+
+    const response = await fetch('http://localhost:3000/api/directMessages/markAsRead', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(directConversationDto)
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    const data = await response.json()
+    if (Array.isArray(data)) {
+    } else {
+      console.error('Expected an array from the API but received:', data)
+    }
+  } catch (error: any) {
+    console.error('Expected an array from the API but received:', error)
   }
 }
 
@@ -423,6 +500,7 @@ const goBack = () => {
               @click="handleFriendManagerOpened(entry)"
               :status="entry.isOnline ? 'online' : 'offline'"
               :username="entry.friend.username"
+              :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
               :showActions="false"
             />
           </div>

@@ -3,7 +3,7 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { connectWebSocket } from '../../websocket'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import type { UserI } from '../../model/user.interface'
-import type { directMessageI } from '../../model/directMessage.interface'
+import type { directMessageI } from '../../model/message/directMessage.interface'
 import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
@@ -50,7 +50,7 @@ const setNewDirectMessageListener = () => {
   }
   socket.value.on('newDirectMessage', (newMessageData: directMessageI) => {
     console.log('newDirectMessage listener fired')
-    messages.value.unshift(newMessageData)
+    setDirectMessages()
   })
 }
 
@@ -78,6 +78,42 @@ const setDirectMessages = async () => {
     loading.value = false
   }
 }
+
+// const setDirectMessages = async () => {
+//   if (!props.selectedFriendEntry || !props.selectedFriendEntry.friend) {
+//     return
+//   }
+//   try {
+//     const directConversationDto: DirectConverstationDto = {
+//       readerUserId: userId.value as number,
+//       withUserId: props.selectedFriendEntry?.friend?.id as number
+//     }
+
+//     const response = await fetch('http://localhost:3000/api/directMessages/markAsRead', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify(directConversationDto)
+//     })
+
+//     if (!response.ok) {
+//       throw new Error(`HTTP error! Status: ${response.status}`)
+//     }
+//     const data = await response.json()
+//     if (Array.isArray(data)) {
+//       messages.value = data
+//       console.log('FriendMessages')
+//       console.log(messages.value)
+//     } else {
+//       console.error('Expected an array from the API but received:', data)
+//     }
+//   } catch (error: any) {
+//     console.error('Expected an array from the API but received:', error)
+//   } finally {
+//     loading.value = false
+//   }
+// }
 
 onMounted(() => {
   initSocket()

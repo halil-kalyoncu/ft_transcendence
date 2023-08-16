@@ -3,6 +3,7 @@
     <div class="friend-container">
       <font-awesome-icon class="icon" :icon="['fas', 'user']" />
       <p class="friend-name">{{ username }}</p>
+      <p>{{ unreadMessagesAmount }}</p>
     </div>
     <div class="friends-actions-container">
       <div v-if="showActions">
@@ -38,6 +39,7 @@ const router = useRouter()
 const props = defineProps({
   username: String,
   status: String,
+  unreadMessagesAmount: Number,
   showActions: Boolean
 })
 
