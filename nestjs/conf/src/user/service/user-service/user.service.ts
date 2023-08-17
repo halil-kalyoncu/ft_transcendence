@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { AuthService } from '../../../auth/service/auth.service';
+import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import * as fs from 'fs';
@@ -8,8 +8,8 @@ import * as fs from 'fs';
 export class UserService {
   constructor(
     private prisma: PrismaService,
-    private authService: AuthService,
-  ) {}
+    private jwtAuthService: JwtAuthService,
+  ) { }
 
   //remove this, if 42 login works
   async login(user: Prisma.UserCreateInput): Promise<string> {
@@ -18,7 +18,7 @@ export class UserService {
     if (!foundUser) {
       foundUser = await this.create(user);
     }
-    return this.authService.generateJwt(foundUser);
+    return this.jwtAuthService.generateJwt(foundUser);
   }
 
   async create(newUser: Prisma.UserCreateInput): Promise<User> {
@@ -63,7 +63,7 @@ export class UserService {
 
   async uploadAvatar(file: Express.Multer.File, userId: number): Promise<User> {
     const user: User = await this.findById(userId);
-  
+
     if (!user) {
       throw new Error('user not found');
     }
@@ -71,13 +71,35 @@ export class UserService {
     if (user.avatarId) {
       fs.unlinkSync(user.avatarId);
     }
-    
+
     return this.prisma.user.update({
       where: {
         id: user.id,
       },
       data: {
         avatarId: file.path
+      }
+    });
+  }
+
+  async setTwoFactorAuthSecret(userId: number, secret: string) {
+    return this.prisma.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        secret2FA: secret
+      }
+    });
+  }
+
+  async turnOnTwoFactorAuth(userId: number): Promise<User> {
+    return this.prisma.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        enabled2FA: true
       }
     });
   }

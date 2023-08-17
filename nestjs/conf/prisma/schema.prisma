@@ -17,6 +17,9 @@ model User {
 
   connectedUser ConnectedUser?
 
+  enabled2FA Boolean @default(false)
+  secret2FA  String?
+
   sentFriendships     Friendship[] @relation("Sender")
   receivedFriendships Friendship[] @relation("Receiver")
 

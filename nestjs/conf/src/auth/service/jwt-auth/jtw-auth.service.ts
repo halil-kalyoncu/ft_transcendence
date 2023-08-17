@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
-export class AuthService {
+export class JwtAuthService {
   constructor(private readonly jwtService: JwtService) {}
 
   generateJwt(user: Prisma.UserCreateInput): Promise<string> {

@@ -69,7 +69,7 @@
     </div> -->
 
     <div class="input-group">
-      <button class="secondary-btn" @click="enable2FA">enable 2FA</button>
+      <button class="secondary-btn">enable 2FA</button>
     </div>
 
     <div class="button-group">

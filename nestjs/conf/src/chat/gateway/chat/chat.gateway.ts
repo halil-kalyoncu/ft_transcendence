@@ -9,7 +9,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AuthService } from '../../../auth/service/auth.service';
+import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 import { FriendshipService } from '../../../chat/service/friendship/friendship.service';
 import { ChannelService } from '../../../chat/service/channel/channel.service';
@@ -45,13 +45,12 @@ import { ErrorDto } from '../../../chat/dto/error.dto';
   },
 })
 export class ChatGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
-{
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   @WebSocketServer()
   server: Server;
 
   constructor(
-    private authService: AuthService,
+    private jwtAuthService: JwtAuthService,
     private userService: UserService,
     private friendshipService: FriendshipService,
     private channelService: ChannelService,
@@ -59,7 +58,7 @@ export class ChatGateway
     private directMessageService: DirectMessageService,
     private channelMessageService: ChannelMessageService,
     private matchService: MatchService,
-  ) {}
+  ) { }
 
   async onModuleInit(): Promise<void> {
     await this.connectedUserService.deleteAll();
@@ -70,7 +69,7 @@ export class ChatGateway
       //Authorization has the format Bearer <access_token>, remove Bearer to verify the token
       const tokenArray: string[] =
         socket.handshake.headers.authorization.split(' ');
-      const decodedToken = await this.authService.verifyJwt(tokenArray[1]);
+      const decodedToken = await this.jwtAuthService.verifyJwt(tokenArray[1]);
       const user: User = await this.userService.findById(decodedToken.user.id);
       if (!user) {
         return this.disconnectUnauthorized(socket);
