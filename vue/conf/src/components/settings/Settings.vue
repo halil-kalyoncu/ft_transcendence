@@ -63,9 +63,13 @@
 
     <div class="divider"></div>
 
-    <div class="input-group" :class="'input-group-single-row'">
+    <!-- <div class="input-group" :class="'input-group-single-row'">
       <label class="username" for="enable-2fa">Enable 2FA</label>
       <input type="checkbox" id="enable-2fa" v-model="enable2FA" />
+    </div> -->
+
+    <div class="input-group">
+      <button class="secondary-btn" @click="enable2FA">enable 2FA</button>
     </div>
 
     <div class="button-group">
@@ -132,9 +136,6 @@ const handleAvatarUpload = async () => {
 
       const response = await fetch(`http://localhost:3000/api/users/avatar?userId=${userId.value}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: formData
       })
 

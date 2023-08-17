@@ -83,9 +83,10 @@ export class UserController {
   ) file: Express.Multer.File,
   @Query('userId', ParseIntPipe) userId: number,
   @Res() res: Response
-  ): Promise<User> {
+  ): Promise<void> {
     try {
-      return this.userService.uploadAvatar(file, userId);
+      const updatedUser = await this.userService.uploadAvatar(file, userId);
+      res.json(updatedUser);
     }
     catch (error) {
       res.status(404).send(error.message);
