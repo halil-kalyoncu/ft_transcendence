@@ -4,8 +4,8 @@
       <font-awesome-icon class="icon" :icon="['fas', 'user']" />
       <p class="friend-name">{{ username }}</p>
       <div class="icon-container">
-        <font-awesome-icon :icon="['fas', 'envelope']" class="envelope-icon" v-if="unreadMessagesAmount > 0"/>
-        <span v-if="unreadMessagesAmount > 0" class="badge-number">{{ unreadMessagesAmount }}</span>
+        <font-awesome-icon :icon="['fas', 'envelope']" class="envelope-icon" v-if="unreadMessagesAmount && unreadMessagesAmount > 0"/>
+        <span v-if="unreadMessagesAmount && unreadMessagesAmount > 0" class="badge-number">{{ unreadMessagesAmount }}</span>
       </div>
     </div>
     <div class="friends-actions-container">
