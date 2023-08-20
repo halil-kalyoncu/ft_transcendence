@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import FriendRequests from './FriendRequests.vue'
+import ChannelInvitations from './ChannelInvitations.vue'
+import BlockedUsers from './BlockedUsers.vue'
 import { ref, onMounted } from 'vue'
 
 const activePanel = ref('FriendRequests')
@@ -34,11 +36,10 @@ const setActivePanel = (value: string) => {
       </li>
     </ul>
     <FriendRequests v-show="activePanel === 'FriendRequests'" />
-    <FriendRequests v-show="activePanel === 'ChannelInvitations'" />
-    <FriendRequests v-show="activePanel === 'BlockedUsers'" />
+    <ChannelInvitations v-show="activePanel === 'ChannelInvitations'" />
+    <BlockedUsers v-show="activePanel === 'BlockedUsers'" />
   </nav>
 </template>
-
 
 <style scoped>
 .activityCenter {

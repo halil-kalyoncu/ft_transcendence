@@ -1,4 +1,3 @@
-
 <template>
   <div class="friend-request-item">
     <div class="friend-info" @click="viewProfile">
@@ -12,7 +11,7 @@
       <button class="icon-button-reject" @click="rejectRequest" title="Reject">
         <font-awesome-icon :icon="['fas', 'times']" />
       </button>
-        <button class="icon-button-view-profile" @click="viewProfile" title="View Profile">
+      <button class="icon-button-view-profile" @click="viewProfile" title="View Profile">
         <font-awesome-icon :icon="['fas', 'eye']" />
       </button>
       <button class="icon-button-block" @click="blockUser" title="Block">
@@ -62,7 +61,7 @@ const blockUser = () => {
   border: 0.5px solid aliceblue;
   padding: 0.5rem 1rem;
   min-width: 540px;
-  margin: 0 0 .5rem 0;
+  margin: 0 0 0.5rem 0;
 }
 
 .friend-info {
@@ -72,7 +71,7 @@ const blockUser = () => {
 }
 
 .friend-username {
-    margin-left: .5rem;
+  margin-left: 0.5rem;
   color: #ea9f42;
 }
 
@@ -84,7 +83,8 @@ const blockUser = () => {
 .icon-button-accept,
 .icon-button-reject,
 .icon-button-view-profile,
-.icon-button-block {
+.icon-button-block,
+.icon-button-unblock {
   background: none;
   border: none;
   cursor: pointer;
@@ -106,5 +106,9 @@ const blockUser = () => {
 
 .icon-button-view-profile {
   color: aliceblue;
+}
+
+.icon-button-unblock {
+  color: green;
 }
 </style>
