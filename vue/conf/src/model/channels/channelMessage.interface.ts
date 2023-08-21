@@ -1,13 +1,13 @@
 import type { MessageI } from '../message.interface'
+import type { UserI } from '../user.interface';
 import type { ChannelMemberI } from './createChannel.interface'
 
 export interface ChannelMessageI{
-	id: number;
-	messageId: number;
-	senderId: number;
+	id?: number
 	message: MessageI;
-	sender: ChannelMemberI;
-	channelMessageReadStatus: ChannelMessageReadStatusI[];
+	sender: UserI;
+	createdAt: Date;
+	//channelMessageReadStatus: ChannelMessageReadStatusI[];
   }
 
 export interface ChannelMessageReadStatusI{
@@ -15,6 +15,6 @@ export interface ChannelMessageReadStatusI{
 	messageId: number;
 	readerId: number;
 	isRead: boolean;
-	reader: ChannelMemberI;
+	reader: UserI;
   }
   

@@ -1,3 +1,5 @@
+
+<!-- CHECK IN THE MUTED! -->
 <template>
   <div v-if="isOpened" class="modal" @click="handleClickOutside">
     <div class="modal-content" @click.stop>

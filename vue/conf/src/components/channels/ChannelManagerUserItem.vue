@@ -57,6 +57,7 @@ const maxValue = ref(100)
 const isUserMuted = ref(false)
 const muteTitle = ref('Mute')
 
+//get the props from parent
 const props = defineProps({
   username: String,
   date: String,

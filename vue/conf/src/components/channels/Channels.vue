@@ -27,7 +27,7 @@
       />
       <div v-if="showChannelManagerAndChat">
         <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" />
-        <ChannelMessages />
+        <ChannelMessages :channelId = "joinedChannelId" />
       </div>
     </template>
   </section>
