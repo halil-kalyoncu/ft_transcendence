@@ -15,69 +15,79 @@ export class ChannelMessageService {
   ) {}
 
   async create(
-    createChannelMessageDto: CreateChannelMessageDto,
+	createChannelMessageDto: CreateChannelMessageDto,
   ): Promise<ChannelMessage> {
-    const { senderId, channelId, message } = createChannelMessageDto;
-    const channel = await this.channelService.find(channelId);
-
-    if (!channel) {
-      throw new Error("Channel doesn't exists");
-    }
-
-    const member = await this.channelService.findMember(senderId, channelId);
-
-    if (!member) {
-      throw new Error('Member is not part of the channel');
-    }
-
-    const createdMessage = await this.messageService.createOne({ message });
-
-    return this.prisma.channelMessage.create({
-      data: {
-        sender: { connect: { id: member.id } },
-        message: { connect: { id: createdMessage.id } },
-      },
-      include: {
-        sender: true,
-        message: true,
-      },
-    });
+	const { senderId, channelId, message } = createChannelMessageDto;
+  
+	const channel = await this.channelService.find(channelId);
+  
+	if (!channel) {
+	  throw new Error("Channel doesn't exist");
+	}
+  
+	const member = await this.channelService.findMember(senderId, channelId);
+  
+	if (!member) {
+	  throw new Error('Member is not part of the channel');
+	}
+  
+	const createdMessage = await this.messageService.createOne({ message });
+	const createdChannelMessage = await this.prisma.channelMessage.create({
+	  data: {
+		sender: { connect: { id: member.id } },
+		message: { connect: { id: createdMessage.id } },
+	  },
+	  include: {
+		sender: true,
+		message: true,
+	  },
+	});
+  
+	// Add a log to indicate that the ChannelMessage was created
+	console.log('ChannelMessage created:', createdChannelMessage);
+  
+	// Return the created ChannelMessage
+	return createdChannelMessage;
   }
+  
 
-async getChannelMessagesforChannel(channelId: number): Promise<{}>
+async getChannelMessagesforChannel(channelId: number): Promise<ChannelMessageDto[]>
 {
-	try{
-		const channelWithMessages: Channel | null = await this.prisma.channel.findUnique({
-			where: {
-				id:channelId,
-			},
-			include: {
-				members: {
-				include: {
-					user:true,
-					sendMessages: {
-						include: {
-							message:true,
-						}
-					},
-				},
-				},
+	try {
+		const channelMessages: any[] = await this.prisma.channelMessage.findMany({
+		  where: {
+			sender: {
+			  channel: {
+				id: channelId, 
+			  }
 			}
-	})
-	if (!channelWithMessages) {
-		throw new Error("Channel not found");
-		return {}
-	}
-
-	const channelMessageDtos: ChannelMessageDto[] = [];
-	for (const member of channelWithMessages.members)
-	return channelWithMessages;
-}
-	catch (error) {
-		 	  console.error("Error fetching channel messages:", error);
-			return {}
-	}
-	
+		  },
+		  include: {
+			message: true,
+			sender: {
+			  include: {
+				user: true,
+			  }
+			}
+		  },
+		  orderBy: {
+			message: {
+			  createdAt: 'desc', 
+			},
+		  },
+		});
+	  
+		const channelMessageDtos: ChannelMessageDto[] = channelMessages.map(channelMessage => ({
+		  id: channelMessage.id,
+		  message: channelMessage.message,
+		  sender: channelMessage.sender.user,
+		  createdAt: channelMessage.message.createdAt,
+		}));
+		return channelMessageDtos.reverse();
+	  } catch (error) {
+		console.error("Error fetching channel messages:", error);
+		throw error;
+	  }
 }
 
   //how to fetch this stuff so that I have the right dto object 
