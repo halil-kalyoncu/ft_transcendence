@@ -26,7 +26,7 @@
         @channel-entered="handleChannelEntered"
       />
       <div v-if="showChannelManagerAndChat">
-        <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" />
+        <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" @channel-signedout="hanndleChannelSignedout"/>
         <ChannelMessages :channelId = "joinedChannelId" />
       </div>
     </template>
@@ -147,9 +147,27 @@ const addUsertoChannel = async() => {
 		notificationStore.showNotification(`Error` + error.message, true)
 	}
 }
+const removeUserFromChannel = async() => {
+	try{	
+		const response = await fetch('http://localhost:3000/api/channel/removeUserFromChannel',
+	{
+	method: 'Delete',
+	headers: {
+		'Content-Type': 'application/json'
+	},
+	body: JSON.stringify({
+		userId: userId.value,
+		channelId: joinedChannelId.value
+	})},)
+}
+	catch (error: any) {
+		notificationStore.showNotification(`Error` + error.message, true)
+	}
+}
 
+//TODO: send message to channel that user entered
 const sendMessageUserEntered = async() => {
-	
+
 }
 
 const openJoinChannels = () => {
@@ -189,6 +207,11 @@ const handleChannelEntered = (channelId: number) => {
 }
 
 const handleChannelLeft = () => {
+  closeChannelManagerAndChat()
+}
+
+const hanndleChannelSignedout = () => {
+  removeUserFromChannel()
   closeChannelManagerAndChat()
 }
 </script>

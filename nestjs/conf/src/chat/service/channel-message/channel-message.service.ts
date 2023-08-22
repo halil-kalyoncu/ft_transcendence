@@ -126,7 +126,7 @@ async getChannelMessagesforChannel(channelId: number): Promise<ChannelMessageDto
 		  sender: channelMessage.sender.user,
 		  createdAt: channelMessage.message.createdAt,
 		}));
-		return channelMessageDtos.reverse();
+		return channelMessageDtos;
 	  } catch (error) {
 		console.error("Error fetching channel messages:", error);
 		throw error;

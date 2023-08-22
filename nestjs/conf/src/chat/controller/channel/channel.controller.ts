@@ -2,6 +2,7 @@ import {
 	Body,
 	Controller,
 	Get,
+	Delete,
 	ParseIntPipe,
 	Post,
 	Query,
@@ -91,12 +92,7 @@ import {
 	  return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
 	}
   
-	@Patch('removeUserFromChannel')
-	async removeUserFromChannel(
-	  @Body() ChannelMembershipDto: ChannelMembershipDto,
-	): Promise<void> {
-	  await this.ChannelService.removeUserFromChannel(ChannelMembershipDto);
-	}
+	
   
 	@Patch('MakeUserAdmin')
 	async MakeUserAdmin(@Body() AdminActionDto: AdminActionDto): Promise<void> {
@@ -106,6 +102,14 @@ import {
 	@Patch('KickUser')
 	async KickUser(@Body() AdminActionDto: AdminActionDto): Promise<void> {
 	  await this.ChannelService.kickChannelMember(AdminActionDto);
+	}
+
+
+	@Delete('removeUserFromChannel')
+	async removeUserFromChannel(
+	  @Body() ChannelMembershipDto: ChannelMembershipDto,
+	): Promise<void> {
+	  await this.ChannelService.removeUserFromChannel(ChannelMembershipDto);
 	}
   }
   

@@ -32,6 +32,9 @@
     <button :class="['join-channel-button', 'leave-channel-button']" @click="leaveChannel">
       Leave
     </button>
+	<button :class="['join-channel-button', 'signout-channel-button']" @click="SignOutChannel">
+      SignOut
+    </button>
   </div>
 </template>
 
@@ -73,10 +76,14 @@ const currentUser = computed(() => dummyUserData.find((user) => user.username ==
 const currentUserRole = 'owner'
 
 let tempChannelName = 'Computato Potato'
-const emit = defineEmits(['channel-left'])
+const emit = defineEmits(['channel-left', 'channel-signedout'])
 const leaveChannel = () => {
   notificationStore.showNotification('You have left the channel: ' + tempChannelName, true)
   emit('channel-left')
+}
+const SignOutChannel = () => {
+  notificationStore.showNotification('You have signed out the channel: ' + tempChannelName, true)
+  emit('channel-signedout')
 }
 
 const changePassword = () => {
@@ -93,7 +100,10 @@ const changePassword = () => {
 }
 </script>
 
+
 <style>
+/* TODO: Verteilen der Buttons gleichmäßig */
+
 .current-channel-name {
   text-align: center;
   font-size: 1.25rem;
@@ -127,6 +137,9 @@ const changePassword = () => {
   background-color: #f64456;
 }
 
+.channel-manager-info .signout-channel-button {
+  background-color: #110442;
+}
 .channel-manager-info .password-input {
   margin: 0;
   width: 100%;
