@@ -6,7 +6,7 @@
 			:isPasswordProtected="channel.channel.protected"
 			:channelName="channel.channel.name"
 			:ownerName="channel.owner.username"
-			:joinChannelButtonName="'Join'"
+			:joinChannelButtonName="'Joines CHannel List'"
 			:channelId="channel.channel.id"
 			@channelEntered="handleChannelEntered(channel.channel.id)"
 		  />

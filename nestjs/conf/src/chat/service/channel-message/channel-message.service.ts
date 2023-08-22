@@ -50,7 +50,50 @@ export class ChannelMessageService {
 	return createdChannelMessage;
   }
   
-
+  async createChannelMessageI(
+	createChannelMessageDto: CreateChannelMessageDto,
+  ): Promise<ChannelMessageDto> {
+	const { senderId, channelId, message } = createChannelMessageDto;
+  
+	const channel = await this.channelService.find(channelId);
+  
+	if (!channel) {
+	  throw new Error("Channel doesn't exist");
+	}
+  
+	const member = await this.channelService.findMember(senderId, channelId);
+  
+	if (!member) {
+	  throw new Error('Member is not part of the channel');
+	}
+  
+	const createdMessage = await this.messageService.createOne({ message });
+	const createdChannelMessage = await this.prisma.channelMessage.create({
+	  data: {
+		sender: { connect: { id: member.id } },
+		message: { connect: { id: createdMessage.id } },
+	  },
+	  include: {
+		sender: {
+			include: {
+				user: true,
+			}
+		},
+		message: true,
+	  },
+	});
+  
+	  // Create a ChannelMessageDto using the returned data
+	  const channelMessageDto: any = {
+		id: createdChannelMessage.id,
+		message: createdChannelMessage.message,
+		sender: createdChannelMessage.sender.user,
+		createdAt: createdChannelMessage.message.createdAt,
+	  };
+	// Return the created ChannelMessage
+	return channelMessageDto;
+  }
+  
 async getChannelMessagesforChannel(channelId: number): Promise<ChannelMessageDto[]>
 {
 	try {

@@ -50,6 +50,7 @@ const setNewDirectMessageListener = () => {
   }
   socket.value.on('newDirectMessage', (newMessageData: directMessageI) => {
     console.log('newDirectMessage listener fired')
+	console.log(newMessageData)
     messages.value.unshift(newMessageData)
   })
 }

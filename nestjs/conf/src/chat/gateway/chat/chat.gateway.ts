@@ -220,7 +220,6 @@ export class ChatGateway
 
     //sender
     socket.emit('newDirectMessage', newMessage);
-
     //receiver
     if (receiverOnline) {
       this.server
@@ -378,26 +377,21 @@ export class ChatGateway
     socket: Socket,
     createChannelMessageDto: CreateChannelMessageDto,
   ): Promise<void> {
-	console.log(createChannelMessageDto)
-    const newMessage = await this.channelMessageService.create(
+	const { senderId, channelId, message } = createChannelMessageDto;
+    const newMessage = await this.channelMessageService.createChannelMessageI(
       createChannelMessageDto,
     );
-	//TODO: Create right kind of message so it can be used for new message event
-	// const newMessage = await this.channelMessageService.createChannelMessage(
-	// 	createChannelMessageDto,
-	//   );
-	console.log(createChannelMessageDto)
-
 
     const members: User[] = await this.channelService.getMembers(
       createChannelMessageDto.channelId,
     );
+
+	socket.emit('newChannelMessage', newMessage);
+	console.log('newChannelMessage', newMessage);
     for (const member of members) {
       const memberOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(member.id);
-		console.log('MESSAGE')
-		console.log(newMessage)
-      if (memberOnline) {
+	if ( memberOnline && memberOnline.userId !== senderId) {
         socket.to(memberOnline.socketId).emit('newChannelMessage', newMessage);
       }
     }

@@ -127,6 +127,30 @@ const joinedChannelId = ref(0)
 const showAvailableChannels = ref(false)
 const showJoinedChannels = ref(false)
 
+const addUsertoChannel = async() => {
+	try {
+	const response = await fetch('http://localhost:3000/api/channel/addUserToChannel',
+	{
+	method: 'PATCH',
+	headers: {
+		'Content-Type': 'application/json'
+	},
+	body: JSON.stringify({
+		userId: userId.value,
+		channelId: joinedChannelId.value
+	})}, 
+	)
+	if (!response.ok) {
+		throw new Error('Failed to add user to channel')
+	}}
+	catch (error: any) {
+		notificationStore.showNotification(`Error` + error.message, true)
+	}
+}
+
+const sendMessageUserEntered = async() => {
+	
+}
 
 const openJoinChannels = () => {
   showAvailableChannels.value = true
@@ -159,6 +183,8 @@ const handleChannelEntered = (channelId: number) => {
 	joinedChannelId.value = channelId
   closeJoinChannels()
   closeMyChannels()
+  addUsertoChannel()
+  sendMessageUserEntered()
   showChannelManagerAndChat.value = true
 }
 

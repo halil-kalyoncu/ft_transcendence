@@ -152,7 +152,9 @@ export class ChannelService {
     );
 
     if (existingMembership) {
-      throw new Error('User is already a member of this channel.');
+       console.log ('User is already a member of this channel.');
+	   return
+		//throw new Error('User is already a member of this channel.');
     }
 
     return this.prisma.channelMember.create({
@@ -487,5 +489,39 @@ export class ChannelService {
 	 }));
 	 return channelEntries;
 }
+
+async getAllAvailableChannels(userId: number): Promise<ChannelInfoDto[]> {
+	const channels = await this.prisma.channel.findMany({
+	  where: {
+		visibility: ChannelVisibility.PUBLIC,
+		members: {
+		  none: {
+			userId: userId,
+		  },
+		},
+	  },
+	  include: {
+		members: {
+		  where: {
+			role: ChannelMemberRole.OWNER,
+		  },
+		  include: {
+			user: true,
+		  },
+		},
+	  },
+	});
+  
+	const channelEntries: ChannelInfoDto[] = await Promise.all(
+	  channels.map(async (channel) => {
+		const owner = channel.members[0]?.user || null;
+		return { channel: channel, owner: owner };
+	  })
+	);
+  
+	return channelEntries;
+  }
+  
+  
 }
 
