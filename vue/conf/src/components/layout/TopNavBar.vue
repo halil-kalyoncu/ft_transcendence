@@ -25,7 +25,6 @@ const logout = () => {
   disconnectWebSocket()
   router.push('/')
 }
-
 </script>
 
 <template>
@@ -45,10 +44,7 @@ const logout = () => {
       <RouterLink class="navButton header-username" :to="`/profile/${username}`">
         <div class="link-content">
           {{ username ? username : 'TBD' }}
-          <img
-            class="profile-image"
-            src=../../assets/defaultAvatar.png
-            alt="Profile" />
+          <img class="profile-image" src=../../assets/defaultAvatar.png alt="Profile" />
         </div>
       </RouterLink>
       <div>

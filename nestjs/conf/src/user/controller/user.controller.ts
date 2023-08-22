@@ -1,4 +1,19 @@
-import { Body, Controller, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, ParseIntPipe, Patch, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  FileTypeValidator,
+  Get,
+  MaxFileSizeValidator,
+  Param,
+  ParseFilePipe,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  Res,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UserService } from '../service/user-service/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
@@ -58,43 +73,49 @@ export class UserController {
   }
 
   @Post('avatar')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './files',
-      filename: (req, file, callback) => {
-        const id = uuidv4();
-        const ext = extname(file.originalname);
-        const filename = `${id}${ext}`;
-        callback(null, filename);
-      }
-    })
-  }))
-  async uploadAvatar(@UploadedFile(
-    new ParseFilePipe({
-      validators: [
-        new FileTypeValidator({
-          fileType: '.(png|jpeg|jpg)'
-        }),
-        new MaxFileSizeValidator({
-          maxSize: 1024 * 1024 * 10 //10mb
-        })
-      ]
-    })
-  ) file: Express.Multer.File,
-  @Query('userId', ParseIntPipe) userId: number,
-  @Res() res: Response
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './files',
+        filename: (req, file, callback) => {
+          const id = uuidv4();
+          const ext = extname(file.originalname);
+          const filename = `${id}${ext}`;
+          callback(null, filename);
+        },
+      }),
+    }),
+  )
+  async uploadAvatar(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new FileTypeValidator({
+            fileType: '.(png|jpeg|jpg)',
+          }),
+          new MaxFileSizeValidator({
+            maxSize: 1024 * 1024 * 10, //10mb
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Query('userId', ParseIntPipe) userId: number,
+    @Res() res: Response,
   ): Promise<void> {
     try {
       const updatedUser = await this.userService.uploadAvatar(file, userId);
       res.json(updatedUser);
-    }
-    catch (error) {
+    } catch (error) {
       res.status(500).send(error.message);
     }
   }
 
   @Get('avatar/:userId')
-  async serverAvatar(@Param('userId', ParseIntPipe) userId: number, @Res() res: Response) {
+  async serverAvatar(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Res() res: Response,
+  ) {
     try {
       const user: User = await this.userService.findById(userId);
 
@@ -104,8 +125,7 @@ export class UserController {
 
       const avatarStream = fs.createReadStream(user.avatarId);
       avatarStream.pipe(res);
-    }
-    catch (error) {
+    } catch (error) {
       res.status(500).send(error.message);
     }
   }
@@ -114,12 +134,11 @@ export class UserController {
   async deleteAvatar(@Param('userId', ParseIntPipe) userId: number) {
     const user: User = await this.userService.findById(userId);
     if (!user) {
-      return { error: 'Failed to find user' }
+      return { error: 'Failed to find user' };
     }
     if (!user.avatarId) {
-      return { error: "User has no uploaded avatar" };
+      return { error: 'User has no uploaded avatar' };
     }
     return this.userService.deleteAvatar(userId);
   }
-
 }

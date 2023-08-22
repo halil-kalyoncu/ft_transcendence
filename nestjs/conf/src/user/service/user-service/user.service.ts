@@ -9,7 +9,7 @@ export class UserService {
   constructor(
     private prisma: PrismaService,
     private jwtAuthService: JwtAuthService,
-  ) { }
+  ) {}
 
   //remove this, if 42 login works
   async login(user: Prisma.UserCreateInput): Promise<string> {
@@ -77,8 +77,8 @@ export class UserService {
         id: user.id,
       },
       data: {
-        avatarId: file.path
-      }
+        avatarId: file.path,
+      },
     });
   }
 
@@ -94,33 +94,33 @@ export class UserService {
     }
     return this.prisma.user.update({
       where: {
-        id: userId
+        id: userId,
       },
       data: {
-        avatarId: null
-      }
+        avatarId: null,
+      },
     });
   }
 
   async setTwoFactorAuthSecret(userId: number, secret: string) {
     return this.prisma.user.update({
       where: {
-        id: userId
+        id: userId,
       },
       data: {
-        secret2FA: secret
-      }
+        secret2FA: secret,
+      },
     });
   }
 
   async turnOnTwoFactorAuth(userId: number): Promise<User> {
     return this.prisma.user.update({
       where: {
-        id: userId
+        id: userId,
       },
       data: {
-        enabled2FA: true
-      }
+        enabled2FA: true,
+      },
     });
   }
 }

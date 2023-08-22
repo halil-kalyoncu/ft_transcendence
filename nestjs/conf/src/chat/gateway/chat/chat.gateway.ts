@@ -45,7 +45,8 @@ import { ErrorDto } from '../../../chat/dto/error.dto';
   },
 })
 export class ChatGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+{
   @WebSocketServer()
   server: Server;
 
@@ -58,7 +59,7 @@ export class ChatGateway
     private directMessageService: DirectMessageService,
     private channelMessageService: ChannelMessageService,
     private matchService: MatchService,
-  ) { }
+  ) {}
 
   async onModuleInit(): Promise<void> {
     await this.connectedUserService.deleteAll();

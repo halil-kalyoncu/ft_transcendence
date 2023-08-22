@@ -17,7 +17,7 @@ describe('TwoFactorAuthController', () => {
         UserService,
         JwtAuthService,
         PrismaService,
-        JwtService
+        JwtService,
       ],
     }).compile();
 

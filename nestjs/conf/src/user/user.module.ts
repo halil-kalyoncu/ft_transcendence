@@ -5,9 +5,7 @@ import { UserHelperService } from './service/user-helper/user-helper.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    forwardRef(() => AuthModule)
-  ],
+  imports: [forwardRef(() => AuthModule)],
   providers: [UserService, UserHelperService],
   controllers: [UserController],
   exports: [UserService],

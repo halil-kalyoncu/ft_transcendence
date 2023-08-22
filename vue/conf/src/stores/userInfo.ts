@@ -30,5 +30,15 @@ export const useUserStore = defineStore('user', () => {
     avatarImageData.value = null
   }
 
-  return { username, userId, avatarImageData, setUsername, clearUsername, setUserId, clearUserId, setAvatarImageData, clearAvatarImageData }
+  return {
+    username,
+    userId,
+    avatarImageData,
+    setUsername,
+    clearUsername,
+    setUserId,
+    clearUserId,
+    setAvatarImageData,
+    clearAvatarImageData
+  }
 })

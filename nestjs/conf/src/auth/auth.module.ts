@@ -12,10 +12,7 @@ import { TwoFactorAuthController } from './controller/two-factor-auth/two-factor
 @Module({
   imports: [
     JwtModule.registerAsync({
-      imports: [
-        ConfigModule,
-        forwardRef(() => UserModule)
-      ],
+      imports: [ConfigModule, forwardRef(() => UserModule)],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
@@ -23,8 +20,14 @@ import { TwoFactorAuthController } from './controller/two-factor-auth/two-factor
       }),
     }),
   ],
-  providers: [JwtStrategy, JwtAuthGuard, JwtAuthService, TwoFactorAuthService, UserService],
+  providers: [
+    JwtStrategy,
+    JwtAuthGuard,
+    JwtAuthService,
+    TwoFactorAuthService,
+    UserService,
+  ],
   exports: [JwtAuthService],
   controllers: [TwoFactorAuthController],
 })
-export class AuthModule { }
+export class AuthModule {}

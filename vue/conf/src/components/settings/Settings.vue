@@ -131,13 +131,16 @@ const handleAvatarUpload = async () => {
     uploadedAvatarFile.value = avatarInput.value.files[0]
 
     try {
-      const formData = new FormData();
-      formData.append('file', uploadedAvatarFile.value);
+      const formData = new FormData()
+      formData.append('file', uploadedAvatarFile.value)
 
-      const response = await fetch(`http://localhost:3000/api/users/avatar?userId=${userId.value}`, {
-        method: 'POST',
-        body: formData
-      })
+      const response = await fetch(
+        `http://localhost:3000/api/users/avatar?userId=${userId.value}`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      )
 
       console.log(response)
       if (response.ok) {
@@ -146,8 +149,7 @@ const handleAvatarUpload = async () => {
       } else {
         notificationStore.showNotification('Failed to upload image', false)
       }
-    }
-    catch (error: any) {
+    } catch (error: any) {
       notificationStore.showNotification(`Error` + error.message, false)
     }
   }
@@ -157,7 +159,7 @@ const deleteAvatar = async () => {
   avatarInput.value = null
   try {
     const response = await fetch(`http://localhost:3000/api/users/avatar?userId=${userId.value}`, {
-      method: 'PATCH',
+      method: 'PATCH'
     })
 
     if (response.ok) {
@@ -166,8 +168,7 @@ const deleteAvatar = async () => {
     } else {
       notificationStore.showNotification('Failed to delete avatar', false)
     }
-  }
-  catch (error: any) {
+  } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
   }
 }
