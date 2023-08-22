@@ -107,17 +107,6 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => jwtGuard(to, from, next)
     },
-    {
-      path: '/settings',
-      component: MainLayout,
-      children: [
-        {
-          path: '',
-          name: 'settings',
-          component: () => import('../views/SettingsView.vue')
-        }
-      ]
-    },
     // {
     //   path: '/profile/:matchId',
     //   component: MainLayout,
