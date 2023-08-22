@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
-import { AuthService } from '../../../auth/service/auth.service';
+import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../../prisma/prisma.service';
 
@@ -11,7 +11,7 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        AuthService,
+        JwtAuthService,
         {
           provide: JwtService,
           useValue: {},

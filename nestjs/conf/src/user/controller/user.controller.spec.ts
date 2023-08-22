@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from '../../user/service/user-service/user.service';
 import { UserHelperService } from '../../user/service/user-helper/user-helper.service';
-import { AuthService } from '../../auth/service/auth.service';
+import { JwtAuthService } from '../../auth/service/jwt-auth/jtw-auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 
