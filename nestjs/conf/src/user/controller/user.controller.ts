@@ -1,4 +1,4 @@
-import { Body, Controller, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, ParseIntPipe, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, ParseIntPipe, Patch, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { UserService } from '../service/user-service/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
@@ -60,7 +60,7 @@ export class UserController {
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
-      destination: '/files',
+      destination: './files',
       filename: (req, file, callback) => {
         const id = uuidv4();
         const ext = extname(file.originalname);
@@ -89,7 +89,7 @@ export class UserController {
       res.json(updatedUser);
     }
     catch (error) {
-      res.status(404).send(error.message);
+      res.status(500).send(error.message);
     }
   }
 
@@ -97,12 +97,29 @@ export class UserController {
   async serverAvatar(@Param('userId', ParseIntPipe) userId: number, @Res() res: Response) {
     try {
       const user: User = await this.userService.findById(userId);
+
+      if (!user.avatarId) {
+        return res.status(404).send('User does not have an avatar.');
+      }
+
       const avatarStream = fs.createReadStream(user.avatarId);
       avatarStream.pipe(res);
     }
     catch (error) {
-      res.status(404).send(error.message);
+      res.status(500).send(error.message);
     }
+  }
+
+  @Patch('avatar/:userId')
+  async deleteAvatar(@Param('userId', ParseIntPipe) userId: number) {
+    const user: User = await this.userService.findById(userId);
+    if (!user) {
+      return { error: 'Failed to find user' }
+    }
+    if (!user.avatarId) {
+      return { error: "User has no uploaded avatar" };
+    }
+    return this.userService.deleteAvatar(userId);
   }
 
 }

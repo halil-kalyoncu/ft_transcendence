@@ -16,6 +16,7 @@ import { useNotificationStore } from '../stores/notification'
 import { connectWebSocket } from '../websocket'
 import type { UserI } from '../model/user.interface'
 import jwtDecode from 'jwt-decode'
+import { fetchAndSaveAvatar } from '../utils/fetchAndSaveAvatar'
 
 const username = ref('')
 const router = useRouter()
@@ -42,6 +43,9 @@ const submitForm = async () => {
         const decodedToken: Record<string, unknown> = jwtDecode(access_token)
         const loggedUser: UserI = decodedToken.user as UserI
         userStore.setUserId(loggedUser.id as number)
+        if (loggedUser.avatarId) {
+          fetchAndSaveAvatar()
+        }
       } catch (error: any) {
         console.error('Invalid token:', error)
         notificationStore.showNotification('Invalid Token', false)

@@ -82,6 +82,26 @@ export class UserService {
     });
   }
 
+  async deleteAvatar(userId: number) {
+    const user: User = await this.findById(userId);
+
+    if (!user) {
+      throw new Error('user not found');
+    }
+
+    if (user.avatarId) {
+      fs.unlinkSync(user.avatarId);
+    }
+    return this.prisma.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        avatarId: null
+      }
+    });
+  }
+
   async setTwoFactorAuthSecret(userId: number, secret: string) {
     return this.prisma.user.update({
       where: {
@@ -103,5 +123,4 @@ export class UserService {
       }
     });
   }
-
 }

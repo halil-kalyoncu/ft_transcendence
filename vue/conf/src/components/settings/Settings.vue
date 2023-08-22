@@ -83,6 +83,7 @@ import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
+import { fetchAndSaveAvatar } from '../../utils/fetchAndSaveAvatar'
 
 const notificationStore = useNotificationStore()
 
@@ -141,6 +142,7 @@ const handleAvatarUpload = async () => {
       console.log(response)
       if (response.ok) {
         notificationStore.showNotification('Success upload image', true)
+        fetchAndSaveAvatar()
       } else {
         notificationStore.showNotification('Failed to upload image', false)
       }
@@ -151,8 +153,23 @@ const handleAvatarUpload = async () => {
   }
 }
 
-const deleteAvatar = () => {
+const deleteAvatar = async () => {
   avatarInput.value = null
+  try {
+    const response = await fetch(`http://localhost:3000/api/users/avatar?userId=${userId.value}`, {
+      method: 'PATCH',
+    })
+
+    if (response.ok) {
+      notificationStore.showNotification('Success delete avatar', true)
+      userStore.clearAvatarImageData()
+    } else {
+      notificationStore.showNotification('Failed to delete avatar', false)
+    }
+  }
+  catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
 }
 
 const deleteAccount = () => {

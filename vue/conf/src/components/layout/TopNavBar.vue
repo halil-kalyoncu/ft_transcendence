@@ -13,6 +13,7 @@ library.add(fas)
 
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
+const userAvatar = computed(() => userStore.avatarImageData)
 
 const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
@@ -24,6 +25,7 @@ const logout = () => {
   disconnectWebSocket()
   router.push('/')
 }
+
 </script>
 
 <template>
@@ -43,7 +45,10 @@ const logout = () => {
       <RouterLink class="navButton header-username" :to="`/profile/${username}`">
         <div class="link-content">
           {{ username ? username : 'TBD' }}
-          <img class="profile-image" src="../../assets/avatar-1.png" alt="Profile" />
+          <img
+            class="profile-image"
+            src=../../assets/defaultAvatar.png
+            alt="Profile" />
         </div>
       </RouterLink>
       <div>
