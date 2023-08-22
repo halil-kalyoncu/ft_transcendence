@@ -33,24 +33,24 @@ export class FriendshipController {
     return this.friendshipService.getFriendRequests(userId);
   }
 
-  @Get('blocked-users')
-  async getBlockedUsers(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<Friendship[]> {
-    return this.friendshipService.getBlockedUsers(userId);
-  }
+  // @Get('blocked-users')
+  // async getBlockedUsers(
+  //   @Query('userId', ParseIntPipe) userId: number,
+  // ): Promise<Friendship[]> {
+  //   return this.friendshipService.getBlockedUsers(userId);
+  // }
 
-  @Post('unblock-user')
-  async unblockUser(
-    @Body() unblockUserDto: UnblockUserDto,
-  ): Promise<Friendship | ErrorDto> {
-    try {
-      return this.friendshipService.unblock(
-        unblockUserDto.userId,
-        unblockUserDto.unblockUserId,
-      );
-    } catch (error) {
-      return { error: error.message };
-    }
-  }
+  // @Post('unblock-user')
+  // async unblockUser(
+  //   @Body() unblockUserDto: UnblockUserDto,
+  // ): Promise<Friendship | ErrorDto> {
+  //   try {
+  //     return this.friendshipService.unblock(
+  //       unblockUserDto.userId,
+  //       unblockUserDto.unblockUserId,
+  //     );
+  //   } catch (error) {
+  //     return { error: error.message };
+  //   }
+  // }
 }

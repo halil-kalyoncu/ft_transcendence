@@ -20,6 +20,9 @@ model User {
   enabled2FA Boolean @default(false)
   secret2FA  String?
 
+  blockedUsers BlockedUser[] @relation("Blocked")
+  blockedBy    BlockedUser[] @relation("BlockedBy")
+
   sentFriendships     Friendship[] @relation("Sender")
   receivedFriendships Friendship[] @relation("Receiver")
 
@@ -44,7 +47,6 @@ enum FriendshipStatus {
   PENDING
   ACCEPTED
   REJECTED
-  BLOCKED
 }
 
 model Friendship {
@@ -180,6 +182,16 @@ model Match {
 
   leftUser  User  @relation("LeftPlayer", fields: [leftUserId], references: [id])
   rightUser User? @relation("RightPlayer", fields: [rightUserId], references: [id])
+}
+
+model BlockedUser {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  targetUserId Int
+  blockedAt    DateTime @default(now())
+
+  user       User @relation("BlockedBy", fields: [userId], references: [id])
+  targetuser User @relation("Blocked", fields: [targetUserId], references: [id])
 }
 
 // model Channel {

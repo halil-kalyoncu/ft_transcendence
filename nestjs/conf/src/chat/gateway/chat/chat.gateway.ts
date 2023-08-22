@@ -145,11 +145,12 @@ export class ChatGateway
         await this.friendshipService.acceptFriendshipRequest(friendshipId);
       if (!friendship) {
         throw new Error('Friendship entry not found');
-      } else if (friendship.status === FriendshipStatus.BLOCKED) {
-        throw new Error(
-          "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
-        );
       }
+      // else if (friendship.status === FriendshipStatus.BLOCKED) {
+      //   throw new Error(
+      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
+      //   );
+      // }
 
       const senderOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.senderId);
@@ -178,11 +179,12 @@ export class ChatGateway
         await this.friendshipService.rejectFriendshipRequest(friendshipId);
       if (!friendship) {
         throw new Error('Friendship entry not found');
-      } else if (friendship.status === FriendshipStatus.BLOCKED) {
-        throw new Error(
-          "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
-        );
       }
+      // else if (friendship.status === FriendshipStatus.BLOCKED) {
+      //   throw new Error(
+      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
+      //   );
+      // }
       const senderOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.senderId);
       const receiverOnline: ConnectedUser =
@@ -209,11 +211,12 @@ export class ChatGateway
       const friendship = await this.friendshipService.getOne(friendshipId);
       if (!friendship) {
         throw new Error('Friendship entry not found');
-      } else if (friendship.status === FriendshipStatus.BLOCKED) {
-        throw new Error(
-          "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
-        );
       }
+      // else if (friendship.status === FriendshipStatus.BLOCKED) {
+      //   throw new Error(
+      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
+      //   );
+      // }
       const senderOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.senderId);
       const receiverOnline: ConnectedUser =
@@ -232,40 +235,40 @@ export class ChatGateway
     }
   }
 
-  @SubscribeMessage('blockUser')
-  async blockUser(
-    socket: Socket,
-    userId: number,
-  ): Promise<Friendship | { error: string }> {
-    let updateFriendlist = false;
+  // @SubscribeMessage('blockUser')
+  // async blockUser(
+  //   socket: Socket,
+  //   userId: number,
+  // ): Promise<Friendship | { error: string }> {
+  //   let updateFriendlist = false;
 
-    try {
-      if (socket.data.user.id === userId) {
-        throw new Error("Can't block yourself");
-      }
-      const friendship = await this.friendshipService.find(
-        socket.data.user.id,
-        userId,
-      );
-      console.log('friendship');
-      if (friendship && friendship.status === FriendshipStatus.ACCEPTED) {
-        updateFriendlist = true;
-      }
-      const blockEntry = await this.friendshipService.block({
-        sender: { connect: { id: socket.data.user.id } },
-        receiver: { connect: { id: userId } },
-      });
+  //   try {
+  //     if (socket.data.user.id === userId) {
+  //       throw new Error("Can't block yourself");
+  //     }
+  //     const friendship = await this.friendshipService.find(
+  //       socket.data.user.id,
+  //       userId,
+  //     );
+  //     console.log('friendship');
+  //     if (friendship && friendship.status === FriendshipStatus.ACCEPTED) {
+  //       updateFriendlist = true;
+  //     }
+  //     const blockEntry = await this.friendshipService.block({
+  //       sender: { connect: { id: socket.data.user.id } },
+  //       receiver: { connect: { id: userId } },
+  //     });
 
-      const receiverOnline: ConnectedUser =
-        await this.connectedUserService.findByUserId(blockEntry.receiverId);
-      if (updateFriendlist && receiverOnline) {
-        this.sendFriendsToClient(receiverOnline);
-      }
-      return blockEntry;
-    } catch (error) {
-      return { error: error.message };
-    }
-  }
+  //     const receiverOnline: ConnectedUser =
+  //       await this.connectedUserService.findByUserId(blockEntry.receiverId);
+  //     if (updateFriendlist && receiverOnline) {
+  //       this.sendFriendsToClient(receiverOnline);
+  //     }
+  //     return blockEntry;
+  //   } catch (error) {
+  //     return { error: error.message };
+  //   }
+  // }
 
   /*********************
    *** DirectMessages ***

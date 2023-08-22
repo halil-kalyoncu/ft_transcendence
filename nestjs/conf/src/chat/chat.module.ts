@@ -13,6 +13,7 @@ import { MatchService } from '../match/service/match.service';
 import { FriendshipController } from './controller/friendship/friendship.controller';
 import { ChannelController } from './controller/channel/channel.controller';
 import { ChannelMemberService } from './service/channel-member/channel-member.service';
+import { BlockedUserService } from './service/blocked-user/blocked-user.service';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -26,6 +27,7 @@ import { ChannelMemberService } from './service/channel-member/channel-member.se
     ChannelMessageService,
     MatchService,
     ChannelMemberService,
+    BlockedUserService,
   ],
   controllers: [
     DirectMessageController,

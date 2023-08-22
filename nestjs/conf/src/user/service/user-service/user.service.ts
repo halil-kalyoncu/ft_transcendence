@@ -35,9 +35,12 @@ export class UserService {
     }
   }
 
-  async findById(id: number): Promise<User | null> {
+  async findById(id: number): Promise<any | null> {
     return this.prisma.user.findUnique({
       where: { id },
+      include: {
+        blockedUsers: true
+      }
     });
   }
 
