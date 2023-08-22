@@ -73,7 +73,6 @@
     </div>
 
     <div class="button-group">
-      <button @click="saveChanges" class="save-button">Save Changes</button>
       <button @click="deleteAccount" class="delete-button">Delete Account</button>
     </div>
   </div>
@@ -154,10 +153,6 @@ const handleAvatarUpload = async () => {
 
 const deleteAvatar = () => {
   avatarInput.value = null
-}
-
-const saveChanges = () => {
-  console.log('Saving changes...')
 }
 
 const deleteAccount = () => {
@@ -309,29 +304,6 @@ button:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-.save-button {
-  background-color: #32a852;
-  color: #ffffff;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.save-button:hover {
-  background-color: #288740;
-}
-
-.save-button:active {
-  background-color: #1e6a30;
-}
-
-.save-button:disabled {
-  background-color: #4c4c4c;
-  cursor: not-allowed;
 }
 
 .delete-button {
