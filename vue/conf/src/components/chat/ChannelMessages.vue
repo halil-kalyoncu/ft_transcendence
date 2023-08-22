@@ -12,10 +12,10 @@
 		  />
 		</div>
 	  </ScrollViewer>
-	  <!-- <div class="chat-input">
-		<textarea v-model="newMessage" placeholder="Type your message here..." rows="1"></textarea>
+	  <div class="chat-input">
+		<textarea v-model="newchannelMessages" placeholder="Type your message here..." rows="1"></textarea>
 		<button @click="sendMessage">Send</button>
-	  </div> -->
+	  </div>
 
 	 </div>
   </template>
@@ -40,6 +40,7 @@ const props = defineProps({
 		},
 })
 
+const channelId: Number = props.channelId
 const userStore = useUserStore()
 const userId = computed<number>(() => userStore.userId)
 const username = computed<string>(() => userStore.username)
@@ -48,6 +49,7 @@ const notificationStore = useNotificationStore()
 const channelMessages = ref<ChannelMessageI[]>([])
 const newchannelMessages = ref('')
 const loading = ref(true)
+//const selectedChannel = ref<ChannelEntryI | null>(null)
 
 type User = {
   id: number
@@ -73,7 +75,6 @@ const setNewChannelMessageListener = () => {
 		notificationStore.showNotification('Error: Connection problems', true)
 		return
 	}
-	//dafür muss einer darauf hören und etwas machen
 	socket.value.on('newChannelMessage', (newChannelMessageData: ChannelMessageI) => {
 		console.log('newChannelMessage fired')
 		channelMessages.value.unshift(newChannelMessageData)
@@ -82,7 +83,9 @@ const setNewChannelMessageListener = () => {
 
 const setNewChannelMessages = async () => {
 	try{
-		const response = await fetch ('http://localhost:3000//api/channel-message/getChannelMessagesforChannel?channelId=${props.channelId}')
+		const response = await fetch (
+			`http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}`
+			)
 		if (!response.ok) {
 			throw new Error(`HTTP error! Status: ${response.status}`)
 		}
@@ -99,53 +102,31 @@ const setNewChannelMessages = async () => {
 }
 
 onMounted(() => {
-	//initSocket()
+	initSocket()
 	setNewChannelMessages()
-	//setNewChannelMessageListener()
+	setNewChannelMessageListener()
 })
-// // const setChannelMessages = async () => {
-// // 	if (!selectedChannel) {
-// // 		return
-// // 	}
-// // 	try {
-// // 		const response = await fetch(`http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`)
-// // 	}
-// // }
 
-// const fetchChannelMessages = () => {
-//   const messages = getMockChannelMessages()
-//   channelMessages.value = messages
-// }
+//Todo Check for selectedChannel after implementaiton
+const sendMessage = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
 
-// const getMockChannelMessages = (): MockMessageI[] => {
-//   return [
-//     { message: 'Knock Knock', sender: 'Eric', createdAt: 'two minutes ago', isOwnMessage: false },
-//     { message: "Who's there?", sender: 'Clapton', createdAt: 'one minute ago', isOwnMessage: true },
-//     { message: 'Race Condition', sender: 'Eric', createdAt: 'one minute ago', isOwnMessage: false },
-//     {
-//       message:
-//         '... and a rather long text for testing purposes. To see if it would not distort the view in any unexpected and unwanted way. \n ... and a bit more long text',
-//       sender: 'Eric',
-//       createdAt: 'one second ago',
-//       isOwnMessage: false
-//     }
-//   ]
-// }
-// onMounted(() => {
-//   initSocket()
-//   fetchChannelMessages()
-// })
+  if (newchannelMessages.value.trim() === '') {
+    return
+  }
 
-// const messages = ref<directMessageI[]>([])
-// const newMessage = ref('')
+  console.log(loggedUser.value.id + ' ' + channelId + ' ' + newchannelMessages.value)
 
-// const sendMessage = () => {
-//   newMessage.value = ''
-// }
-
-// const isOwnMessage = (senderId: number | undefined) => {
-//   return undefined
-// }
+  socket.value.emit('sendChannelMessage', {
+    senderId: loggedUser.value.id,
+    channelId: channelId,
+    message: newchannelMessages.value
+  })
+  newchannelMessages.value = ''
+}
 </script>
 
 <style scoped>

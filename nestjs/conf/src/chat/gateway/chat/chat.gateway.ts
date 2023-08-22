@@ -368,19 +368,26 @@ export class ChatGateway
    *** ChannelMessages ***
    ***********************/
 
-//   @SubscribeMessage('groupMessages')
-//   async getGroupMessages(socket: Socket, channelId: number) {
-//     return await this.channelMessageService.getChannelMessagesforChannel(channelId);
-//   }
+  @SubscribeMessage('groupMessages')
+  async getGroupMessages(socket: Socket, channelId: number) {
+    return await this.channelMessageService.getChannelMessagesforChannel(channelId);
+  }
 
-  @SubscribeMessage('sendGroupMessage')
-  async sendGroupMessage(
+  @SubscribeMessage('sendChannelMessage')
+  async sendChannelMessage(
     socket: Socket,
     createChannelMessageDto: CreateChannelMessageDto,
   ): Promise<void> {
+	console.log(createChannelMessageDto)
     const newMessage = await this.channelMessageService.create(
       createChannelMessageDto,
     );
+	//TODO: Create right kind of message so it can be used for new message event
+	// const newMessage = await this.channelMessageService.createChannelMessage(
+	// 	createChannelMessageDto,
+	//   );
+	console.log(createChannelMessageDto)
+
 
     const members: User[] = await this.channelService.getMembers(
       createChannelMessageDto.channelId,
@@ -388,8 +395,10 @@ export class ChatGateway
     for (const member of members) {
       const memberOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(member.id);
+		console.log('MESSAGE')
+		console.log(newMessage)
       if (memberOnline) {
-        socket.to(memberOnline.socketId).emit('newGroupMessage', newMessage);
+        socket.to(memberOnline.socketId).emit('newChannelMessage', newMessage);
       }
     }
   }
