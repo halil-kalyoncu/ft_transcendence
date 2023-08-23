@@ -297,7 +297,7 @@ const handleBlock = async ({ username }: ModalResult) => {
       throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
     }
     notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
-  } catch (error) {
+  } catch (error: any) {
     notificationStore.showNotification('Error: ' + error.message, false)
   }
 }
@@ -332,7 +332,7 @@ const handleUnblock = async ({ username }: ModalResult) => {
       throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
     }
     notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
-  } catch (error) {
+  } catch (error: any) {
     notificationStore.showNotification('Error: ' + error.message, false)
   }
 }
@@ -452,7 +452,7 @@ const handleBlockUser = async (username: string, blockUserId: number) => {
         throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
       }
       notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
-    } catch (error) {
+    } catch (error: any) {
       notificationStore.showNotification('Error: ' + error.message, false)
     }
   }
