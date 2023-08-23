@@ -4,6 +4,7 @@ import { TwoFactorAuthService } from '../../service/two-factor-auth/two-factor-a
 import { UserService } from '../../../user/service/user-service/user.service';
 import { JwtAuthService } from '../../service/jwt-auth/jtw-auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 import { JwtService } from '@nestjs/jwt';
 
 describe('TwoFactorAuthController', () => {
@@ -18,6 +19,7 @@ describe('TwoFactorAuthController', () => {
         JwtAuthService,
         PrismaService,
         JwtService,
+        ConnectedUserService,
       ],
     }).compile();
 

@@ -8,11 +8,17 @@ import { TwoFactorAuthService } from './service/two-factor-auth/two-factor-auth.
 import { UserModule } from '../user/user.module';
 import { UserService } from '../user/service/user-service/user.service';
 import { TwoFactorAuthController } from './controller/two-factor-auth/two-factor-auth.controller';
+import { ChatModule } from '../chat/chat.module';
+import { ConnectedUserService } from '../chat/service/connected-user/connected-user.service';
 
 @Module({
   imports: [
     JwtModule.registerAsync({
-      imports: [ConfigModule, forwardRef(() => UserModule)],
+      imports: [
+        ConfigModule,
+        forwardRef(() => UserModule),
+        forwardRef(() => ChatModule),
+      ],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
@@ -26,6 +32,7 @@ import { TwoFactorAuthController } from './controller/two-factor-auth/two-factor
     JwtAuthService,
     TwoFactorAuthService,
     UserService,
+    ConnectedUserService,
   ],
   exports: [JwtAuthService],
   controllers: [TwoFactorAuthController],

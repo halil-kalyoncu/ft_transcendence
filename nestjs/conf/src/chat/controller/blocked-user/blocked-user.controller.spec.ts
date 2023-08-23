@@ -4,6 +4,7 @@ import { BlockedUserService } from '../../service/blocked-user/blocked-user.serv
 import { UserService } from '../../../user/service/user-service/user.service';
 import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 describe('BlockedUserController', () => {
@@ -16,6 +17,7 @@ describe('BlockedUserController', () => {
         UserService,
         JwtAuthService,
         JwtService,
+        ConnectedUserService,
         PrismaService,
       ],
       controllers: [BlockedUserController],

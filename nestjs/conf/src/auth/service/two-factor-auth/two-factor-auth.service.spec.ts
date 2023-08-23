@@ -3,6 +3,7 @@ import { TwoFactorAuthService } from './two-factor-auth.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { JwtAuthService } from '../../service/jwt-auth/jtw-auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 import { JwtService } from '@nestjs/jwt';
 
 describe('TwoFactorAuthService', () => {
@@ -15,6 +16,7 @@ describe('TwoFactorAuthService', () => {
         UserService,
         JwtAuthService,
         PrismaService,
+        ConnectedUserService,
         JwtService,
       ],
     }).compile();

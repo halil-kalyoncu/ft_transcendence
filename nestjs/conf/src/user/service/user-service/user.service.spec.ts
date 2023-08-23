@@ -3,6 +3,7 @@ import { UserService } from './user.service';
 import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 
 describe('UserService', () => {
   let service: UserService;
@@ -17,6 +18,7 @@ describe('UserService', () => {
           useValue: {},
         },
         PrismaService,
+        ConnectedUserService,
       ],
     }).compile();
 

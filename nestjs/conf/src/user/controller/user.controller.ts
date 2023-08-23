@@ -3,6 +3,8 @@ import {
   Controller,
   FileTypeValidator,
   Get,
+  HttpException,
+  HttpStatus,
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
@@ -38,14 +40,18 @@ export class UserController {
   //remove this function, when 42 login works
   @Post('login')
   async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseDto> {
-    const userEntity: Prisma.UserCreateInput =
-      this.userHelperService.createUserDtoToEntity(createUserDto);
-    const jwt: string = await this.userService.login(userEntity);
-    return {
-      access_token: jwt,
-      token_type: 'JWT',
-      expires_in: 10000,
-    };
+    try {
+      const userEntity: Prisma.UserCreateInput =
+        this.userHelperService.createUserDtoToEntity(createUserDto);
+      const jwt: string = await this.userService.login(userEntity);
+      return {
+        access_token: jwt,
+        token_type: 'JWT',
+        expires_in: 10000,
+      };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post()

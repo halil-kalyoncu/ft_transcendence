@@ -3,12 +3,14 @@ import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service'
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import * as fs from 'fs';
+import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private jwtAuthService: JwtAuthService,
+    private connectedUser: ConnectedUserService,
   ) {}
 
   //remove this, if 42 login works
@@ -17,6 +19,11 @@ export class UserService {
 
     if (!foundUser) {
       foundUser = await this.create(user);
+    } else {
+      const connectedUser = await this.connectedUser.findByUserId(foundUser.id);
+      if (connectedUser) {
+        throw new Error('User ' + foundUser.username + ' is already logged in');
+      }
     }
     return this.jwtAuthService.generateJwt(foundUser);
   }

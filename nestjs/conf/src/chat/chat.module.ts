@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ChatGateway } from './gateway/chat/chat.gateway';
 import { FriendshipService } from './service/friendship/friendship.service';
 import { UserModule } from '../user/user.module';
@@ -17,7 +17,7 @@ import { BlockedUserService } from './service/blocked-user/blocked-user.service'
 import { BlockedUserController } from './controller/blocked-user/blocked-user.controller';
 
 @Module({
-  imports: [AuthModule, UserModule],
+  imports: [forwardRef(() => AuthModule), forwardRef(() => UserModule)],
   providers: [
     ChatGateway,
     FriendshipService,
