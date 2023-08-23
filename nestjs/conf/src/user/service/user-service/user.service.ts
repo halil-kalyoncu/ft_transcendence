@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
@@ -25,25 +25,25 @@ export class UserService {
         throw new Error('User ' + foundUser.username + ' is already logged in');
       }
     }
-    return this.jwtAuthService.generateJwt(foundUser);
+    return await this.jwtAuthService.generateJwt(foundUser);
   }
 
   async create(newUser: Prisma.UserCreateInput): Promise<User> {
     try {
-      const user = await this.prisma.user.create({
+      return await this.prisma.user.create({
         data: newUser,
       });
-      return this.findById(user.id);
-    } catch {
-      throw new HttpException(
-        'Username is already in use',
-        HttpStatus.CONFLICT,
-      );
+    } catch (error) {
+      //P2002 is the prisma error code for the unique constraint
+      if (error.code === 'P2002') {
+        throw new Error('Username is already in use');
+      }
+      throw error;
     }
   }
 
   async findById(id: number): Promise<any | null> {
-    return this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { id },
       include: {
         blockedUsers: true,
@@ -52,17 +52,17 @@ export class UserService {
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    return this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { username },
     });
   }
 
   async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany();
+    return await this.prisma.user.findMany();
   }
 
   async findAllByUsername(username: string): Promise<User[]> {
-    return this.prisma.user.findMany({
+    return await this.prisma.user.findMany({
       where: {
         username: {
           contains: username,
@@ -82,7 +82,7 @@ export class UserService {
       fs.unlinkSync(user.avatarId);
     }
 
-    return this.prisma.user.update({
+    return await this.prisma.user.update({
       where: {
         id: user.id,
       },
@@ -102,7 +102,7 @@ export class UserService {
     if (user.avatarId) {
       fs.unlinkSync(user.avatarId);
     }
-    return this.prisma.user.update({
+    return await this.prisma.user.update({
       where: {
         id: userId,
       },
@@ -113,7 +113,7 @@ export class UserService {
   }
 
   async setTwoFactorAuthSecret(userId: number, secret: string) {
-    return this.prisma.user.update({
+    return await this.prisma.user.update({
       where: {
         id: userId,
       },
@@ -124,7 +124,7 @@ export class UserService {
   }
 
   async turnOnTwoFactorAuth(userId: number): Promise<User> {
-    return this.prisma.user.update({
+    return await this.prisma.user.update({
       where: {
         id: userId,
       },

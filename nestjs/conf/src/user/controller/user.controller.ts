@@ -54,28 +54,36 @@ export class UserController {
     }
   }
 
-  @Post()
-  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    const UserEntity: Prisma.UserCreateInput =
-      this.userHelperService.createUserDtoToEntity(createUserDto);
-    return this.userService.create(UserEntity);
-  }
+  //use this route, when 42 login works
+  // @Post()
+  // async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+  //   try {
+  //     const UserEntity: Prisma.UserCreateInput =
+  //       this.userHelperService.createUserDtoToEntity(createUserDto);
+  //     return await this.userService.create(UserEntity);
+  //   } catch(error) {
+  //     if (error.message === 'Username is already in use') {
+  //       throw new HttpException('Username is already in use', HttpStatus.CONFLICT);
+  //     }
+  //     throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+  //   }
+  // }
 
   @Get()
   async findAll(): Promise<User[]> {
-    return this.userService.findAll();
+    return await this.userService.findAll();
   }
 
   @Get('find')
   async find(@Query('username') username: string): Promise<User> {
-    return this.userService.findByUsername(username);
+    return await this.userService.findByUsername(username);
   }
 
   @Get('find-by-username')
   async findAllByUsername(
     @Query('username') username: string,
   ): Promise<User[]> {
-    return this.userService.findAllByUsername(username);
+    return await this.userService.findAllByUsername(username);
   }
 
   @Post('avatar')
@@ -145,6 +153,6 @@ export class UserController {
     if (!user.avatarId) {
       return { error: 'User has no uploaded avatar' };
     }
-    return this.userService.deleteAvatar(userId);
+    return await this.userService.deleteAvatar(userId);
   }
 }
