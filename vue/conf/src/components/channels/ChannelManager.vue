@@ -32,25 +32,41 @@
     <button :class="['join-channel-button', 'leave-channel-button']" @click="leaveChannel">
       Leave
     </button>
-	<button :class="['join-channel-button', 'signout-channel-button']" @click="SignOutChannel">
-      SignOut
-    </button>
+	<button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
+      {{ getSignOutButtonText() }}
+    
+	  </button>
+	
+		<!-- WITH CONFRIMATION BUTTON CALL "showSignOutConfirmation"
+	<ConfirmationModal
+    v-model:visible="modalVisible"
+    :title="modalTitle"
+    :message="modalMessage"
+    @confirmed="handleSignOut"
+    @cancelled="modalVisible = false"
+  />  -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import ChannelManagerUserItem from './ChannelManagerUserItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
+import { Socket } from 'socket.io-client'
+import { connectWebSocket } from '../../websocket'
 
-const notificationStore = useNotificationStore()
-const userStore = useUserStore()
-const username = computed(() => userStore.username)
 const props = defineProps({
   channelId: Number
 })
+
+const socket = ref<Socket | null>(null)
+const notificationStore = useNotificationStore()
+const userStore = useUserStore()
+const userId = computed<number>(() => userStore.userId)
+const username = computed(() => userStore.username)
+const channelId: Number = props.channelId
 
 type User = {
   username: string
@@ -62,25 +78,74 @@ const roles = ['owner', 'admin', 'member']
 const showPasswordField = ref(false)
 const password = ref('')
 
-const getRandomRole = () => roles[Math.floor(Math.random() * roles.length)]
+const modalVisible = ref(false);
+const modalTitle = ref('');
+const modalMessage = ref('');
 
-const dummyUserData: User[] = Array.from({ length: 10 }, (_, i) => ({
-  username: `Thomas ${i + 1}`,
-  date: `2023-07-21`,
-  role: getRandomRole()
-}))
+const showSignOutConfirmation = () => {
+  modalTitle.value = 'Confirmation';
+  modalMessage.value = currentUserRole === 'owner'
+    ? 'Are you sure you want to destroy the channel?'
+    : 'Are you sure you want to sign out from the channel?';
 
-const currentUser = computed(() => dummyUserData.find((user) => user.username === username.value))
-// todo: compute currentUserRole instead of static when backend is in place
-// const currentUserRole = computed(() => currentUser.value ? currentUser.value.role : 'member');
+  modalVisible.value = true;
+};
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
+
+const setDestroyChannelListener = () => {
+	if(!socket || !socket.value) {
+		notificationStore.showNotification('Error: Connection problems', true)
+		return
+	}
+	socket.value.on('ChannelDestroy', (channelId: Number) => {
+		console.log('ChannelDestroy fired')
+		notificationStore.showNotification('Channel has been destroyed', true)
+		emit('channel-left')
+	})
+}
+
+const getSignOutButtonText = () => {
+  if (currentUserRole === 'owner') {
+	return 'Destroy'
+  } else {
+	return 'Sign Out'
+  }
+}
+
+
 const currentUserRole = 'owner'
+
+const handleSignOut = () => {
+  if (currentUserRole === 'owner') {
+	DestroyChannel();
+  } else {
+	SignOutChannel();
+  }
+}
 
 let tempChannelName = 'Computato Potato'
 const emit = defineEmits(['channel-left', 'channel-signedout'])
+
 const leaveChannel = () => {
   notificationStore.showNotification('You have left the channel: ' + tempChannelName, true)
   emit('channel-left')
 }
+
+const DestroyChannel = () => {
+	if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  socket.value.emit('DestroyChannel', {
+	  channelId: channelId,
+	  senderId: userId.value
+  })
+}
+
 const SignOutChannel = () => {
   notificationStore.showNotification('You have signed out the channel: ' + tempChannelName, true)
   emit('channel-signedout')
@@ -98,11 +163,27 @@ const changePassword = () => {
     showPasswordField.value = false
   }
 }
+const getRandomRole = () => roles[Math.floor(Math.random() * roles.length)]
+
+const dummyUserData: User[] = Array.from({ length: 10 }, (_, i) => ({
+  username: `Thomas ${i + 1}`,
+  date: `2023-07-21`,
+  role: getRandomRole()
+}))
+
+onMounted(() => {
+	const currentUser = computed(() => dummyUserData.find((user) => user.username === username.value))
+// todo: compute currentUserRole instead of static when backend is in place
+// const currentUserRole = computed(() => currentUser.value ? currentUser.value.role : 'member');
+	initSocket()
+	setDestroyChannelListener()
+})
+//TODO: 1 Define on mounte, init Socket, Define the people int he channel etc, setChannellistener for channel destoyed (later for member left etc.)
 </script>
 
 
 <style>
-/* TODO: Verteilen der Buttons gleichmäßig */
+/* TODO: distribution of buttons */
 
 .current-channel-name {
   text-align: center;

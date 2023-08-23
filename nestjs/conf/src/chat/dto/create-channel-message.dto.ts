@@ -28,3 +28,11 @@ export class ChannelMessageDto {
 	createdAt: Date;
 	//channelMessageReadStatus: ChannelMessageReadStatusI[];
 }
+
+export class DestroyChannelDto{
+	@IsNotEmpty()
+	channelId: number
+
+	@IsNotEmpty()
+	senderId: number
+}

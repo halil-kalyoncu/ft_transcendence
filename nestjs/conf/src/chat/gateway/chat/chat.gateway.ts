@@ -34,7 +34,7 @@ import {
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
-import { CreateChannelMessageDto } from '../../dto/create-channel-message.dto';
+import { CreateChannelMessageDto, DestroyChannelDto } from '../../dto/create-channel-message.dto';
 import { SendGameInviteDto } from '../../../chat/dto/send-game-invite.dto';
 import { MatchService } from '../../../match/service/match.service';
 
@@ -363,6 +363,26 @@ export class ChatGateway
     }
   }
 
+
+  @SubscribeMessage('DestroyChannel')
+  async DestroyChannel(
+    socket: Socket,
+    destroyChannelDto: DestroyChannelDto,
+  ): Promise<void> {
+	const { senderId, channelId } = destroyChannelDto;
+    const members: User[] = await this.channelService.getMembers(
+      channelId
+    );
+	socket.emit('ChannelDestroy');
+    for (const member of members) {
+      const memberOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(member.id);
+	if ( memberOnline && memberOnline.userId !== senderId) {
+        socket.to(memberOnline.socketId).emit('ChannelDestroy', channelId);
+      }
+    }
+	this.channelService.destroyChannel(channelId);
+  }
   /**********************
    *** ChannelMessages ***
    ***********************/

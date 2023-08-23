@@ -111,5 +111,12 @@ import {
 	): Promise<void> {
 	  await this.ChannelService.removeUserFromChannel(ChannelMembershipDto);
 	}
+
+	@Delete('destroyChannel')
+	async destroyChannel(
+	  @Query('channelId', ParseIntPipe) channelId: number,
+	): Promise<void> {
+	  await this.ChannelService.destroyChannel(channelId);
+	}
   }
   
