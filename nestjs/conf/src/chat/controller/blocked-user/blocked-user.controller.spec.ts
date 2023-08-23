@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BlockedUserService } from './blocked-user.service';
+import { BlockedUserController } from './blocked-user.controller';
+import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../../prisma/prisma.service';
 
-describe('BlockedUserService', () => {
-  let service: BlockedUserService;
+describe('BlockedUserController', () => {
+  let controller: BlockedUserController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -17,12 +18,13 @@ describe('BlockedUserService', () => {
         JwtService,
         PrismaService,
       ],
+      controllers: [BlockedUserController],
     }).compile();
 
-    service = module.get<BlockedUserService>(BlockedUserService);
+    controller = module.get<BlockedUserController>(BlockedUserController);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(controller).toBeDefined();
   });
 });

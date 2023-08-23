@@ -191,7 +191,7 @@ model BlockedUser {
   blockedAt    DateTime @default(now())
 
   user       User @relation("BlockedBy", fields: [userId], references: [id])
-  targetuser User @relation("Blocked", fields: [targetUserId], references: [id])
+  targetUser User @relation("Blocked", fields: [targetUserId], references: [id])
 }
 
 // model Channel {

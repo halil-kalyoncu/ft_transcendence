@@ -1,9 +1,9 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class UnblockUserDto {
+export class BlockUserDto {
   @IsNotEmpty()
   userId: number;
 
   @IsNotEmpty()
-  unblockUserId: number;
+  targetUserId: number;
 }

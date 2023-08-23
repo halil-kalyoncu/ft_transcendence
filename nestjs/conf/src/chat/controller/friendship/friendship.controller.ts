@@ -10,7 +10,7 @@ import { FriendshipDto } from '../../dto/friendship.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FriendshipService } from '../../service/friendship/friendship.service';
 import { Friendship } from '@prisma/client';
-import { UnblockUserDto } from '../../dto/unblock-user.dto';
+import { BlockUserDto } from '../../dto/block-user.dto';
 import { ErrorDto } from '../../dto/error.dto';
 
 @ApiTags('Friendship module')

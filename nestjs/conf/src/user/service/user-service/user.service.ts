@@ -39,8 +39,8 @@ export class UserService {
     return this.prisma.user.findUnique({
       where: { id },
       include: {
-        blockedUsers: true
-      }
+        blockedUsers: true,
+      },
     });
   }
 

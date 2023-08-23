@@ -14,6 +14,7 @@ import { FriendshipController } from './controller/friendship/friendship.control
 import { ChannelController } from './controller/channel/channel.controller';
 import { ChannelMemberService } from './service/channel-member/channel-member.service';
 import { BlockedUserService } from './service/blocked-user/blocked-user.service';
+import { BlockedUserController } from './controller/blocked-user/blocked-user.controller';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -33,6 +34,7 @@ import { BlockedUserService } from './service/blocked-user/blocked-user.service'
     DirectMessageController,
     FriendshipController,
     ChannelController,
+    BlockedUserController,
   ],
   exports: [FriendshipService, ConnectedUserService],
 })

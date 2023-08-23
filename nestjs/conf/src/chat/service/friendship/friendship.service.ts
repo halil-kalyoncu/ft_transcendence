@@ -27,7 +27,7 @@ export class FriendshipService {
       //   throw new Error(
       //     'Please check if the user is in your blocked list. Otherwise you have been blocked :(',
       //   );
-      // } 
+      // }
       else if (checkFriendship.status === FriendshipStatus.REJECTED) {
         await this.remove(checkFriendship.id);
       }
