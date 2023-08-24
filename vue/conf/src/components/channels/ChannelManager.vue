@@ -80,7 +80,6 @@ onMounted(() => {
 
 	initSocket()
 	setMembers()
-
 	getSignOutButtonText()
 	setDestroyChannelListener()
 })
