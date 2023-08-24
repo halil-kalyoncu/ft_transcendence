@@ -378,10 +378,52 @@ export class ChatGateway
       const memberOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(member.id);
 	if ( memberOnline && memberOnline.userId !== senderId) {
+		console.log(memberOnline)
+		console.log('Online Memeber')
         socket.to(memberOnline.socketId).emit('ChannelDestroy', channelId);
       }
     }
 	this.channelService.destroyChannel(channelId);
+  }
+
+  
+  @SubscribeMessage('SignOutChannel')
+  async SignOutChannel(
+    socket: Socket,
+    destroyChannelDto: DestroyChannelDto,
+  ): Promise<void> {
+	const { senderId, channelId } = destroyChannelDto;
+    const members: User[] = await this.channelService.getMembers(
+      channelId
+    );
+	for (const member of members) {
+		const memberOnline: ConnectedUser =
+		  await this.connectedUserService.findByUserId(member.id);
+	  if ( memberOnline) {
+		console.log(memberOnline)
+		console.log('Online Memeber')
+		  socket.to(memberOnline.socketId).emit('UserSignedOut', channelId);
+		}
+	  }
+  }
+
+  @SubscribeMessage('SignInChannel')
+  async SignInChannel(
+    socket: Socket,
+    channelId: number,
+  ): Promise<void> {
+    const members: User[] = await this.channelService.getMembers(
+      channelId
+    );
+	for (const member of members) {
+		const memberOnline: ConnectedUser =
+		  await this.connectedUserService.findByUserId(member.id);
+	  if ( memberOnline) {
+		console.log(memberOnline)
+		console.log('Online Memeber')
+		  socket.to(memberOnline.socketId).emit('UserSignedIn', channelId);
+		}
+	  }
   }
   /**********************
    *** ChannelMessages ***

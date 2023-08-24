@@ -19,14 +19,16 @@
           <font-awesome-icon :icon="['fas', 'arrow-left']" />
         </button>
       </div>
-      <AvailableChannels v-if="showAvailableChannels" @channel-entered="handleChannelEntered" />
+      <AvailableChannels 
+	  v-if="showAvailableChannels" 
+	  @channel-entered="handleChannelEntered" />
       <JoinedChannels
         v-if="showJoinedChannels"
         :username="username"
         @channel-entered="handleChannelEntered"
       />
       <div v-if="showChannelManagerAndChat">
-        <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" @channel-signedout="hanndleChannelSignedout" @channel-destroyed="handleChannelDestroyed"/>
+        <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" @channel-signedout="hanndleChannelSignedout" />
         <ChannelMessages :channelId = "joinedChannelId" />
       </div>
     </template>
@@ -56,22 +58,24 @@ import { Socket } from 'socket.io-client'
 import Modal from '../utils/Modal.vue'
 
 const notificationStore = useNotificationStore()
+const socket = ref <Socket | null >(null)
 
-let socket: Socket | null = null
 onMounted(() => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
 
-  if (socket) {
-    socket.on('channelCreated', (success: boolean) => {
+  if (!socket || !socket.value) {
+      notificationStore.showNotification('Error: Connection problems', true);
+      return;
+    }
+    socket.value.on('channelCreated', (success: boolean) => {
       notificationStore.showNotification('Channel Succesfully Created!', true)
     })
 
-    socket.on('error', (error: string) => {
+    socket.value.on('error', (error: string) => {
       notificationStore.showNotification('Error: ' + error, false)
     })
-  }
-})
+  })
 onBeforeUnmount(() => {
   disconnectWebSocket()
 })
@@ -115,11 +119,13 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
     channelVisibility: visibility.toUpperCase() as ChannelVisibilityType
   }
 
-  if (socket) {
-    socket.emit('createChannel', createChannelDto)
-  } else {
-    console.error('Socket is not connected')
-  }
+  if (!socket || !socket.value) {
+      notificationStore.showNotification('Error: Connection problems', true);
+      return;
+    }
+  else {
+    socket.value.emit('createChannel', createChannelDto)
+  } 
 }
 
 const showChannelManagerAndChat = ref(false)
@@ -166,10 +172,7 @@ const removeUserFromChannel = async() => {
 	}
 }
 
-//TODO: send message to channel that user entered
-const sendMessageUserEntered = async() => {
 
-}
 
 const openJoinChannels = () => {
   showAvailableChannels.value = true
@@ -179,12 +182,14 @@ const openMyChannels = () => {
   showJoinedChannels.value = true
 }
 
-const closeJoinChannels = () => {
+const closeJoinChannels = async () => {
   showAvailableChannels.value = false
+  return 
 }
 
-const closeMyChannels = () => {
+const closeMyChannels = async () => {
   showJoinedChannels.value = false
+  return
 }
 
 const closeChannelManagerAndChat = () => {
@@ -198,13 +203,14 @@ const goBack = () => {
   closeChannelManagerAndChat()
 }
 
-const handleChannelEntered = (channelId: number) => {
+const handleChannelEntered = async (channelId: number) => {
 	joinedChannelId.value = channelId
-  closeJoinChannels()
-  closeMyChannels()
-  addUsertoChannel()
-  sendMessageUserEntered()
-  showChannelManagerAndChat.value = true
+	await updateChannelManager()
+  await closeJoinChannels()
+  await closeMyChannels()
+  await addUsertoChannel().then(() => {
+	  showChannelManagerAndChat.value = true
+  })
 }
 
 const handleChannelLeft = () => {
@@ -216,11 +222,18 @@ const hanndleChannelSignedout = () => {
   closeChannelManagerAndChat()
 }
 
-const handleChannelDestroyed = () => {
-	// removeAllUsersFromChannel()
-	// DestroyChannel()
-  closeChannelManagerAndChat()
-}
+const updateChannelManager = async () => {
+    if (!socket || !socket.value) {
+      notificationStore.showNotification('Error: Connection problems', true);
+      return;
+    }
+	try {
+    socket.value.emit('SignInChannel', joinedChannelId.value);
+	}
+	catch (error: any) {
+		notificationStore.showNotification(`Error` + error.message, true)
+	}
+};
 </script>
 
 <style>

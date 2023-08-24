@@ -79,9 +79,12 @@ const modalMessage = ref('');
 onMounted(() => {
 
 	initSocket()
-	setMembers()
+     setMembers().then(() => {
+	 	setCurrentUserRole()
+     	setChannelName()})
 	getSignOutButtonText()
 	setDestroyChannelListener()
+	setUserSignedListener()
 })
 
 const initSocket = () => {
@@ -99,9 +102,6 @@ const setMembers = async () => {
 		}
 		const data = await response.json()
 		Members.value = await data
-		//why can i not put this outside of the function?
-		setCurrentUserRole()
-		setChannelName()
 	}
 	catch (error: any)
 	{
@@ -129,7 +129,26 @@ const setDestroyChannelListener = () => {
 		emit('channel-left')
 	})
 }
-
+const setUserSignedListener = () => {
+	if(!socket || !socket.value) {
+		notificationStore.showNotification('Error: Connection problems', true)
+		return
+	}
+	socket.value.on('UserSignedOut', (channelId: Number) => {
+		console.log('UserSignedOut fired')
+		notificationStore.showNotification(' Signed out Channel', true)
+		setMembers().then(() => {
+			setCurrentUserRole()
+		})
+	})
+	socket.value.on('UserSignedIn', (channelId: Number) => {
+		console.log('UserSignedIn fired')
+		notificationStore.showNotification(' Signed in Channel', true)
+		setMembers().then(() => {
+			setCurrentUserRole()
+		})
+	})
+}
 const getSignOutButtonText = () => {
   if (currentUserRole.value === ChannelMemberRole.OWNER) {
 	return 'Destroy'
@@ -164,6 +183,14 @@ const DestroyChannel = () => {
 
 const SignOutChannel = () => {
   notificationStore.showNotification('You have signed out the channel: ' + ChannelName, true)
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  socket.value.emit('SignOutChannel', {
+	  channelId: channelId,
+	  senderId: userId.value
+  })
   emit('channel-signedout')
 }
 
