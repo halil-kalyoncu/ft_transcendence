@@ -16,7 +16,8 @@ import {
 	CreateChannelDto,
 	ChannelMembershipDto,
 	AdminActionDto,
-	ChannelInfoDto
+	ChannelInfoDto,
+	ChannelMemberDto
   } from 'src/chat/dto/channel.dto';
   
   @ApiTags('Channel module')
@@ -69,6 +70,12 @@ import {
 	async getAllAvaiableChannels(@Query('userId', ParseIntPipe) userId: number): Promise<ChannelInfoDto[]>{
 		return await this.ChannelService.getAllAvailableChannels(userId);
 	}
+
+	@Get ('getAllChannelManagerMembers')
+	async getAllUsersChannelMembers(@Query('channelId', ParseIntPipe) channelId: number): Promise<ChannelMemberDto[]>{
+		return await this.ChannelService.getAllChannelManagerMembers(channelId);
+	}
+
 	//Post Functions to create Channels
 	@Post('createProtectedChannel')
 	async createChannel(

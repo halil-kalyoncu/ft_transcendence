@@ -18,6 +18,7 @@ import {
   ChannelMembershipDto,
   AdminActionDto,
   ChannelInfoDto,
+  ChannelMemberDto
 } from '../../dto/channel.dto';
 import { ChannelMemberService } from '../channel-member/channel-member.service';
 
@@ -108,6 +109,7 @@ export class ChannelService {
 
     return channel;
   }
+
 
   async destroyChannel(channelId: number): Promise<Channel> {
 	const channel = await this.find(channelId);
@@ -564,5 +566,48 @@ async getAllAvailableChannels(userId: number): Promise<ChannelInfoDto[]> {
   }
   
   
-}
+  async getAllChannelManagerMembers(channelId: number): Promise<ChannelMemberDto[]> {
+	const channelMembers = await this.prisma.channelMember.findMany({
+	  where: {
+		channelId: channelId,
+	  },
+	  include: {
+		user: true,
+		channel: true,
+	  },
+	});
 
+	const channelMembersEntries: ChannelMemberDto[] = await Promise.all(
+		channelMembers.map(async (channelmember) => {
+		  const {
+			id: channelMemberId,
+			channel: { name: channelName },
+			userId,
+			user: { username },
+			role,
+			roleSince,
+			status,
+			statusSince,
+			banned,
+			unmuteAt,
+		  } = channelmember;
+	  
+		  return {
+			channelMemberId,
+			channelName,
+			userId,
+			username,
+			role,
+			roleSince,
+			status,
+			statusSince,
+			banned,
+			unmuteAt,
+		  };
+		})
+	  );
+	  
+	return channelMembersEntries;
+  }
+
+}

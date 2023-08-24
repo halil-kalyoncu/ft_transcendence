@@ -1,6 +1,6 @@
 import type { MessageI } from '../message.interface'
 import type { UserI } from '../user.interface';
-import type { ChannelMemberI } from './createChannel.interface'
+import type { ChannelMemberRoleType, ChannelMemberStatusType } from './createChannel.interface'
 
 export interface ChannelMessageI{
 	id?: number
@@ -16,6 +16,19 @@ export interface ChannelMessageReadStatusI{
 	readerId: number;
 	isRead: boolean;
 	reader: UserI;
+  }
+  
+  export interface ChannelManagerMemberI {
+	channelMemberId: number;
+	channelName: string;
+	userId: number;
+	username: string;
+	role: ChannelMemberRoleType;
+	roleSince: string; 
+	status: ChannelMemberStatusType;
+	statusSince: string; 
+	banned: boolean;
+	unmuteAt: string | null; 
   }
   
 
