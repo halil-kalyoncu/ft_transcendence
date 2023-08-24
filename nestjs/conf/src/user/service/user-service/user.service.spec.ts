@@ -97,11 +97,6 @@ describe('UserService', () => {
         enabled2FA: false,
         secret2FA: null,
       };
-      const connectedUser = {
-        id: 2,
-        socketId: 'socketId',
-        userId: 2,
-      }
       const token = 'jwtToken';
 
       const findByUsernameSpy = jest
@@ -411,9 +406,9 @@ describe('UserService', () => {
   });
 
   describe('findAllByUsername', () => {
-    it('should match pattern to two users', async () => {
+    it('should return an array with two users', async () => {
       const username = 'muster'
-      const users = [
+      const users: User[] = [
         {
           id: 1,
           username: 'mmustermann',
@@ -448,7 +443,7 @@ describe('UserService', () => {
       findManySpy.mockRestore();
     });
 
-    it('should match pattern to one user', async () => {
+    it('should return an array with one user', async () => {
       const username = 'frau'
       const expectedResult = [
         {
@@ -478,7 +473,7 @@ describe('UserService', () => {
       findManySpy.mockRestore();
     });
 
-    it('should match pattern to no user', async () => {
+    it('should return an empty array', async () => {
       const username = 'non'
       const expectedResult = []
 

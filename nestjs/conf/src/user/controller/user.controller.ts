@@ -21,7 +21,7 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { Prisma, User } from '@prisma/client';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -38,6 +38,9 @@ export class UserController {
   ) {}
 
   //remove this function, when 42 login works
+  @ApiOperation({ summary: 'Login' })
+  @ApiResponse({ status: 201, description: 'Successful login' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('login')
   async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseDto> {
     try {
@@ -69,16 +72,22 @@ export class UserController {
   //   }
   // }
 
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, description: 'Successful retrieval of users' })
   @Get()
   async findAll(): Promise<User[]> {
     return await this.userService.findAll();
   }
 
+  @ApiOperation({ summary: 'Find user by username' })
+  @ApiResponse({ status: 200, description: 'Successful retrieval of user by username' })
   @Get('find')
   async find(@Query('username') username: string): Promise<User> {
     return await this.userService.findByUsername(username);
   }
 
+  @ApiOperation({ summary: 'Find users by username' })
+  @ApiResponse({ status: 200, description: 'Successful retrieval of users that contain the username' })
   @Get('find-by-username')
   async findAllByUsername(
     @Query('username') username: string,
@@ -86,6 +95,9 @@ export class UserController {
     return await this.userService.findAllByUsername(username);
   }
 
+  @ApiOperation({ summary: 'Upload user avatar' })
+  @ApiResponse({ status: 200, description: 'Successful upload of user avatar' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @Post('avatar')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -125,6 +137,10 @@ export class UserController {
     }
   }
 
+  @ApiOperation({ summary: 'Serve user avatar' })
+  @ApiResponse({ status: 200, description: 'Successful retrieval of user avatar' })
+  @ApiResponse({ status: 404, description: 'User does not have an avatar' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @Get('avatar/:userId')
   async serverAvatar(
     @Param('userId', ParseIntPipe) userId: number,
@@ -144,6 +160,8 @@ export class UserController {
     }
   }
 
+  @ApiOperation({ summary: 'Delete user avatar' })
+  @ApiResponse({ status: 200, description: 'Successful deletion of user avatar' })
   @Patch('avatar/:userId')
   async deleteAvatar(@Param('userId', ParseIntPipe) userId: number) {
     const user: User = await this.userService.findById(userId);
