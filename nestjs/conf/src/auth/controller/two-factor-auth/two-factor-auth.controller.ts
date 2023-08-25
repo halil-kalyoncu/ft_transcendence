@@ -12,7 +12,9 @@ import { Response } from 'express';
 import { TwoFactorAuthCodeDto } from '../../dto/two-factor-auth-code.dto';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { User } from '@prisma/client';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Two Factor Authentification (Auth module)')
 @Controller('2fa')
 export class TwoFactorAuthController {
   constructor(

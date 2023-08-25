@@ -13,7 +13,7 @@ import { Friendship } from '@prisma/client';
 import { BlockUserDto } from '../../dto/block-user.dto';
 import { ErrorDto } from '../../dto/error.dto';
 
-@ApiTags('Friendship module')
+@ApiTags('Friendship (Chat module)')
 @Controller('friendships')
 export class FriendshipController {
   constructor(private friendshipService: FriendshipService) {}

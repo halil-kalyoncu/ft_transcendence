@@ -11,7 +11,9 @@ import {
 } from '@nestjs/common';
 import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
 import { BlockUserDto } from '../../dto/block-user.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Blocked Users (Chat module)')
 @Controller('blockedUsers')
 export class BlockedUserController {
   constructor(private blockedUserService: BlockedUserService) {}

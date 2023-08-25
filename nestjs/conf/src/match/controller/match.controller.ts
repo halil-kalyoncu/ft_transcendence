@@ -10,7 +10,9 @@ import {
 import { MatchService } from '../service/match.service';
 import { CreateMatchDto } from '../dto/create-match.dto';
 import { Match, Prisma } from '@prisma/client';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Match module')
 @Controller('matches')
 export class MatchController {
   constructor(private matchService: MatchService) {}

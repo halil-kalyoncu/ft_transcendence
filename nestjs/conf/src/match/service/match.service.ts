@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { Match, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -36,7 +36,15 @@ export class MatchService {
     });
   }
 
-  async invite(id: number, invitedUserId: number): Promise<Match> {
+  async invite(id: number, invitedUserId: number): Promise<Match | null> {
+    const match = await this.findById(id);
+
+    if (!match) {
+      return null;
+    } else if (match.leftUserId == invitedUserId) {
+      throw new Error("Can't invite yourself to a match");
+    }
+
     return await this.prisma.match.update({
       where: { id },
       data: {
@@ -50,7 +58,7 @@ export class MatchService {
     });
   }
 
-  async acceptInvite(id: number): Promise<Match> {
+  async acceptInvite(id: number): Promise<Match | null> {
     return await this.prisma.match.update({
       where: { id },
       data: {
@@ -63,7 +71,7 @@ export class MatchService {
     });
   }
 
-  async rejectInvite(id: number): Promise<Match> {
+  async rejectInvite(id: number): Promise<Match | null> {
     return await this.prisma.match.update({
       where: { id },
       data: {
@@ -90,11 +98,12 @@ export class MatchService {
     });
   }
 
-  async startMatch(id: number): Promise<Match> {
+  async startMatch(id: number): Promise<Match | null> {
     return await this.prisma.match.update({
       where: { id },
       data: {
         state: 'STARTED',
+        startedAt: new Date()
       },
       include: {
         leftUser: true,
