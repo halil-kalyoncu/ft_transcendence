@@ -36,3 +36,4 @@ lerna-debug.log*
 
 *.txt
 files/
+src/_gen
