@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+
 }
 
 datasource db {
@@ -73,7 +74,7 @@ model ChannelMessage {
   senderId  Int
 
   message Message       @relation(fields: [messageId], references: [id])
-  sender  ChannelMember @relation(fields: [senderId], references: [id])
+  sender  ChannelMember @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   channelMessageReadStatus ChannelMessageReadStatus[]
 

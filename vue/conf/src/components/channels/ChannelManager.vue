@@ -135,7 +135,7 @@ const setUserSignedListener = () => {
 		return
 	}
 	socket.value.on('UserSignedOut', (channelId: Number) => {
-		console.log('UserSignedOut fired')
+		console.log('UserSignedOut from ChannelManager fired')
 		notificationStore.showNotification(' Signed out Channel', true)
 		setMembers().then(() => {
 			setCurrentUserRole()
@@ -143,7 +143,7 @@ const setUserSignedListener = () => {
 	})
 	socket.value.on('UserSignedIn', (channelId: Number) => {
 		console.log('UserSignedIn fired')
-		notificationStore.showNotification(' Signed in Channel', true)
+		//notificationStore.showNotification(' Signed in Channel', true)
 		setMembers().then(() => {
 			setCurrentUserRole()
 		})

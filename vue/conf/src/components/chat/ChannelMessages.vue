@@ -79,6 +79,11 @@ const setNewChannelMessageListener = () => {
 		console.log('newChannelMessage fired')
 		channelMessages.value.unshift(newChannelMessageData)
 	})
+	socket.value.on('UserSignedOut', (channelId: Number) => {
+		console.log('UserSignedOut from ChannelMessages fired')
+		notificationStore.showNotification(' Signed out Channel', true)
+		setNewChannelMessages()
+	})
 }
 
 const setNewChannelMessages = async () => {

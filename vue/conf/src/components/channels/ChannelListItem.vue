@@ -15,6 +15,9 @@
       />
     </div>
     <div class="channel-button-container">
+		<div v-if="unreadMessageCount > 0" class="unread-messages">
+        +{{ unreadMessageCount }}
+      </div>
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
       <button class="join-channel-button" @click="handleJoin">{{ joinChannelButtonName }}</button>
     </div>
@@ -35,8 +38,9 @@ const props = defineProps({
   ownerName: String,
   joinChannelButtonName: String,
   channelId: Number
-})
 
+})
+const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
 const showPasswordField = ref(false)
 const password = ref('')
@@ -151,5 +155,16 @@ watch(password, (newValue) => {
 
 .password-input:focus {
   outline: solid 0.25px #ea9f42;
+}
+
+.unread-messages {
+	background: #428dea;
+  border: 0.5px solid aliceblue;
+  font-size: 0.75rem;
+  font-weight: light;
+  color: #fff;
+  box-sizing: border-box;
+  padding: 0.25rem 0.5rem;
+  margin-right: 5px;
 }
 </style>
