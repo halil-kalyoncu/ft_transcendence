@@ -98,9 +98,7 @@ import {
 	): Promise<ChannelMember> {
 	  return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
 	}
-  
-	
-  
+
 	@Patch('MakeUserAdmin')
 	async MakeUserAdmin(@Body() AdminActionDto: AdminActionDto): Promise<void> {
 	  await this.ChannelService.makeAdmin(AdminActionDto);
