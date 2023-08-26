@@ -66,10 +66,11 @@ const submitForm = async () => {
 
 <style>
 .login {
-  background-color: #0d1117;
+  background-color: transparent;
   width: 100vw;
   height: 100vh;
   position: relative;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .login-form {
@@ -107,7 +108,7 @@ const submitForm = async () => {
 }
 
 .login button:hover {
-  color: #0d1117;
-  background-color: #e6edf3;
+  color: aliceblue;
+  background-color: #ea9f42;
 }
 </style>

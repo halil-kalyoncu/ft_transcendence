@@ -38,6 +38,7 @@ defineProps<Props>()
   justify-content: space-between;
   align-items: center;
   background-color: #333;
+  opacity: 0.9;
   color: #fff;
   padding: 20px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);

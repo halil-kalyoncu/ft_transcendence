@@ -96,13 +96,16 @@ const sendInvite = async () => {
   <div>
     <input
       type="text"
+      class="invite-friend-input"
       v-model="invitedUsername"
       placeholder="Enter username"
       @focus="showSuggestions"
       @blur="hideSuggestions"
     />
-    <div class="suggestionList" v-if="showSuggestionList">
-      <ul v-if="userSuggestions.length" class="suggestionList">
+    <button @click="sendInvite" class="send-game-invitation-button">Send Game Invitation</button>
+
+    <div class="suggestionList" :class="'game-invite-suggestions'">
+      <ul v-if="showSuggestionList && userSuggestions.length" class="suggestionList">
         <li
           v-for="suggestion in userSuggestions"
           :key="suggestion.id"
@@ -112,6 +115,46 @@ const sendInvite = async () => {
         </li>
       </ul>
     </div>
-    <button @click="sendInvite">Send Game Invitation</button>
   </div>
 </template>
+
+<style>
+.invite-friend-input {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: transparent;
+  color: aliceblue;
+  border: 1px solid aliceblue;
+  margin-right: 1.5rem;
+}
+
+.invite-friend-input:focus {
+  outline: solid 0.25px #ea9f42;
+}
+
+.game-invite-suggestions {
+  min-height: 15rem;
+  max-width: 228px;
+}
+
+::placeholder {
+  color: lightgray;
+}
+
+::-moz-placeholder {
+  color: aliceblue;
+  opacity: 1;
+}
+
+::-webkit-input-placeholder {
+  color: aliceblue;
+}
+
+:-ms-input-placeholder {
+  color: aliceblue;
+}
+
+::-ms-input-placeholder {
+  color: aliceblue;
+}
+</style>

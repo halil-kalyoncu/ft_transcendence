@@ -38,7 +38,7 @@ const setFriendsVisible = (value: boolean) => {
   width: 300px;
   height: 100vh;
   min-width: 300px;
-  background-color: #0d1117;
+  background: rgba(0, 0, 0, 0.75);
   padding: 0 0.5rem;
   border-right: 0.25px solid darkgray;
 }

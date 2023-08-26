@@ -183,11 +183,12 @@ const deleteAccount = () => {
 
 <style scoped>
 .settings-container {
+  height: calc(100vh - 50.8px);
   width: 100%;
-  margin: 1.5rem;
+  padding: 1.5rem;
   color: #fff;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
   box-sizing: border-box !important;
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .settings-container .username {
@@ -206,14 +207,15 @@ input[type='file'] {
   margin-top: 8px;
   border: 1px solid #555;
   background-color: #333;
+  opacity: .9;
   color: #fff;
 }
 
 .page-title {
   text-align: left;
   margin: 0 0 1.25rem 0;
-  font-size: 2.25rem;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: normal;
   color: #ea9f42;
 }
 
@@ -235,7 +237,6 @@ input[type='file'] {
   background: #333;
   margin-left: 0.25rem;
   min-width: 250px;
-  border-radius: 0.125rem;
 }
 .secondary-btn:focus {
   outline: solid 0.25px #ea9f42;
@@ -297,7 +298,6 @@ button {
   border: none;
   padding: 10px 20px;
   cursor: pointer;
-  border-radius: 0.25rem;
   transition: background 0.2s;
 }
 
@@ -325,18 +325,18 @@ button:hover {
 }
 
 .delete-button {
-  background-color: #a83232;
-  color: #ffffff;
+  background-color: transparent;
+  color: #a83232;
   border: none;
-  border-radius: 5px;
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .delete-button:hover {
-  background-color: #872828;
+  background-color: #a83232;
+  color: aliceblue;
 }
 
 .delete-button:active {

@@ -162,7 +162,7 @@ const isOwnMessage = (senderId: number | undefined) => {
       <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
     <div class="chat-input">
-      <input type="text" v-model="newMessage" placeholder="Type your message here..." />
+      <textarea type="text" v-model="newMessage" placeholder="Type your message here..." rows="1" />
       <button @click="sendMessage">Send</button>
     </div>
   </div>
@@ -194,32 +194,41 @@ const isOwnMessage = (senderId: number | undefined) => {
 .chat .chat-input {
   flex: 0 0 auto;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem 0.5rem;
+  justify-content: flex-end;
+  align-items: flex-end;
   position: relative;
 }
-.chat .chat-input input {
-  width: 100%;
-  padding: 0.5rem 0.25rem;
-  background-color: lightgray;
-  border-radius: 0.25rem;
-}
+
 .chat .chat-input input:focus {
   outline: solid 2px #ea9f42;
 }
 .chat .chat-input button {
-  position: absolute;
-  right: 1rem;
-  background-color: #ea9f42;
+  height: 100%;
+  background-color: #32a852;
   border: none;
   color: white;
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1rem;
+  cursor: pointer;
   transition: 0.3s;
 }
 .chat .chat-input button:hover {
   background-color: #ed901c;
 }
 
+.chat-input textarea {
+  width: 100%;
+  padding: 0.5rem 0.25rem;
+  background-color: lightgray;
+  resize: none;
+}
+
+.chat-input textarea:focus {
+  outline: none;
+}
 .chat .loading-text {
   font-size: 0.8rem;
   padding-left: 0.75rem;

@@ -17,7 +17,6 @@ const userAvatar = computed(() => userStore.avatarImageData)
 
 const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
-const showProfilePage = computed(() => route.path.startsWith('/profile'))
 
 const logout = () => {
   localStorage.removeItem('ponggame')
@@ -34,20 +33,14 @@ const logout = () => {
         <RouterLink class="navButton" to="/home" :class="{ selected: showHomePage }"
           >Home</RouterLink
         >
-        <RouterLink
-          class="navButton"
-          :class="{ selected: showProfilePage }"
-          :to="`/profile/${username}`"
-          >Profile</RouterLink
-        >
       </div>
-      <RouterLink class="navButton header-username" :to="`/profile/${username}`">
-        <div class="link-content">
-          {{ username ? username : 'TBD' }}
-          <img class="profile-image" src=../../assets/defaultAvatar.png alt="Profile" />
-        </div>
-      </RouterLink>
-      <div>
+      <div class="flex-box-center">
+        <RouterLink class="navButton header-username" :to="`/profile/${username}`">
+          <div class="link-content">
+            {{ username ? username : 'TBD' }}
+            <img class="profile-image" src=../../assets/defaultAvatar.png alt="Profile" />
+          </div>
+        </RouterLink>
         <RouterLink class="navButton header-username" to="/activity-center">
           <button class="settings-button">
             <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
@@ -67,9 +60,13 @@ const logout = () => {
 </template>
 
 <style>
+.flex-box-center {
+  display: flex;
+  align-items: center;
+}
 .header {
   width: calc(100vw - 300px);
-  background-color: #1560bd;
+  background: rgba(0, 0, 0, 0.75);
   border-bottom: 0.25px solid darkgray;
 }
 
@@ -89,22 +86,26 @@ const logout = () => {
 .settings-button {
   font-size: 1rem;
   cursor: pointer;
-  color: lightgreen;
-  padding: 0 0 0 1rem;
+  color: #ce4431;
+  padding: 0 0 0 0.75rem;
   transition: color 0.15s ease-in-out;
 }
 
 .navButtonLogout:hover,
 .settings-button:hover {
-  color: yellow;
+  color: red;
 }
 
 .header-username {
-  color: #ffff00;
+  color: #ea9f42;
   font-weight: light;
   font-family: Helvetica, sans-serif;
   padding: 0;
   text-align: bottom;
+}
+
+.header-username:hover {
+  color: #ea9f42;
 }
 
 .settings-button {
@@ -121,20 +122,18 @@ const logout = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 0.5rem 0 1rem;
-  background-color: #186dd6;
+  background-color: transparent;
   border-radius: 0.5rem;
-  margin-right: 5.4rem;
 }
 
 .link-content .profile-image {
-  width: 2.75rem;
-  height: 2.75rem;
-  margin-left: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.5rem;
   object-fit: cover;
 }
 
 .header .header-username:hover {
-  color: yellow;
+  color: red;
 }
 </style>

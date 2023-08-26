@@ -1,17 +1,19 @@
 <template>
   <section class="channels">
     <template v-if="!showAvailableChannels && !showJoinedChannels && !showChannelManagerAndChat">
-      <button class="channel-option-button" @click="openModal">Create Channel</button>
-      <Modal
-        :isOpened="isModalOpened"
-        :title="'Create a Channel'"
-        :placeholderText="'Enter channel name'"
-        :showVisibilitySelection="true"
-        @submit="handleConfirm"
-        @close="handleClose"
-      />
-      <button class="channel-option-button" @click="openJoinChannels">Join Channels</button>
-      <button class="channel-option-button" @click="openMyChannels">My Channels</button>
+      <div class="channel-option-button-container">
+        <button class="channel-option-button" @click="openModal">Create Channel</button>
+        <Modal
+          :isOpened="isModalOpened"
+          :title="'Create a Channel'"
+          :placeholderText="'Enter channel name'"
+          :showVisibilitySelection="true"
+          @submit="handleConfirm"
+          @close="handleClose"
+        />
+        <button class="channel-option-button" @click="openJoinChannels">Join Channels</button>
+        <button class="channel-option-button" @click="openMyChannels">My Channels</button>
+      </div>
     </template>
     <template v-else>
       <div class="back-button-container">
@@ -168,15 +170,25 @@ const handleChannelLeft = () => {
 .channels {
   height: calc(100% - 50px);
   padding: 1rem 0.5rem 0.5rem 0.5rem;
+  position: relative;
 }
-.channel-option-button {
+
+.channel-option-button-container {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.channels .channel-option-button {
   font-family: 'Courier New', Courier, monospace !important;
   display: block;
   width: calc(100%);
+  background: transparent;
   margin: 0 0 0.5rem 0;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
-  background: transparent;
   color: aliceblue;
   border: 0.5px solid aliceblue;
   cursor: pointer;
@@ -184,7 +196,7 @@ const handleChannelLeft = () => {
   transition: 0.25s color ease-out, border 0.25s ease-out;
 }
 
-.channel-option-button:hover {
+.channels .channel-option-button:hover {
   color: aliceblue;
   border: 1px solid #ea9f42;
   font-weight: bold;

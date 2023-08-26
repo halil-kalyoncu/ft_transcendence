@@ -44,8 +44,10 @@ const handleInviteClick = async () => {
 
 <template>
   <div class="home">
-    <RouterLink class="navButton" to="/game">PLAY</RouterLink>
-    <button class="navButton" @click="handleInviteClick">INVITE TO CUSTOM GAME</button>
+    <!-- <RouterLink class="navButton" :class="'play-button'" to="/game">PLAY</RouterLink> -->
+    <button @click="handleInviteClick" class="send-game-invitation-button">
+      START A CUSTOM GAME
+    </button>
   </div>
 </template>
 
@@ -53,13 +55,14 @@ const handleInviteClick = async () => {
 .home {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   height: calc(100vh - 50.8px);
-  background-color: #171717;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10% 1.5rem 1.5rem 1.5rem;
 }
 
-.home a {
+.play-button {
   padding: 0 2.5rem;
   font-size: 2rem;
   background-color: #32a852;
@@ -72,10 +75,24 @@ const handleInviteClick = async () => {
   animation: appear 0.5s ease-out;
 }
 
-.home a:hover {
+.play-button:hover {
   background-color: #005600;
   transform: scale(1.05);
   box-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+}
+
+.send-game-invitation-button {
+  background-color: transparent;
+  border: 1px solid #ed901c;
+  color: #ed901c;
+  transition: 0.3s;
+  padding: 0.55rem 0.5rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.send-game-invitation-button:hover {
+  background-color: transparent;
 }
 
 @keyframes appear {

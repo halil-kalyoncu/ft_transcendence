@@ -116,8 +116,8 @@ const banUser = () => {
 
 .badge-number {
   position: absolute;
-  bottom: 0.45rem;
-  left: 50%;
+  bottom: 0.3rem;
+  left: 100%;
   transform: translate(-50%, 50%);
   background-color: red;
   color: white;

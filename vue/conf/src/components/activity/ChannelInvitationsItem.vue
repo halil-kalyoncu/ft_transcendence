@@ -8,9 +8,9 @@
       />
       <p>{{ channelName }}</p>
       <div class="friend-info margin-left" @click="viewProfile">
-        <p>(</p>
+        <p>[</p>
         <p class="friend-username small-font">{{ username }}</p>
-        <p>)</p>
+        <p class="margin-left">]</p>
       </div>
     </div>
 

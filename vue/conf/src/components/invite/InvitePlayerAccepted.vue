@@ -11,6 +11,6 @@ const props = defineProps({
 
 <template>
   <div>
-    <span>{{ props.user.username }}</span>
+    <!-- <span>{{ props.user.username }}</span> -->
   </div>
 </template>

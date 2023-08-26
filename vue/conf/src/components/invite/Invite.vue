@@ -154,18 +154,19 @@ onBeforeUnmount(() => {
 
 <template>
   <article class="createCustomGame">
-    <span>{{ match.id }}</span>
-    <span v-if="userIsHost">This is the host</span>
-    <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer" />
-    <div v-else>Something went wrong</div>
-    <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" />
-    <InviteFriend v-else :matchId="match.id!" />
+    <div>
+      <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer" />
+      <div v-else>Something went wrong</div>
+      <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" />
+      <InviteFriend v-else :matchId="match.id!" />
+    </div>
     <button
+      class="play-button"
       @click="handleStartMatch"
-      :disabled="!userIsHost || !rightPlayer"
+      v-if="rightPlayer"
       :class="{ disabledButton: !userIsHost || !rightPlayer }"
     >
-      start match
+      PLAY
     </button>
   </article>
 </template>
@@ -174,14 +175,17 @@ onBeforeUnmount(() => {
 .createCustomGame {
   width: 100%;
   height: calc(100vh - 50.8px);
-  background-color: #171717;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: flex-start;
 }
 
 .suggestionList {
-  flex: 1;
   display: flex;
   flex-direction: column;
 }
@@ -197,7 +201,15 @@ onBeforeUnmount(() => {
 }
 
 .disabledButton {
-  background-color: gray;
+  background-color: transparent;
   cursor: not-allowed;
+  animation: none;
+  border: 1px solid aliceblue;
+}
+
+.disabledButton:hover {
+  background-color: transparent;
+  transform: none;
+  box-shadow: none;
 }
 </style>

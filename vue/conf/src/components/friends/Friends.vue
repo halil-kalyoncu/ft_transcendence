@@ -579,7 +579,7 @@ const goBack = () => {
   display: flex;
   flex-direction: column;
   height: calc(100% - 50px);
-  padding: 1rem 0.5rem 0.5rem 0.5rem;
+  padding: 1rem 0.5rem 1rem 0.5rem;
 }
 
 .friendsList {

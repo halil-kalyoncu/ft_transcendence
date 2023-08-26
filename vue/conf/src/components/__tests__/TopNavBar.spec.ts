@@ -11,7 +11,6 @@ const router = createRouter({
   routes: [
     { path: '/', component: {} },
     { path: '/home', component: {} },
-    { path: '/profile', component: {} },
     { path: '/settings', component: {} },
     { path: '/activity-center', component: {} }
   ]
@@ -39,9 +38,5 @@ describe('TopNavBar', () => {
     await router.push('/home')
     await wrapper.vm.$nextTick()
     expect(wrapper.get('.navButton').classes()).toContain('selected')
-
-    await router.push('/profile')
-    await wrapper.vm.$nextTick()
-    expect(wrapper.findAll('.navButton')[1].classes()).toContain('selected')
   })
 })
