@@ -59,7 +59,7 @@ const handleInviteClick = async () => {
   width: 100%;
   height: calc(100vh - 50.8px);
   background: rgba(0, 0, 0, 0.5);
-  padding: 10% 1.5rem 1.5rem 1.5rem;
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
 }
 
 .play-button {

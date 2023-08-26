@@ -46,7 +46,7 @@ const setActivePanel = (value: string) => {
   width: 100%;
   height: calc(100vh - 50.8px);
 
-  background:rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
 
   display: flex;
   flex-direction: column;

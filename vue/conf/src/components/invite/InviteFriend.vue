@@ -49,6 +49,8 @@ const showSuggestions = () => {
   showSuggestionList.value = true
 }
 
+const emit = defineEmits(['send-match-invite'])
+
 const hideSuggestions = () => {
   showSuggestionList.value = false
 }
@@ -84,6 +86,8 @@ const sendInvite = async () => {
       'sending invite for match: ' + props.matchId + ' to invitedUser: ' + invitedUser.value!.id
     )
     socket.emit('sendMatchInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
+
+    emit('send-match-invite', invitedUser.value)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.toString() : 'An error occurred'
     notificationStore.showNotification(errorMessage, false)

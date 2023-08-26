@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import InvitePlayerAccepted from './InvitePlayerAccepted.vue'
+import Spinner from '../utils/Spinner.vue'
 import InviteFriend from './InviteFriend.vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { connectWebSocket } from '../../websocket'
@@ -10,6 +11,11 @@ import { useRouter } from 'vue-router'
 import jwtDecode from 'jwt-decode'
 import { useRoute } from 'vue-router'
 import { Socket } from 'socket.io-client'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+
+library.add(faArrowLeft)
 
 const route = useRoute()
 const matchId = route.params.matchId as string
@@ -24,8 +30,11 @@ const match = ref<MatchI>({})
 const leftPlayer = ref<UserI>({})
 const rightPlayer = ref<UserI | null>(null)
 const userIsHost = ref(false)
+const isWaitingForResponse = ref(false)
 
 const lobbyIsFinished = ref(false)
+
+const invitedUser = ref<UserI | null>(null)
 
 const initSocket = () => {
   socket.value = connectWebSocket('http://localhost:3000', accessToken)
@@ -102,15 +111,18 @@ onMounted(async () => {
 
   socket.value.on('matchInviteSent', (updatedMatch: MatchI) => {
     match.value = updatedMatch
+    console.log('isWaitingForResponse')
   })
 
   socket.value.on('matchInviteAccepted', (updatedMatch: MatchI) => {
     match.value = updatedMatch
     rightPlayer.value = match.value.rightUser as UserI
+    isWaitingForResponse.value = false
   })
 
   socket.value.on('matchInviteRejected', (updatedMatch: MatchI) => {
     match.value = updatedMatch
+    isWaitingForResponse.value = false
   })
 
   socket.value.on('hostLeftMatch', () => {
@@ -129,6 +141,7 @@ onMounted(async () => {
       notificationStore.showNotification(match.value.rightUser!.username + ' left the match', false)
       match.value = updatedMatch
       rightPlayer.value = null
+      isWaitingForResponse.value = false
     }
   })
 
@@ -139,6 +152,15 @@ onMounted(async () => {
     //router.push(`/game/${matchId}`)
   })
 })
+
+const handleSendMatchInvite = (userI: UserI) => {
+  isWaitingForResponse.value = true
+  invitedUser.value = userI
+}
+
+const cancelWaiting = () => {
+  isWaitingForResponse.value = false
+}
 
 onBeforeUnmount(() => {
   if (lobbyIsFinished.value) {
@@ -155,10 +177,24 @@ onBeforeUnmount(() => {
 <template>
   <article class="createCustomGame">
     <div>
-      <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer" />
-      <div v-else>Something went wrong</div>
-      <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" />
-      <InviteFriend v-else :matchId="match.id!" />
+      <!-- <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer" /> -->
+      <!-- <div v-else>Something went wrong</div> -->
+      <!-- <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" /> -->
+      <InviteFriend
+        v-if="!rightPlayer && !isWaitingForResponse"
+        :matchId="match.id!"
+        @send-match-invite="handleSendMatchInvite"
+      />
+      <div v-if="isWaitingForResponse" class="waiting-container">
+        <Spinner />
+        <span
+          >waiting for <span class="orange-font">{{ invitedUser?.username }}</span
+          >...</span
+        >
+        <button class="icon-button-reject" title="Cancel request" @click="cancelWaiting">
+          <font-awesome-icon :icon="['fas', 'times']" />
+        </button>
+      </div>
     </div>
     <button
       class="play-button"
@@ -172,6 +208,21 @@ onBeforeUnmount(() => {
 </template>
 
 <style>
+.orange-font {
+  color: #ea9f42;
+}
+
+.createCustomGame .icon-button-reject {
+  color: red;
+  background: none;
+  font-size: 1.25rem;
+  border: none;
+  cursor: pointer;
+  color: #e47264;
+  padding: 5px;
+  margin-left: 1rem;
+}
+
 .createCustomGame {
   width: 100%;
   height: calc(100vh - 50.8px);
@@ -204,12 +255,18 @@ onBeforeUnmount(() => {
   background-color: transparent;
   cursor: not-allowed;
   animation: none;
-  border: 1px solid aliceblue;
+  border: 0.25px solid aliceblue;
 }
 
 .disabledButton:hover {
   background-color: transparent;
   transform: none;
   box-shadow: none;
+}
+
+.waiting-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

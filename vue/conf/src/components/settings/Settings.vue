@@ -207,7 +207,7 @@ input[type='file'] {
   margin-top: 8px;
   border: 1px solid #555;
   background-color: #333;
-  opacity: .9;
+  opacity: 0.9;
   color: #fff;
 }
 
