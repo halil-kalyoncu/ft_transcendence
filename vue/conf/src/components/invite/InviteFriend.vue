@@ -4,6 +4,7 @@ import type { UserI } from '../../model/user.interface'
 import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
 import { connectWebSocket } from '../../websocket'
+import ScrollViewer from '../utils/ScrollViewer.vue'
 
 const props = defineProps({
   matchId: {
@@ -108,7 +109,7 @@ const sendInvite = async () => {
     />
     <button @click="sendInvite" class="send-game-invitation-button">Send Game Invitation</button>
 
-    <div class="suggestionList" :class="'game-invite-suggestions'">
+    <ScrollViewer :maxHeight="'50vh'" class="suggestionList" :class="'game-invite-suggestions'">
       <ul v-if="showSuggestionList && userSuggestions.length" class="suggestionList">
         <li
           v-for="suggestion in userSuggestions"
@@ -118,7 +119,7 @@ const sendInvite = async () => {
           {{ suggestion.username }}
         </li>
       </ul>
-    </div>
+    </ScrollViewer>
   </div>
 </template>
 
@@ -139,6 +140,7 @@ const sendInvite = async () => {
 .game-invite-suggestions {
   min-height: 15rem;
   max-width: 228px;
+  max-height: 500px;
 }
 
 ::placeholder {
