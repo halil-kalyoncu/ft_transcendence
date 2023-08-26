@@ -103,7 +103,7 @@ export class MatchService {
       where: { id },
       data: {
         state: 'STARTED',
-        startedAt: new Date()
+        startedAt: new Date(),
       },
       include: {
         leftUser: true,

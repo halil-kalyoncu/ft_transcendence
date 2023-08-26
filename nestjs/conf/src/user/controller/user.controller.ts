@@ -28,7 +28,7 @@ import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import { Response } from 'express';
-import { PrismaModel } from '../../_gen/prisma-class/index'
+import { PrismaModel } from '../../_gen/prisma-class/index';
 
 @ApiTags('User module')
 @Controller('users')
@@ -40,8 +40,13 @@ export class UserController {
 
   //remove this function, when 42 login works
   @ApiOperation({ summary: 'Login' })
-  @ApiResponse({ status: 201, description: 'Successful login', type: LoginResponseDto })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({
+    status: 201,
+    description: 'Successful login',
+    type: LoginResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'CreateUserDto has errors' })
+  @ApiResponse({ status: 409, description: 'User is already logged in' })
   @Post('login')
   async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseDto> {
     try {
@@ -54,7 +59,7 @@ export class UserController {
         expires_in: 10000,
       };
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new HttpException(error.message, HttpStatus.CONFLICT);
     }
   }
 
@@ -74,21 +79,35 @@ export class UserController {
   // }
 
   @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Successful retrieval of users', type: PrismaModel.User, isArray: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of users',
+    type: PrismaModel.User,
+    isArray: true,
+  })
   @Get()
   async findAll(): Promise<User[]> {
     return await this.userService.findAll();
   }
 
   @ApiOperation({ summary: 'Find user by username' })
-  @ApiResponse({ status: 200, description: 'Successful retrieval of user by username', type: PrismaModel.User })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of user by username',
+    type: PrismaModel.User,
+  })
   @Get('find')
   async find(@Query('username') username: string): Promise<User> {
     return await this.userService.findByUsername(username);
   }
 
   @ApiOperation({ summary: 'Find users by username' })
-  @ApiResponse({ status: 200, description: 'Successful retrieval of users that contain the username', type: PrismaModel.User, isArray: true })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of users that contain the username',
+    type: PrismaModel.User,
+    isArray: true,
+  })
   @Get('find-by-username')
   async findAllByUsername(
     @Query('username') username: string,
@@ -139,7 +158,10 @@ export class UserController {
   }
 
   @ApiOperation({ summary: 'Serve user avatar' })
-  @ApiResponse({ status: 200, description: 'Successful retrieval of user avatar' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of user avatar',
+  })
   @ApiResponse({ status: 404, description: 'User does not have an avatar' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @Get('avatar/:userId')
@@ -163,7 +185,10 @@ export class UserController {
 
   //TODO: return
   @ApiOperation({ summary: 'Delete user avatar' })
-  @ApiResponse({ status: 200, description: 'Successful deletion of user avatar' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful deletion of user avatar',
+  })
   @Patch('avatar/:userId')
   async deleteAvatar(@Param('userId', ParseIntPipe) userId: number) {
     const user: User = await this.userService.findById(userId);

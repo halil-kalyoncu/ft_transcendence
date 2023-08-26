@@ -33,7 +33,8 @@ describe('UserService', () => {
     service = module.get<UserService>(UserService);
     prismaService = module.get<PrismaService>(PrismaService);
     jwtAuthService = module.get<JwtAuthService>(JwtAuthService);
-    connectedUserService = module.get<ConnectedUserService>(ConnectedUserService);
+    connectedUserService =
+      module.get<ConnectedUserService>(ConnectedUserService);
   });
 
   it('should be defined', () => {
@@ -43,7 +44,7 @@ describe('UserService', () => {
   describe('login', () => {
     it('should create a new user and generate a JWT', async () => {
       const input: Prisma.UserCreateInput = {
-        username: 'mmustermann'
+        username: 'mmustermann',
       };
       const createdUser = {
         id: 1,
@@ -56,7 +57,7 @@ describe('UserService', () => {
         id: 1,
         socketId: 'socketId',
         userId: 1,
-      }
+      };
       const token = 'jwtToken';
 
       const findByUsernameSpy = jest
@@ -88,7 +89,7 @@ describe('UserService', () => {
 
     it('should find the user and generate a JWT', async () => {
       const input: Prisma.UserCreateInput = {
-        username: 'mmustermann'
+        username: 'mmustermann',
       };
       const foundUser = {
         id: 1,
@@ -128,7 +129,7 @@ describe('UserService', () => {
 
     it('should throw an error when user is already logged in', async () => {
       const input: Prisma.UserCreateInput = {
-        username: 'mmustermann'
+        username: 'mmustermann',
       };
       const user = {
         id: 1,
@@ -141,15 +142,13 @@ describe('UserService', () => {
         id: 1,
         socketId: 'socketId',
         userId: 1,
-      }
+      };
       const token = 'jwtToken';
 
       const findByUsernameSpy = jest
         .spyOn(service, 'findByUsername')
         .mockResolvedValue(user);
-      const createSpy = jest
-        .spyOn(service, 'create')
-        .mockResolvedValue(user);
+      const createSpy = jest.spyOn(service, 'create').mockResolvedValue(user);
       const findByUserIdSpy = jest
         .spyOn(connectedUserService, 'findByUserId')
         .mockResolvedValue(connectedUser);
@@ -159,8 +158,7 @@ describe('UserService', () => {
 
       try {
         await service.login(input);
-      }
-      catch (e) {
+      } catch (e) {
         expect(e).toBeInstanceOf(Error);
         expect(e.message).toBe(`User ${user.username} is already logged in`);
       }
@@ -351,7 +349,7 @@ describe('UserService', () => {
           avatarId: null,
           enabled2FA: false,
           secret2FA: null,
-        }
+        },
       ];
 
       const findManySpy = jest
@@ -374,7 +372,7 @@ describe('UserService', () => {
           avatarId: null,
           enabled2FA: false,
           secret2FA: null,
-        }
+        },
       ];
 
       const findManySpy = jest
@@ -407,7 +405,7 @@ describe('UserService', () => {
 
   describe('findAllByUsername', () => {
     it('should return an array with two users', async () => {
-      const username = 'muster'
+      const username = 'muster';
       const users: User[] = [
         {
           id: 1,
@@ -422,7 +420,7 @@ describe('UserService', () => {
           avatarId: null,
           enabled2FA: false,
           secret2FA: null,
-        }
+        },
       ];
 
       const findManySpy = jest
@@ -435,16 +433,16 @@ describe('UserService', () => {
       expect(findManySpy).toHaveBeenCalledWith({
         where: {
           username: {
-            contains: username
-          }
-        }
+            contains: username,
+          },
+        },
       });
 
       findManySpy.mockRestore();
     });
 
     it('should return an array with one user', async () => {
-      const username = 'frau'
+      const username = 'frau';
       const expectedResult = [
         {
           id: 2,
@@ -452,8 +450,8 @@ describe('UserService', () => {
           avatarId: null,
           enabled2FA: false,
           secret2FA: null,
-        } 
-      ]
+        },
+      ];
 
       const findManySpy = jest
         .spyOn(prismaService.user, 'findMany')
@@ -465,17 +463,17 @@ describe('UserService', () => {
       expect(findManySpy).toHaveBeenCalledWith({
         where: {
           username: {
-            contains: username
-          }
-        }
+            contains: username,
+          },
+        },
       });
 
       findManySpy.mockRestore();
     });
 
     it('should return an empty array', async () => {
-      const username = 'non'
-      const expectedResult = []
+      const username = 'non';
+      const expectedResult = [];
 
       const findManySpy = jest
         .spyOn(prismaService.user, 'findMany')
@@ -487,9 +485,9 @@ describe('UserService', () => {
       expect(findManySpy).toHaveBeenCalledWith({
         where: {
           username: {
-            contains: username
-          }
-        }
+            contains: username,
+          },
+        },
       });
 
       findManySpy.mockRestore();
@@ -499,13 +497,13 @@ describe('UserService', () => {
   describe('uploadAvatar', () => {
     it('should upload an avatar and update the user', async () => {
       const userId = 1;
-      const file = { path: './files/abc-123.png'} as Express.Multer.File;
+      const file = { path: './files/abc-123.png' } as Express.Multer.File;
       const user = {
-          id: 1,
-          username: 'mmustermann',
-          avatarId: null,
-          enabled2FA: false,
-          secret2FA: null,
+        id: 1,
+        username: 'mmustermann',
+        avatarId: null,
+        enabled2FA: false,
+        secret2FA: null,
       };
 
       const findByIdSpy = jest
@@ -520,11 +518,11 @@ describe('UserService', () => {
 
       const result = await service.uploadAvatar(file, userId);
 
-      expect(result).toEqual({ ...user, avatarId: file.path});
+      expect(result).toEqual({ ...user, avatarId: file.path });
       expect(findByIdSpy).toHaveBeenCalledWith(userId);
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { avatarId: file.path }
+        data: { avatarId: file.path },
       });
       expect(unlinkSyncSpy).not.toHaveBeenCalled();
 
@@ -535,13 +533,13 @@ describe('UserService', () => {
 
     it('should upload an avatar and delete the existing one', async () => {
       const userId = 1;
-      const file = { path: './files/def-456.png'} as Express.Multer.File;
+      const file = { path: './files/def-456.png' } as Express.Multer.File;
       const user = {
-          id: 1,
-          username: 'mmustermann',
-          avatarId: './files/abc-123.png',
-          enabled2FA: false,
-          secret2FA: null,
+        id: 1,
+        username: 'mmustermann',
+        avatarId: './files/abc-123.png',
+        enabled2FA: false,
+        secret2FA: null,
       };
 
       const findByIdSpy = jest
@@ -558,11 +556,11 @@ describe('UserService', () => {
 
       const result = await service.uploadAvatar(file, userId);
 
-      expect(result).toEqual({ ...user, avatarId: file.path});
+      expect(result).toEqual({ ...user, avatarId: file.path });
       expect(findByIdSpy).toHaveBeenCalledWith(userId);
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { avatarId: file.path }
+        data: { avatarId: file.path },
       });
       expect(unlinkSyncSpy).toHaveBeenCalledWith(user.avatarId);
 
@@ -573,7 +571,7 @@ describe('UserService', () => {
 
     it('should throw an error when user is not found', async () => {
       const userId = 4242;
-      const file = { path: './files/abc-123.png'} as Express.Multer.File;
+      const file = { path: './files/abc-123.png' } as Express.Multer.File;
 
       const findByIdSpy = jest
         .spyOn(service, 'findById')
@@ -581,19 +579,16 @@ describe('UserService', () => {
 
       try {
         await service.uploadAvatar(file, userId);
-      }
-      catch (e) {
+      } catch (e) {
         expect(e).toBeInstanceOf(Error);
         expect(e.message).toBe('user not found');
       }
 
       findByIdSpy.mockRestore();
     });
-
   });
 
   describe('deleteAvatar', () => {
-
     it('should delete the avatar and update the user', async () => {
       const userId = 1;
       const user = {
@@ -620,7 +615,7 @@ describe('UserService', () => {
       expect(findByIdSpy).toHaveBeenCalledWith(userId);
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { avatarId: null }
+        data: { avatarId: null },
       });
       expect(unlinkSyncSpy).toHaveBeenCalledWith(user.avatarId);
 
@@ -655,7 +650,7 @@ describe('UserService', () => {
       expect(findByIdSpy).toHaveBeenCalledWith(userId);
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { avatarId: null }
+        data: { avatarId: null },
       });
       expect(unlinkSyncSpy).not.toHaveBeenCalled();
 
@@ -673,8 +668,7 @@ describe('UserService', () => {
 
       try {
         await service.deleteAvatar(userId);
-      }
-      catch (e) {
+      } catch (e) {
         expect(e).toBeInstanceOf(Error);
         expect(e.message).toBe('user not found');
       }
@@ -698,13 +692,13 @@ describe('UserService', () => {
       const updateSpy = jest
         .spyOn(prismaService.user, 'update')
         .mockResolvedValue({ ...user, secret2FA: secret });
-      
+
       const result = await service.setTwoFactorAuthSecret(userId, secret);
 
       expect(result).toEqual({ ...user, secret2FA: secret });
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { secret2FA: secret }
+        data: { secret2FA: secret },
       });
 
       updateSpy.mockRestore();
@@ -720,8 +714,7 @@ describe('UserService', () => {
 
       try {
         await service.setTwoFactorAuthSecret(userId, secret);
-      }
-      catch (e) {
+      } catch (e) {
         expect(e).toBeInstanceOf(Error);
       }
 
@@ -749,7 +742,7 @@ describe('UserService', () => {
       expect(result).toEqual({ ...user, enabled2FA: true });
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { enabled2FA: true }
+        data: { enabled2FA: true },
       });
 
       updateSpy.mockRestore();
@@ -774,7 +767,7 @@ describe('UserService', () => {
       expect(result).toEqual(user);
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { enabled2FA: true }
+        data: { enabled2FA: true },
       });
 
       updateSpy.mockRestore();
@@ -789,13 +782,11 @@ describe('UserService', () => {
 
       try {
         await service.turnOnTwoFactorAuth(userId);
-      }
-      catch (e) {
+      } catch (e) {
         expect(e).toBeInstanceOf(Error);
       }
 
       updateSpy.mockRestore();
     });
-
   });
 });

@@ -6,11 +6,15 @@ import { JwtAuthService } from '../../auth/service/jwt-auth/jtw-auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConnectedUserService } from '../../chat/service/connected-user/connected-user.service';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { LoginResponseDto } from '../dto/login-response.dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('UserController', () => {
   let controller: UserController;
   let userService: UserService;
+  let userHelperService: UserHelperService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,16 +31,84 @@ describe('UserController', () => {
           provide: PrismaService,
           useValue: PrismaService.getInstance(),
         },
-        ConnectedUserService
+        ConnectedUserService,
       ],
     }).compile();
 
     controller = module.get<UserController>(UserController);
     userService = module.get<UserService>(UserService);
+    userHelperService = module.get<UserHelperService>(UserHelperService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('login', () => {
+    it('should return jwt token', async () => {
+      const createUserDto: CreateUserDto = {
+        username: 'mmustermann',
+      };
+      const userEntity: Prisma.UserCreateInput = {
+        username: 'mmustermann',
+      };
+      const jwt: string = 'jwtToken';
+      const loginResponseDto: LoginResponseDto = {
+        access_token: jwt,
+        token_type: 'JWT',
+        expires_in: 10000,
+      };
+
+      const createUserDtoToEntitySpy = jest
+        .spyOn(userHelperService, 'createUserDtoToEntity')
+        .mockReturnValue(userEntity);
+      const loginSpy = jest.spyOn(userService, 'login').mockResolvedValue(jwt);
+
+      const result = await controller.login(createUserDto);
+
+      expect(result).toStrictEqual(loginResponseDto);
+      expect(createUserDtoToEntitySpy).toHaveBeenCalledWith(createUserDto);
+      expect(loginSpy).toHaveBeenCalledWith(userEntity);
+
+      createUserDtoToEntitySpy.mockRestore();
+      loginSpy.mockRestore();
+    });
+
+    it('should throw a HttpException when user is already logged in', async () => {
+      const createUserDto: CreateUserDto = {
+        username: 'mmustermann',
+      };
+      const userEntity: Prisma.UserCreateInput = {
+        username: 'mmustermann',
+      };
+
+      const createUserDtoToEntitySpy = jest
+        .spyOn(userHelperService, 'createUserDtoToEntity')
+        .mockReturnValue(userEntity);
+      const loginSpy = jest
+        .spyOn(userService, 'login')
+        .mockRejectedValue(
+          new HttpException(
+            'User ${userEntity.username} is already logged in',
+            HttpStatus.CONFLICT,
+          ),
+        );
+
+      try {
+        await controller.login(createUserDto);
+      } catch (e) {
+        expect(e).toBeInstanceOf(HttpException);
+        expect(e.status).toBe(HttpStatus.CONFLICT);
+        expect(e.response).toEqual(
+          'User ${userEntity.username} is already logged in',
+        );
+      }
+      expect(createUserDtoToEntitySpy).toHaveBeenCalledWith(createUserDto);
+      expect(loginSpy).toHaveBeenCalledWith(userEntity);
+
+      createUserDtoToEntitySpy.mockRestore();
+      loginSpy.mockRestore();
+    });
   });
 
   describe('findAll', () => {
@@ -55,7 +127,7 @@ describe('UserController', () => {
           avatarId: null,
           enabled2FA: false,
           secret2FA: null,
-        }
+        },
       ];
 
       const findAllSpy = jest
@@ -78,7 +150,7 @@ describe('UserController', () => {
           avatarId: null,
           enabled2FA: false,
           secret2FA: null,
-        }
+        },
       ];
 
       const findAllSpy = jest
@@ -123,7 +195,7 @@ describe('UserController', () => {
       const findByUsernameSpy = jest
         .spyOn(userService, 'findByUsername')
         .mockResolvedValue(user);
-      
+
       const result = await controller.find(username);
 
       expect(result).toEqual(user);
@@ -138,7 +210,7 @@ describe('UserController', () => {
       const findByUsernameSpy = jest
         .spyOn(userService, 'findByUsername')
         .mockResolvedValue(null);
-      
+
       const result = await controller.find(username);
 
       expect(result).toEqual(null);
@@ -146,7 +218,6 @@ describe('UserController', () => {
 
       findByUsernameSpy.mockRestore();
     });
-
   });
 
   describe('findAllByUsername', () => {
@@ -166,7 +237,7 @@ describe('UserController', () => {
           avatarId: null,
           enabled2FA: false,
           secret2FA: null,
-        }
+        },
       ];
 
       const findAllByUsernameSpy = jest
@@ -190,7 +261,7 @@ describe('UserController', () => {
           avatarId: null,
           enabled2FA: false,
           secret2FA: null,
-        }
+        },
       ];
 
       const findAllByUsernameSpy = jest
@@ -222,15 +293,9 @@ describe('UserController', () => {
     });
   });
 
-  describe('uploadAvatar', () => {
+  describe('uploadAvatar', () => {});
 
-  });
+  describe('serverAvatar', () => {});
 
-  describe('serverAvatar', () => {
-
-  });
-
-  describe('deleteAvatar', () => {
-
-  });
+  describe('deleteAvatar', () => {});
 });

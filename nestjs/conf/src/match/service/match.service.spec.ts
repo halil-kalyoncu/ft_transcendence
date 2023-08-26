@@ -5,7 +5,7 @@ import { Match, Prisma } from '@prisma/client';
 
 describe('MatchService', () => {
   let service: MatchService;
-  let prismaService: PrismaService
+  let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,9 +30,9 @@ describe('MatchService', () => {
     it('should create a new match', async () => {
       const newMatch: Prisma.MatchCreateInput = {
         leftUser: {
-          connect: { id: 1 }
+          connect: { id: 1 },
         },
-        type: 'CUSTOM'
+        type: 'CUSTOM',
       };
       const createdMatch: Match = {
         id: 1,
@@ -44,13 +44,13 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: null,
-        finishedAt: null
+        finishedAt: null,
       };
 
       const createSpy = jest
         .spyOn(prismaService.match, 'create')
         .mockResolvedValue(createdMatch);
-      
+
       const result = await service.create(newMatch);
 
       expect(result).toBe(createdMatch);
@@ -58,8 +58,8 @@ describe('MatchService', () => {
         data: newMatch,
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       createSpy.mockRestore();
@@ -79,13 +79,13 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: null,
-        finishedAt: null
+        finishedAt: null,
       };
 
       const findUniqueSpy = jest
         .spyOn(prismaService.match, 'findUnique')
-        .mockResolvedValue(match)
-      
+        .mockResolvedValue(match);
+
       const result = await service.findById(matchId);
 
       expect(result).toBe(match);
@@ -93,8 +93,8 @@ describe('MatchService', () => {
         where: { id: matchId },
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       findUniqueSpy.mockRestore();
@@ -105,8 +105,8 @@ describe('MatchService', () => {
 
       const findUniqueSpy = jest
         .spyOn(prismaService.match, 'findUnique')
-        .mockResolvedValue(null)
-      
+        .mockResolvedValue(null);
+
       const result = await service.findById(matchId);
 
       expect(result).toBeNull();
@@ -114,8 +114,8 @@ describe('MatchService', () => {
         where: { id: matchId },
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       findUniqueSpy.mockRestore();
@@ -135,7 +135,7 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: null,
-        finishedAt: null
+        finishedAt: null,
       };
 
       const deleteSpy = jest
@@ -149,8 +149,8 @@ describe('MatchService', () => {
         where: { id: matchId },
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       deleteSpy.mockRestore();
@@ -162,7 +162,7 @@ describe('MatchService', () => {
       const deleteSpy = jest
         .spyOn(prismaService.match, 'delete')
         .mockResolvedValue(null);
-      
+
       const result = await service.deleteById(matchId);
 
       expect(result).toBeNull;
@@ -170,8 +170,8 @@ describe('MatchService', () => {
         where: { id: matchId },
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       deleteSpy.mockRestore();
@@ -192,7 +192,7 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: null,
-        finishedAt: null
+        finishedAt: null,
       };
 
       const findByIdSpy = jest
@@ -200,11 +200,19 @@ describe('MatchService', () => {
         .mockResolvedValue(match);
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
-        .mockResolvedValue({ ...match, rightUserId: invitedUserId, state: 'INVITED' });
-      
+        .mockResolvedValue({
+          ...match,
+          rightUserId: invitedUserId,
+          state: 'INVITED',
+        });
+
       const result = await service.invite(matchId, invitedUserId);
 
-      expect(result).toStrictEqual({ ...match, rightUserId: invitedUserId, state: 'INVITED' })
+      expect(result).toStrictEqual({
+        ...match,
+        rightUserId: invitedUserId,
+        state: 'INVITED',
+      });
       expect(findByIdSpy).toBeCalledWith(matchId);
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: matchId },
@@ -232,7 +240,7 @@ describe('MatchService', () => {
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
         .mockResolvedValue(null);
-      
+
       const result = await service.invite(matchId, invitedUserId);
 
       expect(result).toBeNull;
@@ -256,7 +264,7 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: null,
-        finishedAt: null
+        finishedAt: null,
       };
 
       const findByIdSpy = jest
@@ -264,14 +272,17 @@ describe('MatchService', () => {
         .mockResolvedValue(match);
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
-        .mockResolvedValue({ ...match, rightUserId: invitedUserId, state: 'INVITED' });
+        .mockResolvedValue({
+          ...match,
+          rightUserId: invitedUserId,
+          state: 'INVITED',
+        });
 
       try {
         await service.invite(matchId, invitedUserId);
-      }
-      catch (e) {
-        expect(e).toBeInstanceOf(Error)
-        expect(e.message).toBe("Can't invite yourself to a match")
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect(e.message).toBe("Can't invite yourself to a match");
       }
 
       expect(findByIdSpy).toBeCalledWith(matchId);
@@ -294,7 +305,7 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: null,
-        finishedAt: null
+        finishedAt: null,
       };
 
       const findByIdSpy = jest
@@ -303,11 +314,10 @@ describe('MatchService', () => {
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
         .mockRejectedValue(new Error());
-      
+
       try {
         await service.invite(matchId, invitedUserId);
-      }
-      catch (e) {
+      } catch (e) {
         expect(e).toBeInstanceOf(Error);
       }
       expect(findByIdSpy).toHaveBeenCalledWith(matchId);
@@ -341,13 +351,13 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: null,
-        finishedAt: null
+        finishedAt: null,
       };
 
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
         .mockResolvedValue(match);
-      
+
       const result = await service.acceptInvite(matchId);
 
       expect(result).toBe(match);
@@ -371,7 +381,7 @@ describe('MatchService', () => {
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
         .mockResolvedValue(null);
-      
+
       const result = await service.acceptInvite(matchId);
 
       expect(result).toBeNull;
@@ -403,13 +413,13 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: null,
-        finishedAt: null
+        finishedAt: null,
       };
 
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
         .mockResolvedValue(match);
-      
+
       const result = await service.rejectInvite(matchId);
 
       expect(result).toBe(match);
@@ -434,7 +444,7 @@ describe('MatchService', () => {
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
         .mockResolvedValue(null);
-      
+
       const result = await service.rejectInvite(matchId);
 
       expect(result).toBeNull;
@@ -468,7 +478,7 @@ describe('MatchService', () => {
           goalsRightPlayer: 0,
           createdAt: new Date(),
           startedAt: null,
-          finishedAt: null
+          finishedAt: null,
         },
         {
           id: 1,
@@ -480,14 +490,14 @@ describe('MatchService', () => {
           goalsRightPlayer: 0,
           createdAt: new Date(),
           startedAt: null,
-          finishedAt: null
+          finishedAt: null,
         },
       ];
 
       const findManySpy = jest
         .spyOn(prismaService.match, 'findMany')
         .mockResolvedValue(matchInvites);
-      
+
       const result = await service.getInvites(userId);
 
       expect(result).toBe(matchInvites);
@@ -544,8 +554,8 @@ describe('MatchService', () => {
         goalsRightPlayer: 0,
         createdAt: new Date(),
         startedAt: new Date(),
-        finishedAt: null
-      }
+        finishedAt: null,
+      };
 
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
@@ -558,7 +568,7 @@ describe('MatchService', () => {
         where: { id: matchId },
         data: {
           state: 'STARTED',
-          startedAt: new Date()
+          startedAt: match.startedAt,
         },
         include: {
           leftUser: true,
@@ -571,26 +581,26 @@ describe('MatchService', () => {
 
     it('should return null if match is not found', async () => {
       const matchId = 4242;
-  
+
       const updateSpy = jest
         .spyOn(prismaService.match, 'update')
         .mockResolvedValue(null);
-  
+
       const result = await service.startMatch(matchId);
-  
+
       expect(result).toBeNull;
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: matchId },
         data: {
           state: 'STARTED',
-          startedAt: new Date()
+          startedAt: new Date(),
         },
         include: {
           leftUser: true,
           rightUser: true,
         },
       });
-  
+
       updateSpy.mockRestore();
     });
   });
