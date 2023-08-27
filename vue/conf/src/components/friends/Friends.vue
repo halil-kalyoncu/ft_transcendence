@@ -32,7 +32,6 @@ const userId = computed(() => userStore.userId)
 const socket = ref<Socket | null>(null)
 
 const friends = ref<FriendshipEntryI[]>([])
-const friendRequests = ref<FriendshipEntryI[]>([])
 const matchInvites = ref<MatchI[]>([])
 const unreadMessages = ref<UnreadMessageI[]>([])
 
@@ -88,23 +87,6 @@ const setFriendData = async () => {
   }
 }
 
-const setFriendRequestData = async () => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`
-    )
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    friendRequests.value = data
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
-  }
-}
-
 const setMatchInviteData = async () => {
   try {
     const response = await fetch(
@@ -134,8 +116,6 @@ const setDirectMessageData = async () => {
 
     const data = await response.json()
     unreadMessages.value = data
-    console.log('unreadMessages')
-    console.log(unreadMessages.value)
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
   }
@@ -153,24 +133,12 @@ const setFriendsListener = () => {
   })
 }
 
-const setFriendRequestListener = () => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-  socket.value.on('friendRequests', () => {
-    console.log('friendRequests listener fired')
-    setFriendRequestData()
-  })
-}
-
 const setMatchInviteListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   socket.value.on('matchInvites', () => {
-    console.log('matchInvites listener fired')
     setMatchInviteData()
   })
 }
@@ -200,12 +168,10 @@ onMounted(() => {
   initSocket()
 
   setFriendsListener()
-  setFriendRequestListener()
   setMatchInviteListener()
   setDirectMessageListener()
 
   setFriendData()
-  setFriendRequestData()
   setMatchInviteData()
   setDirectMessageData()
 })
@@ -260,7 +226,9 @@ const handleAdd = ({ username }: ModalResult) => {
       notificationStore.showNotification(response.error, false)
     } else {
       notificationStore.showNotification(
-        'Friend Request was sent to ' + response.receiver!.username,
+        'Friend Request was sent to id:' +
+          response.receiverId +
+          '. username would be better though (TBD) ',
         true
       )
     }
@@ -349,41 +317,6 @@ const closeFriendManagerAndChat = async () => {
 const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
   selectedFriend.value = friend
   showFriendManagerAndChat.value = true
-}
-
-const acceptFriendRequest = (requestId: number) => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-
-  socket.value.emit('acceptFriendRequest', requestId, (response: FriendshipI | ErrorI) => {
-    if ('error' in response) {
-      notificationStore.showNotification(response.error, false)
-    } else {
-      notificationStore.showNotification(
-        response.sender!.username + 'has been added as a friend',
-        true
-      )
-    }
-  })
-}
-
-const rejectFriendRequest = (requestId: number) => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-  socket.value.emit('rejectFriendRequest', requestId, (response: FriendshipI | ErrorI) => {
-    if ('error' in response) {
-      notificationStore.showNotification(response.error, false)
-    } else {
-      notificationStore.showNotification(
-        'The friend request from ' + response.sender!.username + 'has been rejected',
-        true
-      )
-    }
-  })
 }
 
 const acceptMatchInvite = (matchId: number) => {
@@ -524,16 +457,6 @@ const goBack = () => {
             />
           </div>
         </ScrollViewer>
-        <h2 v-if="friendRequests?.length > 0">Friend Requests</h2>
-        <ul v-if="friendRequests?.length > 0" class="friendRequestsList">
-          <li v-for="request in friendRequests" :key="request.id">
-            <div class="friendInfo">
-              <span>{{ request.friend.username }}</span>
-              <button @click="acceptFriendRequest(request.id)">Accept</button>
-              <button @click="rejectFriendRequest(request.id)">Reject</button>
-            </div>
-          </li>
-        </ul>
         <h2 v-if="matchInvites?.length > 0">MatchInvites</h2>
         <ul v-if="matchInvites?.length > 0">
           <li v-for="invite in matchInvites" :key="invite.id">

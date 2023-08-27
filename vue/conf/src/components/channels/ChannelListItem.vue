@@ -45,16 +45,16 @@ const handleJoin = () => {
   if (props.isPasswordProtected && password.value === '') {
     showPasswordField.value = true
   } else {
-    console.log(
-      'password: ' +
-        password.value +
-        ', channel name: ' +
-        props.channelName +
-        ', owner: ' +
-        props.ownerName +
-        ', channelId: ' +
-        props.channelId
-    )
+    // console.log(
+    //   'password: ' +
+    //     password.value +
+    //     ', channel name: ' +
+    //     props.channelName +
+    //     ', owner: ' +
+    //     props.ownerName +
+    //     ', channelId: ' +
+    //     props.channelId
+    // )
     emit('channel-entered', props.channelId)
   }
 }

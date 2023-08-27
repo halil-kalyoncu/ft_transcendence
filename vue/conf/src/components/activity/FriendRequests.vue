@@ -1,8 +1,18 @@
 <template>
   <div class="friend-requests">
     <ScrollViewer :maxHeight="'75vh'" :paddingRight="'.5rem'">
-      <div v-for="(user, index) in dummyUserData" :key="index">
-        <FriendRequestsItem :username="user.username" />
+      <div v-if="friendRequests && friendRequests.length">
+        <div v-for="request in friendRequests" :key="request.id">
+          <FriendRequestsItem
+            v-if="isValidRequest(request)"
+            :username="request.friend.username"
+            :requestId="request.id"
+            @remove-friend-request="handleRemoveFriendRequest"
+          />
+        </div>
+      </div>
+      <div v-else>
+        <p class="empty-list-info">No Pending Friend Requests</p>
       </div>
     </ScrollViewer>
   </div>
@@ -15,6 +25,10 @@ import FriendRequestsItem from './FriendRequestsItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
+import { useFriendRequestStore } from '../../stores/friendRequests'
+
+const friendRequestStore = useFriendRequestStore()
+const friendRequests = computed(() => friendRequestStore.friendRequests)
 
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
@@ -23,17 +37,21 @@ const props = defineProps({
   channelId: Number
 })
 
-type User = {
-  username: string
+const isValidRequest = (request: any) => {
+  return request && request.friend && request.friend.username
 }
 
-const dummyUserData: User[] = Array.from({ length: 7 }, (_, i) => ({
-  username: `Thomas ${i + 1}`
-}))
+const handleRemoveFriendRequest = (requestId: number) => {
+  friendRequestStore.removeFriendRequestById(requestId)
+}
 </script>
 
 <style>
 .friend-requests {
   padding: 1.5rem 0 0 0;
+}
+
+.empty-list-info {
+  color: lightgray;
 }
 </style>

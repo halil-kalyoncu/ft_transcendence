@@ -142,7 +142,6 @@ const handleAvatarUpload = async () => {
         }
       )
 
-      console.log(response)
       if (response.ok) {
         notificationStore.showNotification('Success upload image', true)
         fetchAndSaveAvatar()
@@ -176,7 +175,6 @@ const deleteAvatar = async () => {
 const deleteAccount = () => {
   const confirmDelete = window.confirm('Are you sure you want to delete your account?')
   if (confirmDelete) {
-    console.log('Deleting account...')
   }
 }
 </script>

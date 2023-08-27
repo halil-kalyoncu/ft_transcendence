@@ -44,10 +44,7 @@ const handleInviteClick = async () => {
 
 <template>
   <div class="home">
-    <!-- <RouterLink class="navButton" :class="'play-button'" to="/game">PLAY</RouterLink> -->
-    <button @click="handleInviteClick" class="send-game-invitation-button">
-      START A CUSTOM GAME
-    </button>
+    <button @click="handleInviteClick" class="dynamic-button">START A CUSTOM GAME</button>
   </div>
 </template>
 
@@ -86,7 +83,7 @@ const handleInviteClick = async () => {
   border: 1px solid #ea9f42;
   color: #ea9f42;
   transition: 0.3s;
-  padding: 0.55rem 0.5rem;
+  padding: 0.55rem 1rem;
   font-size: 1rem;
   text-transform: uppercase;
   cursor: pointer;

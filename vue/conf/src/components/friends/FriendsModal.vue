@@ -127,8 +127,6 @@ watch(inputName, (newValue) => {
 })
 
 const goToProfile = (username: String | undefined) => {
-  console.log('u9')
-
   if (username === undefined) {
     return
   }

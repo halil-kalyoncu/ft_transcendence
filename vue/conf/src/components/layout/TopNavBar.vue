@@ -22,67 +22,12 @@ const socket = ref<Socket | null>(null)
 const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
 const hasNotification = ref(false)
-const friendRequests = ref<FriendshipEntryI[]>([])
-
-const initSocket = () => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
-}
-
-onMounted(() => {
-  initSocket()
-
-  setFriendRequestListener()
-  setMatchInviteListener()
-})
 
 const logout = () => {
   localStorage.removeItem('ponggame')
   userStore.clearUsername()
   disconnectWebSocket()
   router.push('/')
-}
-
-const setMatchInviteListener = () => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-  socket.value.on('matchInvites', () => {
-    console.log('matchInvites listener fired')
-    hasNotification.value = true
-
-    // setMatchInviteData()
-  })
-}
-
-const setFriendRequestData = async () => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`
-    )
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    friendRequests.value = data
-    hasNotification.value = true
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
-  }
-}
-
-const setFriendRequestListener = () => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-  socket.value.on('friendRequests', () => {
-    console.log('friendRequests listener fired')
-    setFriendRequestData()
-  })
 }
 </script>
 
@@ -101,12 +46,8 @@ const setFriendRequestListener = () => {
             <img class="profile-image" src=../../assets/defaultAvatar.png alt="Profile" />
           </div>
         </RouterLink>
-        <RouterLink class="navButton header-username" to="/activity-center">
-          <button class="settings-button" :class="'icon-wrapper'">
-            <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
-            <span v-if="friendRequests?.length > 0" class="notification-badge">1+</span>
-          </button>
-        </RouterLink>
+
+        <NotificationBell />
         <RouterLink class="navButton header-username" to="/settings">
           <button class="settings-button">
             <font-awesome-icon class="icon" icon="cog" title="Settings" />

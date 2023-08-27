@@ -5,10 +5,10 @@
       <p class="friend-username">{{ username }}</p>
     </div>
     <div class="request-actions">
-      <button class="icon-button-accept" @click="acceptRequest" title="Accept">
+      <button class="icon-button-accept" @click="acceptFriendRequest" title="Accept">
         <font-awesome-icon :icon="['fas', 'check']" />
       </button>
-      <button class="icon-button-reject" @click="rejectRequest" title="Reject">
+      <button class="icon-button-reject" @click="rejectFriendRequest" title="Reject">
         <font-awesome-icon :icon="['fas', 'times']" />
       </button>
       <button class="icon-button-view-profile" @click="viewProfile" title="View Profile">
@@ -22,30 +22,71 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
+import { Socket } from 'socket.io-client'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
+import { connectWebSocket } from '../../websocket'
+import type { FriendshipI } from '../../model/friendship/friendship.interface'
+import type { ErrorI } from '../../model/error.interface'
 
 library.add(fas)
 const router = useRouter()
 const notificationStore = useNotificationStore()
+const socket = ref<Socket | null>(null)
+
+const emit = defineEmits(['remove-friend-request'])
 
 const props = defineProps({
-  username: String
+  username: String,
+  requestId: Number
 })
 
 const viewProfile = () => {
   router.push(`/profile/${props.username}`)
 }
 
-const acceptRequest = () => {
-  notificationStore.showNotification(`You accepted ${props.username}'s friend request`, true)
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
 }
 
-const rejectRequest = () => {
-  notificationStore.showNotification(`You rejected ${props.username}'s friend request`, true)
+onMounted(() => {
+  initSocket()
+})
+
+const acceptFriendRequest = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.emit('acceptFriendRequest', props.requestId, (response: FriendshipI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(`You accepted ${props.username}'s friend request`, true)
+      emit('remove-friend-request', props.requestId)
+    }
+  })
+}
+
+const rejectFriendRequest = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+  socket.value.emit('rejectFriendRequest', props.requestId, (response: FriendshipI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(`You rejected ${props.username}'s friend request`, true)
+      emit('remove-friend-request', props.requestId)
+    }
+  })
 }
 
 const blockUser = () => {

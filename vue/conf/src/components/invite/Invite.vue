@@ -111,7 +111,6 @@ onMounted(async () => {
 
   socket.value.on('matchInviteSent', (updatedMatch: MatchI) => {
     match.value = updatedMatch
-    console.log('isWaitingForResponse')
   })
 
   socket.value.on('matchInviteAccepted', (updatedMatch: MatchI) => {
@@ -148,7 +147,6 @@ onMounted(async () => {
   socket.value.on('goToGame', (updatedMatch: MatchI) => {
     match.value = updatedMatch
     lobbyIsFinished.value = true
-    console.log(match.value)
     //router.push(`/game/${matchId}`)
   })
 })
@@ -196,14 +194,19 @@ onBeforeUnmount(() => {
         </button>
       </div>
     </div>
-    <button
-      class="play-button"
-      @click="handleStartMatch"
-      v-if="rightPlayer"
-      :class="{ disabledButton: !userIsHost || !rightPlayer }"
-    >
-      PLAY
-    </button>
+    <div v-if="rightPlayer" class="flex-row">
+      <p>
+        '<span class="orange-font">{{ invitedUser?.username }}</span
+        >' is ready to play
+      </p>
+      <button
+        class="dynamic-button"
+        @click="handleStartMatch"
+        :class="{ disabledButton: !userIsHost || !rightPlayer }"
+      >
+        PLAY
+      </button>
+    </div>
   </article>
 </template>
 
@@ -235,6 +238,13 @@ onBeforeUnmount(() => {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: flex-start;
+}
+
+.flex-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
 }
 
 .suggestionList {
@@ -269,5 +279,55 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+@keyframes entranceAnimation {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.dynamic-button {
+  animation: entranceAnimation 0.5s forwards;
+  background-color: transparent;
+  border: 1px solid #ea9f42;
+  color: #ea9f42;
+  font-size: 1rem;
+  padding: 0.5rem 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.dynamic-button:hover {
+  background-color: #ea9f42;
+  color: white;
+}
+
+.dynamic-button:active {
+  transform: scale(0.95);
+  background-color: #d97c30;
+}
+
+.dynamic-button:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  background: linear-gradient(45deg, #ea9f42, transparent, #ea9f42);
+  transform: skewX(-20deg) scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s ease;
+}
+
+.dynamic-button:hover:before {
+  transform: skewX(-20deg) scaleX(1);
 }
 </style>

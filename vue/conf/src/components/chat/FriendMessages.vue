@@ -49,7 +49,6 @@ const setNewDirectMessageListener = () => {
     return
   }
   socket.value.on('newDirectMessage', (newMessageData: directMessageI) => {
-    console.log('newDirectMessage listener fired')
     setDirectMessages()
   })
 }
@@ -130,8 +129,6 @@ const sendMessage = () => {
   if (newMessage.value.trim() === '' || !selectedUser) {
     return
   }
-
-  console.log(loggedUser.value.id + ' ' + selectedUser.id + ' ' + newMessage.value)
 
   socket.value.emit('sendDirectMessage', {
     senderId: loggedUser.value.id,
