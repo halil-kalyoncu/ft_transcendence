@@ -210,6 +210,7 @@ onBeforeUnmount(() => {
 <style>
 .orange-font {
   color: #ea9f42;
+  font-weight: bold;
 }
 
 .createCustomGame .icon-button-reject {

@@ -107,7 +107,7 @@ const props = defineProps({
 .profile-title {
   text-transform: uppercase;
   font-size: 1rem;
-  color: orange;
+  color: #ea9f42;
   font-family: 'Gill Sans', sans-serif;
   text-align: Center;
   margin: 0 0 1rem 0;

@@ -1,28 +1,88 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useUserStore } from '../../stores/userInfo'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import router from '../../router'
-import { disconnectWebSocket } from '../../websocket'
+import { disconnectWebSocket, connectWebSocket } from '../../websocket'
+import { Socket } from 'socket.io-client'
+import { useNotificationStore } from '../../stores/notification'
+import { useUserStore } from '../../stores/userInfo'
+import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 
 library.add(fas)
-
 const userStore = useUserStore()
+const notificationStore = useNotificationStore()
 const username = computed(() => userStore.username)
+const userId = computed(() => userStore.userId)
 const userAvatar = computed(() => userStore.avatarImageData)
-
+const socket = ref<Socket | null>(null)
 const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
+const hasNotification = ref(false)
+const friendRequests = ref<FriendshipEntryI[]>([])
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
+
+onMounted(() => {
+  initSocket()
+
+  setFriendRequestListener()
+  setMatchInviteListener()
+})
 
 const logout = () => {
   localStorage.removeItem('ponggame')
   userStore.clearUsername()
   disconnectWebSocket()
   router.push('/')
+}
+
+const setMatchInviteListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+  socket.value.on('matchInvites', () => {
+    console.log('matchInvites listener fired')
+    hasNotification.value = true
+
+    // setMatchInviteData()
+  })
+}
+
+const setFriendRequestData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    friendRequests.value = data
+    hasNotification.value = true
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
+}
+
+const setFriendRequestListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+  socket.value.on('friendRequests', () => {
+    console.log('friendRequests listener fired')
+    setFriendRequestData()
+  })
 }
 </script>
 
@@ -42,8 +102,9 @@ const logout = () => {
           </div>
         </RouterLink>
         <RouterLink class="navButton header-username" to="/activity-center">
-          <button class="settings-button">
+          <button class="settings-button" :class="'icon-wrapper'">
             <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
+            <span v-if="friendRequests?.length > 0" class="notification-badge">1+</span>
           </button>
         </RouterLink>
         <RouterLink class="navButton header-username" to="/settings">
@@ -135,5 +196,21 @@ const logout = () => {
 
 .header .header-username:hover {
   color: red;
+}
+
+.header .icon-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.header .notification-badge {
+  position: absolute;
+  top: 0.15rem;
+  right: -0.25rem;
+  color: aliceblue;
+  font-size: 0.5rem;
+  padding: 0.1px 0.1px 0 0;
+  background-color: red;
+  border-radius: 5%;
 }
 </style>

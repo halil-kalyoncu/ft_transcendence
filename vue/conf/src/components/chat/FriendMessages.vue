@@ -216,7 +216,7 @@ const isOwnMessage = (senderId: number | undefined) => {
   transition: 0.3s;
 }
 .chat .chat-input button:hover {
-  background-color: #ed901c;
+  background-color: #ea9f42;
 }
 
 .chat-input textarea {

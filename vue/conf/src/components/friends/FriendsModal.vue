@@ -311,6 +311,6 @@ const goToProfile = (username: String | undefined) => {
 }
 
 .inGame {
-  background-color: orange;
+  background-color: #ea9f42;
 }
 </style>

@@ -83,8 +83,8 @@ const handleInviteClick = async () => {
 
 .send-game-invitation-button {
   background-color: transparent;
-  border: 1px solid #ed901c;
-  color: #ed901c;
+  border: 1px solid #ea9f42;
+  color: #ea9f42;
   transition: 0.3s;
   padding: 0.55rem 0.5rem;
   font-size: 1rem;
