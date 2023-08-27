@@ -10,7 +10,7 @@ import { disconnectWebSocket, connectWebSocket } from '../../websocket'
 import { Socket } from 'socket.io-client'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
-import NotificationBell from './TopNAvBarNotificationBell.vue'
+import NotificationBell from './TopNavBarNotificationBell.vue'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 
 library.add(fas)
