@@ -172,7 +172,27 @@ const removeUserFromChannel = async() => {
 	}
 }
 
-
+const MarkMessagesAsRead = async() => {
+	try{
+		const response = await fetch('http://localhost:3000/api/channel-message/markChannelMessagesAsRead',
+	{
+		method: 'PATCH',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			userId: userId.value,
+			channelId: joinedChannelId.value
+		})},)
+		if (!response.ok) {
+			throw new Error('Failed to mark messages as read')
+		}
+		return
+	}
+	catch (error: any) {
+		notificationStore.showNotification(`Error` + error.message, true)
+	}
+}
 
 const openJoinChannels = () => {
   showAvailableChannels.value = true
@@ -192,9 +212,10 @@ const closeMyChannels = async () => {
   return
 }
 
-const closeChannelManagerAndChat = () => {
+const closeChannelManagerAndChat = async () => {
   joinedChannelId.value = 0
   showChannelManagerAndChat.value = false
+  return
 }
 
 const goBack = () => {
@@ -213,8 +234,10 @@ const handleChannelEntered = async (channelId: number) => {
   })
 }
 
-const handleChannelLeft = () => {
-  closeChannelManagerAndChat()
+const handleChannelLeft = async () => {
+	//Halil
+	await MarkMessagesAsRead()
+	await closeChannelManagerAndChat()
 }
 
 const hanndleChannelSignedout = () => {

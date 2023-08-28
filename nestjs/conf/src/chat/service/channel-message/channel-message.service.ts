@@ -3,7 +3,7 @@ import { MessageService } from '../message/message.service';
 import { CreateChannelMessageDto } from '../../dto/create-channel-message.dto';
 import {ChannelMessageDto} from '../../dto/channel.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { ChannelMessage, Message, User, Channel, ChannelMember  } from '@prisma/client';
+import { ChannelMessage, Message, User, Channel, ChannelMember,  } from '@prisma/client';
 import { ChannelService } from '../channel/channel.service';
 
 @Injectable()
@@ -90,6 +90,20 @@ export class ChannelMessageService {
 		sender: createdChannelMessage.sender.user,
 		createdAt: createdChannelMessage.message.createdAt,
 	  };
+
+	// Create a ChannelMessageReadStatus for each member of the channel
+  const channelMembers = await this.channelService.findMembers(channelId);
+  for (const channelMember of channelMembers) {
+	console.log('channelMembers', channelMember.userId);
+	console.log('member', member.userId);
+    await this.prisma.channelMessageReadStatus.create({
+      data: {
+        message: { connect: { id: createdMessage.id } },
+        reader: { connect: { id: channelMember.id } },
+        isRead: channelMember.userId === member.userId, 
+      },
+    });
+  }
 	// Return the created ChannelMessage
 	return channelMessageDto;
   }
@@ -133,48 +147,27 @@ async getChannelMessagesforChannel(channelId: number): Promise<ChannelMessageDto
 	  }
 }
 
-  //how to fetch this stuff so that I have the right dto object 
-//   async getChannelMessagesforChannel(channelId: number): Promise<ChannelMessageDto[]> {
-// 	try {
-// 	  // Fetch the channel along with its related channel messages
-// 	  const channelWithMessages: Channel | null = await this.prisma.channel.findUnique({
-// 		where: {
-// 		  id: channelId,
-// 		},
-// 		include: {
-// 		  members: {
-// 			include: {
-// 		  channelMessage: {
-// 			include: {
-// 			  message: true,
-// 			  sender: true,
-// 			},
-// 		  },
-// 			},
-// 		},
-// 	}
-// 	  });
-  
-// 	  if (!channelWithMessages) {
-// 		throw new Error("Channel not found");
-// 	  }
-  
-// 	  // Extract and transform the channel messages into the desired DTO format
-// 	  const channelMessageDtos: ChannelMessageDto[] = channelWithMessages.channelMessage.map(
-// 		(channelMessage) => {
-// 		  return {
-// 			id: channelMessage.id,
-// 			message: channelMessage.message as Message, // Type assertion to Message type
-// 			sender: channelMessage.sender as ChannelMember, // Type assertion to ChannelMember type
-// 			createdAt: channelMessage.message.createdAt,
-// 		  };
-// 		}
-// 	  );
-  
-// 	  return channelMessageDtos;
-// 	} catch (error) {
-// 	  console.error("Error fetching channel messages:", error);
-// 	  return []; // Return an empty array or handle the error as appropriate for your application
-// 	}
-//   }
+
+//Halil
+async markChannelMessagesAsRead(channelId: number, userId: number): Promise<ChannelMessageDto[]> {
+	try {
+	  await this.prisma.channelMessageReadStatus.updateMany({
+		where: {
+		  readerId: userId,
+		  message: {
+			sender: {
+			  channelId: channelId,
+			},
+		  },
+		},
+		data: {
+		  isRead: true,
+		},
+	  });
+	  return await this.getChannelMessagesforChannel(channelId);
+	} catch (error: any) {
+	  console.error("Error marking messages as read:", error);
+	  throw error;
+	}
+  } 
 }

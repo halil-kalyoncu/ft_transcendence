@@ -407,6 +407,14 @@ catch (error) {
     });
   }
 
+  async findMembers(channelId: number): Promise<ChannelMember[]> {
+	return this.prisma.channelMember.findMany({
+	  where: {
+		channelId: channelId,
+	  },
+	});
+  }
+
   async getMembers(channelId: number): Promise<User[]> {
 	console.log('channelId', channelId);
     const members = await this.prisma.channelMember.findMany({
