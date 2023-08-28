@@ -27,10 +27,10 @@
 		<!-- <div class="ball-coordinates" v-if="ballCoordinates">
 			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
 		</div> -->
-		<form @submit.prevent="connectToWS">
+		<!-- <form @submit.prevent="connectToWS">
 			<input type="text" v-model="serverIp" placeholder="Enter Server IP"/>
 			<button type="submit">Connect</button>
-		</form>
+		</form> -->
 	</div>
 </template>
 
@@ -40,7 +40,11 @@ import type { GamePaddleSetup } from './GamePaddle.vue';
 import GamePaddle from './GamePaddle.vue'
 import GameBall from './GameBall.vue'
 import PowerUp from './PowerUp.vue'
-import { Socket, io } from "socket.io-client";
+import { Socket } from "socket.io-client";
+import jwtDecode from 'jwt-decode';
+import type { UserI } from '../../model/user.interface'
+import { connectGameSocket, disconnectGameSocket } from '../../websocket';
+import { useRoute, useRouter } from 'vue-router'
 
 export default defineComponent ({
 	name: 'App',
@@ -86,7 +90,20 @@ export default defineComponent ({
 		let paddleB = ref<GamePaddleSetup | null>(null);
 		let ball = ref<typeof GameBall | null>(null);
 
+		let accessToken = localStorage.getItem('ponggame') ?? ''
+
+		let route = useRoute()
+		let matchId = route.params.matchId as string
+		const router = useRouter()
+
+		const getUserFromAccessToken = () => {
+			const decodedToken: Record<string, unknown> = jwtDecode(accessToken);
+			return decodedToken.user as UserI
+		}
+
 		onMounted(() => {
+			connectToWS();
+
 			if (gameField.value) {
 				fieldWidth.value = gameField.value.clientWidth || 0;
 				fieldHeight.value = gameField.value.clientHeight || 0;
@@ -97,17 +114,14 @@ export default defineComponent ({
 				if (fieldWidth.value && paddleB.value)
 					paddleB.value.setX(fieldWidth.value - paddleB.value.getPaddleWidth() - 1);
 			}
-			
 		}); 
 
-
 		watch(isMovingUp, (newState) => {
-			// console.log("newState");
-			socket?.emit('moveUp', newState);
+			socket?.emit('paddleMove', 'up');
 		});
 
 		watch(isMovingDown, (newState) => {
-			socket?.emit('moveDown', newState);
+			socket?.emit('paddleMove', 'down');
 		});
 		
 		const keyHookDown = (e: KeyboardEvent) => {
@@ -142,13 +156,18 @@ export default defineComponent ({
 		onBeforeUnmount(() => {
 			window.removeEventListener('keydown', keyHookDown);
 			window.removeEventListener('keyup', keyHookUp);
+			disconnectGameSocket();
 		});
 
-
 		function connectToWS() {
+			const user: UserI = getUserFromAccessToken();
+
 			socket?.close();
-			socket = io(`localhost:3000/game`, { transports: [ 'websocket' ]});
-			
+			socket = connectGameSocket(`localhost:3000/game`, {
+				userId: user.id,
+				matchId: matchId
+			});
+
 			socket.on("connect", () => {
 				console.log("Connected to Server");
 				socket?.emit("message", "Hello");
@@ -211,6 +230,14 @@ export default defineComponent ({
 					console.log("PU removed");
 				}
 			});
+
+			socket.on('gameFinished', (payload: any) => {
+
+			})
+
+			socket.on('opponentDisconnect', (payload: any) => {
+				router.push('/home');
+			})
 
 			};
 

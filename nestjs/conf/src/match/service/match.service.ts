@@ -111,4 +111,19 @@ export class MatchService {
       },
     });
   }
+
+  //TODO: finish this with the object of the game gateway
+  async finishMatch(id: number): Promise<Match | null> {
+    return await this.prisma.match.update({
+      where: { id },
+      data: {
+        state: "WINNERLEFT",
+        finishedAt: new Date(),
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
+    });
+  }
 }

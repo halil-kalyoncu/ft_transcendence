@@ -147,7 +147,7 @@ onMounted(async () => {
   socket.value.on('goToGame', (updatedMatch: MatchI) => {
     match.value = updatedMatch
     lobbyIsFinished.value = true
-    //router.push(`/game/${matchId}`)
+    router.push(`/game/${matchId}`)
   })
 })
 

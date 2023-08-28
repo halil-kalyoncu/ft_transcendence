@@ -1,8 +1,10 @@
-import { SubscribeMessage, WebSocketGateway, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { SubscribeMessage, WebSocketGateway, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import { GameService } from '../../service/game.service';
 import { Room } from '../../service/room.service';
 import { PowerUp } from 'src/game/service/powerup.service';
+import { MatchService } from '../../../match/service/match.service';
+import { UserService } from '../../../user/service/user-service/user.service';
 
 let ballPos = {x: 0, y: 0};
 
@@ -17,121 +19,181 @@ let ballPos = {x: 0, y: 0};
 	
 	constructor(
 		private gameService: GameService,
+		private userService: UserService,
+		private matchService: MatchService
 		) {
-			this.rooms.set("test", new Room("test"));
-			this.startGame();
+			// this.rooms.set("test", new Room("test"));
+			// this.startGame();
 		}
-		
+
+		@WebSocketServer()
 		server: Server;
-		
-		gameIsRunning = false;
-		rooms = new Map<string, Room>();
-		players = new Map<string, string>();
-		
-		startGame() {
-			this.gameIsRunning = true;
+
+		// gameIsRunning = false; -> individual game has to know if is running
+		rooms = new Map<number, Room>();
+		// players = new Map<string, string>(); -> individual socket holds information if it is the left or right player
+
+		startGame(socket: Socket) {
+			const room = this.rooms.get(socket.data.match.id);
 			setInterval(() => {
-				if (this.gameIsRunning) {
-					let room = this.rooms.get("test");
+				if (room.gameIsRunning) {
 					let newBallPos = room.ball.moveBall(room, this.server);
 					// for (let powerup of room.powerups){
 					// 	powerup.moveDown();
 					// 	this.server.emit('powerUpMove', {id: powerup.id, y: powerup.y});
 					// }
-					this.server.emit('ballPosition', newBallPos);
+					socket.emit('ballPosition', newBallPos);
+					this.sendToOpponent(socket, room.socketIds, 'ballPosition', newBallPos);
+					//this.server.emit('ballPosition', newBallPos);
 				}
 			}, 15);
 		}
+
+		// afterInit(server: Server) {
+		// 	this.server = server;
+		// 	console.log('Server is ready');
+		// }
 		
-		afterInit(server: Server) {
-			this.server = server;
-			console.log('Server is ready');
+		// handleConnection(client: any, ...args: any[]) {
+		// 	if (!this.players.has(client.id))
+		// 	{
+		// 		if (this.players.size < 1)
+		// 		{
+		// 			this.players.set(client.id, "left");
+		// 			client.emit('direction', 'left');
+		// 		}
+		// 		else
+		// 		{
+		// 			this.players.set(client.id, "right");
+		// 			client.emit('direction', 'right');
+		// 			client.broadcast.emit('startGame');
+		// 			client.emit('startGame');
+		// 		}
+		// 	}
+		// 	console.log(`Client connected: ${client.id}`);
+		// }
+
+		async handleConnection(socket: Socket, ...args: any[]) {
+			if (!socket.handshake.query.userId || !socket.handshake.query.matchId) {
+				//handle error!
+				return ;
+			}
+
+			//get the user and match id from the query
+			const queryUserId: number = parseInt(socket.handshake.query.userId as string, 10);
+    		const queryMatchId: number = parseInt(socket.handshake.query.matchId as string, 10);
+
+			//saving the user and match objects in the socket
+			socket.data.user = await this.userService.findById(queryUserId);
+			socket.data.match = await this.matchService.findById(queryMatchId);
+
+			//first user that connects to the gateway creates the entry in the rooms array
+			if (!this.rooms.has(queryMatchId)) {
+				this.rooms.set(queryMatchId, new Room(queryMatchId));
+			}
+
+			const room = this.rooms.get(queryMatchId);
+			if (queryUserId === socket.data.match.leftUserId) {
+				socket.data.isLeftPlayer = true;
+				room.socketIds[0] = socket.id;
+			}
+			else {
+				socket.data.isLeftPlayer = false;
+				room.socketIds[1] = socket.id;
+			}
+		
+			// console.log(socket.data.user);
+			// console.log(socket.data.match);
+			//both players are connected to the games if both socket ids are set, better solution?
+			if (room.socketIds[0] != '' && room.socketIds[1] != '') {
+				console.log('starting game');
+				this.startGame(socket);
+			}
 		}
-		
-		handleConnection(client: any, ...args: any[]) {
-			if (!this.players.has(client.id))
-			{
-				if (this.players.size < 1)
-				{
-					this.players.set(client.id, "left");
-					client.emit('direction', 'left');
+
+		async handleDisconnect(socket: Socket) {
+			//this.players.delete(client.id);
+			const room = this.rooms.get(socket.data.match.id);
+			if (room.gameIsRunning) {
+				room.gameIsRunning = false;
+				//later give the room (or a custom object) with it
+				const match = await this.matchService.finishMatch(socket.data.match.id);
+				if (socket.data.isLeftPlayer) {
+					room.leftPlayerDisconnect = true;
+					socket.to(room.socketIds[1]).emit('opponentDisconnect', match);
 				}
-				else
-				{
-					this.players.set(client.id, "right");
-					client.emit('direction', 'right');
-					client.broadcast.emit('startGame');
-					client.emit('startGame');
+				else {
+					room.rightPlayerDisconnect = true;
+					socket.to(room.socketIds[0]).emit('opponentDisconnect', match);
 				}
 			}
-			console.log(`Client connected: ${client.id}`);
+			console.log(`Client disconnected: userId: ${socket.data.user.id}: ${socket.id}`);
+			socket.disconnect();
 		}
-		
-		handleDisconnect(client: any) {
-			this.players.delete(client.id);
-			console.log(`Client disconnected: ${client.id}`);
-		}
-		
-		resetGame() {
-			this.gameIsRunning = false;
-			console.log("HERE");
-			this.rooms.get("test").ball.resetBall();
-			this.server.emit('ballPosition', this.rooms.get("test").ball.getBallPosition());
-		}
-		
-		@SubscribeMessage('message')
-		handleMessage(client: any, payload: any): string {
-			return 'Hello world!';
-		}
-		
+
+		// resetGame() {
+		// 	this.gameIsRunning = false;
+		// 	console.log("HERE");
+		// 	this.rooms.get("test").ball.resetBall();
+		// 	this.server.emit('ballPosition', this.rooms.get("test").ball.getBallPosition());
+		// }
+
 		@SubscribeMessage('paddleMove')
-		handlePaddleMove(client: any, data: { 
-			playerId: string,
-			direction: string
-		}): void {
-			if (this.players.get(client.id) == "left"){
+		handlePaddleMove(socket: Socket, direction: string): void {
+			if (socket.data.isLeftPlayer === true) {
 				let paddleAPos = {x: 0, y: 0, wid: 0, hgt: 0};
 
-				if (data.direction == "up")
-					paddleAPos = this.rooms.get("test").paddleA.movePaddleUp();
-				else
-					paddleAPos = this.rooms.get("test").paddleA.movePaddleDown();
+				if (direction === "up") {
+					paddleAPos = this.rooms.get(socket.data.match.id).paddleA.movePaddleUp();
+				}
+				else {
+					paddleAPos = this.rooms.get(socket.data.match.id).paddleA.movePaddleDown();
+				}
 
-				this.server.emit('paddleMove', { playerId: this.players.get(client.id), newPos: paddleAPos.y });
+				socket.emit('paddleMove', { playerId: 'left', newPos: paddleAPos.y });
+				this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'paddleMove', { playerId: 'left', newPos: paddleAPos.y });
+				//this.server.emit('paddleMove', { playerId: 'left', newPos: paddleAPos.y }); ->	this would send to all clients currently on the server,
+				//																					we only want to send to the two users that are playing the match
 			}
-			if (this.players.get(client.id) == "right"){
+			else {
 				let paddleBPos = {x: 0, y: 0, wid: 0, hgt: 0};
 
-				if (data.direction == "up")
-					paddleBPos = this.rooms.get("test").paddleB.movePaddleUp();
-				else
-					paddleBPos = this.rooms.get("test").paddleB.movePaddleDown();
+				if (direction === "up") {
+					paddleBPos = this.rooms.get(socket.data.match.id).paddleB.movePaddleUp();
+				}
+				else {
+					paddleBPos = this.rooms.get(socket.data.match.id).paddleB.movePaddleDown();
+				}
 
-				this.server.emit('paddleMove', { playerId: this.players.get(client.id), newPos: paddleBPos.y });
+				socket.emit('paddleMove', { playerId: 'right', newPos: paddleBPos.y });
+				this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'paddleMove', { playerId: 'right', newPos: paddleBPos.y });
+				//this.server.emit('paddleMove', { playerId: 'right', newPos: paddleBPos.y });
 			}
 			return;
 		}
-		
+
 		@SubscribeMessage('ballX')
-		updateBallX(client: any, ballX: number): void {
+		updateBallX(socket: Socket, ballX: number): void {
 			ballPos.x = ballX;
-			client.broadcast.emit('ballX', ballPos.x);
-		}
-		
-		@SubscribeMessage('ballY')
-		updateBallY(client: any, ballY: number): void {
-			ballPos.y = ballY;
-			client.broadcast.emit('ballY', ballPos.y);
-		}
-		
-		@SubscribeMessage('start')
-		sendStartMessage(client: any): void {
-			client.broadcast.emit('startGame');
-			console.log("start");
+			this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'ballX', ballPos.x);
+			//client.broadcast.emit('ballX', ballPos.x);
 		}
 
+		@SubscribeMessage('ballY')
+		updateBallY(socket: Socket, ballY: number): void {
+			ballPos.y = ballY;
+			this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'ballY', ballPos.y);
+			//client.broadcast.emit('ballY', ballPos.y);
+		}
+
+		// @SubscribeMessage('start')
+		// sendStartMessage(client: any): void {
+		// 	client.broadcast.emit('startGame');
+		// 	console.log("start");
+		// }
+
 		@SubscribeMessage('spawnPowerUp')
-		createPowerUp(client: any, data: { 
+		createPowerUp(socket: Socket, data: { 
 			id: number,
 			x: number,
 			y: number,
@@ -141,38 +203,55 @@ let ballPos = {x: 0, y: 0};
 			hgt: number,
 			color: string;
 		}): void {
-			const room = this.rooms.get("test");
+			const room = this.rooms.get(socket.data.match.id);
 			data.speed = 3;
 			// data.color = "blue";
 			const newPowerUp = new PowerUp(data.id, data.x, data.y, data.speed, data.type, data.wid, data.hgt, data.color);
 			room.powerups.push(newPowerUp);
-			this.server.emit('newPowerUp', data);
+			socket.emit('newPowerUp', data);
+			this.sendToOpponent(socket, room.socketIds, 'newPowerUp', data);
+			//this.server.emit('newPowerUp', data);
 			// console.log("powerup spawned at x: ", data.x)
 		}
 
 		@SubscribeMessage('activatePowerUp')
-		activatePowerUp(client: any, data: {
+		activatePowerUp(socket: Socket, data: {
 			type: string,
 			player: string
 		}): void {
 			if (data.type == "increasePaddle")
 			{
-				const room = this.rooms.get("test");
+				const room = this.rooms.get(socket.data.match.id);
 				room.paddleA.setHeight(400);
-				this.server.emit('newPaddleHeight', { player: "left", hgt: 400 });
+				socket.emit('newPaddleHeight', { player: "left", hgt: 400 });
+				this.sendToOpponent(socket, room.socketIds, 'newPaddleHeight', { player: "left", hgt: 400 });
+				//this.server.emit('newPaddleHeight', { player: "left", hgt: 400 });
 				console.log("increase Pad");
 			}
 			// console.log(data.type, data.player);
 		}
 		@SubscribeMessage('removePowerUp')
-		removePowerUp(client: any, id: number){
-			const room = this.rooms.get("test");
+		removePowerUp(socket: Socket, id: number) {
+			const room = this.rooms.get(socket.data.match.id);
 			let index = room.powerups.findIndex(powerup => powerup.id == id);
 			console.log("index: ", index)
 			if (index != -1) {
 				room.powerups.splice(index, 1);
 			}
 		}
-	}
 
-	
+		//Helperfunctions
+		private sendToOpponent(socket: Socket, socketIds: string[], eventName: string, data: any) {
+			if (!socketIds[0] || socketIds[0] === '' || !socketIds[1] || socketIds[1] === '') {
+				//handle error
+				return ;
+			}
+
+			if (socket.data.isLeftPlayer) {
+				socket.to(socketIds[1]).emit(eventName, data);
+			}
+			else {
+				socket.to(socketIds[0]).emit(eventName, data);
+			}
+		}
+	}

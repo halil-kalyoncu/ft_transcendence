@@ -486,12 +486,10 @@ export class ChatGateway
       return;
     }
 
-    console.log(receiverOnline);
     const updatedMatch: Match = await this.matchService.invite(
       sendGameInviteDto.matchId,
       sendGameInviteDto.invitedUserId,
     );
-    console.log(updatedMatch);
     socket.emit('matchInviteSent', updatedMatch);
     socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
   }
@@ -509,8 +507,6 @@ export class ChatGateway
 
     const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
     socket.emit('matchInvites');
-    //remove
-    console.log(match.leftUserId + ' ' + receiverOnline.userId);
     socket
       .to(receiverOnline.socketId)
       .emit('matchInviteAccepted', updatedMatch);
@@ -524,8 +520,6 @@ export class ChatGateway
 
     socket.emit('matchInvites');
     if (receiverOnline) {
-      //remove
-      console.log(updatedMatch.leftUserId);
       socket
         .to(receiverOnline.socketId)
         .emit('matchInviteRejected', updatedMatch);
@@ -539,7 +533,6 @@ export class ChatGateway
       await this.connectedUserService.findByUserId(match.rightUserId);
 
     if (receiverOnline) {
-      console.log('sending hostLeftMatch to ' + receiverOnline.userId);
       socket.to(receiverOnline.socketId).emit('hostLeftMatch');
     }
     this.matchService.deleteById(match.id);
