@@ -5,6 +5,9 @@ import { GameService } from './game.service';
 @Module({
   imports: [],
   controllers: [],
-  providers: [EventsGateway, GameService],
+  providers: [
+		EventsGateway,
+		GameService
+	],
 })
 export class AppModule {}
