@@ -5,6 +5,7 @@ import {ChannelMessageDto} from '../../dto/channel.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ChannelMessage, Message, User, Channel, ChannelMember,  } from '@prisma/client';
 import { ChannelService } from '../channel/channel.service';
+import { ChannelMemberService } from '../channel-member/channel-member.service';
 
 @Injectable()
 export class ChannelMessageService {
@@ -12,6 +13,7 @@ export class ChannelMessageService {
     private prisma: PrismaService,
     private channelService: ChannelService,
     private messageService: MessageService,
+	private channelMemberService: ChannelMemberService
   ) {}
 
   async create(
@@ -151,14 +153,13 @@ async getChannelMessagesforChannel(channelId: number): Promise<ChannelMessageDto
 //Halil
 async markChannelMessagesAsRead(channelId: number, userId: number): Promise<ChannelMessageDto[]> {
 	try {
+	  const channelMember = await this.channelMemberService.find(channelId, userId);
+	  if (!channelMember) {
+		throw Error('user not in channel');
+	  }
 	  await this.prisma.channelMessageReadStatus.updateMany({
 		where: {
-		  readerId: userId,
-		  message: {
-			sender: {
-			  channelId: channelId,
-			},
-		  },
+		  readerId: channelMember.id
 		},
 		data: {
 		  isRead: true,

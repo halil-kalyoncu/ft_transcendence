@@ -172,25 +172,24 @@ const removeUserFromChannel = async() => {
 	}
 }
 
+//Esra
+// just a small mistake, api call needs 2 queries not a body
 const MarkMessagesAsRead = async() => {
 	try{
-		const response = await fetch('http://localhost:3000/api/channel-message/markChannelMessagesAsRead',
-	{
-		method: 'PATCH',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			userId: userId.value,
-			channelId: joinedChannelId.value
-		})},)
+		const response = await fetch(`http://localhost:3000/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${userId.value}`, {
+		  method: 'PATCH',
+		  headers: {
+		  	'Content-Type': 'application/json'
+		  }
+    })
+
 		if (!response.ok) {
 			throw new Error('Failed to mark messages as read')
 		}
 		return
 	}
 	catch (error: any) {
-		notificationStore.showNotification(`Error` + error.message, true)
+		notificationStore.showNotification(`Error` + error.message, false)
 	}
 }
 
@@ -213,6 +212,11 @@ const closeMyChannels = async () => {
 }
 
 const closeChannelManagerAndChat = async () => {
+  console.log('close channel')
+  if (joinedChannelId.value !== 0) {
+    console.log('call mark messages')
+    await MarkMessagesAsRead()
+  }
   joinedChannelId.value = 0
   showChannelManagerAndChat.value = false
   return
@@ -236,6 +240,7 @@ const handleChannelEntered = async (channelId: number) => {
 
 const handleChannelLeft = async () => {
 	//Halil
+  // !!! leaving of channel doesn't work anymore !!!
 	await MarkMessagesAsRead()
 	await closeChannelManagerAndChat()
 }

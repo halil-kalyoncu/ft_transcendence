@@ -17,8 +17,8 @@ export class ChannelMessageController {
 
     //Halil
 	@Patch('markChannelMessagesAsRead')
-	async markChannelMessagesAsRead(@Query('channelId') channelId: number,
-	@Query('userId') userId: number): Promise<ChannelMessageDto[]> {
+	async markChannelMessagesAsRead(@Query('channelId', ParseIntPipe) channelId: number,
+	@Query('userId', ParseIntPipe) userId: number): Promise<ChannelMessageDto[]> {
 		return await this.ChannelMessageService.markChannelMessagesAsRead(channelId, userId);
 	}
 }
