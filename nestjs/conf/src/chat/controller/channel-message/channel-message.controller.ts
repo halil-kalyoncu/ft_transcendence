@@ -15,6 +15,12 @@ export class ChannelMessageController {
 		return await this.ChannelMessageService.getChannelMessagesforChannel(channelId);
 	}
 
+	@Get('getUnreadMessages')
+	async getUnreadMessages(@Query(
+		'channelId', ParseIntPipe) channelId: number,
+		@Query('userId', ParseIntPipe) userId: number): Promise<ChannelMessage[]> {
+			return await this.ChannelMessageService.getUnreadMessages(channelId, userId);
+		}
     //Halil
 	@Patch('markChannelMessagesAsRead')
 	async markChannelMessagesAsRead(@Query('channelId', ParseIntPipe) channelId: number,

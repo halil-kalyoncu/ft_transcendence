@@ -28,33 +28,59 @@
   const handleChannelEntered = (channelId: number) => {
 	emit('channel-entered', channelId)
   }
-  
 
-  //const channelData = ref([]); //
-  const channelData = ref<ChannelEntryI[]>([])
-  onMounted(async () => {
-	  
+  const props = defineProps({
+  channelId: Number
+})
   const userStore = useUserStore()
-  const userId = computed(() => userStore.userId)
-  const notificationStore = useNotificationStore()
-  const role = 'all'  
+	  const userId = computed(() => userStore.userId)
+	  const channelId = props.channelId
+	  const notificationStore = useNotificationStore()
+	  const channelData = ref<ChannelEntryI[]>([])
+	const unreadMessages = ref([])
+	  const role = 'all'
+
+
+
+
+
+
+ // TODO: Control if unread message
+ // Create Channel 
+  const setUnreadMessages = async () => {
 	try{
+		const response = await fetch(`http://localhost:3000/api/channel/getUnreadMessages?userId=${userId.value}&channelId=${channelId}`)
+		if (!response.ok)
+			throw new Error(`HTTP error! status: ${response.status}`);
+		const data = await response.json()
+		unreadMessages.value = data
+		console.log(unreadMessages.value)
+		}
+		catch (error:any)
+	{
+		notificationStore.showNotification('Error' + error.message, true)
+	}
+}
+  const setChannels = async () => {
+  try{
 		const response =  await fetch(`http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`)
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json()
 		channelData.value = data;
-		console.log('Channel data: ')
-		//TODO take this out
-		for (const channel of channelData.value) {
-			console.log(channel)
-		}
 	  }
 	  catch (error: any) {
 	  notificationStore.showNotification(`Error` + error.message, true)
 	}
 	  }
+
+  //const channelData = ref([]); //
+
+  onMounted(async () => {
+	await setChannels()
+	await setUnreadMessages()
+  }
   )
   </script>
   

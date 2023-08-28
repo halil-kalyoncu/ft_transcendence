@@ -171,4 +171,26 @@ async markChannelMessagesAsRead(channelId: number, userId: number): Promise<Chan
 	  throw error;
 	}
   } 
+
+  async getUnreadMessages(channelId: number, userId: number): Promise<ChannelMessage[]> {
+	try {
+	  const unreadMessages = await this.prisma.channelMessage.findMany({
+		where: {
+		  sender: {
+			channelId: channelId,
+			userId: userId
+		  },
+		  channelMessageReadStatus: {
+			some: {
+			  isRead: false
+			}
+		  }
+		}
+	  });
+	  return unreadMessages;
+	} catch (error) {
+	  // Handle errors appropriately
+	  throw new Error('Error fetching unread messages: ' + error.message);
+	}
+  }  
 }
