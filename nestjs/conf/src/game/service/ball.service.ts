@@ -44,15 +44,16 @@ export class Ball {
 				this.dx = -this.speed * Math.cos(bounceAngle);
 			else
 				this.dx = this.speed * Math.cos(bounceAngle);
-				this.dy = this.speed * Math.sin(bounceAngle);
-				this.dx = -this.dx;
+			
+			this.dy = this.speed * Math.sin(bounceAngle);
+			this.dx = -this.dx;
 			
 			this.speed++;
 		}
 		
 		handleBallCollision(nextBallX: number, nextBallY: number, room: Room, paddle: string) {
 			if (paddle == "A"){
-				if ((nextBallX < room.paddleA.x + room.paddleA.hgt) &&
+				if ((nextBallX < room.paddleA.x + room.paddleA.wid) &&
 				(nextBallY + this.hgt >= room.paddleA.y) &&
 				(nextBallY < room.paddleA.y + room.paddleA.hgt))
 					return true;
@@ -93,7 +94,7 @@ export class Ball {
 			
 			else if (this.handleBallCollision(nextBallX, nextBallY, room, "A")){
 				this.moveBallDir(room.paddleA.y, room.paddleA.hgt, "A");
-				this.x = room.paddleA.x + room.paddleA.hgt;
+				this.x = room.paddleA.x + room.paddleA.wid;
 			}
 			
 			else if (this.handleBallCollision(nextBallX, nextBallY, room, "B")){

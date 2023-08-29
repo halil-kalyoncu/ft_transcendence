@@ -19,7 +19,7 @@ export default defineComponent ({
 		let y = ref(200);
 		let wid = ref(15);
 		let hgt = ref(15);
-		let speed = ref(5);
+		let speed = ref(3);
 		let dx = ref(4);
 		let dy = ref(3);
 		

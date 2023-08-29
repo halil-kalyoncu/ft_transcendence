@@ -250,17 +250,17 @@ onBeforeUnmount(() => {
 	disconnectGameSocket();
 });
 
-watch(isMovingUp, () => {
-	if (socket.value) {
-		socket.value.emit('paddle', 'up');
-	}
-});
+// watch(isMovingUp, () => {
+// 	if (socket.value) {
+// 		socket.value.emit('paddle', 'up');
+// 	}
+// });
 
-watch(isMovingDown, () => {
-	if (socket.value) {
-		socket.value.emit('paddle', 'down');
-	}
-});
+// watch(isMovingDown, () => {
+// 	if (socket.value) {
+// 		socket.value.emit('paddle', 'down');
+// 	}
+// });
 
 function update() {
 	// console.log("UPDATE");
