@@ -55,8 +55,8 @@ const router = useRouter()
 
 const gameField = ref<HTMLElement | null>(null);
 const hitCount = ref<number>(0);
-const isMovingUp = ref<boolean>(false);
-const isMovingDown = ref<boolean>(false);
+let isMovingUp = ref<boolean>(false);
+let isMovingDown = ref<boolean>(false);
 const isPaused = ref<boolean>(false);
 // let mouseX = ref<number | null>(null);
 // let mouseY = ref<number | null>(null);
@@ -71,6 +71,9 @@ const paddleA = ref<GamePaddleSetup | null>(null);
 const paddleB = ref<GamePaddleSetup | null>(null);
 const ball = ref<typeof GameBall | null>(null);
 
+let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false };
+
+
 const countdown = ref<number>(-1);
 
 const getUserFromAccessToken = () => {
@@ -79,6 +82,7 @@ const getUserFromAccessToken = () => {
 }
 
 const keyHookDown = (e: KeyboardEvent) => {
+
 	switch(e.key) {
 		case 'p':
 			isPaused.value = !isPaused.value;
@@ -146,9 +150,10 @@ const initGameField = () => {
 		paddleB.value.setX(fieldWidth.value - paddleB.value.getPaddleWidth() - 1);
 	}
 
-	console.log("paddleA X: " + paddleA.value?.getPaddleX());
-	console.log("paddleB X: " + paddleA.value?.getPaddleX());
+	// console.log("paddleA X: " + paddleA.value?.getPaddleX());
+	// console.log("paddleB X: " + paddleA.value?.getPaddleX());
 }
+
 
 onMounted(() => {
 	initGameSocket();
@@ -166,12 +171,12 @@ onMounted(() => {
 		if (playerId === 'left')
 		{
 			paddleA.value?.setY(newPos);
-			// console.log(playerId, ": ", newPos);
+			console.log(playerId, ": ", newPos);
 		}
 		else
 		{	
 			paddleB.value?.setY(newPos);
-			// console.log(playerId, ": ", newPos);
+			console.log(playerId, ": ", newPos);
 		}
 	});
 			
@@ -268,22 +273,37 @@ function update() {
 	if (side.value && side.value == "left")
 	{
 		// console.log("update");
-		if (paddleA.value && isMovingUp.value)
-			paddleA.value.movePaddleUp();
-		
-		else if (paddleA.value && isMovingDown.value)
-			paddleA.value.movePaddleDown();
+		if (paddleA.value && isMovingUp.value){
+			if (socket.value) {
+				socket.value.emit('paddle', 'up');
+			}
+		}
+			// paddleA.movePaddleDown();
+
+		else if (paddleA.value && isMovingDown.value){
+			if (socket.value) {
+				socket.value.emit('paddle', 'down');
+			}
+		}
+			// paddleA.movePaddleDown();
 		
 	}
 	else if (side.value && side.value == "right")
 	{
-		if (paddleB.value && isMovingUp.value)
-			paddleB.value.movePaddleUp();
-		
-		else if (paddleB.value && isMovingDown.value)
-			paddleB.value.movePaddleDown();
+		if (paddleB.value && isMovingUp.value){
+			if (socket.value) {
+				socket.value.emit('paddle', 'up');
+			}
+		}
+			// paddleB.movePaddleDown();
+
+		else if (paddleB.value && isMovingDown.value){
+			if (socket.value) {
+				socket.value.emit('paddle', 'down');
+			}
+		}
 	}
-	
+	// console.log(isMovingUp.value);
 	requestAnimationFrame(update);
 };
 

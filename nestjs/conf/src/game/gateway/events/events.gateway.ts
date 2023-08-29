@@ -26,6 +26,7 @@ let ballPos = {x: 0, y: 0};
 			// this.startGame();
 		}
 
+
 		@WebSocketServer()
 		server: Server;
 
@@ -47,6 +48,7 @@ let ballPos = {x: 0, y: 0};
 				}
 			}, 15);
 		}
+
 
 		// afterInit(server: Server) {
 		// 	this.server = server;
@@ -71,6 +73,7 @@ let ballPos = {x: 0, y: 0};
 		// 	}
 		// 	console.log(`Client connected: ${client.id}`);
 		// }
+
 
 		async handleConnection(socket: Socket, ...args: any[]) {
 			console.log('game socket');
@@ -97,10 +100,12 @@ let ballPos = {x: 0, y: 0};
 			const room = this.rooms.get(queryMatchId);
 			if (queryUserId === socket.data.match.leftUserId) {
 				socket.data.isLeftPlayer = true;
+				socket.emit('direction', 'left');
 				room.socketIds[0] = socket.id;
 			}
 			else {
 				socket.data.isLeftPlayer = false;
+				socket.emit('direction', 'right');
 				room.socketIds[1] = socket.id;
 			}
 
@@ -114,6 +119,7 @@ let ballPos = {x: 0, y: 0};
 			}
 		}
 
+	
 		async handleDisconnect(socket: Socket) {
 			//this.players.delete(client.id);
 			const room = this.rooms.get(socket.data.match.id);
@@ -141,8 +147,10 @@ let ballPos = {x: 0, y: 0};
 		// 	this.server.emit('ballPosition', this.rooms.get("test").ball.getBallPosition());
 		// }
 
+
 		@SubscribeMessage('paddle')
 		handlePaddleMove(socket: Socket, direction: string): void {
+			console.log("Pad move");
 			if (socket.data.isLeftPlayer === true) {
 				let paddleAPos = {x: 0, y: 0, wid: 0, hgt: 0};
 
@@ -194,6 +202,7 @@ let ballPos = {x: 0, y: 0};
 		// 	client.broadcast.emit('startGame');
 		// 	console.log("start");
 		// }
+
 
 		@SubscribeMessage('spawnPowerUp')
 		createPowerUp(socket: Socket, data: { 
