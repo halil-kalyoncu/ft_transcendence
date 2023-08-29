@@ -97,7 +97,7 @@
 		notificationStore.showNotification('Error: Connection problems', true)
 		return
 	}
-	socket.value.on('newChannelMessage', (newChannelMessageData: ChannelMessageI) => {
+	socket.value.on('newChannelMessage', () => {
 		console.log('newChannelMessage fired from JoinedChannelsList.vue to update unread messages')
 		setUnreadMessages()
 		return
