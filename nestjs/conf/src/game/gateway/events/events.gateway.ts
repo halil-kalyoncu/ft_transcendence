@@ -33,8 +33,7 @@ let ballPos = {x: 0, y: 0};
 		rooms = new Map<number, Room>();
 		// players = new Map<string, string>(); -> individual socket holds information if it is the left or right player
 
-		startGame(socket: Socket) {
-			const room = this.rooms.get(socket.data.match.id);
+		startGame(room: Room) {
 			setInterval(() => {
 				if (room.gameIsRunning) {
 					let newBallPos = room.ball.moveBall(room, this.server);
@@ -42,8 +41,8 @@ let ballPos = {x: 0, y: 0};
 					// 	powerup.moveDown();
 					// 	this.server.emit('powerUpMove', {id: powerup.id, y: powerup.y});
 					// }
-					socket.emit('ballPosition', newBallPos);
-					this.sendToOpponent(socket, room.socketIds, 'ballPosition', newBallPos);
+					this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos);
+					this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
 					//this.server.emit('ballPosition', newBallPos);
 				}
 			}, 15);
@@ -74,8 +73,11 @@ let ballPos = {x: 0, y: 0};
 		// }
 
 		async handleConnection(socket: Socket, ...args: any[]) {
+			console.log('game socket');
+			console.log(socket.handshake.query);
 			if (!socket.handshake.query.userId || !socket.handshake.query.matchId) {
-				//handle error!
+				//error handling?
+				console.log("query doesn't have the properties userId and matchId");
 				return ;
 			}
 
@@ -101,13 +103,14 @@ let ballPos = {x: 0, y: 0};
 				socket.data.isLeftPlayer = false;
 				room.socketIds[1] = socket.id;
 			}
-		
+
 			// console.log(socket.data.user);
 			// console.log(socket.data.match);
 			//both players are connected to the games if both socket ids are set, better solution?
+			console.log(socket.data.user.username + ' ' + socket.data.isLeftPlayer)
 			if (room.socketIds[0] != '' && room.socketIds[1] != '') {
 				console.log('starting game');
-				this.startGame(socket);
+				this.startCountdown(room);
 			}
 		}
 
@@ -138,7 +141,7 @@ let ballPos = {x: 0, y: 0};
 		// 	this.server.emit('ballPosition', this.rooms.get("test").ball.getBallPosition());
 		// }
 
-		@SubscribeMessage('paddleMove')
+		@SubscribeMessage('paddle')
 		handlePaddleMove(socket: Socket, direction: string): void {
 			if (socket.data.isLeftPlayer === true) {
 				let paddleAPos = {x: 0, y: 0, wid: 0, hgt: 0};
@@ -253,5 +256,23 @@ let ballPos = {x: 0, y: 0};
 			else {
 				socket.to(socketIds[0]).emit(eventName, data);
 			}
+		}
+
+		private startCountdown(room: Room) {
+			let countdown: number = 3;
+			const countdownInterval = setInterval(() => {
+				if (countdown > 0) {
+					this.server.to(room.socketIds[0]).emit('countdown', countdown);
+					this.server.to(room.socketIds[1]).emit('countdown', countdown);
+					countdown--;
+				}
+				else {
+					clearInterval(countdownInterval);
+					room.gameIsRunning = true;
+					this.server.to(room.socketIds[0]).emit('startGame');
+					this.server.to(room.socketIds[1]).emit('startGame');
+					this.startGame(room);
+				}
+			}, 1000);
 		}
 	}

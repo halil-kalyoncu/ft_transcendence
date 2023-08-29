@@ -180,7 +180,7 @@ onBeforeUnmount(() => {
       <!-- <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" /> -->
       <InviteFriend
         v-if="!rightPlayer && !isWaitingForResponse"
-        :matchId="match.id!"
+        :matchId="matchId"
         @send-match-invite="handleSendMatchInvite"
       />
       <div v-if="isWaitingForResponse" class="waiting-container">

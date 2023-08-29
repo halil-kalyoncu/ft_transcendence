@@ -27,7 +27,10 @@ export function disconnectWebSocket(): void {
 
 //lazy data parameter!
 export function connectGameSocket(url: string, data: any): Socket {
+  console.log('inside function')
+  console.log(data);
   if (!gameSocket) {
+    console.log('making connection');
     gameSocket = io(`${url}`, {
       query: {
         userId: data.userId.toString(),

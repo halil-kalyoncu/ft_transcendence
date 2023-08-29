@@ -32,14 +32,8 @@ export type GamePaddleSetup = {
 };
 
 export default defineComponent ({
-	
-	props: {
-		socket: {
-			type: Object as () => Socket | null,
-			default: null
-		}
-	},
-	setup(props){
+
+	setup(){
 		
 		// const fieldHeight = ref(props.fieldHeight);
 		// const socket = ref(props.socket);
@@ -49,22 +43,6 @@ export default defineComponent ({
 		let wid = ref(15);
 		let hgt = ref(100);
 		let speed = ref(7);
-		
-		function movePaddleUp() {
-			const data = {
-				direction: 'up'
-			};
-			
-			props.socket?.emit('paddleMove', data);
-		};
-		
-		function movePaddleDown() {
-			const data = {
-				direction: 'down'
-			};
-			
-			props.socket?.emit('paddleMove', data);
-		};
 		
 		function getPaddleX() {
 			return x.value;
@@ -107,8 +85,6 @@ export default defineComponent ({
 			wid,
 			hgt,
 			speed,
-			movePaddleUp,
-			movePaddleDown,
 			getPaddleX,
 			getPaddleY,
 			setY,
