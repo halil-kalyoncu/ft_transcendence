@@ -150,7 +150,6 @@ let ballPos = {x: 0, y: 0};
 
 		@SubscribeMessage('paddle')
 		handlePaddleMove(socket: Socket, direction: string): void {
-			console.log("Pad move");
 			if (socket.data.isLeftPlayer === true) {
 				let paddleAPos = {x: 0, y: 0, wid: 0, hgt: 0};
 
@@ -183,19 +182,19 @@ let ballPos = {x: 0, y: 0};
 			return;
 		}
 
-		@SubscribeMessage('ballX')
-		updateBallX(socket: Socket, ballX: number): void {
-			ballPos.x = ballX;
-			this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'ballX', ballPos.x);
-			//client.broadcast.emit('ballX', ballPos.x);
-		}
+		// @SubscribeMessage('ballX')
+		// updateBallX(socket: Socket, ballX: number): void {
+		// 	ballPos.x = ballX;
+		// 	this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'ballX', ballPos.x);
+		// 	//client.broadcast.emit('ballX', ballPos.x);
+		// }
 
-		@SubscribeMessage('ballY')
-		updateBallY(socket: Socket, ballY: number): void {
-			ballPos.y = ballY;
-			this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'ballY', ballPos.y);
-			//client.broadcast.emit('ballY', ballPos.y);
-		}
+		// @SubscribeMessage('ballY')
+		// updateBallY(socket: Socket, ballY: number): void {
+		// 	ballPos.y = ballY;
+		// 	this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'ballY', ballPos.y);
+		// 	//client.broadcast.emit('ballY', ballPos.y);
+		// }
 
 		// @SubscribeMessage('start')
 		// sendStartMessage(client: any): void {
