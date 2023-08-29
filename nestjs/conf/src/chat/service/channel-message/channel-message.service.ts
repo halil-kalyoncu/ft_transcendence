@@ -3,7 +3,7 @@ import { MessageService } from '../message/message.service';
 import { CreateChannelMessageDto } from '../../dto/create-channel-message.dto';
 import {ChannelMessageDto} from '../../dto/channel.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { ChannelMessage, Message, User, Channel, ChannelMember,  } from '@prisma/client';
+import { ChannelMessage, Message, User, Channel, ChannelMember, ChannelMessageReadStatus } from '@prisma/client';
 import { ChannelService } from '../channel/channel.service';
 import { ChannelMemberService } from '../channel-member/channel-member.service';
 
@@ -149,8 +149,6 @@ async getChannelMessagesforChannel(channelId: number): Promise<ChannelMessageDto
 	  }
 }
 
-
-//Halil
 async markChannelMessagesAsRead(channelId: number, userId: number): Promise<ChannelMessageDto[]> {
 	try {
 	  const channelMember = await this.channelMemberService.find(channelId, userId);
@@ -172,21 +170,18 @@ async markChannelMessagesAsRead(channelId: number, userId: number): Promise<Chan
 	}
   } 
 
-  async getUnreadMessages(channelId: number, userId: number): Promise<ChannelMessage[]> {
+  async getUnreadStatus(channelId: number, userId: number): Promise<ChannelMessageReadStatus[]> {
 	try {
-	  const unreadMessages = await this.prisma.channelMessage.findMany({
+	  const unreadMessages = await this.prisma.channelMessageReadStatus.findMany({
 		where: {
-		  sender: {
-			channelId: channelId,
-			userId: userId
-		  },
-		  channelMessageReadStatus: {
-			some: {
-			  isRead: false
-			}
-		  }
-		}
+	reader: {
+		channelId: channelId,
+		userId: userId
+	},
+		isRead: false
+		},
 	  });
+	  console.log('unreadMessages', unreadMessages);
 	  return unreadMessages;
 	} catch (error) {
 	  // Handle errors appropriately

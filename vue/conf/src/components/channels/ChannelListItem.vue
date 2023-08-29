@@ -37,10 +37,10 @@ const props = defineProps({
   channelName: String,
   ownerName: String,
   joinChannelButtonName: String,
-  channelId: Number
-
+  channelId: Number,
+  unreadMessageCount: Number,
 })
-const unreadMessageCount = ref(4)
+//const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
 const showPasswordField = ref(false)
 const password = ref('')

@@ -8,6 +8,7 @@
 			:ownerName="channel.owner.username"
 			:joinChannelButtonName="'Enter'"
 			:channelId="channel.channel.id"
+			:unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
 			@channelEntered="handleChannelEntered(channel.channel.id)"
 		  />
 		</div>
@@ -22,45 +23,46 @@
   import { useUserStore } from '../../stores/userInfo'
   import type {ChannelEntryI} from  '../../model/channels/createChannel.interface'
   import { useNotificationStore } from '../../stores/notification'
+  import { Socket } from 'socket.io-client'
+  import { connectWebSocket } from '../../websocket'
   
-  //How to use this? 
-  const emit = defineEmits(['channel-entered'])
-  const handleChannelEntered = (channelId: number) => {
-	emit('channel-entered', channelId)
-  }
-
-  const props = defineProps({
-  channelId: Number
-})
   const userStore = useUserStore()
 	  const userId = computed(() => userStore.userId)
-	  const channelId = props.channelId
+	  const socket = ref<Socket | null>(null)
+	  const unreadMessageCounts = ref({});
 	  const notificationStore = useNotificationStore()
 	  const channelData = ref<ChannelEntryI[]>([])
 	const unreadMessages = ref([])
 	  const role = 'all'
+	  
 
-
-
-
-
-
- // TODO: Control if unread message
- // Create Channel 
-  const setUnreadMessages = async () => {
-	try{
-		const response = await fetch(`http://localhost:3000/api/channel/getUnreadMessages?userId=${userId.value}&channelId=${channelId}`)
-		if (!response.ok)
-			throw new Error(`HTTP error! status: ${response.status}`);
-		const data = await response.json()
-		unreadMessages.value = data
-		console.log(unreadMessages.value)
-		}
-		catch (error:any)
-	{
-		notificationStore.showNotification('Error' + error.message, true)
-	}
+  const emit = defineEmits(['channel-entered'])
+  const handleChannelEntered = (channelId: number) => {
+	emit('channel-entered', channelId)
+  }
+  const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
 }
+
+
+  const calculateUnreadMessages = async (channelId: number) => {
+	try{
+		const response =  await fetch(`http://localhost:3000/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${userId.value}`)
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json()
+		unreadMessages.value = data;
+		return  unreadMessages.value.length
+}
+	  catch (error: any) {
+	  notificationStore.showNotification(`Error` + error.message, true)
+	  return 0
+	}
+	  }
+
+  
   const setChannels = async () => {
   try{
 		const response =  await fetch(`http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`)
@@ -69,19 +71,45 @@
 		}
 		const data = await response.json()
 		channelData.value = data;
+		return 
 	  }
 	  catch (error: any) {
 	  notificationStore.showNotification(`Error` + error.message, true)
+	  return 
 	}
 	  }
 
-  //const channelData = ref([]); //
+  const setUnreadMessages = async () => {
+	try{
+		for (const channel of channelData.value) {
+    	const count = await calculateUnreadMessages(channel.channel.id);
+    	unreadMessageCounts.value[channel.channel.id] = count;
+  		}
+		return
+	}
+	catch (error: any) {
+		notificationStore.showNotification(`Error` + error.message, true)
+		return 
+	  }
+  }
+  const setNewChannelMessageListener = () => {
+	if(!socket || !socket.value) {
+		notificationStore.showNotification('Error: Connection problems', true)
+		return
+	}
+	socket.value.on('newChannelMessage', (newChannelMessageData: ChannelMessageI) => {
+		console.log('newChannelMessage fired from JoinedChannelsList.vue to update unread messages')
+		setUnreadMessages()
+		return
+	})
+}
 
   onMounted(async () => {
-	await setChannels()
-	await setUnreadMessages()
-  }
-  )
+	 await setChannels()
+	 await setUnreadMessages()
+	 initSocket()
+	 setNewChannelMessageListener()
+  })
   </script>
   
   <style>

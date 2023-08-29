@@ -14,6 +14,8 @@ import { FriendshipController } from './controller/friendship/friendship.control
 import { ChannelController } from './controller/channel/channel.controller';
 import { ChannelMemberService } from './service/channel-member/channel-member.service';
 import { ChannelMessageController } from './controller/channel-message/channel-message.controller';
+import { ChannelMessageReadStatusController } from './controller/channel-message-read-status/channel-message-read-status.controller';
+import { ChannelMessageReadStatusService } from './service/channel-message-read-status/channel-message-read-status.service';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -27,8 +29,9 @@ import { ChannelMessageController } from './controller/channel-message/channel-m
     ChannelMessageService,
     MatchService,
     ChannelMemberService,
+    ChannelMessageReadStatusService,
   ],
-  controllers: [DirectMessageController, FriendshipController, ChannelController, ChannelMessageController],
+  controllers: [DirectMessageController, FriendshipController, ChannelController, ChannelMessageController, ChannelMessageReadStatusController],
   exports: [FriendshipService, ConnectedUserService],
 })
 export class ChatModule {}
