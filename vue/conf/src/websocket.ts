@@ -31,11 +31,13 @@ export function connectGameSocket(url: string, data: any): Socket {
   console.log(data);
   if (!gameSocket) {
     console.log('making connection');
+    const queryData = {
+      userId: data.userId.toString(),
+      matchId: data.matchId.toString()
+    }
+    console.log(queryData);
     gameSocket = io(`${url}`, {
-      query: {
-        userId: data.userId.toString(),
-        matchId: data.matchId.toString()
-      }
+      query: queryData
     })
   }
   return gameSocket
