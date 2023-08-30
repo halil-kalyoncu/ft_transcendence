@@ -232,17 +232,33 @@ export class ChatGateway
    *** Channel ***
    ***************/
 
-  @SubscribeMessage('createChannel')
-  async handleCreateChannel(
+  @SubscribeMessage('createUnProtectedChannel')
+  async handleCreateUnProtectedChannel(
     @ConnectedSocket() socket: Socket,
     @MessageBody() createChannelDto: CreateChannelDto,
   ): Promise<void> {
     try {
+		console.log('create unprotected channel')
       const newChannel = await this.channelService.createUnProtectedChannel(
         createChannelDto,
       );
       socket.emit('channelCreated', true);
-    } catch (error) {
+    } catch (error:any) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('createProtectedChannel')
+  async createProtectedChannel(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() createChannelDto: CreateChannelDto,
+  ): Promise<void> {
+    try {
+      const newChannel = await this.channelService.createProtectedChannel(
+        createChannelDto,
+      );
+      socket.emit('channelCreated', true);
+    } catch (error:any) {
       socket.emit('error', error.message);
     }
   }

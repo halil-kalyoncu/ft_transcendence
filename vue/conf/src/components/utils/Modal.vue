@@ -23,27 +23,20 @@
           type="text"
           class="input-text"
         />
-      </div>
+</div>
       <div v-if="showVisibilitySelection && !isNumberSelection">
         <div class="radio-button-input-group">
-          <input type="radio" id="Public" value="Public" v-model="selectedVisibility" hidden />
+          <input type="radio" id="Public" value="Public" v-model="channelVisibility" hidden />
           <label for="Public">Public</label>
+<!-- TODO: Change layout -->
 
-          <input
-            type="radio"
-            id="Protected"
-            value="Protected"
-            v-model="selectedVisibility"
-            hidden
-          />
-          <label for="Protected">Protected</label>
-
-          <input type="radio" id="Private" value="Private" v-model="selectedVisibility" hidden />
+          <input type="radio" id="Private" value="Private" v-model="channelVisibility" hidden />
           <label for="Private">Private</label>
         </div>
+
       </div>
 
-      <div class="input-group" v-if="selectedVisibility === 'Protected'">
+      <div class="input-group" v-if="checkPassword">
         <input
           id="input-password"
           v-model="inputPassword"
@@ -52,6 +45,17 @@
           class="input-text"
         />
       </div>
+	
+	  <div class="checkbox-container">
+	<label for="check-box"> Password 
+		<input
+		type="checkbox"
+		 v-show = "!isNumberSelection"
+		 id="check-box"
+		 v-model="checkPassword"
+		/>
+	</label>
+		</div>
 
       <div class="button-group">
         <button class="submit-button" @click="isNumberSelection ? submitNumber() : submit()">
@@ -69,15 +73,17 @@ import { ref, watch } from 'vue'
 interface ModalResult {
   name?: string
   password?: string
-  visibility?: string
+  channelVisibility?: string
   minutesOfMute?: Number
+  passwordSet?: boolean
 }
 
 const inputName = ref('')
 const inputPassword = ref('')
-const selectedVisibility = ref('Public')
+const checkPassword = ref(true)
 const numberValue = ref(0)
 const maxValue = ref(100)
+const channelVisibility = ref('Public')
 
 const props = defineProps({
   isOpened: Boolean,
@@ -93,14 +99,15 @@ const submit = () => {
   const result: ModalResult = {
     name: inputName.value,
     password: inputPassword.value,
-    visibility: selectedVisibility.value
+    channelVisibility: channelVisibility.value,
+	passwordSet: checkPassword.value
   }
 
   emit('submit', result)
 
   inputName.value = ''
   inputPassword.value = ''
-  selectedVisibility.value = 'Public'
+  channelVisibility.value = 'Public'
 }
 
 const submitNumber = () => {
@@ -243,4 +250,26 @@ watch(numberValue, (newValue) => {
   padding: 0 1rem 0.5rem;
   border-bottom: 0.25px solid darkgray;
 }
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 0.8rem;
+}
+
+.checkbox-container label {
+  margin-right: 0.5rem;
+  color: #ecf0f1;
+  font-size: 0.7rem;
+}
+
+.checkbox-input {
+  display: flex;
+  align-items: center;
+  margin-top: -0.2rem;
+  width: 8px; /* Set the desired width */
+  height: 8px; 
+}
+
 </style>

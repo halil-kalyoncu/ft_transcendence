@@ -87,8 +87,9 @@ const userId = computed(() => userStore.userId)
 interface ModalResult {
   name?: string
   password?: string
-  visibility?: string
+  channelVisibility?: string
   minutesOfMute?: number
+  passwordSet?: boolean
 }
 
 const isModalOpened = ref(false)
@@ -100,32 +101,39 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResult) => {
+const handleConfirm = ({ name, password, channelVisibility, minutesOfMute, passwordSet  }: ModalResult) => {
   isModalOpened.value = false
-  if (visibility === undefined) {
-    visibility = ChannelVisibility.PUBLIC
+  if (channelVisibility === undefined) {
+    channelVisibility = ChannelVisibility.PUBLIC
   }
   if (
-    !Object.values(ChannelVisibility).includes(visibility.toUpperCase() as ChannelVisibilityType)
+    !Object.values(ChannelVisibility).includes(channelVisibility.toUpperCase() as ChannelVisibilityType)
   ) {
-    console.error(`Invalid channel visibility:: ${visibility.toUpperCase()}`)
+    console.error(`Invalid channel visibility:: ${channelVisibility.toUpperCase()}`)
     return
   }
-
-  const createChannelDto: CreateChannelDto = {
-    userId: userId.value,
-    name: name || '',
-    password: password || '',
-    channelVisibility: visibility.toUpperCase() as ChannelVisibilityType
-  }
-
   if (!socket || !socket.value) {
       notificationStore.showNotification('Error: Connection problems', true);
       return;
     }
+  if (passwordSet === true) {
+	  const createChannelDto: CreateChannelDto = {
+		userId: userId.value,
+		name: name || '',
+		password: password || '',
+		channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
+	  }
+	socket.value.emit('createProtectedChannel', createChannelDto)
+  }
   else {
-    socket.value.emit('createChannel', createChannelDto)
-  } 
+	  const createChannelDto: CreateChannelDto = {	
+		userId: userId.value,
+		name: name || '',
+		channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
+	}
+	socket.value.emit('createUnProtectedChannel', createChannelDto)
+
+}
 }
 
 const showChannelManagerAndChat = ref(false)
@@ -175,6 +183,9 @@ const removeUserFromChannel = async() => {
 //Esra
 // just a small mistake, api call needs 2 queries not a body
 const MarkMessagesAsRead = async() => {
+	console.log('close channel')
+  if (joinedChannelId.value !== 0) {
+    console.log('call mark messages')
 	try{
 		const response = await fetch(`http://localhost:3000/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${userId.value}`, {
 		  method: 'PATCH',
@@ -191,6 +202,7 @@ const MarkMessagesAsRead = async() => {
 	catch (error: any) {
 		notificationStore.showNotification(`Error` + error.message, false)
 	}
+}
 }
 
 const openJoinChannels = () => {
@@ -212,11 +224,7 @@ const closeMyChannels = async () => {
 }
 
 const closeChannelManagerAndChat = async () => {
-  console.log('close channel')
-  if (joinedChannelId.value !== 0) {
-    console.log('call mark messages')
-    await MarkMessagesAsRead()
-  }
+
   joinedChannelId.value = 0
   showChannelManagerAndChat.value = false
   return
@@ -239,13 +247,12 @@ const handleChannelEntered = async (channelId: number) => {
 }
 
 const handleChannelLeft = async () => {
-	//Halil
-  // !!! leaving of channel doesn't work anymore !!!
 	await MarkMessagesAsRead()
 	await closeChannelManagerAndChat()
 }
 
-const hanndleChannelSignedout = () => {
+const hanndleChannelSignedout = async () => {
+   await MarkMessagesAsRead()
   removeUserFromChannel()
   closeChannelManagerAndChat()
 }
@@ -262,6 +269,7 @@ const updateChannelManager = async () => {
 		notificationStore.showNotification(`Error` + error.message, true)
 	}
 };
+
 </script>
 
 <style>

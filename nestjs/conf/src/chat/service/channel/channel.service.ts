@@ -42,14 +42,13 @@ export class ChannelService {
     password?: string;
     channelVisibility: ChannelVisibility;
   }): Promise<Channel> {
+	console.log('createProtectedChannel')
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
     });
-
     if (existingChannel) {
       throw new Error('Channel name already exists');
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create the channel without the members initially
