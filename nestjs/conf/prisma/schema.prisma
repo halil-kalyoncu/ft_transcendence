@@ -88,7 +88,7 @@ model ChannelMessageReadStatus {
   isRead    Boolean
 
   message ChannelMessage @relation(fields: [messageId], references: [messageId], onDelete: Cascade)
-  reader  ChannelMember  @relation(fields: [readerId], references: [userId])
+  reader  ChannelMember  @relation(fields: [readerId], references: [id])
 }
 
 model Message {
@@ -129,7 +129,7 @@ enum ChannelMemberStatus {
 
 model ChannelMember {
   id          Int                 @id @default(autoincrement())
-  userId      Int				@unique
+  userId      Int				 
   channelId   Int
   role        ChannelMemberRole
   roleSince   DateTime            @default(now())

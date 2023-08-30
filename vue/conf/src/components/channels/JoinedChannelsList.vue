@@ -29,7 +29,9 @@
   const userStore = useUserStore()
 	  const userId = computed(() => userStore.userId)
 	  const socket = ref<Socket | null>(null)
-	  const unreadMessageCounts = ref({});
+		type UnreadMessageCounts = Record<number, number>;
+	const unreadMessageCounts = ref<UnreadMessageCounts>({});
+
 	  const notificationStore = useNotificationStore()
 	  const channelData = ref<ChannelEntryI[]>([])
 	const unreadMessages = ref([])
@@ -83,11 +85,13 @@
 	try{
 		for (const channel of channelData.value) {
     	const count = await calculateUnreadMessages(channel.channel.id);
-    	unreadMessageCounts.value[channel.channel.id] = count;
+		const channelId = channel.channel.id
+    	unreadMessageCounts.value[channelId] = count;
   		}
 		return
 	}
 	catch (error: any) {
+		console.log('error: ' + error.message)
 		notificationStore.showNotification(`Error` + error.message, true)
 		return 
 	  }

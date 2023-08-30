@@ -175,13 +175,12 @@ export class ChannelService {
       channelMembershipDto.userId,
       channelMembershipDto.channelId,
     );
-
+		console.log('existingMembership', existingMembership)
     if (existingMembership) {
        console.log ('User is already a member of this channel.');
 	   return
-		//throw new Error('User is already a member of this channel.');
     }
-
+	console.log('channelMembershipDto', channelMembershipDto)
     return this.prisma.channelMember.create({
       data: {
         userId: channelMembershipDto.userId,

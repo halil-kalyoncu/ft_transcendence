@@ -1,3 +1,5 @@
+<!-- TODO:
+Make badge number visibale. At the moment hidden. Delete big umber next to enter -->
 <template>
   <div class="channel-list-item">
     <div class="channel-info">
@@ -5,6 +7,16 @@
       <div class="channel-owner-container">
         <font-awesome-icon class="icon" :icon="['fas', 'star']" />
         <p class="channel-owner">{{ ownerName }}</p>
+		<div class="icon-container">
+        <font-awesome-icon
+          :icon="['fas', 'envelope']"
+          class="envelope-icon"
+          v-if="unreadMessageCount && unreadMessageCount > 0"
+        />
+        <span v-if="unreadMessageCount && unreadMessageCount > 0" class="badge-number">{{
+          unreadMessageCount
+        }}</span>
+      </div>
       </div>
       <input
         v-if="showPasswordField"
@@ -15,7 +27,7 @@
       />
     </div>
     <div class="channel-button-container">
-		<div v-if="unreadMessageCount > 0" class="unread-messages">
+		<div v-if=" unreadMessageCount && unreadMessageCount > 0" class="unread-messages">
         +{{ unreadMessageCount }}
       </div>
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
@@ -70,6 +82,7 @@ watch(password, (newValue) => {
 </script>
 
 <style>
+
 .channel-list-item {
   display: flex;
   justify-content: space-between;
@@ -167,4 +180,27 @@ watch(password, (newValue) => {
   padding: 0.25rem 0.5rem;
   margin-right: 5px;
 }
+
+.envelope-icon {
+  width: 100%;
+}
+
+.badge-number {
+  position: absolute;
+  bottom: 0.3rem;
+  left: 100%;
+  transform: translate(-50%, 50%);
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  width: 0.65rem;
+  height: 0.65rem;
+  line-height: 0.65rem;
+  text-align: center;
+  font-size: 0.55rem;
+  font-weight: bold;
+}
+
 </style>
+
+
