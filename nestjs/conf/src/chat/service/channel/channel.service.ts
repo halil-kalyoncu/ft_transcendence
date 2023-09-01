@@ -125,6 +125,11 @@ export class ChannelService {
 	await this.prisma.channelMember.deleteMany({
 	  where: { channel: { id: channelId } },
 	});
+
+	// Delete Associated Channel Invitations
+	await this.prisma.channelInvitation.deleteMany({
+	  where: { channel: { id: channelId } },
+	});
   
 	// Delete the Channel Itself
 	return this.prisma.channel.delete({
@@ -212,6 +217,7 @@ try{
 		  where: { senderId: userId },
 		});
 	  }
+
 
 	  await this.prisma.channelMember.delete({
 		where: {

@@ -25,6 +25,9 @@ model User {
 
   ChannelMember ChannelMember[]
 
+  inviteeforChannels ChannelInvitation[] @relation("Invitee")
+  inviterforChannels ChannelInvitation[] @relation("Inviter")
+
   leftPlayerMatches  Match[] @relation("LeftPlayer")
   rightPlayerMatches Match[] @relation("RightPlayer")
 }
@@ -100,6 +103,29 @@ model Message {
   channelMessage ChannelMessage?
 }
 
+enum ChannelInvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model ChannelInvitation{
+	id 			Int @id @default(autoincrement())
+	channelId 	Int
+	inviteeId 	Int
+	inviterId 	Int
+	createdAt 	DateTime @default(now())
+	status 		ChannelInvitationStatus @default(PENDING)
+
+	channel 	Channel @relation(fields: [channelId], references: [id])
+	invitee 	User	@relation("Invitee", fields: [inviteeId], references: [id])
+	inviter 	User  	@relation("Inviter", fields: [inviterId], references: [id])
+
+
+
+	@@unique([channelId, inviteeId])
+}
+
 enum ChannelVisibility {
   PUBLIC
   PRIVATE
@@ -112,7 +138,8 @@ model Channel {
   protected    Boolean           @default(false)
   passwordHash String?
 
-  members ChannelMember[]
+  members 		ChannelMember[]
+  invitations 	ChannelInvitation[]
 }
 
 enum ChannelMemberRole {

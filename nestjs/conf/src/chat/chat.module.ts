@@ -16,6 +16,8 @@ import { ChannelMemberService } from './service/channel-member/channel-member.se
 import { ChannelMessageController } from './controller/channel-message/channel-message.controller';
 import { ChannelMessageReadStatusController } from './controller/channel-message-read-status/channel-message-read-status.controller';
 import { ChannelMessageReadStatusService } from './service/channel-message-read-status/channel-message-read-status.service';
+import { ChannelInvitationsController } from './controller/channel-invitations/channel-invitations.controller';
+import { ChannelInvitationsService } from './service/channel-invitations/channel-invitations.service';
 
 @Module({
   imports: [AuthModule, UserModule],
@@ -30,8 +32,9 @@ import { ChannelMessageReadStatusService } from './service/channel-message-read-
     MatchService,
     ChannelMemberService,
     ChannelMessageReadStatusService,
+    ChannelInvitationsService,
   ],
-  controllers: [DirectMessageController, FriendshipController, ChannelController, ChannelMessageController, ChannelMessageReadStatusController],
+  controllers: [DirectMessageController, FriendshipController, ChannelController, ChannelMessageController, ChannelMessageReadStatusController, ChannelInvitationsController],
   exports: [FriendshipService, ConnectedUserService],
 })
 export class ChatModule {}
