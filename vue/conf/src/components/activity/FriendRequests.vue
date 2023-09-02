@@ -3,11 +3,17 @@
     <ScrollViewer :maxHeight="'75vh'" :paddingRight="'.5rem'">
       <div v-if="friendRequests && friendRequests.length">
         <div v-for="request in friendRequests" :key="request.id">
-          <FriendRequestsItem
+          <RequestItem
             v-if="isValidRequest(request)"
             :username="request.friend.username"
             :requestId="request.id"
-            @remove-friend-request="handleRemoveFriendRequest"
+            :showAcceptRequest="true"
+            :showRejectRequest="true"
+            :showBlockUser="true"
+            :showUnblockUser="false"
+            @reject-request="handleRejectFriendRequest"
+            @accept-request="handleAcceptFriendRequest"
+            @block-user="handleBlockUser"
           />
         </div>
       </div>
@@ -19,13 +25,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import FriendRequestsItem from './FriendRequestsItem.vue'
-
+import { onMounted, computed, ref } from 'vue'
+import RequestItem from './RequestItem.vue'
+import { Socket } from 'socket.io-client'
+import { connectWebSocket } from '../../websocket'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { useFriendRequestStore } from '../../stores/friendRequests'
+import type { FriendshipI } from '../../model/friendship/friendship.interface'
+import type { ErrorI } from '../../model/error.interface'
 
 const friendRequestStore = useFriendRequestStore()
 const friendRequests = computed(() => friendRequestStore.friendRequests)
@@ -33,6 +42,17 @@ const friendRequests = computed(() => friendRequestStore.friendRequests)
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
+const socket = ref<Socket | null>(null)
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
+
+onMounted(() => {
+  initSocket()
+})
+
 const props = defineProps({
   channelId: Number
 })
@@ -41,8 +61,47 @@ const isValidRequest = (request: any) => {
   return request && request.friend && request.friend.username
 }
 
-const handleRemoveFriendRequest = (requestId: number) => {
+const handleAcceptFriendRequest = (requestId: number, username: string) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.emit('acceptFriendRequest', requestId, (response: FriendshipI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(`You accepted ${username}'s friend request`, true)
+    }
+  })
+
   friendRequestStore.removeFriendRequestById(requestId)
+}
+
+const handleRejectFriendRequest = (requestId: number, username: string) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+  socket.value.emit('rejectFriendRequest', requestId, (response: FriendshipI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(`You rejected ${username}'s friend request`, true)
+    }
+  })
+
+  friendRequestStore.removeFriendRequestById(requestId)
+  console.log(friendRequests)
+}
+
+const handleBlockUser = (requestId: number, username: string) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+
+    return
+  }
+  notificationStore.showNotification(`You banned ${username}`, true)
 }
 </script>
 
