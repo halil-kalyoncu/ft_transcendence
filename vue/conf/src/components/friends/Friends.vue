@@ -108,7 +108,6 @@ const setFriendsListener = () => {
   }
 
   socket.value.on('friends', () => {
-    console.log('friends listener fired')
     setFriendData()
   })
 }
@@ -119,7 +118,6 @@ const setDirectMessageListener = () => {
     return
   }
   socket.value.on('newDirectMessage', () => {
-    console.log('newDirectMessage listener fired')
     setDirectMessageData()
   })
 }
@@ -307,10 +305,6 @@ const handleUnfriendUser = (username: String, friendshipId: Number) => {
 }
 
 const handleBlockUser = async (username: string, blockUserId: number) => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
   if (username !== '') {
     try {
       const blockUser: UserI = await fetchUser(username)

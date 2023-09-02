@@ -58,6 +58,7 @@ const emit = defineEmits(['reject-request', 'accept-request', 'block-user', 'unb
 const props = defineProps({
   username: String,
   requestId: Number,
+  targetUserId: Number,
   showAcceptRequest: Boolean,
   showRejectRequest: Boolean,
   showUnblockUser: Boolean,
@@ -77,11 +78,11 @@ const rejectFriendRequest = () => {
 }
 
 const blockUser = () => {
-  emit('block-user', props.requestId, props.username)
+  emit('block-user', props.requestId, props.targetUserId, props.username)
 }
 
 const unblockUser = () => {
-  emit('unblock-user', props.requestId, props.username)
+  emit('unblock-user', props.requestId, props.targetUserId, props.username)
 }
 </script>
 
