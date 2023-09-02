@@ -16,7 +16,6 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
 import type { MatchI } from '../../model/match/match.interface'
-import { useRouter } from 'vue-router'
 import type { ErrorI } from '../../model/error.interface'
 import type { UnreadMessageI } from '../../model/message/unreadMessage.interface'
 import type { DirectConverstationDto } from '../../model/message/directConversation.dto'
@@ -24,7 +23,6 @@ import type { BlockUserDto } from '../../model/block-user.dto'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
-const router = useRouter()
 
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
@@ -32,7 +30,6 @@ const userId = computed(() => userStore.userId)
 const socket = ref<Socket | null>(null)
 
 const friends = ref<FriendshipEntryI[]>([])
-const matchInvites = ref<MatchI[]>([])
 const unreadMessages = ref<UnreadMessageI[]>([])
 
 const modalTitle = ref('')
@@ -87,23 +84,6 @@ const setFriendData = async () => {
   }
 }
 
-const setMatchInviteData = async () => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/matches/invites-by-userId?userId=${userId.value}`
-    )
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    matchInvites.value = data
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
-  }
-}
-
 const setDirectMessageData = async () => {
   try {
     const response = await fetch(
@@ -133,16 +113,6 @@ const setFriendsListener = () => {
   })
 }
 
-const setMatchInviteListener = () => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-  socket.value.on('matchInvites', () => {
-    setMatchInviteData()
-  })
-}
-
 const setDirectMessageListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
@@ -168,11 +138,9 @@ onMounted(() => {
   initSocket()
 
   setFriendsListener()
-  setMatchInviteListener()
   setDirectMessageListener()
 
   setFriendData()
-  setMatchInviteData()
   setDirectMessageData()
 })
 
@@ -319,25 +287,6 @@ const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
   showFriendManagerAndChat.value = true
 }
 
-const acceptMatchInvite = (matchId: number) => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-
-  socket.value.emit('acceptMatchInvite', matchId)
-  router.push(`/invite/${matchId}`)
-}
-
-const rejectMatchInvite = (matchId: number) => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-
-  socket.value.emit('rejectMatchInvite', matchId)
-}
-
 const handleUnfriendUser = (username: String, friendshipId: Number) => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
@@ -457,18 +406,6 @@ const goBack = () => {
             />
           </div>
         </ScrollViewer>
-        <h2 v-if="matchInvites?.length > 0">MatchInvites</h2>
-        <ul v-if="matchInvites?.length > 0">
-          <li v-for="invite in matchInvites" :key="invite.id">
-            <div class="friendInfo">
-              <span v-if="invite.leftUser"
-                >Custom game invite from {{ invite.leftUser.username }}
-              </span>
-              <button @click="acceptMatchInvite(invite.id as number)">Accept</button>
-              <button @click="rejectMatchInvite(invite.id as number)">Reject</button>
-            </div>
-          </li>
-        </ul>
         <button class="add-friend-button" @click="openAddModal">Add Friend</button>
         <button class="add-friend-button" @click="openBlockModal">Block User</button>
         <button class="add-friend-button" @click="openUnblockModal">Unblock User</button>

@@ -36,7 +36,6 @@ const submitForm = async () => {
     if (response.ok) {
       console.log('Login successful')
       const { access_token } = await response.json()
-      console.log('access_token: ' + access_token)
       //save jwt into local storage
       localStorage.setItem('ponggame', access_token)
       try {

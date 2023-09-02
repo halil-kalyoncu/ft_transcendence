@@ -12,18 +12,11 @@ export const useFriendRequestStore = defineStore('friendRequest', {
 
   actions: {
     addFriendRequest(newFriendRequests: FriendshipEntryI[]) {
-      newFriendRequests.forEach((request) => {
-        if (!this.friendRequests.includes(newFriendRequests[0])) {
-          this.friendRequests.push(request)
-        }
-      })
-    },
-
-    setFriendOnlineStatus(id: number, status: boolean) {
-      const friend = this.friendRequests.find((friendRequest) => friendRequest.id === id)
-      if (friend) {
-        friend.isOnline = status
-      }
+      const uniqueRequests = newFriendRequests.filter(
+        (request) =>
+          !this.friendRequests.some((existingRequest) => existingRequest.id === request.id)
+      )
+      this.friendRequests.push(...uniqueRequests)
     },
 
     removeFriendRequestById(requestId: number) {

@@ -1,11 +1,11 @@
 <template>
   <div class="friend-requests">
     <ScrollViewer :maxHeight="'75vh'" :paddingRight="'.5rem'">
-      <div v-if="friendRequests && friendRequests.length">
-        <div v-for="request in friendRequests" :key="request.id">
+      <div v-if="matchRequests && matchRequests.length">
+        <div v-for="request in matchRequests" :key="request.id">
           <RequestItem
             v-if="isValidRequest(request)"
-            :username="request.friend.username"
+            :username="request.leftUser?.username"
             :requestId="request.id"
             :showAcceptRequest="true"
             :showRejectRequest="true"
@@ -24,34 +24,64 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import RequestItem from './RequestItem.vue'
 
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
-import { useFriendRequestStore } from '../../stores/friendRequests'
+import { useMatchRequestsStore } from '../../stores/matchRequests'
+import { Socket } from 'socket.io-client'
+import { connectWebSocket } from '../../websocket'
+import { useRouter } from 'vue-router'
 
-const friendRequestStore = useFriendRequestStore()
-const friendRequests = computed(() => friendRequestStore.friendRequests)
+const matchRequestStore = useMatchRequestsStore()
+const matchRequests = computed(() => matchRequestStore.matchRequests)
+const router = useRouter()
 
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
+const socket = ref<Socket | null>(null)
 const props = defineProps({
   channelId: Number
 })
 
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
+
+onMounted(() => {
+  initSocket()
+})
+
 const isValidRequest = (request: any) => {
-  return request && request.friend && request.friend.username
+  return request && request.leftUser && request.leftUser.username
 }
 
 const handleAcceptGameRequest = (requestId: number, username: string) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.emit('acceptMatchInvite', requestId)
+  router.push(`/invite/${requestId}`)
+
   notificationStore.showNotification(`You accepted ${username}'s game request`, true)
+  matchRequestStore.removeMatchRequestById(requestId)
 }
 
 const handleRejectGameRequest = (requestId: number, username: string) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.emit('rejectMatchInvite', requestId)
   notificationStore.showNotification(`You rejected ${username}'s game request`, true)
+  matchRequestStore.removeMatchRequestById(requestId)
 }
 </script>
 
