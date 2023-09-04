@@ -108,6 +108,18 @@ const sendMessage = () => {
 const isOwnMessage = (senderId: number | undefined) => {
   return senderId !== undefined && senderId === loggedUser.value.id
 }
+
+const formatDate = (createdAt: string) =>
+{
+	const date = new Date(createdAt)
+	const day = date.getDate()
+	const month = date.getMonth() + 1
+	const year = date.getFullYear()
+	const hours = date.getHours()
+	const minutes = date.getMinutes()
+
+	return `${day}/${month}/${year} ${hours}:${minutes}`
+}
 </script>
 
 <template>
@@ -118,7 +130,7 @@ const isOwnMessage = (senderId: number | undefined) => {
         <Message
           v-for="message in messages"
           :key="message.id"
-          :createdAt="'one minute ago'"
+          :createdAt="formatDate(message.message.createdAt)"
           :message="message.message?.message ?? ''"
           :sender="message.sender?.username ?? ''"
           :isOwnMessage="isOwnMessage(message.sender.id)"
