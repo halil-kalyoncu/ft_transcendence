@@ -4,7 +4,7 @@
       @handle-block="handleBlockUser"
       @handle-unfriend="handleUnfriendUser"
       :username="selectedFriendEntry?.friend?.username ?? ''"
-      :status="selectedFriendEntry?.isOnline ? 'online' : 'offline'"
+      :status="selectedFriendEntry?.status!"
       :showActions="true"
     />
     <button class="game-invite-button" @click="handleInvite">Invite to Game</button>

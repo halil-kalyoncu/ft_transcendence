@@ -45,7 +45,6 @@ const logout = () => {
             <img class="profile-image" src=../../assets/defaultAvatar.png alt="Profile" />
           </div>
         </RouterLink>
-
         <NotificationBell />
         <RouterLink class="navButton header-username" to="/settings">
           <button class="settings-button">

@@ -5,92 +5,84 @@
       <p class="friend-username">{{ username }}</p>
     </div>
     <div class="request-actions">
-      <button class="icon-button-accept" @click="acceptFriendRequest" title="Accept">
+      <button
+        v-if="showAcceptRequest"
+        class="icon-button-accept"
+        @click="acceptFriendRequest"
+        title="Accept"
+      >
         <font-awesome-icon :icon="['fas', 'check']" />
       </button>
-      <button class="icon-button-reject" @click="rejectFriendRequest" title="Reject">
+      <button
+        v-if="showRejectRequest"
+        class="icon-button-reject"
+        @click="rejectFriendRequest"
+        title="Reject"
+      >
         <font-awesome-icon :icon="['fas', 'times']" />
       </button>
       <button class="icon-button-view-profile" @click="viewProfile" title="View Profile">
         <font-awesome-icon :icon="['fas', 'eye']" />
       </button>
-      <button class="icon-button-block" @click="blockUser" title="Block">
+      <button v-if="showBlockUser" class="icon-button-block" @click="blockUser" title="Block">
         <font-awesome-icon :icon="['fas', 'ban']" />
+      </button>
+      <button
+        v-if="showUnblockUser"
+        class="icon-button-unblock"
+        @click="unblockUser"
+        title="Unblock"
+      >
+        <font-awesome-icon :icon="['fas', 'fa-unlock']" />
       </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
-import { Socket } from 'socket.io-client'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
-import { connectChatSocket } from '../../websocket'
 import type { FriendshipI } from '../../model/friendship/friendship.interface'
 import type { ErrorI } from '../../model/error.interface'
 
 library.add(fas)
 const router = useRouter()
 const notificationStore = useNotificationStore()
-const socket = ref<Socket | null>(null)
 
-const emit = defineEmits(['remove-friend-request'])
+const emit = defineEmits(['reject-request', 'accept-request', 'block-user', 'unblock-user'])
 
 const props = defineProps({
   username: String,
-  requestId: Number
+  requestId: Number,
+  targetUserId: Number,
+  showAcceptRequest: Boolean,
+  showRejectRequest: Boolean,
+  showUnblockUser: Boolean,
+  showBlockUser: Boolean
 })
 
 const viewProfile = () => {
   router.push(`/profile/${props.username}`)
 }
 
-const initSocket = () => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectChatSocket(accessToken)
-}
-
-onMounted(() => {
-  initSocket()
-})
-
 const acceptFriendRequest = () => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-
-  socket.value.emit('acceptFriendRequest', props.requestId, (response: FriendshipI | ErrorI) => {
-    if ('error' in response) {
-      notificationStore.showNotification(response.error, false)
-    } else {
-      notificationStore.showNotification(`You accepted ${props.username}'s friend request`, true)
-      emit('remove-friend-request', props.requestId)
-    }
-  })
+  emit('accept-request', props.requestId, props.username)
 }
 
 const rejectFriendRequest = () => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, false)
-    return
-  }
-  socket.value.emit('rejectFriendRequest', props.requestId, (response: FriendshipI | ErrorI) => {
-    if ('error' in response) {
-      notificationStore.showNotification(response.error, false)
-    } else {
-      notificationStore.showNotification(`You rejected ${props.username}'s friend request`, true)
-      emit('remove-friend-request', props.requestId)
-    }
-  })
+  emit('reject-request', props.requestId, props.username)
 }
 
 const blockUser = () => {
-  notificationStore.showNotification(`You blocked ${props.username}`, true)
+  emit('block-user', props.requestId, props.targetUserId, props.username)
+}
+
+const unblockUser = () => {
+  emit('unblock-user', props.requestId, props.targetUserId, props.username)
 }
 </script>
 
