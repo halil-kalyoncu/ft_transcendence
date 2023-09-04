@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import type { UserI } from '../../model/user.interface'
 import type { FriendshipI } from '../../model/friendship/friendship.interface'
@@ -44,7 +44,7 @@ const showChat = ref(false)
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const updateSelectedFriend = () => {
@@ -227,8 +227,8 @@ const handleAdd = ({ username }: ModalResult) => {
     } else {
       notificationStore.showNotification(
         'Friend Request was sent to id:' +
-          response.receiverId +
-          '. username would be better though (TBD) ',
+        response.receiverId +
+        '. username would be better though (TBD) ',
         true
       )
     }
@@ -433,36 +433,23 @@ const goBack = () => {
 <template>
   <section class="friends">
     <template v-if="!showFriendManagerAndChat">
-      <FriendsModal
-        :isOpened="isModalOpened"
-        :title="modalTitle"
-        @submit="handleSubmit"
-        @close="handleClose"
-      />
+      <FriendsModal :isOpened="isModalOpened" :title="modalTitle" @submit="handleSubmit" @close="handleClose" />
       <div class="friendsList">
-        <h2
-          v-if="friends === undefined || friends?.length === 0"
-          class="friends-empty-notification"
-        >
+        <h2 v-if="friends === undefined || friends?.length === 0" class="friends-empty-notification">
           Friend list is empty
         </h2>
         <ScrollViewer :maxHeight="'68vh'" class="friendsList" :class="'messages-scrollviewer'">
           <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
-            <FriendsListItem
-              @click="handleFriendManagerOpened(entry)"
-              :status="entry.isOnline ? 'online' : 'offline'"
-              :username="entry.friend.username"
-              :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
-              :showActions="false"
-            />
+            <FriendsListItem @click="handleFriendManagerOpened(entry)" :status="entry.isOnline ? 'online' : 'offline'"
+              :username="entry.friend.username" :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
+              :showActions="false" />
           </div>
         </ScrollViewer>
         <h2 v-if="matchInvites?.length > 0">MatchInvites</h2>
         <ul v-if="matchInvites?.length > 0">
           <li v-for="invite in matchInvites" :key="invite.id">
             <div class="friendInfo">
-              <span v-if="invite.leftUser"
-                >Custom game invite from {{ invite.leftUser.username }}
+              <span v-if="invite.leftUser">Custom game invite from {{ invite.leftUser.username }}
               </span>
               <button @click="acceptMatchInvite(invite.id as number)">Accept</button>
               <button @click="rejectMatchInvite(invite.id as number)">Reject</button>
@@ -486,12 +473,8 @@ const goBack = () => {
           <font-awesome-icon :icon="['fas', 'arrow-left']" />
         </button>
       </div>
-      <FriendManager
-        @unfriend-user="handleUnfriendUser"
-        @block-user="handleBlockUser"
-        @invite-user-to-game="handleInviteToGame"
-        :selectedFriendEntry="selectedFriend"
-      />
+      <FriendManager @unfriend-user="handleUnfriendUser" @block-user="handleBlockUser"
+        @invite-user-to-game="handleInviteToGame" :selectedFriendEntry="selectedFriend" />
       <FriendMessages :selectedFriendEntry="selectedFriend" />
     </template>
   </section>

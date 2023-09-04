@@ -3,14 +3,8 @@
     <template v-if="!showAvailableChannels && !showJoinedChannels && !showChannelManagerAndChat">
       <div class="channel-option-button-container">
         <button class="channel-option-button" @click="openModal">Create Channel</button>
-        <Modal
-          :isOpened="isModalOpened"
-          :title="'Create a Channel'"
-          :placeholderText="'Enter channel name'"
-          :showVisibilitySelection="true"
-          @submit="handleConfirm"
-          @close="handleClose"
-        />
+        <Modal :isOpened="isModalOpened" :title="'Create a Channel'" :placeholderText="'Enter channel name'"
+          :showVisibilitySelection="true" @submit="handleConfirm" @close="handleClose" />
         <button class="channel-option-button" @click="openJoinChannels">Join Channels</button>
         <button class="channel-option-button" @click="openMyChannels">My Channels</button>
       </div>
@@ -22,11 +16,7 @@
         </button>
       </div>
       <AvailableChannels v-if="showAvailableChannels" @channel-entered="handleChannelEntered" />
-      <JoinedChannels
-        v-if="showJoinedChannels"
-        :username="username"
-        @channel-entered="handleChannelEntered"
-      />
+      <JoinedChannels v-if="showJoinedChannels" :username="username" @channel-entered="handleChannelEntered" />
       <div v-if="showChannelManagerAndChat">
         <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" />
         <ChannelMessages />
@@ -44,7 +34,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
-import { connectWebSocket, disconnectWebSocket } from '../../websocket'
+import { connectChatSocket, disconnectChatSocket } from '../../websocket'
 import { ChannelVisibility } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
 import JoinedChannels from './JoinedChannelsList.vue'
@@ -61,7 +51,7 @@ const notificationStore = useNotificationStore()
 let socket: Socket | null = null
 onMounted(() => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket = connectWebSocket('http://localhost:3000', accessToken)
+  socket = connectChatSocket(accessToken)
 
   if (socket) {
     socket.on('channelCreated', (success: boolean) => {
@@ -74,7 +64,7 @@ onMounted(() => {
   }
 })
 onBeforeUnmount(() => {
-  disconnectWebSocket()
+  disconnectChatSocket()
 })
 
 const userStore = useUserStore()

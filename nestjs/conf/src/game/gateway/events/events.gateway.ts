@@ -13,7 +13,7 @@ let ballPos = {x: 0, y: 0};
 	cors: {
 	  origin: ["http://localhost:4200", "http://localhost:3000"]
 	},
-	namespace: 'game'
+	path: '/game'
   })
   export class EventsGateway {
 	
@@ -74,10 +74,7 @@ let ballPos = {x: 0, y: 0};
 		// 	console.log(`Client connected: ${client.id}`);
 		// }
 
-
 		async handleConnection(socket: Socket, ...args: any[]) {
-			console.log('game socket');
-			console.log(socket.handshake.query);
 			if (!socket.handshake.query.userId || !socket.handshake.query.matchId) {
 				//error handling?
 				console.log("query doesn't have the properties userId and matchId");
@@ -112,14 +109,12 @@ let ballPos = {x: 0, y: 0};
 			// console.log(socket.data.user);
 			// console.log(socket.data.match);
 			//both players are connected to the games if both socket ids are set, better solution?
-			console.log(socket.data.user.username + ' ' + socket.data.isLeftPlayer)
 			if (room.socketIds[0] != '' && room.socketIds[1] != '') {
 				console.log('starting game');
 				this.startCountdown(room);
 			}
 		}
 
-	
 		async handleDisconnect(socket: Socket) {
 			//this.players.delete(client.id);
 			const room = this.rooms.get(socket.data.match.id);
@@ -136,7 +131,6 @@ let ballPos = {x: 0, y: 0};
 					socket.to(room.socketIds[0]).emit('opponentDisconnect', match);
 				}
 			}
-			console.log(`Client disconnected: userId: ${socket.data.user.id}: ${socket.id}`);
 			socket.disconnect();
 		}
 

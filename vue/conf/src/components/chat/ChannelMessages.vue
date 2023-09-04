@@ -2,14 +2,8 @@
   <div class="messages-container">
     <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'" class="messages-scrollviewer">
       <div class="messages">
-        <Message
-          v-for="(message, index) in channelMessages"
-          :key="index"
-          :isOwnMessage="message.isOwnMessage"
-          :message="message.message"
-          :createdAt="message.createdAt"
-          :sender="message.sender"
-        />
+        <Message v-for="(message, index) in channelMessages" :key="index" :isOwnMessage="message.isOwnMessage"
+          :message="message.message" :createdAt="message.createdAt" :sender="message.sender" />
       </div>
     </ScrollViewer>
     <div class="chat-input">
@@ -21,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { UserI } from '../../model/user.interface'
 import type { directMessageI } from '../../model/message/directMessage.interface'
 import type { MockMessageI } from '../../model/message/mockMessage.interface'
@@ -43,7 +37,7 @@ const socket = ref<Socket | null>(null)
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const fetchChannelMessages = async () => {

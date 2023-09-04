@@ -29,7 +29,7 @@ import { fas } from '@fortawesome/free-solid-svg-icons'
 import { Socket } from 'socket.io-client'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { FriendshipI } from '../../model/friendship/friendship.interface'
 import type { ErrorI } from '../../model/error.interface'
 
@@ -51,7 +51,7 @@ const viewProfile = () => {
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 onMounted(() => {

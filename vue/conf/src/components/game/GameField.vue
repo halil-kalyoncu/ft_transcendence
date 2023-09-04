@@ -121,12 +121,7 @@ window.addEventListener('keyup', keyHookUp);
 
 const initGameSocket = () => {
 	const user: UserI = getUserFromAccessToken();
-	console.log('initGameSocket')
-	console.log({
-		userId: user.id,
-		matchId: matchId
-	})
-	socket.value = connectGameSocket(`localhost:3000/game`, {
+	socket.value = connectGameSocket({
 		userId: user.id,
 		matchId: matchId
 	});
@@ -158,7 +153,7 @@ const initGameField = () => {
 onMounted(() => {
 	initGameSocket();
 	if (!socket || !socket.value) {
-		notificationStore.showNotification(`Error: Connection problems`, true)
+		notificationStore.showNotification(`Error: Connection problems`, false)
     	return
 	}
 			
