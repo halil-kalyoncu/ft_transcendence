@@ -33,7 +33,7 @@ import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { useMatchRequestsStore } from '../../stores/matchRequests'
 import { Socket } from 'socket.io-client'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import { useRouter } from 'vue-router'
 
 const matchRequestStore = useMatchRequestsStore()
@@ -50,11 +50,13 @@ const props = defineProps({
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 onMounted(() => {
   initSocket()
+
+  socket.value
 })
 
 const isValidRequest = (request: any) => {

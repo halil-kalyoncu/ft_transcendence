@@ -33,7 +33,6 @@ export function connectGameSocket(data: any): Socket {
       userId: data.userId.toString(),
       matchId: data.matchId.toString()
     }
-    console.log(queryData);
     gameSocket = io("http://localhost:3000", {
       query: queryData,
       path: '/game'

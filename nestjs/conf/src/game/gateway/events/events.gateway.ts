@@ -110,7 +110,6 @@ let ballPos = {x: 0, y: 0};
 			// console.log(socket.data.match);
 			//both players are connected to the games if both socket ids are set, better solution?
 			if (room.socketIds[0] != '' && room.socketIds[1] != '') {
-				console.log('starting game');
 				this.startCountdown(room);
 			}
 		}
