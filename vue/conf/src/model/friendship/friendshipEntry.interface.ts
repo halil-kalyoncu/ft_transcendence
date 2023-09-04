@@ -1,12 +1,13 @@
 import type { UserI } from '../user.interface'
 
 export const FriendshipEntryStatus = {
-  PENDING: 'PENDING' as const,
-  ACCEPTED: 'ACCEPTED' as const,
-  REJECTED: 'REJECTED' as const
+  ONLINE: 'ONLINE' as const,
+  OFFLINE: 'OFFLINE' as const,
+  INGAME: 'INGAME' as const
 }
 
-export type FriendshipEntryStatusType = (typeof FriendshipEntryStatus)[keyof typeof FriendshipEntryStatus]
+export type FriendshipEntryStatusType =
+  (typeof FriendshipEntryStatus)[keyof typeof FriendshipEntryStatus]
 
 export interface FriendshipEntryI {
   id: number

@@ -102,15 +102,12 @@ export class MatchService {
     return await this.prisma.match.findFirst({
       where: {
         state: 'STARTED',
-        OR: [
-          { leftUserId: userId },
-          { rightUserId: userId }
-        ]
+        OR: [{ leftUserId: userId }, { rightUserId: userId }],
       },
       include: {
         leftUser: true,
-        rightUser: true
-      }
+        rightUser: true,
+      },
     });
   }
 

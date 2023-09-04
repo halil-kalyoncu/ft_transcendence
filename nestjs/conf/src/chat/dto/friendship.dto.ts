@@ -5,7 +5,7 @@ import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 export enum FriendshipEntryStatus {
   Online = 'ONLINE',
   Offline = 'OFFLINE',
-  Ingame = 'INGAME'
+  Ingame = 'INGAME',
 }
 
 export class FriendshipDto {

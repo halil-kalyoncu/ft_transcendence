@@ -34,6 +34,7 @@ describe('MatchService', () => {
         },
         type: 'CUSTOM',
       };
+      const currentTime = new Date();
       const createdMatch: Match = {
         id: 1,
         leftUserId: 1,
@@ -42,7 +43,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
+        createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
       };
@@ -69,6 +70,7 @@ describe('MatchService', () => {
   describe('findById', () => {
     it('should find a match by id', async () => {
       const matchId = 1;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -77,7 +79,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
+        createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
       };
@@ -125,6 +127,7 @@ describe('MatchService', () => {
   describe('deleteById', () => {
     it('should delete the match by id and return the deleted match', async () => {
       const matchId = 1;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -133,7 +136,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
+        createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
       };
@@ -182,6 +185,7 @@ describe('MatchService', () => {
     it('should change the state of the match to INVITED and set rightUserId', async () => {
       const matchId = 1;
       const invitedUserId = 2;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -190,7 +194,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
+        createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
       };
@@ -254,6 +258,7 @@ describe('MatchService', () => {
     it('should throw an error if invitedUserId is the same as leftUserId of the found match', async () => {
       const matchId = 1;
       const invitedUserId = 1;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -262,7 +267,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
+        createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
       };
@@ -295,6 +300,7 @@ describe('MatchService', () => {
     it('should throw an error if user is not found', async () => {
       const matchId = 1;
       const invitedUserId = 4242;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -303,7 +309,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
+        createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
       };
@@ -341,6 +347,7 @@ describe('MatchService', () => {
   describe('acceptInvite', () => {
     it('should change the state of the match to ACCEPTED', async () => {
       const matchId = 1;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -349,7 +356,7 @@ describe('MatchService', () => {
         state: 'ACCEPTED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
+        createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
       };
@@ -403,6 +410,7 @@ describe('MatchService', () => {
   describe('rejectInvite', () => {
     it('should change the state of the match to CREATED and set rightUserId to null', async () => {
       const matchId = 1;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -411,7 +419,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
+        createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
       };
@@ -467,6 +475,7 @@ describe('MatchService', () => {
   describe('getInvites', () => {
     it('should return matches with state INVITED and matching rightUserIds', async () => {
       const userId = 1;
+      const currentTime = new Date();
       const matchInvites: Match[] = [
         {
           id: 1,
@@ -476,7 +485,7 @@ describe('MatchService', () => {
           state: 'INVITED',
           goalsLeftPlayer: 0,
           goalsRightPlayer: 0,
-          createdAt: new Date(),
+          createdAt: currentTime,
           startedAt: null,
           finishedAt: null,
         },
@@ -488,7 +497,7 @@ describe('MatchService', () => {
           state: 'INVITED',
           goalsLeftPlayer: 0,
           goalsRightPlayer: 0,
-          createdAt: new Date(),
+          createdAt: currentTime,
           startedAt: null,
           finishedAt: null,
         },
@@ -544,6 +553,7 @@ describe('MatchService', () => {
   describe('isInGame', () => {
     it('should return the match object if leftUserId matches', async () => {
       const userId = 1;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -552,30 +562,27 @@ describe('MatchService', () => {
         state: 'STARTED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
-        startedAt: new Date(),
+        createdAt: currentTime,
+        startedAt: currentTime,
         finishedAt: null,
       };
 
       const findFirstSpy = jest
         .spyOn(prismaService.match, 'findFirst')
         .mockResolvedValue(match);
-      
+
       const result = await service.isInGame(userId);
 
       expect(result).toBe(match);
       expect(findFirstSpy).toHaveBeenCalledWith({
         where: {
           state: 'STARTED',
-          OR: [
-            { leftUserId: userId },
-            { rightUserId: userId }
-          ]
+          OR: [{ leftUserId: userId }, { rightUserId: userId }],
         },
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       findFirstSpy.mockRestore();
@@ -583,6 +590,7 @@ describe('MatchService', () => {
 
     it('should return the match object if rightUserId matches', async () => {
       const userId = 1;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 2,
@@ -591,30 +599,27 @@ describe('MatchService', () => {
         state: 'STARTED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
-        startedAt: new Date(),
+        createdAt: currentTime,
+        startedAt: currentTime,
         finishedAt: null,
       };
 
       const findFirstSpy = jest
         .spyOn(prismaService.match, 'findFirst')
         .mockResolvedValue(match);
-      
+
       const result = await service.isInGame(userId);
 
       expect(result).toBe(match);
       expect(findFirstSpy).toHaveBeenCalledWith({
         where: {
           state: 'STARTED',
-          OR: [
-            { leftUserId: userId },
-            { rightUserId: userId }
-          ]
+          OR: [{ leftUserId: userId }, { rightUserId: userId }],
         },
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       findFirstSpy.mockRestore();
@@ -626,22 +631,19 @@ describe('MatchService', () => {
       const findFirstSpy = jest
         .spyOn(prismaService.match, 'findFirst')
         .mockResolvedValue(null);
-      
+
       const result = await service.isInGame(userId);
 
       expect(result).toBe(null);
       expect(findFirstSpy).toHaveBeenCalledWith({
         where: {
           state: 'STARTED',
-          OR: [
-            { leftUserId: userId },
-            { rightUserId: userId }
-          ]
+          OR: [{ leftUserId: userId }, { rightUserId: userId }],
         },
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       findFirstSpy.mockRestore();
@@ -653,22 +655,19 @@ describe('MatchService', () => {
       const findFirstSpy = jest
         .spyOn(prismaService.match, 'findFirst')
         .mockResolvedValue(null);
-      
+
       const result = await service.isInGame(userId);
 
       expect(result).toBe(null);
       expect(findFirstSpy).toHaveBeenCalledWith({
         where: {
           state: 'STARTED',
-          OR: [
-            { leftUserId: userId },
-            { rightUserId: userId }
-          ]
+          OR: [{ leftUserId: userId }, { rightUserId: userId }],
         },
         include: {
           leftUser: true,
-          rightUser: true
-        }
+          rightUser: true,
+        },
       });
 
       findFirstSpy.mockRestore();
@@ -678,6 +677,7 @@ describe('MatchService', () => {
   describe('startMatch', () => {
     it('should change the state to STARTED and set startedAt', async () => {
       const matchId = 1;
+      const currentTime = new Date();
       const match: Match = {
         id: 1,
         leftUserId: 1,
@@ -686,8 +686,8 @@ describe('MatchService', () => {
         state: 'STARTED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
-        createdAt: new Date(),
-        startedAt: new Date(),
+        createdAt: currentTime,
+        startedAt: currentTime,
         finishedAt: null,
       };
 

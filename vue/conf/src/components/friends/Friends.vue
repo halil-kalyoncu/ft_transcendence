@@ -81,6 +81,7 @@ const setFriendData = async () => {
 
     const data = await response.json()
     friends.value = data
+    console.log(friends.value)
     updateSelectedFriend()
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
@@ -450,7 +451,7 @@ const goBack = () => {
           <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
             <FriendsListItem
               @click="handleFriendManagerOpened(entry)"
-              :status="entry.isOnline ? 'online' : 'offline'"
+              :status="entry.status!"
               :username="entry.friend.username"
               :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
               :showActions="false"

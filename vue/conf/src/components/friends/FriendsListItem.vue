@@ -24,12 +24,12 @@
         </button>
       </div>
       <div
-        :title="status === 'online' ? 'Online' : status === 'offline' ? 'Offline' : 'In Game'"
+        :title="status"
         class="statusIndicator"
         :class="{
-          online: status === 'online',
-          offline: status === 'offline',
-          inGame: status === 'inGame'
+          online: status === 'ONLINE',
+          offline: status === 'OFFLINE',
+          inGame: status === 'INGAME'
         }"
       ></div>
     </div>
