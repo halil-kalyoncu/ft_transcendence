@@ -6,7 +6,7 @@ export interface ChannelMessageI{
 	id?: number
 	message: MessageI;
 	sender: UserI;
-	createdAt: Date;
+	createdAt: string;
 	//channelMessageReadStatus: ChannelMessageReadStatusI[];
   }
 

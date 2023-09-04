@@ -5,7 +5,7 @@
 		  <Message
 			v-for="channelmessage in channelMessages"
 			:key="channelmessage.id"
-			:createdAt="'one minute ago'"
+			:createdAt="formatDate(channelmessage.createdAt)"
           	:message="channelmessage.message?.message ?? ''"
           	:sender="channelmessage.sender?.username ?? ''"
           	:isOwnMessage="isOwnMessage(channelmessage.sender.id)"
@@ -64,7 +64,17 @@ const loggedUser = computed<User>(() => ({
 const isOwnMessage = (senderId: number | undefined) => {
   return senderId !== undefined && senderId === loggedUser.value.id
 }
+const formatDate = (createdAt: string) =>
+{
+	const date = new Date(createdAt)
+	const day = date.getDate()
+	const month = date.getMonth() + 1
+	const year = date.getFullYear()
+	const hours = date.getHours()
+	const minutes = date.getMinutes()
 
+	return `${day}/${month}/${year} ${hours}:${minutes}`
+}
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectWebSocket('http://localhost:3000', accessToken)
