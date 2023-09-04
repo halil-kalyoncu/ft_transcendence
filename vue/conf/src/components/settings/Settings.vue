@@ -3,49 +3,14 @@
     <h2 class="page-title">User Settings</h2>
 
     <div class="input-group">
-      <label class="username" for="username">Username:</label>
-      <input type="text" id="username" :class="'secondary-btn'" v-model="username" />
+      <input type="text" id="username" placeholder="Enter username" v-model="username" />
     </div>
 
-    <!-- <div class="input-group">
-      <label class="username" for="username">Select Avatar:</label>
-
-      <div class="carousel-container" :class="'secondary-btn'">
-        <button
-          @click="previousImages"
-          :disabled="startIndex === 0"
-          :class="startIndex === 0 ? 'disabled' : ''"
-        >
-          ←
-        </button>
-
-        <div class="images-displayed">
-          <div v-for="img in displayedImages" :key="img" class="center-inner-contents">
-            <img
-              :src="img"
-              alt="Carousel Image"
-              @click="setSelectedImage(img)"
-              :class="img === selectedImg ? 'selected' : ''"
-            />
-          </div>
-        </div>
-
-        <button
-          @click="nextImages"
-          :disabled="startIndex > images.length - displayedCount"
-          :class="startIndex < images.length - displayedCount ? '' : 'disabled'"
-        >
-          →
-        </button>
-      </div>
-    </div> -->
-
     <div class="input-group">
-      <label class="username" for="avatar">Upload Avatar:</label>
       <div class="file-upload-wrapper">
-        <button type="button" class="secondary-btn upload-btn">
+        <label for="avatar" class="secondary-btn upload-btn">
           {{ selectedFileName || 'Choose Avatar' }}
-        </button>
+        </label>
         <input
           class="file-input"
           type="file"
@@ -57,23 +22,15 @@
     </div>
 
     <div class="input-group">
-      <label class="username" for="avatar">Delete Avatar:</label>
       <button class="secondary-btn" @click="deleteAvatar">Delete Avatar</button>
     </div>
 
-    <div class="divider"></div>
-
-    <!-- <div class="input-group" :class="'input-group-single-row'">
-      <label class="username" for="enable-2fa">Enable 2FA</label>
-      <input type="checkbox" id="enable-2fa" v-model="enable2FA" />
-    </div> -->
-
     <div class="input-group">
-      <button class="secondary-btn">enable 2FA</button>
+      <button class="secondary-btn">Enable 2FA</button>
     </div>
 
     <div class="button-group">
-      <button @click="deleteAccount" class="delete-button">Delete Account</button>
+      <button @click="deleteAccount" class="delete-button secondary-btn">Delete Account</button>
     </div>
   </div>
 </template>
@@ -184,9 +141,12 @@ const deleteAccount = () => {
   height: calc(100vh - 50.8px);
   width: 100%;
   padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   color: #fff;
   box-sizing: border-box !important;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .settings-container .username {
@@ -198,22 +158,36 @@ const deleteAccount = () => {
   display: block;
 }
 
-input[type='text'],
-input[type='file'] {
-  padding: 10px;
-  width: calc(100% - 0.25rem);
-  margin-top: 8px;
-  border: 1px solid #555;
-  background-color: #333;
+input[type='text'] {
+  padding: 0.5rem 1rem;
+  margin-left: 0.25rem;
+  min-height: 40px;
+  border: none;
+  min-width: 540px;
+  background-color: transparent;
+  border: 1px solid aliceblue;
   opacity: 0.9;
   color: #fff;
+  font-family: 'Courier New', Courier, monospace !important;
 }
 
+input[type='text']::placeholder {
+  text-align: center;
+  color: aliceblue;
+  font-size: 15px;
+}
+
+input[type='text']:focus {
+  outline: solid 1px #ea9f42;
+  border: none;
+}
 .page-title {
   text-align: left;
   margin: 0 0 1.25rem 0;
+  min-width: 540px;
   font-size: 1.5rem;
   font-weight: normal;
+  border-bottom: 1px solid #ea9f42;
   color: #ea9f42;
 }
 
@@ -227,80 +201,63 @@ input[type='file'] {
 
 .button-group {
   display: flex;
-  justify-content: space-between;
-  margin-top: 2.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
-.secondary-btn {
-  background: #333;
-  margin-left: 0.25rem;
-  min-width: 250px;
-}
 .secondary-btn:focus {
   outline: solid 0.25px #ea9f42;
 }
 
-.delete-button {
-  color: #ff3333;
-  border-color: #ff3333;
-}
-
 .file-upload-wrapper {
   position: relative;
-  width: fit-content;
   display: inline-block;
 }
 
-.upload-btn {
+.secondary-btn.upload-btn {
+  background: transparent;
+  margin-left: 0.25rem;
+  min-width: 540px;
+  border: 1px solid aliceblue;
   cursor: pointer;
+  display: block;
+}
+
+.input[type='text']:hover,
+.secondary-btn:hover,
+.secondary-btn.upload-btn:hover {
+  color: aliceblue;
+  border: 1px solid #ea9f42;
+  font-weight: bold;
+}
+
+.secondary-btn {
+  background: transparent;
+  margin-left: 0.25rem;
+  min-width: 540px;
+  border: 1px solid aliceblue;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  text-align: center;
+  color: aliceblue;
+  font-size: 15px;
+  font-family: 'Courier New', Courier, monospace !important;
+  min-height: 40px;
+  transition: all 0.25s ease;
 }
 
 .file-input {
   position: absolute;
   top: 0;
   left: 0;
+  width: 0.1px;
+  height: 0.1px;
   opacity: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-}
-
-.carousel-container {
-  display: flex;
-  align-items: center;
-  width: calc(100% - 0.25rem);
-  justify-content: space-between;
-  padding: 0.5rem;
-}
-
-.images-displayed {
-  display: flex;
-  gap: 10px;
   overflow: hidden;
-}
-
-img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-}
-
-img.selected {
-  border: 0.01rem solid #ea9f42;
-  border-radius: 0.5rem;
-}
-
-button {
-  background: #444;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-button:hover {
-  background: #555;
+  pointer-events: none;
+  clip: rect(0, 0, 0, 0);
 }
 
 .disabled {
@@ -316,25 +273,26 @@ button:hover {
   background: #2a2a2a;
 }
 
-.center-inner-contents {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .delete-button {
   background-color: transparent;
-  color: #a83232;
   border: none;
-  padding: 10px 20px;
-  font-size: 16px;
+  padding: 0.5rem 1rem;
+  margin-left: 0.25rem;
+  margin-top: -0.5rem;
+  font-size: 15px;
+  min-width: 540px;
+  min-height: 40px;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: block;
+  background-color: #a83232;
+  color: aliceblue;
+  border-color: #ff3333;
 }
 
 .delete-button:hover {
-  background-color: #a83232;
-  color: aliceblue;
+  background-color: #ba4646;
+  border: none;
 }
 
 .delete-button:active {
@@ -346,18 +304,7 @@ button:hover {
   cursor: not-allowed;
 }
 
-.input-group-single-row {
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-}
-#enable-2fa {
-  margin-left: 1rem;
-}
-
-.divider {
-  height: 1px; /* Skinny line */
-  background-color: #444; /* Dark gray color */
-  margin: 0.5rem -0.1rem; /* Space above and below the divider */
+.margin-top {
+  margin-top: 0.5rem;
 }
 </style>

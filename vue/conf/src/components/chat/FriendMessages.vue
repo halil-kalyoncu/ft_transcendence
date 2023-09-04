@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import type { UserI } from '../../model/user.interface'
 import type { directMessageI } from '../../model/message/directMessage.interface'
@@ -40,7 +40,7 @@ const loggedUser = computed<User>(() => ({
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const setNewDirectMessageListener = () => {
@@ -147,14 +147,9 @@ const isOwnMessage = (senderId: number | undefined) => {
     <div></div>
     <ScrollViewer :maxHeight="'60vh'" class="messages-scrollviewer">
       <div class="messages" v-if="!loading" ref="chatContainerRef">
-        <Message
-          v-for="message in messages"
-          :key="message.id"
-          :createdAt="'one minute ago'"
-          :message="message.message?.message ?? ''"
-          :sender="message.sender?.username ?? ''"
-          :isOwnMessage="isOwnMessage(message.sender.id)"
-        />
+        <Message v-for="message in messages" :key="message.id" :createdAt="'one minute ago'"
+          :message="message.message?.message ?? ''" :sender="message.sender?.username ?? ''"
+          :isOwnMessage="isOwnMessage(message.sender.id)" />
       </div>
       <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
@@ -174,12 +169,11 @@ const isOwnMessage = (senderId: number | undefined) => {
   margin-top: 0.5rem;
 }
 
-.chat > div:first-child {
+.chat>div:first-child {
   flex-grow: 1;
 }
 
-.chat .messages-scrollviewer {
-}
+.chat .messages-scrollviewer {}
 
 .chat .messages {
   display: flex;
@@ -199,6 +193,7 @@ const isOwnMessage = (senderId: number | undefined) => {
 .chat .chat-input input:focus {
   outline: solid 2px #ea9f42;
 }
+
 .chat .chat-input button {
   height: 100%;
   background-color: #32a852;
@@ -212,6 +207,7 @@ const isOwnMessage = (senderId: number | undefined) => {
   cursor: pointer;
   transition: 0.3s;
 }
+
 .chat .chat-input button:hover {
   background-color: #ea9f42;
 }
@@ -226,6 +222,7 @@ const isOwnMessage = (senderId: number | undefined) => {
 .chat-input textarea:focus {
   outline: none;
 }
+
 .chat .loading-text {
   font-size: 0.8rem;
   padding-left: 0.75rem;

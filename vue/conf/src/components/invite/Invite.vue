@@ -3,7 +3,7 @@ import InvitePlayerAccepted from './InvitePlayerAccepted.vue'
 import Spinner from '../utils/Spinner.vue'
 import InviteFriend from './InviteFriend.vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { UserI } from '../../model/user.interface'
 import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
@@ -37,7 +37,7 @@ const lobbyIsFinished = ref(false)
 const invitedUser = ref<UserI | null>(null)
 
 const initSocket = () => {
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 async function fetchMatchData(matchId: string): Promise<void> {
@@ -178,17 +178,11 @@ onBeforeUnmount(() => {
       <!-- <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer" /> -->
       <!-- <div v-else>Something went wrong</div> -->
       <!-- <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" /> -->
-      <InviteFriend
-        v-if="!rightPlayer && !isWaitingForResponse"
-        :matchId="matchId"
-        @send-match-invite="handleSendMatchInvite"
-      />
+      <InviteFriend v-if="!rightPlayer && !isWaitingForResponse" :matchId="matchId"
+        @send-match-invite="handleSendMatchInvite" />
       <div v-if="isWaitingForResponse" class="waiting-container">
         <Spinner />
-        <span
-          >waiting for <span class="orange-font">{{ invitedUser?.username }}</span
-          >...</span
-        >
+        <span>waiting for <span class="orange-font">{{ invitedUser?.username }}</span>...</span>
         <button class="icon-button-reject" title="Cancel request" @click="cancelWaiting">
           <font-awesome-icon :icon="['fas', 'times']" />
         </button>
@@ -196,14 +190,9 @@ onBeforeUnmount(() => {
     </div>
     <div v-if="rightPlayer" class="flex-row">
       <p>
-        '<span class="orange-font">{{ invitedUser?.username }}</span
-        >' is ready to play
+        '<span class="orange-font">{{ invitedUser?.username }}</span>' is ready to play
       </p>
-      <button
-        class="dynamic-button"
-        @click="handleStartMatch"
-        :class="{ disabledButton: !userIsHost || !rightPlayer }"
-      >
+      <button class="dynamic-button" @click="handleStartMatch" :class="{ disabledButton: !userIsHost || !rightPlayer }">
         PLAY
       </button>
     </div>
@@ -280,16 +269,19 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
 }
+
 @keyframes entranceAnimation {
   from {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 .dynamic-button {
   animation: entranceAnimation 0.5s forwards;
   background-color: transparent;

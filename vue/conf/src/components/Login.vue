@@ -13,7 +13,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
-import { connectWebSocket } from '../websocket'
+import { connectChatSocket } from '../websocket'
 import type { UserI } from '../model/user.interface'
 import jwtDecode from 'jwt-decode'
 import { fetchAndSaveAvatar } from '../utils/fetchAndSaveAvatar'
@@ -36,7 +36,6 @@ const submitForm = async () => {
     if (response.ok) {
       console.log('Login successful')
       const { access_token } = await response.json()
-      console.log('access_token: ' + access_token)
       //save jwt into local storage
       localStorage.setItem('ponggame', access_token)
       try {
@@ -51,7 +50,7 @@ const submitForm = async () => {
         notificationStore.showNotification('Invalid Token', false)
       }
       userStore.setUsername(username.value)
-      connectWebSocket('http://localhost:3000', access_token)
+      connectChatSocket(access_token)
       router.push('/home')
     } else {
       console.error('Login failed!! ' + response.status + ': ' + response.statusText)
@@ -105,6 +104,7 @@ const submitForm = async () => {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

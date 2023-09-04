@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import type { UserI } from '../../model/user.interface'
 import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 
 const props = defineProps({
@@ -23,7 +23,7 @@ const userSuggestions = ref<UserI[]>([])
 const showSuggestionList = ref(false)
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
-const socket = connectWebSocket('http://localhost:3000', accessToken)
+const socket = connectChatSocket(accessToken)
 
 const findUserSuggestions = async (username: string) => {
   if (username.trim() === '') {
@@ -85,10 +85,7 @@ const sendInvite = async () => {
       return
     }
 
-    console.log(
-      'sending invite for match: ' + numericMatchId + ' to invitedUser: ' + invitedUser.value!.id
-    )
-    socket.emit('sendMatchInvite', { matchId: numericMatchId, invitedUserId: invitedUser.value?.id })
+    socket.emit('sendMatchInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
 
     emit('send-match-invite', invitedUser.value)
   } catch (error) {
@@ -101,23 +98,13 @@ const sendInvite = async () => {
 
 <template>
   <div>
-    <input
-      type="text"
-      class="invite-friend-input"
-      v-model="invitedUsername"
-      placeholder="Enter username"
-      @focus="showSuggestions"
-      @blur="hideSuggestions"
-    />
+    <input type="text" class="invite-friend-input" v-model="invitedUsername" placeholder="Enter username"
+      @focus="showSuggestions" @blur="hideSuggestions" />
     <button @click="sendInvite" class="send-game-invitation-button">Send Game Invitation</button>
 
     <ScrollViewer :maxHeight="'50vh'" class="suggestionList" :class="'game-invite-suggestions'">
       <ul v-if="showSuggestionList && userSuggestions.length" class="suggestionList">
-        <li
-          v-for="suggestion in userSuggestions"
-          :key="suggestion.id"
-          @mousedown="selectSuggestion(suggestion)"
-        >
+        <li v-for="suggestion in userSuggestions" :key="suggestion.id" @mousedown="selectSuggestion(suggestion)">
           {{ suggestion.username }}
         </li>
       </ul>

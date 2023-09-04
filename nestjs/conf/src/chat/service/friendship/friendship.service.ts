@@ -2,13 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Friendship, FriendshipStatus, Prisma, User } from '@prisma/client';
-import { FriendshipDto } from '../../dto/friendship.dto';
+import { FriendshipDto, FriendshipEntryStatus } from '../../dto/friendship.dto';
+import { MatchService } from '../../../match/service/match.service';
 
 @Injectable()
 export class FriendshipService {
   constructor(
     private prisma: PrismaService,
     private connectedUserService: ConnectedUserService,
+    private matchService: MatchService,
   ) {}
 
   async create(friendship: Prisma.FriendshipCreateInput): Promise<Friendship> {
@@ -69,15 +71,31 @@ export class FriendshipService {
           friendship.senderId === userId
             ? friendship.receiver
             : friendship.sender;
+
+        let status = FriendshipEntryStatus.Offline;
+        const inGame = await this.matchService.isInGame(friend.id);
         const isConnected = await this.connectedUserService.findByUser(friend);
-        return { id, friend, isOnline: !!isConnected };
+        if (inGame) {
+          status = FriendshipEntryStatus.Ingame;
+        } else if (isConnected) {
+          status = FriendshipEntryStatus.Online;
+        }
+        return { id, friend, status };
       }),
     );
 
     friendshipEntries.sort((a, b) => {
-      if (a.isOnline && !b.isOnline) {
+      if (
+        (a.status === FriendshipEntryStatus.Online ||
+          a.status === FriendshipEntryStatus.Ingame) &&
+        b.status === FriendshipEntryStatus.Offline
+      ) {
         return -1;
-      } else if (!a.isOnline && b.isOnline) {
+      } else if (
+        a.status === FriendshipEntryStatus.Offline &&
+        (b.status === FriendshipEntryStatus.Online ||
+          b.status === FriendshipEntryStatus.Ingame)
+      ) {
         return 1;
       } else {
         return 0;
@@ -99,7 +117,7 @@ export class FriendshipService {
       requests.map(async (request) => {
         const id = request.id;
         const sender = request.sender;
-        return { id, friend: sender, isOnline: false };
+        return { id, friend: sender, status: FriendshipEntryStatus.Offline };
       }),
     );
 

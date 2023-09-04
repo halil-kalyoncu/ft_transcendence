@@ -3,11 +3,7 @@
     <RouterLink class="navButton header-username" to="/activity-center">
       <button class="settings-button" :class="'icon-wrapper'">
         <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
-        <span
-          v-if="friendRequests?.length > 0 || matchInvites?.length > 0"
-          class="notification-badge"
-          >1+</span
-        >
+        <span v-if="friendRequests?.length > 0 || matchInvites?.length > 0" class="notification-badge">1+</span>
       </button>
     </RouterLink>
   </div>
@@ -19,7 +15,7 @@ import { Socket } from 'socket.io-client'
 import { computed, ref, onMounted } from 'vue'
 import type { MatchI } from '../../model/match/match.interface'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
-import { disconnectWebSocket, connectWebSocket } from '../../websocket'
+import { disconnectChatSocket, connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import { useFriendRequestStore } from '../../stores/friendRequests'
 import { useMatchRequestsStore } from '../../stores/matchRequests'
@@ -44,50 +40,49 @@ const hasNotification = ref(false)
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 onMounted(() => {
   initSocket()
 
   setFriendRequestListener()
-  // Todo: implement matchInvite
-  // setMatchInviteListener()
+  setMatchInviteListener()
+
+  setFriendRequestData()
+  setMatchInviteData()
 })
 
-// const setMatchInviteData = async () => {
-//     console.log("NotificationBell userId" + userId.value)
-//   try {
-//     const response = await fetch(
-//       `http://localhost:3000/api/matches/invites-by-userId?userId=${userId.value}`
-//     )
+const setMatchInviteListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+  socket.value.on('matchInvites', () => {
+    setMatchInviteData()
+  })
+}
 
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-//     }
+const setMatchInviteData = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/matches/invites-by-userId?userId=${userId.value}`
+    )
 
-//     const data = await response.json()
-//     matchInvites.value = data
-//     if (data && data.length > 0) {
-//       hasNotification.value = true;
-//     }
-//     // matchRequestsStore.addMatchRequest(matchInvites.value)
+    if (!response.ok) {
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    }
 
-//   } catch (error: any) {
-//     notificationStore.showNotification(`Error` + error.message, false)
-//   }
-// }
-
-// const setMatchInviteListener = () => {
-//   if (!socket || !socket.value) {
-//     notificationStore.showNotification(`Error: Connection problems`, false)
-//     return
-//   }
-//   socket.value.on('matchInvites', () => {
-
-//     setMatchInviteData()
-//   })
-// }
+    const data = await response.json()
+    matchInvites.value = data
+    if (data && data.length > 0) {
+      hasNotification.value = true
+    }
+    matchRequestsStore.addMatchRequest(matchInvites.value)
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
+}
 
 const setFriendRequestData = async () => {
   try {
@@ -101,11 +96,10 @@ const setFriendRequestData = async () => {
 
     const data = await response.json()
 
-    // Only set hasNotification to true if there are actual new notifications.
     if (data && data.length > 0) {
       hasNotification.value = true
     }
-    console.log(data)
+
     friendRequestsStore.addFriendRequest(data)
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
