@@ -541,6 +541,140 @@ describe('MatchService', () => {
     });
   });
 
+  describe('isInGame', () => {
+    it('should return the match object if leftUserId matches', async () => {
+      const userId = 1;
+      const match: Match = {
+        id: 1,
+        leftUserId: 1,
+        rightUserId: 2,
+        type: 'CUSTOM',
+        state: 'STARTED',
+        goalsLeftPlayer: 0,
+        goalsRightPlayer: 0,
+        createdAt: new Date(),
+        startedAt: new Date(),
+        finishedAt: null,
+      };
+
+      const findFirstSpy = jest
+        .spyOn(prismaService.match, 'findFirst')
+        .mockResolvedValue(match);
+      
+      const result = await service.isInGame(userId);
+
+      expect(result).toBe(match);
+      expect(findFirstSpy).toHaveBeenCalledWith({
+        where: {
+          state: 'STARTED',
+          OR: [
+            { leftUserId: userId },
+            { rightUserId: userId }
+          ]
+        },
+        include: {
+          leftUser: true,
+          rightUser: true
+        }
+      });
+
+      findFirstSpy.mockRestore();
+    });
+
+    it('should return the match object if rightUserId matches', async () => {
+      const userId = 1;
+      const match: Match = {
+        id: 1,
+        leftUserId: 2,
+        rightUserId: 1,
+        type: 'CUSTOM',
+        state: 'STARTED',
+        goalsLeftPlayer: 0,
+        goalsRightPlayer: 0,
+        createdAt: new Date(),
+        startedAt: new Date(),
+        finishedAt: null,
+      };
+
+      const findFirstSpy = jest
+        .spyOn(prismaService.match, 'findFirst')
+        .mockResolvedValue(match);
+      
+      const result = await service.isInGame(userId);
+
+      expect(result).toBe(match);
+      expect(findFirstSpy).toHaveBeenCalledWith({
+        where: {
+          state: 'STARTED',
+          OR: [
+            { leftUserId: userId },
+            { rightUserId: userId }
+          ]
+        },
+        include: {
+          leftUser: true,
+          rightUser: true
+        }
+      });
+
+      findFirstSpy.mockRestore();
+    });
+
+    it('should return null if user is not in game', async () => {
+      const userId = 1;
+
+      const findFirstSpy = jest
+        .spyOn(prismaService.match, 'findFirst')
+        .mockResolvedValue(null);
+      
+      const result = await service.isInGame(userId);
+
+      expect(result).toBe(null);
+      expect(findFirstSpy).toHaveBeenCalledWith({
+        where: {
+          state: 'STARTED',
+          OR: [
+            { leftUserId: userId },
+            { rightUserId: userId }
+          ]
+        },
+        include: {
+          leftUser: true,
+          rightUser: true
+        }
+      });
+
+      findFirstSpy.mockRestore();
+    });
+
+    it("should return null if user doesn't exists", async () => {
+      const userId = 4242;
+
+      const findFirstSpy = jest
+        .spyOn(prismaService.match, 'findFirst')
+        .mockResolvedValue(null);
+      
+      const result = await service.isInGame(userId);
+
+      expect(result).toBe(null);
+      expect(findFirstSpy).toHaveBeenCalledWith({
+        where: {
+          state: 'STARTED',
+          OR: [
+            { leftUserId: userId },
+            { rightUserId: userId }
+          ]
+        },
+        include: {
+          leftUser: true,
+          rightUser: true
+        }
+      });
+
+      findFirstSpy.mockRestore();
+    });
+  });
+
   describe('startMatch', () => {
     it('should change the state to STARTED and set startedAt', async () => {
       const matchId = 1;
