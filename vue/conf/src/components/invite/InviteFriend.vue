@@ -83,9 +83,6 @@ const sendInvite = async () => {
       return
     }
 
-    console.log(
-      'sending invite for match: ' + props.matchId + ' to invitedUser: ' + invitedUser.value!.id
-    )
     socket.emit('sendMatchInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
 
     emit('send-match-invite', invitedUser.value)
