@@ -13,7 +13,7 @@ let ballPos = {x: 0, y: 0};
 	cors: {
 	  origin: ["http://localhost:4200", "http://localhost:3000"]
 	},
-	namespace: 'game'
+	namespace: '/game'
   })
   export class EventsGateway {
 	
@@ -47,6 +47,10 @@ let ballPos = {x: 0, y: 0};
 					//this.server.emit('ballPosition', newBallPos);
 				}
 			}, 15);
+	
+
+			
+
 		}
 
 

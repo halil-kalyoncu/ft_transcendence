@@ -1,30 +1,20 @@
 <template>
-	<div class="field" ref="gameField">
-		<div class="left-border"></div>
-		<div class="right-border"></div>
-		<GameBall ref="ball" />
-		<GamePaddle ref="paddleA" />
-		<GamePaddle ref="paddleB" />
-		<!-- <PowerUp
-		v-for="powerup in PowerUps"
-		:id="powerup.id" 
-		:x="powerup.x"
-		:y="powerup.y"
-		:type="powerup.type"
-		:color="powerup.color"
-		:index="powerup.index"
-		/> -->
-	</div>
-	<div v-if="countdown === -1">
-		<div class="waiting">
-			<p>Waiting for opponent...</p>
+		<div class="field" ref="gameField">
+			<div class="left-border"></div>
+			<div class="right-border"></div>
+			<GameBall ref="ball" />
+			<GamePaddle ref="paddleA" />
+			<GamePaddle ref="paddleB" />
+			<div v-if="countdown === -1" class="waiting"> <p>Waiting for opponent...</p></div>
+			<div v-else-if="countdown > 0" class="countdown"> <p>{{ countdown }}</p></div>
+			<PowerUp v-for="powerup in PowerUps"
+			:id="powerup.id" 
+			:x="powerup.x"
+			:y="powerup.y"
+			:type="powerup.type"
+			:color="powerup.color"
+			:index="powerup.index"/>
 		</div>
-	</div>
-	<div v-else-if="countdown > 0">
-		<div class="countdown">
-			<p>Starting in {{ countdown }}</p>
-		</div>
-	</div>
 		<!-- <div class="ball-coordinates" v-if="ballCoordinates">
 			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
 		</div> -->
@@ -73,7 +63,6 @@ const ball = ref<typeof GameBall | null>(null);
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false };
 
-
 const countdown = ref<number>(-1);
 
 const getUserFromAccessToken = () => {
@@ -111,7 +100,7 @@ const keyHookUp = (e: KeyboardEvent) => {
 			break;
 		case 'n':
 			spawnPowerUp();
-			socket.value.emit('activatePowerUp', { type: "increasePaddle", player: "left" })
+			// socket.value.emit('activatePowerUp', { type: "increasePaddle", player: "left" })
 			break;
 	}
 };
@@ -308,6 +297,34 @@ function update() {
 };
 
 function spawnPowerUp() {
+	const newPowerUp = {
+		id: Math.floor(Date.now()),
+		x: Math.floor(Math.random() * fieldWidth.value!),
+		y: -30,
+		index: 0,
+		type: Math.floor(Math.random() * 4),
+		color: "white",
+		wid: 30,
+		hgt: 30
+	};
+	if (newPowerUp.type == 0){
+		newPowerUp.color = "red";
+		newPowerUp.index = 0;
+	}
+	else if (newPowerUp.type == 1){
+		newPowerUp.color = "green";
+		newPowerUp.index = 3;
+	}
+	else if (newPowerUp.type == 2){
+		newPowerUp.color = "blue";
+		newPowerUp.index = 2;
+	}
+	else if (newPowerUp.type == 3){
+		newPowerUp.color = "white";
+		newPowerUp.index = 1;
+	}
+	socket.value?.emit('spawnPowerUp', newPowerUp);
+	console.log("PU spawn local");
 }
 </script>
 
@@ -354,5 +371,25 @@ function spawnPowerUp() {
 
 .right-border {
 	right: 0;
+}
+
+.waiting {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 40px;
+	text-align: center;
+}
+
+.countdown {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 100px;
+	text-align: center;
 }
 </style>

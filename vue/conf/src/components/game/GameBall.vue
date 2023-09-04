@@ -28,7 +28,7 @@ export default defineComponent ({
 			y.value=0;
 			wid.value=15;
 			hgt.value=15;
-			speed.value=5;
+			speed.value=3;
 			dx.value=3;
 			dy.value=2;
 		};
