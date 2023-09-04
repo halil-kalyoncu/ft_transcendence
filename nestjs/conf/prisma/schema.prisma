@@ -7,7 +7,7 @@ generator client {
 
 generator prismaClassGenerator {
   provider = "prisma-class-generator"
-  dryRun = false
+  dryRun   = false
 }
 
 datasource db {
@@ -16,14 +16,14 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  username String  @unique
-  avatarId String?
+  id          Int     @id @default(autoincrement())
+  username    String  @unique
+  avatarId    String?
+  ladderLevel Int     @default(1000)
+  enabled2FA  Boolean @default(false)
+  secret2FA   String?
 
   connectedUser ConnectedUser?
-
-  enabled2FA Boolean @default(false)
-  secret2FA  String?
 
   blockedUsers BlockedUser[] @relation("Blocked")
   blockedBy    BlockedUser[] @relation("BlockedBy")
@@ -38,6 +38,8 @@ model User {
 
   leftPlayerMatches  Match[] @relation("LeftPlayer")
   rightPlayerMatches Match[] @relation("RightPlayer")
+
+  queue Matchmaking? @relation("WaitingLadderGame")
 }
 
 model ConnectedUser {
@@ -197,6 +199,13 @@ model BlockedUser {
 
   user       User @relation("BlockedBy", fields: [userId], references: [id])
   targetUser User @relation("Blocked", fields: [targetUserId], references: [id])
+}
+
+model Matchmaking {
+  id     Int @id @default(autoincrement())
+  userId Int @unique
+
+  user User @relation("WaitingLadderGame", fields: [userId], references: [id])
 }
 
 // model Channel {

@@ -21,6 +21,7 @@ CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "username" TEXT NOT NULL,
     "avatarId" TEXT,
+    "ladderLevel" INTEGER NOT NULL DEFAULT 1000,
     "enabled2FA" BOOLEAN NOT NULL DEFAULT false,
     "secret2FA" TEXT,
 
@@ -138,6 +139,14 @@ CREATE TABLE "BlockedUser" (
     CONSTRAINT "BlockedUser_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Matchmaking" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+
+    CONSTRAINT "Matchmaking_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
@@ -164,6 +173,9 @@ CREATE UNIQUE INDEX "Channel_name_key" ON "Channel"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ChannelMember_userId_channelId_key" ON "ChannelMember"("userId", "channelId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Matchmaking_userId_key" ON "Matchmaking"("userId");
 
 -- AddForeignKey
 ALTER TABLE "ConnectedUser" ADD CONSTRAINT "ConnectedUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -212,3 +224,6 @@ ALTER TABLE "BlockedUser" ADD CONSTRAINT "BlockedUser_userId_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "BlockedUser" ADD CONSTRAINT "BlockedUser_targetUserId_fkey" FOREIGN KEY ("targetUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Matchmaking" ADD CONSTRAINT "Matchmaking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
