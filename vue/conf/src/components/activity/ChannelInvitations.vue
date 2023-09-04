@@ -74,8 +74,6 @@ const setInvitationListener = () => {
 	})
 	socket.value.on('ChannelInvitationAccepted', (channelName, UserName) => {
 		console.log('User Accepted ChannelInvitaion fired')
-		console.log(channelName)
-		console.log(UserName)
 		notificationStore.showNotification('Channel Invitaion accepted', true)
 		setChannelInvitations()
 	})

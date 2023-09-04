@@ -155,13 +155,19 @@ const setUserSignedListener = () => {
 	}
 	socket.value.on('UserSignedOut', (channelId: Number) => {
 		console.log('UserSignedOut from ChannelManager fired')
-		notificationStore.showNotification(' Signed out Channel', true)
 		setMembers().then(() => {
 			setCurrentUserRole()
 		})
 	})
 	socket.value.on('UserSignedIn', (channelId: Number) => {
 		console.log('UserSignedIn fired')
+		//notificationStore.showNotification(' Signed in Channel', true)
+		setMembers().then(() => {
+			setCurrentUserRole()
+		})
+	})
+	socket.value.on('ChannelInvitationAccepted', (channelId: Number) => {
+		console.log('ChannelInvitationAccepted fired')
 		//notificationStore.showNotification(' Signed in Channel', true)
 		setMembers().then(() => {
 			setCurrentUserRole()
@@ -214,17 +220,17 @@ const DestroyChannel = () => {
   })
 }
 
-const SignOutChannel = () => {
+const SignOutChannel = async () => {
   notificationStore.showNotification('You have signed out the channel: ' + ChannelName, true)
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.emit('SignOutChannel', {
+  await emit('channel-signedout')
+  await socket.value.emit('SignOutChannel', {
 	  channelId: channelId,
 	  senderId: userId.value
   })
-  emit('channel-signedout')
 }
 
 const changePassword = () => {

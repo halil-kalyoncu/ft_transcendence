@@ -420,7 +420,7 @@ export class ChatGateway
 	  if ( memberOnline) {
 		console.log(memberOnline)
 		console.log('Online Memeber')
-		  socket.to(memberOnline.socketId).emit('UserSignedOut', channelId);
+		socket.to(memberOnline.socketId).emit('UserSignedOut', channelId);
 		}
 	  }
   }
@@ -488,13 +488,20 @@ export class ChatGateway
 	 await this.channelInvitationService.acceptInvitation(invitation.channelId, invitation.inviteeId);
 	 const channelName = invitation.channel.name
 	 const inviteeName = invitation.invitee.username
+	 console.log('CHANNELID')
+	 console.log(invitation.channelId)
 	 socket.emit('ChannelInvitationAccepted', channelName, inviteeName);
-	 const inviterOnline: ConnectedUser = 
-	 await this.connectedUserService.findByUserId(invitation.inviterId);
-	 if (inviterOnline) {
-		 socket.to(inviterOnline.socketId).emit('ChannelInvitationAccepted',channelName, inviteeName);
-	   }
-	 }
+	 const members: User[] = await this.channelService.getMembers(
+		invitation.channelId,
+	  );
+	  for (const member of members) {
+		const memberOnline: ConnectedUser =
+		  await this.connectedUserService.findByUserId(member.id);
+	  if ( memberOnline) {
+		  socket.to(memberOnline.socketId).emit('ChannelInvitationAccepted', channelName, inviteeName);
+		}
+	  }
+	}
 
 	@SubscribeMessage('rejectChannelInvitation')
 	async handleRejectChannelInvitation(
