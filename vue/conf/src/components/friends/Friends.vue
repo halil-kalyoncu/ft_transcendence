@@ -78,7 +78,6 @@ const setFriendData = async () => {
 
     const data = await response.json()
     friends.value = data
-    console.log(friends.value)
     updateSelectedFriend()
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)

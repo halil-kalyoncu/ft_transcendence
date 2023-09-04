@@ -31,7 +31,7 @@ import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
 import { useNotificationStore } from '../../stores/notification'
 import { useFriendRequestStore } from '../../stores/friendRequests'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { BlockEntryI } from '../../model/users/blocked-users.interface'
 import type { BlockUserDto } from '../../model/block-user.dto'
 import type { UserI } from '../../model/user.interface'
@@ -47,7 +47,7 @@ const username = computed(() => userStore.username)
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 onMounted(() => {
@@ -113,8 +113,6 @@ const setBlockedUsersData = async () => {
 
     const data = await response.json()
     blockedUsers.value = data
-    console.log(data)
-    console.log(blockedUsers.value)
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
   }
