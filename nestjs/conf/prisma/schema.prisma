@@ -91,7 +91,7 @@ model ChannelMessageReadStatus {
   isRead    Boolean
 
   message ChannelMessage @relation(fields: [messageId], references: [messageId], onDelete: Cascade)
-  reader  ChannelMember  @relation(fields: [readerId], references: [id])
+  reader  ChannelMember  @relation(fields: [readerId], references: [id], onDelete: Cascade)
 }
 
 model Message {

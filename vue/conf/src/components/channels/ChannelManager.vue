@@ -1,7 +1,14 @@
 <template>
   <h2 class="current-channel-name">{{ ChannelName }}</h2>
-
   <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'">
+	<InvitePrivateChannelModal
+		  v-if="isModalOpened"
+		  :isOpened="isModalOpened"
+		  :title="modalTitle"
+		  :channelId = "channelId"
+		  @submit="handleSubmit"
+		  @close="handleClose"
+		/>
     <div v-for="member in Members" :key="member.userId">
       <ChannelManagerUserItem
         :username="member.username"
@@ -29,12 +36,18 @@
       />
     </div>
 
-    <button :class="['join-channel-button', 'leave-channel-button']" @click="leaveChannel">
+    <button :class="['join-channel-button', 'leave-channel-button']" @click="handleLeaveChannel">
       Leave
     </button>
 	<button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
       {{ getSignOutButtonText() }}
     
+	  </button>
+	  <button 
+	  v-show="currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN"
+	  :class="['join-channel-button', 'add-user-button']" 
+	  @click="openAddModal">
+      Add User
 	  </button>
   </div>
 </template>
@@ -51,8 +64,13 @@ import { connectWebSocket } from '../../websocket'
 import type { ChannelManagerMemberI } from '../../model/channels/channelMessage.interface'
 import type { ChannelMemberRoleType } from '../../model/channels/createChannel.interface'
 import  { ChannelMemberRole } from '../../model/channels/createChannel.interface'
+import InvitePrivateChannelModal from './InvitePrivateChannelModal.vue'
 const props = defineProps({
-  channelId: Number
+  channelId: 
+  {
+	type: Number,
+	required: true
+  }
 })
 
 const socket = ref<Socket | null>(null)
@@ -60,7 +78,7 @@ const notificationStore = useNotificationStore()
 const userStore = useUserStore()
 const userId = computed<number>(() => userStore.userId)
 const username = computed(() => userStore.username)
-const channelId: Number | undefined = props.channelId
+const channelId: Number = props.channelId
 const Members = ref<ChannelManagerMemberI[]>([])
 let currentUserRole = ref<ChannelMemberRoleType>(ChannelMemberRole.MEMBER)
 let ChannelName = ref<string>('')
@@ -73,6 +91,7 @@ const password = ref('')
 const modalVisible = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
+const isModalOpened = ref(false)
 
 
 
@@ -165,7 +184,21 @@ const handleSignOut = () => {
   }
 }
 
-const leaveChannel = () => {
+const openAddModal = () => {
+  modalTitle.value = 'Invite Users to Channel'
+  isModalOpened.value = true
+}
+
+const handleSubmit = () => {
+	console.log('SUBMIT')
+	isModalOpened.value = false
+}
+
+const handleClose = () => {
+  isModalOpened.value = false
+}
+
+const handleLeaveChannel = () => {
   notificationStore.showNotification('You have left the channel: ' + ChannelName, true)
   emit('channel-left')
 }
@@ -266,6 +299,9 @@ const changePassword = () => {
   width: 100%;
 }
 
+.channel-manager-info .add-user-button{
+	background-color: #ffbd09;
+}
 .change-password-container {
   width: 100%;
   margin: -1.25px 0 0 0;

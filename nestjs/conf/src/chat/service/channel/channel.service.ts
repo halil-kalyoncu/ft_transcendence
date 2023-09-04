@@ -212,7 +212,6 @@ try{
 	});
 
 	if (associatedMessages.length > 0) {
-		//delete all the messages of this user when he signs out
 		await this.prisma.channelMessage.deleteMany({
 		  where: { senderId: userId },
 		});
@@ -621,5 +620,4 @@ async getAllAvailableChannels(userId: number): Promise<ChannelInfoDto[]> {
 	  
 	return channelMembersEntries;
   }
-
 }

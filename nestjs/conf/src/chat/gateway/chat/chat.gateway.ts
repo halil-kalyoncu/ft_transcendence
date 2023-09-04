@@ -15,6 +15,7 @@ import { FriendshipService } from '../../../chat/service/friendship/friendship.s
 import { ChannelService } from '../../../chat/service/channel/channel.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
+import { ChannelInvitationsService } from '../../service/channel-invitations/channel-invitations.service';
 import { CreateDirectMessageDto } from '../../dto/create-direct-message.dto';
 import {
   CreateChannelDto,
@@ -58,6 +59,7 @@ export class ChatGateway
     private directMessageService: DirectMessageService,
     private channelMessageService: ChannelMessageService,
     private matchService: MatchService,
+	private channelInvitationService: ChannelInvitationsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -249,7 +251,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('createProtectedChannel')
-  async createProtectedChannel(
+  async handlecreateProtectedChannel(
     @ConnectedSocket() socket: Socket,
     @MessageBody() createChannelDto: CreateChannelDto,
   ): Promise<void> {
@@ -381,7 +383,7 @@ export class ChatGateway
 
 
   @SubscribeMessage('DestroyChannel')
-  async DestroyChannel(
+  async handleDestroyChannel(
     socket: Socket,
     destroyChannelDto: DestroyChannelDto,
   ): Promise<void> {
@@ -404,7 +406,7 @@ export class ChatGateway
 
   
   @SubscribeMessage('SignOutChannel')
-  async SignOutChannel(
+  async handleSignOutChannel(
     socket: Socket,
     destroyChannelDto: DestroyChannelDto,
   ): Promise<void> {
@@ -424,7 +426,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('SignInChannel')
-  async SignInChannel(
+  async handleSignInChannel(
     socket: Socket,
     channelId: number,
   ): Promise<void> {
@@ -446,12 +448,12 @@ export class ChatGateway
    ***********************/
 
   @SubscribeMessage('groupMessages')
-  async getGroupMessages(socket: Socket, channelId: number) {
+  async handlegetGroupMessages(socket: Socket, channelId: number) {
     return await this.channelMessageService.getChannelMessagesforChannel(channelId);
   }
 
   @SubscribeMessage('sendChannelMessage')
-  async sendChannelMessage(
+  async handleSendChannelMessage(
     socket: Socket,
     createChannelMessageDto: CreateChannelMessageDto,
   ): Promise<void> {
@@ -474,7 +476,55 @@ export class ChatGateway
       }
     }
   }
+  /**********************
+   *** ChannelInvitations ***
+   ***********************/
+   @SubscribeMessage('acceptChannelInvitation')
+   async handleAcceptChannelInvitation(
+	 socket: Socket,
+	 invitationId: number,
+   ): Promise<void> {
+	 const invitation = await this.channelInvitationService.getOne(invitationId);
+	 await this.channelInvitationService.acceptInvitation(invitation.channelId, invitation.inviteeId);
+	 const channelName = invitation.channel.name
+	 const inviteeName = invitation.invitee.username
+	 socket.emit('ChannelInvitationAccepted', channelName, inviteeName);
+	 const inviterOnline: ConnectedUser = 
+	 await this.connectedUserService.findByUserId(invitation.inviterId);
+	 if (inviterOnline) {
+		 socket.to(inviterOnline.socketId).emit('ChannelInvitationAccepted',channelName, inviteeName);
+	   }
+	 }
 
+	@SubscribeMessage('rejectChannelInvitation')
+	async handleRejectChannelInvitation(
+		socket: Socket,
+		invitationId: number
+	): Promise<void> {
+		const invitation = await this.channelInvitationService.getOne(invitationId);
+		await this.channelInvitationService.rejectInvitation(invitation.channelId, invitation.inviteeId);
+		const channelName = invitation.channel.name
+		const inviteeName = invitation.invitee.username
+		socket.emit('ChannelInvitationRejected', channelName, inviteeName);
+		const inviterOnline: ConnectedUser = 
+		await this.connectedUserService.findByUserId(invitation.inviterId);
+		if (inviterOnline) {
+			socket.to(inviterOnline.socketId).emit('ChannelInvitationRejected', channelName, inviteeName)
+		}
+	}
+
+	@SubscribeMessage('gotChannelInvitation')
+	async handlGotChannelInvitation(
+		socket: Socket,
+		inviteeUsername: string
+	): Promise<void> {
+		const invitee = await this.userService.findByUsername(inviteeUsername);
+		const inviteeOnline: ConnectedUser =
+		await this.connectedUserService.findByUserId(invitee.id);
+		if (inviteeOnline) {
+			socket.to(inviteeOnline.socketId).emit('NewChannelInvitation');
+		}
+	}
   /******************
    *** MatchInvites ***
    *******************/
@@ -580,6 +630,7 @@ export class ChatGateway
     socket.emit('goToGame', updatedMatch);
     socket.to(receiverOnline.socketId).emit('goToGame', updatedMatch);
   }
+
 
   /**********************
    *** Helperfunctions ***

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ChannelInvitation, ChannelInvitationStatus, ChannelMemberRole } from '@prisma/client';
 import { ChannelService } from '../channel/channel.service';
-import type { ChannelMembershipDto } from 'src/chat/dto/channel.dto';
-
+import type { ChannelMembershipDto } from '../../dto/channel.dto';
+import type { ChannelInvitationDto } from '../../dto/channelInvitation.dto';
 
 @Injectable()
 export class ChannelInvitationsService {
@@ -11,6 +11,46 @@ export class ChannelInvitationsService {
 		private prisma: PrismaService,
 		private ChannelService: ChannelService
 	) { }
+
+
+	async getPendingInvitations(userId: number): Promise<ChannelInvitationDto[]> {
+		try{
+		const invitations: any[] = await this.prisma.channelInvitation.findMany({
+			where: { inviteeId: userId, status: ChannelInvitationStatus.PENDING },
+			include: { channel: true, inviter: true}
+		});
+
+		const ChannelInvitationsDtos: ChannelInvitationDto[] =  
+		invitations.map( invitation => ({
+			invitationId: invitation.id,
+			inviterName: invitation.inviter.username,
+			channelName: invitation.channel.name,
+		 	isPasswordProtected: invitation.channel.protected
+		}));
+		return ChannelInvitationsDtos;
+	}
+	catch (error:any)
+	{
+		console.error("Error fetching channel messages: ", error);
+		throw error;
+	}
+}
+	async getOne(invitationId:number): Promise<any> {
+		console.log(invitationId)
+		const invitation = await this.prisma.channelInvitation.findUnique({
+			where: { id: invitationId },
+			include : { channel: true, inviter: true, invitee: true }
+		});
+		return invitation;
+	}
+
+	async getInvitationsComplete(userId: number): Promise<ChannelInvitation[]> {
+		const invitations = await this.prisma.channelInvitation.findMany({
+			where: { inviteeId: userId },
+			include: { channel: true, inviter: true, invitee: true }
+		});
+		return invitations;
+	}
 
 	async inviteUserToChannel(channelId: number, inviteeId: number, inviterId: number): Promise<ChannelInvitation> {
 		await this.ErrorCheckInvite(channelId, inviteeId, inviterId);
@@ -26,6 +66,7 @@ export class ChannelInvitationsService {
 		});
 		return invitation;
 	}
+
 
 	async acceptInvitation(channelId: number, userId: number): Promise<ChannelInvitation> {
 		//TODO ERROR HANDLING
@@ -69,10 +110,11 @@ export class ChannelInvitationsService {
 
 		//decline invitation
 		const invitation_updated = await this.prisma.channelInvitation.update({
-			where: { channelId_inviteeId: { channelId: channelId, inviteeId: userId },
-			},data: {
+			where: {
+				channelId_inviteeId: { channelId: channelId, inviteeId: userId },
+			}, data: {
 				status: ChannelInvitationStatus.REJECTED,
-			 }
+			}
 		});
 
 		return invitation_updated;
@@ -98,9 +140,11 @@ export class ChannelInvitationsService {
 			throw new Error(`User with id ${inviteeId} not found`);
 		}
 
-		const inviter = await this.prisma.channelMember.findUnique({ where: { 
-			userId_channelId: { channelId: channelId, userId: inviterId}
-			}});
+		const inviter = await this.prisma.channelMember.findUnique({
+			where: {
+				userId_channelId: { channelId: channelId, userId: inviterId }
+			}
+		});
 		if (!inviter) {
 			throw new Error(`User with id ${inviterId} not found`);
 		}
@@ -123,12 +167,12 @@ export class ChannelInvitationsService {
 				await this.prisma.channelInvitation.delete({
 					where: { channelId_inviteeId: { channelId: channelId, inviteeId: inviteeId } }
 				});
-				return 
+				return
 			}
 			if (existingInvitation.status === ChannelInvitationStatus.PENDING) {
-			throw new Error(`User with id ${inviteeId} is already invited to channel with id ${channelId}`);
+				throw new Error(`User with id ${inviteeId} is already invited to channel with id ${channelId}`);
+			}
 		}
-	}
 		return
 	}
 }

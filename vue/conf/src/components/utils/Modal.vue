@@ -22,6 +22,7 @@
           :placeholder="placeholderText"
           type="text"
           class="input-text"
+		  required
         />
 </div>
       <div v-if="showVisibilitySelection && !isNumberSelection">
@@ -69,6 +70,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useNotificationStore } from '../../stores/notification'
 
 interface ModalResult {
   name?: string
@@ -80,10 +82,11 @@ interface ModalResult {
 
 const inputName = ref('')
 const inputPassword = ref('')
-const checkPassword = ref(true)
+const checkPassword = ref(false)
 const numberValue = ref(0)
 const maxValue = ref(100)
 const channelVisibility = ref('Public')
+const notificationStore = useNotificationStore()
 
 const props = defineProps({
   isOpened: Boolean,
@@ -96,6 +99,14 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'close'])
 
 const submit = () => {
+	if (inputName.value.trim() === '') {
+		notificationStore.showNotification('Set Channel-Name', true)
+		return
+	}
+	if (checkPassword.value && inputPassword.value.trim() === '') {
+		notificationStore.showNotification('Set Password', true)
+		return
+	}
   const result: ModalResult = {
     name: inputName.value,
     password: inputPassword.value,
