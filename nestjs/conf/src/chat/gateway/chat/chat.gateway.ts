@@ -31,6 +31,8 @@ import {
   FriendshipStatus,
   User,
   Match,
+  Matchmaking,
+  Prisma,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
@@ -38,12 +40,13 @@ import { CreateChannelMessageDto } from '../../dto/create-channel-message.dto';
 import { SendGameInviteDto } from '../../../chat/dto/send-game-invite.dto';
 import { MatchService } from '../../../match/service/match.service';
 import { ErrorDto } from '../../../chat/dto/error.dto';
+import { MatchmakingService } from '../../../matchmaking/service/matchmaking.service';
 
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost:3000', 'http://localhost:4200'],
   },
-  path: '/chat'
+  path: '/chat',
 })
 export class ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
@@ -60,6 +63,7 @@ export class ChatGateway
     private directMessageService: DirectMessageService,
     private channelMessageService: ChannelMessageService,
     private matchService: MatchService,
+    private matchmakingService: MatchmakingService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -564,6 +568,94 @@ export class ChatGateway
     const updatedMatch: Match = await this.matchService.startMatch(matchId);
     socket.emit('goToGame', updatedMatch);
     socket.to(receiverOnline.socketId).emit('goToGame', updatedMatch);
+  }
+
+  /******************
+   *** Matchmaking ***
+   ******************/
+
+  @SubscribeMessage('queueUpForLadder')
+  async queueUpForLadder(socket: Socket): Promise<Matchmaking | ErrorDto> {
+    let existingMatchmaking: Matchmaking;
+    let findOpponent: Matchmaking;
+    let waitForPlayer: Matchmaking;
+    let connectedUser: ConnectedUser;
+
+    try {
+      //looking for exisiting entry if user reconnects, presses refresh
+      existingMatchmaking = await this.matchmakingService.getByUserId(
+        socket.data.user.id,
+      );
+      if (existingMatchmaking) {
+        return existingMatchmaking;
+      }
+
+      //looking if another player is looking for a game with a similiar ladderLevel
+      findOpponent = await this.matchmakingService.findOpponent(
+        socket.data.user.id,
+      );
+      if (findOpponent) {
+        const ladderGameData: Prisma.MatchCreateInput = {
+          type: 'LADDER',
+          leftUser: { connect: { id: findOpponent.userId } },
+          rightUser: { connect: { id: socket.data.user.id } },
+        };
+        connectedUser = await this.connectedUserService.findByUserId(
+          findOpponent.userId,
+        );
+        if (!connectedUser) {
+          return { error: 'Opponent is not online' };
+        }
+        socket.to(connectedUser.socketId).emit('readyLadderGame', findOpponent);
+        socket.emit('readyLadderGame', findOpponent);
+        return findOpponent;
+      }
+
+      //create entry in matchmaking and wait
+      waitForPlayer = await this.matchmakingService.createByUserId(
+        socket.data.user.id,
+      );
+      return waitForPlayer;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
+  @SubscribeMessage('startLadderGame')
+  async startLadderMatch(
+    socket: Socket,
+    matchmakingId: number,
+  ): Promise<Match | ErrorDto> {
+    let matchmaking: Matchmaking;
+    let ladderMatch: Match;
+    let connectedUser: ConnectedUser;
+
+    try {
+      matchmaking = await this.matchmakingService.find(matchmakingId);
+      if (!matchmaking || matchmaking.userId !== socket.data.user.id) {
+        return { error: 'Something went wrong starting the ladder game' };
+      }
+
+      const ladderGameData: Prisma.MatchCreateInput = {
+        type: 'LADDER',
+        leftUser: { connect: { id: matchmaking.userId } },
+        rightUser: { connect: { id: matchmaking.opponentUserId } },
+      };
+      ladderMatch = await this.matchService.create(ladderGameData);
+      connectedUser = await this.connectedUserService.findByUserId(
+        matchmaking.opponentUserId,
+      );
+      if (!connectedUser) {
+        await this.matchService.deleteById(ladderMatch.id);
+        await this.matchmakingService.deleteByUserId(matchmaking.userId);
+        return { error: 'Opponent is not online' };
+      }
+      await this.matchmakingService.deleteByUserId(matchmaking.userId);
+      socket.to(connectedUser.socketId).emit('goToLadderGame', ladderMatch);
+      socket.emit('goToLadderGame', ladderMatch);
+    } catch (error) {
+      return { error: error.message as string };
+    }
   }
 
   /**********************

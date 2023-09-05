@@ -13,7 +13,7 @@ const props = defineProps({
   }
 })
 
-const numericMatchId = parseInt(props.matchId, 10);
+const numericMatchId = parseInt(props.matchId, 10)
 
 const notificationStore = useNotificationStore()
 
@@ -85,7 +85,10 @@ const sendInvite = async () => {
       return
     }
 
-    socket.emit('sendMatchInvite', { matchId: numericMatchId, invitedUserId: invitedUser.value?.id })
+    socket.emit('sendMatchInvite', {
+      matchId: numericMatchId,
+      invitedUserId: invitedUser.value?.id
+    })
 
     emit('send-match-invite', invitedUser.value)
   } catch (error) {
@@ -98,13 +101,23 @@ const sendInvite = async () => {
 
 <template>
   <div>
-    <input type="text" class="invite-friend-input" v-model="invitedUsername" placeholder="Enter username"
-      @focus="showSuggestions" @blur="hideSuggestions" />
+    <input
+      type="text"
+      class="invite-friend-input"
+      v-model="invitedUsername"
+      placeholder="Enter username"
+      @focus="showSuggestions"
+      @blur="hideSuggestions"
+    />
     <button @click="sendInvite" class="send-game-invitation-button">Send Game Invitation</button>
 
     <ScrollViewer :maxHeight="'50vh'" class="suggestionList" :class="'game-invite-suggestions'">
       <ul v-if="showSuggestionList && userSuggestions.length" class="suggestionList">
-        <li v-for="suggestion in userSuggestions" :key="suggestion.id" @mousedown="selectSuggestion(suggestion)">
+        <li
+          v-for="suggestion in userSuggestions"
+          :key="suggestion.id"
+          @mousedown="selectSuggestion(suggestion)"
+        >
           {{ suggestion.username }}
         </li>
       </ul>

@@ -3,8 +3,14 @@
     <template v-if="!showAvailableChannels && !showJoinedChannels && !showChannelManagerAndChat">
       <div class="channel-option-button-container">
         <button class="channel-option-button" @click="openModal">Create Channel</button>
-        <Modal :isOpened="isModalOpened" :title="'Create a Channel'" :placeholderText="'Enter channel name'"
-          :showVisibilitySelection="true" @submit="handleConfirm" @close="handleClose" />
+        <Modal
+          :isOpened="isModalOpened"
+          :title="'Create a Channel'"
+          :placeholderText="'Enter channel name'"
+          :showVisibilitySelection="true"
+          @submit="handleConfirm"
+          @close="handleClose"
+        />
         <button class="channel-option-button" @click="openJoinChannels">Join Channels</button>
         <button class="channel-option-button" @click="openMyChannels">My Channels</button>
       </div>
@@ -16,7 +22,11 @@
         </button>
       </div>
       <AvailableChannels v-if="showAvailableChannels" @channel-entered="handleChannelEntered" />
-      <JoinedChannels v-if="showJoinedChannels" :username="username" @channel-entered="handleChannelEntered" />
+      <JoinedChannels
+        v-if="showJoinedChannels"
+        :username="username"
+        @channel-entered="handleChannelEntered"
+      />
       <div v-if="showChannelManagerAndChat">
         <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" />
         <ChannelMessages />

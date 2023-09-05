@@ -9,15 +9,21 @@ import { DirectMessageService } from './service/direct-message/direct-message.se
 import { MessageService } from './service/message/message.service';
 import { ChannelMessageService } from './service/channel-message/channel-message.service';
 import { DirectMessageController } from './controller/direct-message/direct-message.controller';
-import { MatchService } from '../match/service/match.service';
 import { FriendshipController } from './controller/friendship/friendship.controller';
 import { ChannelController } from './controller/channel/channel.controller';
 import { ChannelMemberService } from './service/channel-member/channel-member.service';
 import { BlockedUserService } from './service/blocked-user/blocked-user.service';
 import { BlockedUserController } from './controller/blocked-user/blocked-user.controller';
+import { MatchModule } from '../match/match.module';
+import { MatchmakingModule } from '../matchmaking/matchmaking.module';
 
 @Module({
-  imports: [forwardRef(() => AuthModule), forwardRef(() => UserModule)],
+  imports: [
+    forwardRef(() => AuthModule),
+    forwardRef(() => UserModule),
+    forwardRef(() => MatchModule),
+    forwardRef(() => MatchmakingModule),
+  ],
   providers: [
     ChatGateway,
     FriendshipService,
@@ -26,7 +32,6 @@ import { BlockedUserController } from './controller/blocked-user/blocked-user.co
     DirectMessageService,
     MessageService,
     ChannelMessageService,
-    MatchService,
     ChannelMemberService,
     BlockedUserService,
   ],

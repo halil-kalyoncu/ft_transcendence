@@ -39,7 +39,8 @@ model User {
   leftPlayerMatches  Match[] @relation("LeftPlayer")
   rightPlayerMatches Match[] @relation("RightPlayer")
 
-  queue Matchmaking? @relation("WaitingLadderGame")
+  queue    Matchmaking? @relation("WaitingLadderGame")
+  opponent Matchmaking? @relation("OpponentLadderGame")
 }
 
 model ConnectedUser {
@@ -202,10 +203,12 @@ model BlockedUser {
 }
 
 model Matchmaking {
-  id     Int @id @default(autoincrement())
-  userId Int @unique
+  id             Int @id @default(autoincrement())
+  userId         Int @unique
+  opponentUserId Int? @unique
 
-  user User @relation("WaitingLadderGame", fields: [userId], references: [id])
+  user     User @relation("WaitingLadderGame", fields: [userId], references: [id])
+  opponent User? @relation("OpponentLadderGame", fields: [opponentUserId], references: [id])
 }
 
 // model Channel {

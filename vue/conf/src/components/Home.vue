@@ -1,21 +1,45 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import type { MatchI } from '../model/match/match.interface'
 import jwtDecode from 'jwt-decode'
 import type { UserI } from '../model/user.interface'
 import type { MatchTypeType } from '../model/match/match.interface'
 import type { CreateMatchDto } from '../model/match/create-match.dto'
 import { useNotificationStore } from '../stores/notification'
+import { onMounted, ref } from 'vue'
+import { Socket } from 'socket.io-client'
+import { connectChatSocket } from '../websocket'
+import type { ErrorI } from '../model/error.interface'
+import type { MatchmakingI } from '../model/match/matchmaking.interface'
 
 const notificationStore = useNotificationStore()
 const router = useRouter()
 
+const socket = ref<Socket | null>(null)
+
+const getUserFromAccessToken = (): UserI => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+  return decodedToken.user as UserI
+}
+
+const handleQueueUpLadder = async () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.emit('queueUpForLadder', (response: MatchmakingI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      router.push(`/queue/${response.id}`)
+    }
+  })
+}
+
 const handleInviteClick = async () => {
   try {
-    //getting user from the access token, maybe do this differently
-    const accessToken = localStorage.getItem('ponggame') ?? ''
-    const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-    const loggedUser: UserI = decodedToken.user as UserI
+    const loggedUser: UserI = getUserFromAccessToken()
     const createMatchDto: CreateMatchDto = {
       userId: loggedUser.id as number,
       matchType: 'CUSTOM' as MatchTypeType
@@ -40,10 +64,20 @@ const handleInviteClick = async () => {
     notificationStore.showNotification('Failed to create a game', false)
   }
 }
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
+
+onMounted(() => {
+  initSocket()
+})
 </script>
 
 <template>
   <div class="home">
+    <button @click="handleQueueUpLadder" class="dynamic-button">QUEUE UP FOR LADDER GAME</button>
     <button @click="handleInviteClick" class="dynamic-button">START A CUSTOM GAME</button>
   </div>
 </template>

@@ -193,8 +193,8 @@ const handleAdd = ({ username }: ModalResult) => {
     } else {
       notificationStore.showNotification(
         'Friend Request was sent to id:' +
-        response.receiverId +
-        '. username would be better though (TBD) ',
+          response.receiverId +
+          '. username would be better though (TBD) ',
         true
       )
     }
@@ -376,9 +376,17 @@ const goBack = () => {
 <template>
   <section class="friends">
     <template v-if="!showFriendManagerAndChat">
-      <FriendsModal :isOpened="isModalOpened" :title="modalTitle" @submit="handleSubmit" @close="handleClose" />
+      <FriendsModal
+        :isOpened="isModalOpened"
+        :title="modalTitle"
+        @submit="handleSubmit"
+        @close="handleClose"
+      />
       <div class="friendsList">
-        <h2 v-if="friends === undefined || friends?.length === 0" class="friends-empty-notification">
+        <h2
+          v-if="friends === undefined || friends?.length === 0"
+          class="friends-empty-notification"
+        >
           Friend list is empty
         </h2>
         <ScrollViewer :maxHeight="'68vh'" class="friendsList" :class="'messages-scrollviewer'">
@@ -409,8 +417,12 @@ const goBack = () => {
           <font-awesome-icon :icon="['fas', 'arrow-left']" />
         </button>
       </div>
-      <FriendManager @unfriend-user="handleUnfriendUser" @block-user="handleBlockUser"
-        @invite-user-to-game="handleInviteToGame" :selectedFriendEntry="selectedFriend" />
+      <FriendManager
+        @unfriend-user="handleUnfriendUser"
+        @block-user="handleBlockUser"
+        @invite-user-to-game="handleInviteToGame"
+        :selectedFriendEntry="selectedFriend"
+      />
       <FriendMessages :selectedFriendEntry="selectedFriend" />
     </template>
   </section>

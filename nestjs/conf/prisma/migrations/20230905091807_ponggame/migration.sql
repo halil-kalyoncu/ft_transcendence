@@ -143,6 +143,7 @@ CREATE TABLE "BlockedUser" (
 CREATE TABLE "Matchmaking" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
+    "opponentUserId" INTEGER,
 
     CONSTRAINT "Matchmaking_pkey" PRIMARY KEY ("id")
 );
@@ -176,6 +177,9 @@ CREATE UNIQUE INDEX "ChannelMember_userId_channelId_key" ON "ChannelMember"("use
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Matchmaking_userId_key" ON "Matchmaking"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Matchmaking_opponentUserId_key" ON "Matchmaking"("opponentUserId");
 
 -- AddForeignKey
 ALTER TABLE "ConnectedUser" ADD CONSTRAINT "ConnectedUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -227,3 +231,6 @@ ALTER TABLE "BlockedUser" ADD CONSTRAINT "BlockedUser_targetUserId_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "Matchmaking" ADD CONSTRAINT "Matchmaking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Matchmaking" ADD CONSTRAINT "Matchmaking_opponentUserId_fkey" FOREIGN KEY ("opponentUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -130,7 +130,7 @@ export class MatchService {
     return await this.prisma.match.update({
       where: { id },
       data: {
-        state: "WINNERLEFT",
+        state: 'WINNERLEFT',
         finishedAt: new Date(),
       },
       include: {

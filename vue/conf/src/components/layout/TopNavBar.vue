@@ -36,7 +36,9 @@ const logout = () => {
   <header class="header">
     <nav>
       <div>
-        <RouterLink class="navButton" to="/home" :class="{ selected: showHomePage }">Home</RouterLink>
+        <RouterLink class="navButton" to="/home" :class="{ selected: showHomePage }"
+          >Home</RouterLink
+        >
       </div>
       <div class="flex-box-center">
         <RouterLink class="navButton header-username" :to="`/profile/${username}`">

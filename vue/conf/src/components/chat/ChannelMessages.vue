@@ -2,8 +2,14 @@
   <div class="messages-container">
     <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'" class="messages-scrollviewer">
       <div class="messages">
-        <Message v-for="(message, index) in channelMessages" :key="index" :isOwnMessage="message.isOwnMessage"
-          :message="message.message" :createdAt="message.createdAt" :sender="message.sender" />
+        <Message
+          v-for="(message, index) in channelMessages"
+          :key="index"
+          :isOwnMessage="message.isOwnMessage"
+          :message="message.message"
+          :createdAt="message.createdAt"
+          :sender="message.sender"
+        />
       </div>
     </ScrollViewer>
     <div class="chat-input">

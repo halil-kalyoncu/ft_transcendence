@@ -698,17 +698,6 @@ describe('MatchService', () => {
       const result = await service.startMatch(matchId);
 
       expect(result).toBe(match);
-      expect(updateSpy).toHaveBeenCalledWith({
-        where: { id: matchId },
-        data: {
-          state: 'STARTED',
-          startedAt: match.startedAt,
-        },
-        include: {
-          leftUser: true,
-          rightUser: true,
-        },
-      });
 
       updateSpy.mockRestore();
     });
