@@ -43,17 +43,6 @@ const props = defineProps({
 });
 let images = [widePaddle, magnet, image2, image1];
 
-// const tmpX = ref(props.x);
-// const tmpY = ref(props.y);
-
-// const setX = (newX: number) => {
-//   tmpX.value = newX;
-// };
-
-// const setY = (newY: number) => {
-//   tmpY.value = newY;
-// };
-
 </script>
 
 <style>

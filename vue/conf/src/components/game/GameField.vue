@@ -100,7 +100,7 @@ const keyHookUp = (e: KeyboardEvent) => {
 			break;
 		case 'n':
 			spawnPowerUp();
-			// socket.value.emit('activatePowerUp', { type: "increasePaddle", player: "left" })
+			socket.value.emit('activatePowerUp', { type: "magnet", player: "left" })
 			break;
 	}
 };

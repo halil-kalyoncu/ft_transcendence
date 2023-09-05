@@ -7,15 +7,16 @@ import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 
 let ballPos = {x: 0, y: 0};
-
-
+let magnet = 0;
+let end;
+// let end = new(Number);
 @WebSocketGateway({
 	cors: {
-	  origin: ["http://localhost:4200", "http://localhost:3000"]
+		origin: ["http://localhost:4200", "http://localhost:3000"]
 	},
 	path: '/game'
-  })
-  export class EventsGateway {
+})
+export class EventsGateway {
 	
 	constructor(
 		private gameService: GameService,
@@ -25,32 +26,47 @@ let ballPos = {x: 0, y: 0};
 			// this.rooms.set("test", new Room("test"));
 			// this.startGame();
 		}
-
-
+		
+		
 		@WebSocketServer()
 		server: Server;
-
+		
 		// gameIsRunning = false; -> individual game has to know if is running
 		rooms = new Map<number, Room>();
 		// players = new Map<string, string>(); -> individual socket holds information if it is the left or right player
-
+		
 		startGame(room: Room) {
 			setInterval(() => {
 				if (room.gameIsRunning) {
-					let newBallPos = room.ball.moveBall(room, this.server);
+					let newBallPos;
+					if (magnet == 0){
+						end = Date.now() + 5000;
+						newBallPos = room.ball.moveBall(room, this.server);
+						this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos);
+						this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
+					}
+					else{
+						newBallPos = {x: room.paddleA.wid, y: room.paddleA.y + (room.paddleA.hgt / 2)};
+						this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos)
+						this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos)
+						room.ball.x = newBallPos.x;
+						room.ball.y = newBallPos.y;
+						if (Date.now() >= end){
+							magnet = 0;
+						}
+
+					}
 					// for (let powerup of room.powerups){
 					// 	powerup.moveDown();
 					// 	this.server.emit('powerUpMove', {id: powerup.id, y: powerup.y});
 					// }
-					this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos);
-					this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
 					//this.server.emit('ballPosition', newBallPos);
+
+					
 				}
 			}, 15);
 	
-
-			
-
+		
 		}
 
 
@@ -235,6 +251,18 @@ let ballPos = {x: 0, y: 0};
 				this.sendToOpponent(socket, room.socketIds, 'newPaddleHeight', { player: "left", hgt: 400 });
 				//this.server.emit('newPaddleHeight', { player: "left", hgt: 400 });
 				console.log("increase Pad");
+			}
+			if (data.type == "magnet"){
+				const room = this.rooms.get(socket.data.match.id);
+				magnet = 1;
+				// let end = Date.now() + 5000;
+				// while (Date.now() < end){
+				// 	let newBallPos= {x: room.paddleA.wid, y: room.paddleA.y + (room.paddleA.hgt / 2)};
+				// 	this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos)
+				// 	this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos)
+				// 	room.ball.x = newBallPos.x;
+				// 	room.ball.y = newBallPos.y;
+				// }
 			}
 			// console.log(data.type, data.player);
 		}
