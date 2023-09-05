@@ -12,8 +12,8 @@ export class Ball {
 		public y: number = 200, 
 		public wid: number = 15, 
 		public hgt: number = 15, 
-		public speed: number = 2, 
-		public dx: number = 4, 
+		public speed: number = 4, 
+		public dx: number = 5, 
 		public dy: number = 3,
 		public fieldWidth: number = 800,
 		public fieldHeight: number = 600,
@@ -31,7 +31,7 @@ export class Ball {
 			this.y = this.fieldHeight / 2 - (this.hgt / 2);
 			this.dx = 5;
 			this.dy = 3;
-			this.speed = 3;
+			this.speed = 4;
 		}
 		
 		moveBallDir(paddleBY: number, paddleHeight: number, paddle: string): void {
@@ -39,6 +39,8 @@ export class Ball {
 			let ballMid = this.y + (this.hgt / 2);
 			let paddleHitLocation = (ballMid - paddleMid) / (paddleHeight / 2);
 			let bounceAngle = (paddleHitLocation * 45) * Math.PI / 180;
+
+			this.speed++;
 			
 			if (paddle == "A")
 				this.dx = -this.speed * Math.cos(bounceAngle);
@@ -48,7 +50,6 @@ export class Ball {
 			this.dy = this.speed * Math.sin(bounceAngle);
 			this.dx = -this.dx;
 			
-			this.speed++;
 		}
 		
 		handleBallCollision(nextBallX: number, nextBallY: number, room: Room, paddle: string) {
@@ -79,11 +80,25 @@ export class Ball {
 			return false;
 		}
 
+		scoreGoal(room: Room, nextBallX: number) {
+			if (((nextBallX <= 0) && nextBallX < this.x)) {
+				room.leftPlayerGoals++;
+				// console.log(room.leftPlayerGoals);
+				return true;
+			}
+			else if (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x) {
+				room.rightPlayerGoals++;
+				// console.log(room.rightPlayerGoals);
+				return true;
+			}
+			return false;
+		}
+
 		moveBall(room: Room, server: Server) {
 			let nextBallX = this.x + this.dx;
 			let nextBallY = this.y + this.dy;
 			
-			if (((nextBallX <= 0) && nextBallX < this.x) || (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x))
+			if (this.scoreGoal(room, nextBallX))
 				this.resetBall();
 			
 			else if (nextBallX + this.wid > this.fieldWidth)

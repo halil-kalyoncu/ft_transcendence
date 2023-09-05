@@ -236,6 +236,11 @@ onMounted(() => {
 		countdown.value = 0;
 	});
 
+	socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
+		if (type == "bla")
+			console.log("BLA");
+	})
+
 	initGameField();
 }); 
 
