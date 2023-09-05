@@ -8,6 +8,7 @@
           :ownerName="channel.owner.username"
           :joinChannelButtonName="'Join'"
           :channelId="channel.channel.id"
+		  :userId="userId"
 		  @channelEntered="handleChannelEntered(channel.channel.id)"
         />
       </div>
@@ -41,8 +42,6 @@ const notificationStore = useNotificationStore()
 	}
 	const data = await response.json()
 	channelData.value = data
-	console.log('Channel data: ')
-	console.log(channelData.value)
 	}
 	catch (error: any) {
 	notificationStore.showNotification(`Error` + error.message, true)

@@ -179,12 +179,10 @@ export class ChannelService {
       channelMembershipDto.userId,
       channelMembershipDto.channelId,
     );
-		console.log('existingMembership', existingMembership)
     if (existingMembership) {
        console.log ('User is already a member of this channel.');
 	   return
     }
-	console.log('channelMembershipDto', channelMembershipDto)
     return this.prisma.channelMember.create({
       data: {
         userId: channelMembershipDto.userId,
@@ -274,12 +272,10 @@ catch (error) {
       adminActionDto.requesterId,
       adminActionDto.channelId,
     );
-
     if (
       !channel ||
       (channelOwner.userId !== adminActionDto.requesterId &&
-        requesterMembership?.role !== ChannelMemberRole.ADMIN) ||
-      requesterMembership?.role !== ChannelMemberRole.OWNER
+        requesterMembership?.role !== ChannelMemberRole.ADMIN)
     ) {
       throw new Error(
         'Only the owner or an admin can kick a user from the channel.',
@@ -344,6 +340,7 @@ catch (error) {
       data: {
         status: ChannelMemberStatus.BANNED,
         statusSince: new Date(),
+		banned: true,
       },
     });
   }
@@ -419,7 +416,6 @@ catch (error) {
   }
 
   async getMembers(channelId: number): Promise<User[]> {
-	console.log('channelId', channelId);
     const members = await this.prisma.channelMember.findMany({
       where: {
         channelId:channelId,

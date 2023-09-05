@@ -15,6 +15,10 @@
         :date="member.statusSince"
         :roleProp="member.role.toLowerCase()"
         :currentUserRole="currentUserRole.toLowerCase()"
+		:requesterId = "userId"
+		:targetUserId = "member.userId"
+		:channelId = "channelId"
+		:isUserBanned = "member.isBanned"
       />
     </div>
   </ScrollViewer>
@@ -82,7 +86,7 @@ const channelId: Number = props.channelId
 const Members = ref<ChannelManagerMemberI[]>([])
 let currentUserRole = ref<ChannelMemberRoleType>(ChannelMemberRole.MEMBER)
 let ChannelName = ref<string>('')
-const emit = defineEmits(['channel-left', 'channel-signedout'])
+const emit = defineEmits(['channel-left', 'channel-signedout', 'channel-force-leave'])
 
 
 const showPasswordField = ref(false)
@@ -93,14 +97,23 @@ const modalTitle = ref('');
 const modalMessage = ref('');
 const isModalOpened = ref(false)
 
+const handleChangedProperties = () => {
+  console.log('handleChangedProperties')
+  getMembers()
+}
 
+const getMembers = async () => {
+	await setMembers().then(() => {
+		setCurrentUserRole()
+		setChannelName()
+	})
+	return
+}
 
-onMounted(() => {
+onMounted(async () => {
 
 	initSocket()
-     setMembers().then(() => {
-	 	setCurrentUserRole()
-     	setChannelName()})
+	await getMembers()
 	getSignOutButtonText()
 	setDestroyChannelListener()
 	setUserSignedListener()
@@ -145,7 +158,7 @@ const setDestroyChannelListener = () => {
 	socket.value.on('ChannelDestroy', (channelId: Number) => {
 		console.log('ChannelDestroy fired')
 		notificationStore.showNotification('Channel has been destroyed', true)
-		emit('channel-left')
+		emit('channel-force-leave')
 	})
 }
 const setUserSignedListener = () => {
@@ -169,6 +182,33 @@ const setUserSignedListener = () => {
 	socket.value.on('ChannelInvitationAccepted', (channelId: Number) => {
 		console.log('ChannelInvitationAccepted fired')
 		//notificationStore.showNotification(' Signed in Channel', true)
+		setMembers().then(() => {
+			setCurrentUserRole()
+		})
+	})
+	socket.value.on('madeAdmin', (membership: any) => {
+		console.log('madeAdmin fired')
+		//await notificationStore.showNotification('New Admin Added', true)
+		setMembers().then(() => {
+			setCurrentUserRole()
+		})
+	})
+	socket.value.on('memberKicked', (membership: any) => {
+		console.log('memberKicked fired')
+		//await notificationStore.showNotification('User Kicked', true)
+		if (membership.userId === userId.value){
+			emit('channel-force-leave')
+		}
+		setMembers().then(() => {
+			setCurrentUserRole()
+		})
+	})
+	socket.value.on('memberBanned', (membership: any) => {
+		console.log('memberBanned fired')
+		//await notificationStore.showNotification('User Banned', true)
+		if (membership.userId === userId.value){
+			emit('channel-force-leave')
+		}
 		setMembers().then(() => {
 			setCurrentUserRole()
 		})

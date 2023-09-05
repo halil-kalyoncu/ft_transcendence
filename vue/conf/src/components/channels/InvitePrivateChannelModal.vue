@@ -154,7 +154,6 @@ const inviteUser = async (channelId:Number, inviteeUsername:string, inviterId:Nu
 			}
 		}
 	)
-	console.log("response: ", response)
 	if (!response.ok){
 		throw new Error('Could not fetch channel manager members')
 	}
@@ -199,7 +198,6 @@ const response = await fetch(
     }
     return false;
   });
-  console.log(filteredSuggestions)
   userSuggestions.value = filteredSuggestions;
 };
 

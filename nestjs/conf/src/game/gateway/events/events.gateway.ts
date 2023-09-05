@@ -74,7 +74,7 @@ let ballPos = {x: 0, y: 0};
 		
 		resetGame() {
 			this.gameIsRunning = false;
-			console.log("HERE");
+	
 			this.rooms.get("test").ball.resetBall();
 			this.server.emit('ballPosition', this.rooms.get("test").ball.getBallPosition());
 		}

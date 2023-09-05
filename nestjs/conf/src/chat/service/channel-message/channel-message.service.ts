@@ -96,8 +96,7 @@ export class ChannelMessageService {
 	// Create a ChannelMessageReadStatus for each member of the channel
   const channelMembers = await this.channelService.findMembers(channelId);
   for (const channelMember of channelMembers) {
-	console.log('channelMembers', channelMember.userId);
-	console.log('member', member.userId);
+
     await this.prisma.channelMessageReadStatus.create({
       data: {
         message: { connect: { id: createdMessage.id } },

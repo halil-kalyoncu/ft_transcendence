@@ -9,6 +9,7 @@
 			:joinChannelButtonName="'Enter'"
 			:channelId="channel.channel.id"
 			:unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
+			:userId="userId"
 			@channelEntered="handleChannelEntered(channel.channel.id)"
 		  />
 		</div>
@@ -29,8 +30,9 @@
   const userStore = useUserStore()
 	  const userId = computed(() => userStore.userId)
 	  const socket = ref<Socket | null>(null)
-		type UnreadMessageCounts = Record<number, number>;
+	type UnreadMessageCounts = Record<number, number>;
 	const unreadMessageCounts = ref<UnreadMessageCounts>({});
+	const bannedUsers = ref<Record<number, boolean>>({});
 
 	  const notificationStore = useNotificationStore()
 	  const channelData = ref<ChannelEntryI[]>([])
@@ -73,6 +75,7 @@
 		}
 		const data = await response.json()
 		channelData.value = data;
+		console.log(channelData.value)
 		return 
 	  }
 	  catch (error: any) {

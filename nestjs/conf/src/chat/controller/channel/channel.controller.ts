@@ -19,13 +19,15 @@ import {
 	ChannelInfoDto,
 	ChannelMemberDto
   } from 'src/chat/dto/channel.dto';
-  
+  import { ChannelMemberService } from '../../service/channel-member/channel-member.service';
+
   @ApiTags('Channel module')
   @Controller('channel')
   export class ChannelController {
 	constructor(
 	  private prisma: PrismaService,
 	  private ChannelService: ChannelService,
+	  private ChannelMemberService: ChannelMemberService
 	) {}
 	//Get Functions for getting Channels
 	@Get('getAllChannels')
@@ -76,6 +78,11 @@ import {
 		return await this.ChannelService.getAllChannelManagerMembers(channelId);
 	}
 
+	@Get ('isUserBanned')
+	async isUserBanned(@Query('userId', ParseIntPipe) userId: number,
+	@Query('channelId', ParseIntPipe) channelId: number): Promise<boolean>{
+		return await this.ChannelMemberService.isUserBanned(userId, channelId);
+	}
 	//Post Functions to create Channels
 	@Post('createProtectedChannel')
 	async createChannel(

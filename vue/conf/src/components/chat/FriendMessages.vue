@@ -50,7 +50,6 @@ const setNewDirectMessageListener = () => {
   }
   socket.value.on('newDirectMessage', (newMessageData: directMessageI) => {
     console.log('newDirectMessage listener fired')
-	console.log(newMessageData)
     messages.value.unshift(newMessageData)
   })
 }
@@ -130,7 +129,7 @@ const formatDate = (createdAt: string) =>
         <Message
           v-for="message in messages"
           :key="message.id"
-          :createdAt="formatDate(message.message.createdAt)"
+          :createdAt="'one minute ago'"
           :message="message.message?.message ?? ''"
           :sender="message.sender?.username ?? ''"
           :isOwnMessage="isOwnMessage(message.sender.id)"

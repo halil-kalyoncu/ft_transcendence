@@ -28,7 +28,7 @@
         @channel-entered="handleChannelEntered"
       />
       <div v-if="showChannelManagerAndChat">
-        <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" @channel-signedout="hanndleChannelSignedout" />
+        <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" @channel-signedout="hanndleChannelSignedout" @channel-force-leave ="hanndleChannelforceLeave" />
         <ChannelMessages :channelId = "joinedChannelId" />
       </div>
     </template>
@@ -180,10 +180,7 @@ const removeUserFromChannel = async() => {
 	}
 }
 
-//Esra
-// just a small mistake, api call needs 2 queries not a body
 const MarkMessagesAsRead = async() => {
-	console.log('close channel')
   if (joinedChannelId.value !== 0) {
     console.log('call mark messages')
 	try{
@@ -248,6 +245,9 @@ const handleChannelEntered = async (channelId: number) => {
 
 const handleChannelLeft = async () => {
 	await MarkMessagesAsRead()
+	await closeChannelManagerAndChat()
+}
+const hanndleChannelforceLeave = async () => {
 	await closeChannelManagerAndChat()
 }
 

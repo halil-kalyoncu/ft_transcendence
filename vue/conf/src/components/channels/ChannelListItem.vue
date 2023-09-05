@@ -31,16 +31,22 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
         +{{ unreadMessageCount }}
       </div>
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
-      <button class="join-channel-button" @click="handleJoin">{{ joinChannelButtonName }}</button>
+      <button class="join-channel-button" @click="handleJoin" :disabled="userBanned"
+	  :class="{ 'disabled-button': userBanned }"
+	  :title="tooltipText()">{{ joinChannelButtonName }}</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { Socket } from 'socket.io-client'
+import { connectWebSocket } from '../../websocket'
+import { useNotificationStore } from '../../stores/notification'
+
 
 library.add(fas)
 
@@ -51,11 +57,16 @@ const props = defineProps({
   joinChannelButtonName: String,
   channelId: Number,
   unreadMessageCount: Number,
+  userId: Number,
 })
 //const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
 const showPasswordField = ref(false)
 const password = ref('')
+const userBanned = ref(false)
+const socket = ref<Socket | null>(null)
+const notificationStore = useNotificationStore()
+
 
 const handleJoin = () => {
   if (props.isPasswordProtected && password.value === '') {
@@ -75,9 +86,62 @@ const handleJoin = () => {
   }
 }
 
+const tooltipText = () => {
+	if (userBanned) {
+		return 'You are banned from this channel'
+	}
+	else{
+		return 'Go to channel'
+	}
+}
 watch(password, (newValue) => {
   if (newValue) {
   }
+})
+
+watch(userBanned, (newValue) => {
+  if (newValue) {
+  }
+})
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+}
+
+const setUserBanned = async () => {
+	try{
+		const response = await fetch (
+			`http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${props.userId}`
+			)
+		if (!response.ok) {
+			throw new Error(`HTTP error! Status: ${response.status}`)
+		}
+		const data = response.json()
+		 userBanned.value = await data
+		return
+	}
+	catch (error: any)
+	{
+		console.error("Error: ", error)
+	}
+}
+
+const setBannedFromChannelListener = () => {
+	if(!socket || !socket.value) {
+		notificationStore.showNotification('Error: Connection problems', true)
+		return
+	}
+	socket.value.on('memberBanned', () => {
+		console.log('memberBanned fired from JoinedChannelsList.vue')
+		setUserBanned()
+		return
+	})
+}
+onMounted( () => {
+	initSocket();
+	setUserBanned()
+	setBannedFromChannelListener()
 })
 </script>
 
@@ -201,6 +265,11 @@ watch(password, (newValue) => {
   font-weight: bold;
 }
 
+.disabled-button {
+  background-color: #ccc; 
+  color: #666; 
+  cursor: not-allowed;
+}
 </style>
 
 

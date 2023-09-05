@@ -47,7 +47,6 @@ const initSocket = () => {
 
 const setChannelInvitations = async () => {
  try{
-	console.log(userId.value)
 	const response = await fetch(
 		`http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`
 	)

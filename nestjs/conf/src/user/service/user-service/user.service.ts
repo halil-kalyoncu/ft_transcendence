@@ -95,7 +95,6 @@ export class UserService {
 			};
 			channelInvitees.push(channelinvitee);
 		}
-		console.log(channelInvitees)
 		return channelInvitees;
 }
 }

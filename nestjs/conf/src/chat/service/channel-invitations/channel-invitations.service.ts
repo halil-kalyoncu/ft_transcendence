@@ -36,7 +36,6 @@ export class ChannelInvitationsService {
 	}
 }
 	async getOne(invitationId:number): Promise<any> {
-		console.log(invitationId)
 		const invitation = await this.prisma.channelInvitation.findUnique({
 			where: { id: invitationId },
 			include : { channel: true, inviter: true, invitee: true }
