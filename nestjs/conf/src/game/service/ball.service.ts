@@ -121,11 +121,20 @@ export class Ball {
 				this.y = nextBallY;
 			}
 			for (let powerup of room.powerups){
+				// console.log(this.dx);
 				if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)){
+					let target;
+					if (this.dx < 0)
+						target = "left";
+					else
+						target = "right";
+					
+					server.emit('activatePowerUp', {player: target, type:"increasePaddleHeight"});
 					server.emit('destroyPowerUp', {id: powerup.id});
 				}
 				if (powerup.y + powerup.hgt >= this.fieldHeight && !this.handlePowerUpCollision(nextBallX, nextBallY, powerup)){
 					console.log("powerupid: ", powerup.id);
+					
 					server.emit('destroyPowerUp', {id: powerup.id});
 				}
 				else {

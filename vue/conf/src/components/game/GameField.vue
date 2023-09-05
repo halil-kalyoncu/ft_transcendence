@@ -100,7 +100,8 @@ const keyHookUp = (e: KeyboardEvent) => {
 			break;
 		case 'n':
 			spawnPowerUp();
-			socket.value.emit('activatePowerUp', { type: "magnet", player: "left" })
+			// socket.value.emit('activatePowerUp', { type: "magnet", player: "left" })
+			// socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
 			break;
 	}
 };
@@ -148,19 +149,19 @@ onMounted(() => {
 			
 	socket.value.on("direction", (data: any) => {
 		side.value = data;
-		console.log("side: ", data);
+		// console.log("side: ", data);
 	});
 			
 	socket.value.on("paddleMove", ({ playerId, newPos }: { playerId: string; newPos: number }) => {
 		if (playerId === 'left')
 		{
 			paddleA.value?.setY(newPos);
-			console.log(playerId, ": ", newPos);
+			// console.log(playerId, ": ", newPos);
 		}
 		else
 		{	
 			paddleB.value?.setY(newPos);
-			console.log(playerId, ": ", newPos);
+			// console.log(playerId, ": ", newPos);
 		}
 	});
 			
@@ -186,8 +187,9 @@ onMounted(() => {
 			// console.log("ID: ", powerUp.id, "Y:", y);
 		}
 	});
-	// socket?.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
-	// 	return ;
+
+	// socket.value.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
+	// 	// return ;
 	// 	if (paddleA.value && player == "left")
 	// 		paddleA.value?.setHgt(hgt);
 	// 	else if (paddleB.value && player == "right")
@@ -225,10 +227,21 @@ onMounted(() => {
 		countdown.value = 0;
 	});
 
-	// socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
-	// 	if (type == "bla")
-	// 		console.log("BLA");
-	// })
+	socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
+		let target;
+		console.log(player);
+		if (player == "left")
+			target = paddleA.value;
+		else 
+			target = paddleB.value;
+
+		if (type == "increasePaddleHeight") {
+			target?.setHgt(400);
+		}
+		
+		// socket.value?.emit('activatePowerUp', { type: type, player: player})
+			// console.log(player, type);
+	})
 
 	initGameField();
 }); 

@@ -27,7 +27,6 @@ export class EventsGateway {
 			// this.startGame();
 		}
 		
-		
 		@WebSocketServer()
 		server: Server;
 		
@@ -243,17 +242,23 @@ export class EventsGateway {
 			type: string,
 			player: string
 		}): void {
-			if (data.type == "increasePaddle")
+			let target;
+			const room = this.rooms.get(socket.data.match.id);
+
+			if (data.player == "left")
+				target = room.paddleA;
+			else
+				target = room.paddleB;
+
+			if (data.type == "increasePaddleHeight")
 			{
-				const room = this.rooms.get(socket.data.match.id);
-				room.paddleA.setHeight(400);
-				socket.emit('newPaddleHeight', { player: "left", hgt: 400 });
-				this.sendToOpponent(socket, room.socketIds, 'newPaddleHeight', { player: "left", hgt: 400 });
-				//this.server.emit('newPaddleHeight', { player: "left", hgt: 400 });
+				target.setHeight(400);
+				socket.emit('activatePowerUp', {type: 'increasePaddleHeight', player: data.player});
+				this.sendToOpponent(socket, room.socketIds, 'activatePowerUp', {type: 'increasePaddleHeight', player: data.player});
 				console.log("increase Pad");
 			}
 			if (data.type == "magnet"){
-				const room = this.rooms.get(socket.data.match.id);
+				// const room = this.rooms.get(socket.data.match.id);
 				magnet = 1;
 				// let end = Date.now() + 5000;
 				// while (Date.now() < end){
@@ -266,6 +271,7 @@ export class EventsGateway {
 			}
 			// console.log(data.type, data.player);
 		}
+
 		@SubscribeMessage('removePowerUp')
 		removePowerUp(socket: Socket, id: number) {
 			const room = this.rooms.get(socket.data.match.id);
