@@ -28,6 +28,9 @@ export class Room {
 		this.powerups = [];
 		this.socketIds = ['', ''];
 		this.gameIsRunning = true;
+
+		this.leftPlayerGoals = 0;
+		this.rightPlayerGoals = 0;
 	}
 
 }
