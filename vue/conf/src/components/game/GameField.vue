@@ -237,9 +237,9 @@ onMounted(() => {
 
 		if (type == "increasePaddleHeight") {
 			target?.setHgt(400);
+			socket.value?.emit('activatePowerUp', { type: type, player: player})
 		}
 		
-		// socket.value?.emit('activatePowerUp', { type: type, player: player})
 			// console.log(player, type);
 	})
 

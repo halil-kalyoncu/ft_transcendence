@@ -124,7 +124,7 @@ export class Ball {
 				// console.log(this.dx);
 				if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)){
 					let target;
-					if (this.dx < 0)
+					if (this.dx > 0)
 						target = "left";
 					else
 						target = "right";

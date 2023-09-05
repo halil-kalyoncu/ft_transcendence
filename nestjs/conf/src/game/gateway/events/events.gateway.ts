@@ -245,16 +245,20 @@ export class EventsGateway {
 			let target;
 			const room = this.rooms.get(socket.data.match.id);
 
-			if (data.player == "left")
+			if (data.player == "left") {
 				target = room.paddleA;
-			else
+				// console.log("PU::: left");
+			}
+			else {
 				target = room.paddleB;
+				// console.log("PU::: right");
+			}
 
 			if (data.type == "increasePaddleHeight")
 			{
 				target.setHeight(400);
-				socket.emit('activatePowerUp', {type: 'increasePaddleHeight', player: data.player});
-				this.sendToOpponent(socket, room.socketIds, 'activatePowerUp', {type: 'increasePaddleHeight', player: data.player});
+				// socket.emit('activatePowerUp', {type: 'increasePaddleHeight', player: data.player});
+				// this.sendToOpponent(socket, room.socketIds, 'activatePowerUp', {type: 'increasePaddleHeight', player: data.player});
 				console.log("increase Pad");
 			}
 			if (data.type == "magnet"){
