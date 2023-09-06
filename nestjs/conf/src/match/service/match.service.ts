@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Match, Prisma } from '@prisma/client';
+import { Room } from '../../game/service/room.service';
 
 @Injectable()
 export class MatchService {
@@ -126,7 +127,7 @@ export class MatchService {
   }
 
   //TODO: finish this with the object of the game gateway
-  async finishMatch(id: number): Promise<Match | null> {
+  async finishMatch(id: number, room: Room): Promise<Match | null> {
     return await this.prisma.match.update({
       where: { id },
       data: {

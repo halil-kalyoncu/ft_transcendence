@@ -91,20 +91,25 @@ const keyHookUp = (e: KeyboardEvent) => {
     	return
 	}
 
-	switch(e.key) {
+	switch(e.code) {
 		case 'ArrowUp':
 			isMovingUp.value = false;
 			break;
 		case 'ArrowDown':
 			isMovingDown.value = false;
 			break;
-		case 'n':
-			spawnPowerUp();
-			// socket.value.emit('activatePowerUp', { type: "magnet", player: "left" })
+		case 'KeyN':
+			// spawnPowerUp();
+			socket.value.emit('activatePowerUp', { type: "magnet", player: "left" })
 			// socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
 			break;
+		case 'Space':
+			socket.value.emit('fire');
+			break ;
 	}
 };
+
+
 
 window.addEventListener('keydown', keyHookDown);
 window.addEventListener('keyup', keyHookUp);
@@ -226,6 +231,7 @@ onMounted(() => {
 	socket.value.on('startGame', () => {
 		countdown.value = 0;
 	});
+
 
 	socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
 		let target;

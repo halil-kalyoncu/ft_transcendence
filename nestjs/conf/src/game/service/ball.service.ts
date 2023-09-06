@@ -17,6 +17,9 @@ export class Ball {
 		public dy: number = 3,
 		public fieldWidth: number = 800,
 		public fieldHeight: number = 600,
+		public magnet: boolean = false,
+		public ballSticking: boolean = false,
+		public magdiff: number = 0
 		) {	}
 		
 		getBallPosition() {
@@ -32,15 +35,18 @@ export class Ball {
 			this.dx = 5;
 			this.dy = 3;
 			this.speed = 4;
+			this.magnet = false;
 		}
 		
 		moveBallDir(paddleBY: number, paddleHeight: number, paddle: string): void {
+
 			let paddleMid = paddleBY + (paddleHeight / 2);
 			let ballMid = this.y + (this.hgt / 2);
 			let paddleHitLocation = (ballMid - paddleMid) / (paddleHeight / 2);
 			let bounceAngle = (paddleHitLocation * 45) * Math.PI / 180;
 
 			this.speed++;
+			// console.log("Speed", this.speed);
 			
 			if (paddle == "A")
 				this.dx = -this.speed * Math.cos(bounceAngle);
@@ -52,6 +58,7 @@ export class Ball {
 			
 		}
 		
+
 		handleBallCollision(nextBallX: number, nextBallY: number, room: Room, paddle: string) {
 			if (paddle == "A"){
 				if ((nextBallX < room.paddleA.x + room.paddleA.wid) &&
@@ -83,6 +90,7 @@ export class Ball {
 		scoreGoal(room: Room, nextBallX: number) {
 			if (((nextBallX <= 0) && nextBallX < this.x)) {
 				room.leftPlayerGoals++;
+				// this.magdiff = this.y - padd
 				// console.log(room.leftPlayerGoals);
 				return true;
 			}
@@ -108,11 +116,20 @@ export class Ball {
 				this.dy = -this.dy;
 			
 			else if (this.handleBallCollision(nextBallX, nextBallY, room, "A")){
+				if (this.magnet) {
+					this.ballSticking = true;
+					// console.log("DIFFERENCE: ", this.y)
+					return ;
+				}
 				this.moveBallDir(room.paddleA.y, room.paddleA.hgt, "A");
 				this.x = room.paddleA.x + room.paddleA.wid;
 			}
 			
 			else if (this.handleBallCollision(nextBallX, nextBallY, room, "B")){
+				if (this.magnet) {
+					this.ballSticking = true;
+					return ;
+				}
 				this.moveBallDir(room.paddleB.y, room.paddleB.hgt, "B");
 				this.x = room.paddleB.x - this.wid;
 			}
@@ -120,6 +137,7 @@ export class Ball {
 				this.x = nextBallX;
 				this.y = nextBallY;
 			}
+
 			for (let powerup of room.powerups){
 				// console.log(this.dx);
 				if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)){

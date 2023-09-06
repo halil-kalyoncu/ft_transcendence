@@ -32,5 +32,4 @@ export class Room {
 		this.leftPlayerGoals = 0;
 		this.rightPlayerGoals = 0;
 	}
-
 }
