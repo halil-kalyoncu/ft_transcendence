@@ -1,3 +1,5 @@
+import type { UserI } from '../user.interface'
+
 export const MatchType = {
   LADDER: 'LADDER' as const,
   CUSTOM: 'CUSTOM' as const
@@ -30,4 +32,6 @@ export interface MatchI {
   createdAt?: Date
   statedAt?: Date
   finishedAt?: Date
+  leftUser?: UserI
+  rightUser?: UserI
 }

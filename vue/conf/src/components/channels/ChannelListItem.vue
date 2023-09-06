@@ -50,7 +50,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Socket } from 'socket.io-client'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 
 library.add(fas)
@@ -76,16 +76,16 @@ const handleJoin = () => {
   if (props.isPasswordProtected && password.value === '') {
     showPasswordField.value = true
   } else {
-    console.log(
-      'password: ' +
-        password.value +
-        ', channel name: ' +
-        props.channelName +
-        ', owner: ' +
-        props.ownerName +
-        ', channelId: ' +
-        props.channelId
-    )
+    // console.log(
+    //   'password: ' +
+    //     password.value +
+    //     ', channel name: ' +
+    //     props.channelName +
+    //     ', owner: ' +
+    //     props.ownerName +
+    //     ', channelId: ' +
+    //     props.channelId
+    // )
     emit('channel-entered', props.channelId)
   }
 }
@@ -109,7 +109,7 @@ watch(userBanned, (newValue) => {
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const setUserBanned = async () => {

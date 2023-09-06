@@ -15,12 +15,13 @@ export const useFriendRequestStore = defineStore('friendRequest', {
       this.friendRequests.push(...newFriendRequests)
     },
 
-    setFriendOnlineStatus(id: number, status: boolean) {
-      const friend = this.friendRequests.find((friendRequest) => friendRequest.id === id)
-      if (friend) {
-        friend.isOnline = status
-      }
-    },
+    //need this function anymore??? isOnline is replace with status
+    // setFriendOnlineStatus(id: number, status: boolean) {
+    //   const friend = this.friendRequests.find((friendRequest) => friendRequest.id === id)
+    //   if (friend) {
+    //     friend.isOnline = status
+    //   }
+    // },
 
     removeFriendRequestById(requestId: number) {
       const index = this.friendRequests.findIndex((request) => request.id === requestId)

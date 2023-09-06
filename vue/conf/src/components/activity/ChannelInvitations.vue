@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { Socket } from 'socket.io-client'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { ChannelInvitationI } from '../../model/channels/channelInvitation.interface'
 import type { ChannelMemberRoleType } from '../../model/channels/createChannel.interface'
 import { ChannelMemberRole } from '../../model/channels/createChannel.interface'
@@ -41,7 +41,7 @@ onMounted(() => {
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const setChannelInvitations = async () => {

@@ -55,7 +55,7 @@ export class Ball {
   ) {
     if (paddle == 'A') {
       if (
-        nextBallX < room.paddleA.x + room.paddleA.hgt &&
+        nextBallX < room.paddleA.x + room.paddleA.wid &&
         nextBallY + this.hgt >= room.paddleA.y &&
         nextBallY < room.paddleA.y + room.paddleA.hgt
       )
@@ -106,7 +106,7 @@ export class Ball {
       this.dy = -this.dy;
     else if (this.handleBallCollision(nextBallX, nextBallY, room, 'A')) {
       this.moveBallDir(room.paddleA.y, room.paddleA.hgt, 'A');
-      this.x = room.paddleA.x + room.paddleA.hgt;
+      this.x = room.paddleA.x + room.paddleA.wid;
     } else if (this.handleBallCollision(nextBallX, nextBallY, room, 'B')) {
       this.moveBallDir(room.paddleB.y, room.paddleB.hgt, 'B');
       this.x = room.paddleB.x - this.wid;
@@ -115,10 +115,14 @@ export class Ball {
       this.y = nextBallY;
     }
     for (let powerup of room.powerups) {
-      if (powerup.y > this.fieldHeight)
+      if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)) {
         server.emit('destroyPowerUp', { id: powerup.id });
-      else if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)) {
-        // console.log("powerupid: ", powerup.id)
+      }
+      if (
+        powerup.y + powerup.hgt >= this.fieldHeight &&
+        !this.handlePowerUpCollision(nextBallX, nextBallY, powerup)
+      ) {
+        console.log('powerupid: ', powerup.id);
         server.emit('destroyPowerUp', { id: powerup.id });
       } else {
         powerup.moveDown();

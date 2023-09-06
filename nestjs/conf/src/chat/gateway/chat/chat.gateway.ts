@@ -9,7 +9,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AuthService } from '../../../auth/service/auth.service';
+import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 import { FriendshipService } from '../../../chat/service/friendship/friendship.service';
 import { ChannelService } from '../../../chat/service/channel/channel.service';
@@ -32,6 +32,8 @@ import {
   FriendshipStatus,
   User,
   Match,
+  Matchmaking,
+  Prisma,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
@@ -41,11 +43,14 @@ import {
 } from '../../dto/create-channel-message.dto';
 import { SendGameInviteDto } from '../../../chat/dto/send-game-invite.dto';
 import { MatchService } from '../../../match/service/match.service';
+import { ErrorDto } from '../../../chat/dto/error.dto';
+import { MatchmakingService } from '../../../matchmaking/service/matchmaking.service';
 
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost:3000', 'http://localhost:4200'],
   },
+  path: '/chat',
 })
 export class ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
@@ -54,7 +59,7 @@ export class ChatGateway
   server: Server;
 
   constructor(
-    private authService: AuthService,
+    private jwtAuthService: JwtAuthService,
     private userService: UserService,
     private friendshipService: FriendshipService,
     private channelService: ChannelService,
@@ -63,6 +68,7 @@ export class ChatGateway
     private channelMessageService: ChannelMessageService,
     private matchService: MatchService,
     private channelInvitationService: ChannelInvitationsService,
+    private matchmakingService: MatchmakingService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -74,7 +80,7 @@ export class ChatGateway
       //Authorization has the format Bearer <access_token>, remove Bearer to verify the token
       const tokenArray: string[] =
         socket.handshake.headers.authorization.split(' ');
-      const decodedToken = await this.authService.verifyJwt(tokenArray[1]);
+      const decodedToken = await this.jwtAuthService.verifyJwt(tokenArray[1]);
       const user: User = await this.userService.findById(decodedToken.user.id);
       if (!user) {
         return this.disconnectUnauthorized(socket);
@@ -112,7 +118,7 @@ export class ChatGateway
   async sendFriendRequest(
     socket: Socket,
     receiverUsername: string,
-  ): Promise<FriendshipDto | { error: string }> {
+  ): Promise<Friendship | ErrorDto> {
     try {
       const receiver: User = await this.userService.findByUsername(
         receiverUsername,
@@ -130,12 +136,12 @@ export class ChatGateway
 
       const receiverOnline: ConnectedUser =
         await this.connectedUserService.findByUser(receiver);
-      if (!!receiverOnline) {
+      if (receiverOnline) {
         this.sendFriendRequestsToClient(receiverOnline);
       }
-      return { id: friendship.id, friend: receiver, isOnline: false };
+      return friendship;
     } catch (error) {
-      return { error: error.message };
+      return { error: error.message as string };
     }
   }
 
@@ -143,19 +149,33 @@ export class ChatGateway
   async acceptFriendRequest(
     socket: Socket,
     friendshipId: number,
-  ): Promise<void> {
-    const friendship: Friendship =
-      await this.friendshipService.acceptFriendshipRequest(friendshipId);
-    const senderOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(friendship.senderId);
-    const receiverOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(friendship.receiverId);
-    if (!!senderOnline) {
-      this.sendFriendsToClient(senderOnline);
-    }
-    if (!!receiverOnline) {
-      this.sendFriendRequestsToClient(receiverOnline);
-      this.sendFriendsToClient(receiverOnline);
+  ): Promise<Friendship | ErrorDto> {
+    try {
+      const friendship: Friendship =
+        await this.friendshipService.acceptFriendshipRequest(friendshipId);
+      if (!friendship) {
+        throw new Error('Friendship entry not found');
+      }
+      // else if (friendship.status === FriendshipStatus.BLOCKED) {
+      //   throw new Error(
+      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
+      //   );
+      // }
+
+      const senderOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(friendship.senderId);
+      const receiverOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(friendship.receiverId);
+      if (senderOnline) {
+        this.sendFriendsToClient(senderOnline);
+      }
+      if (receiverOnline) {
+        this.sendFriendRequestsToClient(receiverOnline);
+        this.sendFriendsToClient(receiverOnline);
+      }
+      return friendship;
+    } catch (error) {
+      return { error: error.message as string };
     }
   }
 
@@ -163,19 +183,32 @@ export class ChatGateway
   async rejectFriendRequest(
     socket: Socket,
     friendshipId: number,
-  ): Promise<void> {
-    const friendship: Friendship =
-      await this.friendshipService.rejectFriendshipRequest(friendshipId);
-    const senderOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(friendship.senderId);
-    const receiverOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(friendship.receiverId);
-    if (!!senderOnline) {
-      this.sendFriendsToClient(senderOnline);
-    }
-    if (!!receiverOnline) {
-      this.sendFriendRequestsToClient(receiverOnline);
-      this.sendFriendsToClient(receiverOnline);
+  ): Promise<Friendship | ErrorDto> {
+    try {
+      const friendship: Friendship =
+        await this.friendshipService.rejectFriendshipRequest(friendshipId);
+      if (!friendship) {
+        throw new Error('Friendship entry not found');
+      }
+      // else if (friendship.status === FriendshipStatus.BLOCKED) {
+      //   throw new Error(
+      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
+      //   );
+      // }
+      const senderOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(friendship.senderId);
+      const receiverOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(friendship.receiverId);
+      if (!!senderOnline) {
+        this.sendFriendsToClient(senderOnline);
+      }
+      if (!!receiverOnline) {
+        this.sendFriendRequestsToClient(receiverOnline);
+        this.sendFriendsToClient(receiverOnline);
+      }
+      return friendship;
+    } catch (error) {
+      return { error: error.message as string };
     }
   }
 
@@ -183,28 +216,69 @@ export class ChatGateway
   async removeFriend(
     socket: Socket,
     friendshipId: number,
-  ): Promise<void | { error: string }> {
+  ): Promise<Friendship | { error: string }> {
     try {
       const friendship = await this.friendshipService.getOne(friendshipId);
       if (!friendship) {
-        throw new Error('Something went wrong during removing from friends');
+        throw new Error('Friendship entry not found');
       }
+      // else if (friendship.status === FriendshipStatus.BLOCKED) {
+      //   throw new Error(
+      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
+      //   );
+      // }
       const senderOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.senderId);
       const receiverOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.receiverId);
 
       await this.friendshipService.remove(friendshipId);
-      if (!!senderOnline) {
+      if (senderOnline) {
         this.sendFriendsToClient(senderOnline);
       }
-      if (!!receiverOnline) {
+      if (receiverOnline) {
         this.sendFriendsToClient(receiverOnline);
       }
+      return friendship;
     } catch (error) {
       return { error: error.message };
     }
   }
+
+  // @SubscribeMessage('blockUser')
+  // async blockUser(
+  //   socket: Socket,
+  //   userId: number,
+  // ): Promise<Friendship | { error: string }> {
+  //   let updateFriendlist = false;
+
+  //   try {
+  //     if (socket.data.user.id === userId) {
+  //       throw new Error("Can't block yourself");
+  //     }
+  //     const friendship = await this.friendshipService.find(
+  //       socket.data.user.id,
+  //       userId,
+  //     );
+  //     console.log('friendship');
+  //     if (friendship && friendship.status === FriendshipStatus.ACCEPTED) {
+  //       updateFriendlist = true;
+  //     }
+  //     const blockEntry = await this.friendshipService.block({
+  //       sender: { connect: { id: socket.data.user.id } },
+  //       receiver: { connect: { id: userId } },
+  //     });
+
+  //     const receiverOnline: ConnectedUser =
+  //       await this.connectedUserService.findByUserId(blockEntry.receiverId);
+  //     if (updateFriendlist && receiverOnline) {
+  //       this.sendFriendsToClient(receiverOnline);
+  //     }
+  //     return blockEntry;
+  //   } catch (error) {
+  //     return { error: error.message };
+  //   }
+  // }
 
   /*********************
    *** DirectMessages ***
@@ -598,12 +672,10 @@ export class ChatGateway
       return;
     }
 
-    console.log(receiverOnline);
     const updatedMatch: Match = await this.matchService.invite(
       sendGameInviteDto.matchId,
       sendGameInviteDto.invitedUserId,
     );
-    console.log(updatedMatch);
     socket.emit('matchInviteSent', updatedMatch);
     socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
   }
@@ -621,8 +693,6 @@ export class ChatGateway
 
     const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
     socket.emit('matchInvites');
-    //remove
-    console.log(match.leftUserId + ' ' + receiverOnline.userId);
     socket
       .to(receiverOnline.socketId)
       .emit('matchInviteAccepted', updatedMatch);
@@ -636,14 +706,14 @@ export class ChatGateway
 
     socket.emit('matchInvites');
     if (receiverOnline) {
-      //remove
-      console.log(updatedMatch.leftUserId);
       socket
         .to(receiverOnline.socketId)
         .emit('matchInviteRejected', updatedMatch);
     }
   }
-
+  /************
+  *** Match ***
+  *************/
   @SubscribeMessage('hostLeaveMatch')
   async hostLeaveMatch(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
@@ -651,7 +721,6 @@ export class ChatGateway
       await this.connectedUserService.findByUserId(match.rightUserId);
 
     if (receiverOnline) {
-      console.log('sending hostLeftMatch to ' + receiverOnline.userId);
       socket.to(receiverOnline.socketId).emit('hostLeftMatch');
     }
     this.matchService.deleteById(match.id);
@@ -680,8 +749,103 @@ export class ChatGateway
     }
 
     const updatedMatch: Match = await this.matchService.startMatch(matchId);
+    this.updateFriendsOf(socket.data.user.id);
+    this.updateFriendsOf(match.rightUserId);
     socket.emit('goToGame', updatedMatch);
     socket.to(receiverOnline.socketId).emit('goToGame', updatedMatch);
+  }
+
+  @SubscribeMessage('finishedMatch')
+  async finishedMatch(socket: Socket): Promise<void> {
+    this.updateFriendsOf(socket.data.user.id);
+  }
+
+  /******************
+   *** Matchmaking ***
+   ******************/
+
+  @SubscribeMessage('queueUpForLadder')
+  async queueUpForLadder(socket: Socket): Promise<Matchmaking | ErrorDto> {
+    let existingMatchmaking: Matchmaking;
+    let findOpponent: Matchmaking;
+    let waitForPlayer: Matchmaking;
+    let connectedUser: ConnectedUser;
+
+    try {
+      //looking for exisiting entry if user reconnects, presses refresh
+      existingMatchmaking = await this.matchmakingService.getByUserId(
+        socket.data.user.id,
+      );
+      if (existingMatchmaking) {
+        return existingMatchmaking;
+      }
+
+      //looking if another player is looking for a game with a similiar ladderLevel
+      findOpponent = await this.matchmakingService.findOpponent(
+        socket.data.user.id,
+      );
+      if (findOpponent) {
+        const ladderGameData: Prisma.MatchCreateInput = {
+          type: 'LADDER',
+          leftUser: { connect: { id: findOpponent.userId } },
+          rightUser: { connect: { id: socket.data.user.id } },
+        };
+        connectedUser = await this.connectedUserService.findByUserId(
+          findOpponent.userId,
+        );
+        if (!connectedUser) {
+          return { error: 'Opponent is not online' };
+        }
+        socket.to(connectedUser.socketId).emit('readyLadderGame', findOpponent);
+        socket.emit('readyLadderGame', findOpponent);
+        return findOpponent;
+      }
+
+      //create entry in matchmaking and wait
+      waitForPlayer = await this.matchmakingService.createByUserId(
+        socket.data.user.id,
+      );
+      return waitForPlayer;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
+  @SubscribeMessage('startLadderGame')
+  async startLadderMatch(
+    socket: Socket,
+    matchmakingId: number,
+  ): Promise<Match | ErrorDto> {
+    let matchmaking: Matchmaking;
+    let ladderMatch: Match;
+    let connectedUser: ConnectedUser;
+
+    try {
+      matchmaking = await this.matchmakingService.find(matchmakingId);
+      if (!matchmaking || matchmaking.userId !== socket.data.user.id) {
+        return { error: 'Something went wrong starting the ladder game' };
+      }
+
+      const ladderGameData: Prisma.MatchCreateInput = {
+        type: 'LADDER',
+        leftUser: { connect: { id: matchmaking.userId } },
+        rightUser: { connect: { id: matchmaking.opponentUserId } },
+      };
+      ladderMatch = await this.matchService.create(ladderGameData);
+      connectedUser = await this.connectedUserService.findByUserId(
+        matchmaking.opponentUserId,
+      );
+      if (!connectedUser) {
+        await this.matchService.deleteById(ladderMatch.id);
+        await this.matchmakingService.deleteByUserId(matchmaking.userId);
+        return { error: 'Opponent is not online' };
+      }
+      await this.matchmakingService.deleteByUserId(matchmaking.userId);
+      socket.to(connectedUser.socketId).emit('goToLadderGame', ladderMatch);
+      socket.emit('goToLadderGame', ladderMatch);
+    } catch (error) {
+      return { error: error.message as string };
+    }
   }
 
   /**********************

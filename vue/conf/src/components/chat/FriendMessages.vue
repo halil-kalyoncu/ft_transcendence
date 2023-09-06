@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
-import { connectWebSocket } from '../../websocket'
-import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
+import { connectChatSocket } from '../../websocket'
+import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import type { UserI } from '../../model/user.interface'
-import type { directMessageI } from '../../model/directMessage.interface'
+import type { directMessageI } from '../../model/message/directMessage.interface'
 import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
@@ -40,7 +40,7 @@ const loggedUser = computed<User>(() => ({
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const setNewDirectMessageListener = () => {
@@ -49,8 +49,7 @@ const setNewDirectMessageListener = () => {
     return
   }
   socket.value.on('newDirectMessage', (newMessageData: directMessageI) => {
-    console.log('newDirectMessage listener fired')
-    messages.value.unshift(newMessageData)
+    setDirectMessages()
   })
 }
 
@@ -79,6 +78,42 @@ const setDirectMessages = async () => {
   }
 }
 
+// const setDirectMessages = async () => {
+//   if (!props.selectedFriendEntry || !props.selectedFriendEntry.friend) {
+//     return
+//   }
+//   try {
+//     const directConversationDto: DirectConverstationDto = {
+//       readerUserId: userId.value as number,
+//       withUserId: props.selectedFriendEntry?.friend?.id as number
+//     }
+
+//     const response = await fetch('http://localhost:3000/api/directMessages/markAsRead', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify(directConversationDto)
+//     })
+
+//     if (!response.ok) {
+//       throw new Error(`HTTP error! Status: ${response.status}`)
+//     }
+//     const data = await response.json()
+//     if (Array.isArray(data)) {
+//       messages.value = data
+//       console.log('FriendMessages')
+//       console.log(messages.value)
+//     } else {
+//       console.error('Expected an array from the API but received:', data)
+//     }
+//   } catch (error: any) {
+//     console.error('Expected an array from the API but received:', error)
+//   } finally {
+//     loading.value = false
+//   }
+// }
+
 onMounted(() => {
   initSocket()
   setDirectMessages()
@@ -94,8 +129,6 @@ const sendMessage = () => {
   if (newMessage.value.trim() === '' || !selectedUser) {
     return
   }
-
-  console.log(loggedUser.value.id + ' ' + selectedUser.id + ' ' + newMessage.value)
 
   socket.value.emit('sendDirectMessage', {
     senderId: loggedUser.value.id,
@@ -137,7 +170,7 @@ const formatDate = (createdAt: string) => {
       <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
     <div class="chat-input">
-      <input type="text" v-model="newMessage" placeholder="Type your message here..." />
+      <textarea type="text" v-model="newMessage" placeholder="Type your message here..." rows="1" />
       <button @click="sendMessage">Send</button>
     </div>
   </div>
@@ -169,30 +202,42 @@ const formatDate = (createdAt: string) => {
 .chat .chat-input {
   flex: 0 0 auto;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem 0.5rem;
+  justify-content: flex-end;
+  align-items: flex-end;
   position: relative;
 }
-.chat .chat-input input {
-  width: 100%;
-  padding: 0.5rem 0.25rem;
-  background-color: lightgray;
-  border-radius: 0.25rem;
-}
+
 .chat .chat-input input:focus {
   outline: solid 2px #ea9f42;
 }
+
 .chat .chat-input button {
-  position: absolute;
-  right: 1rem;
-  background-color: #ea9f42;
+  height: 100%;
+  background-color: #32a852;
   border: none;
   color: white;
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1rem;
+  cursor: pointer;
   transition: 0.3s;
 }
+
 .chat .chat-input button:hover {
-  background-color: #ed901c;
+  background-color: #ea9f42;
+}
+
+.chat-input textarea {
+  width: 100%;
+  padding: 0.5rem 0.25rem;
+  background-color: lightgray;
+  resize: none;
+}
+
+.chat-input textarea:focus {
+  outline: none;
 }
 
 .chat .loading-text {

@@ -6,6 +6,34 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import jwtDecode from 'jwt-decode'
 
+const redirectToHomeIfLoggedIn = (
+  to: RouteLocationNormalized,
+  from: RouteLocationNormalized,
+  next: NavigationGuardNext
+): void => {
+  const accessToken = localStorage.getItem('ponggame')
+  if (accessToken) {
+    try {
+      const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+      const expirationTime: number = (decodedToken.exp as number) * 1000
+
+      if (Date.now() >= expirationTime) {
+        // Token has expired
+        next()
+      } else {
+        // Token is valid
+        next('/home')
+      }
+    } catch (error) {
+      // Token verification failed
+      next()
+    }
+  } else {
+    // Token does not exist
+    next()
+  }
+}
+
 const jwtGuard = (
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
@@ -40,7 +68,12 @@ const router = createRouter({
     {
       path: '/',
       name: 'login',
-      component: LoginView
+      component: LoginView,
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => redirectToHomeIfLoggedIn(to, from, next)
     },
     {
       path: '/home',
@@ -74,6 +107,22 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => jwtGuard(to, from, next)
     },
+    // {
+    //   path: '/profile/:matchId',
+    //   component: MainLayout,
+    //   children: [
+    //     {
+    //       path: '',
+    //       name: 'invite',
+    //       component: () => import('../components/invite/Invite.vue') //lazy load
+    //     }
+    //   ],
+    //   beforeEnter: (
+    //     to: RouteLocationNormalized,
+    //     from: RouteLocationNormalized,
+    //     next: NavigationGuardNext
+    //   ): void => jwtGuard(to, from, next)
+    // },
     {
       path: '/settings',
       component: MainLayout,
@@ -106,24 +155,8 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => jwtGuard(to, from, next)
     },
-    // {
-    //   path: '/profile/:matchId',
-    //   component: MainLayout,
-    //   children: [
-    //     {
-    //       path: '',
-    //       name: 'invite',
-    //       component: () => import('../components/invite/Invite.vue') //lazy load
-    //     }
-    //   ],
-    //   beforeEnter: (
-    //     to: RouteLocationNormalized,
-    //     from: RouteLocationNormalized,
-    //     next: NavigationGuardNext
-    //   ): void => jwtGuard(to, from, next)
-    // },
     {
-      path: '/game',
+      path: '/game/:matchId',
       component: MainLayout,
       children: [
         {
@@ -148,7 +181,22 @@ const router = createRouter({
           component: () => import('../views/InviteView.vue') //lazy load
         }
       ],
-      props: true,
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => jwtGuard(to, from, next)
+    },
+    {
+      path: '/queue/:matchmakingId',
+      component: MainLayout,
+      children: [
+        {
+          path: '',
+          name: 'queue',
+          component: () => import('../views/QueueView.vue') //lazy load
+        }
+      ],
       beforeEnter: (
         to: RouteLocationNormalized,
         from: RouteLocationNormalized,

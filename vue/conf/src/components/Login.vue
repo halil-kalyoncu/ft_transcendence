@@ -1,9 +1,9 @@
 <template>
   <div class="login">
     <form @submit.prevent="submitForm" class="login-form">
-      <label for="username">Username:</label>
+      <label for="username" class="font-color">Username:</label>
       <input type="text" id="username" v-model="username" required />
-      <button type="submit" role="link">42 Login</button>
+      <button type="submit" role="link" class="dynamic-button">42 Login</button>
     </form>
   </div>
 </template>
@@ -13,8 +13,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
+import { connectChatSocket } from '../websocket'
 import type { UserI } from '../model/user.interface'
 import jwtDecode from 'jwt-decode'
+import { fetchAndSaveAvatar } from '../utils/fetchAndSaveAvatar'
 
 const username = ref('')
 const router = useRouter()
@@ -34,18 +36,21 @@ const submitForm = async () => {
     if (response.ok) {
       console.log('Login successful')
       const { access_token } = await response.json()
-      console.log('access_token: ' + access_token)
       //save jwt into local storage
       localStorage.setItem('ponggame', access_token)
       try {
         const decodedToken: Record<string, unknown> = jwtDecode(access_token)
         const loggedUser: UserI = decodedToken.user as UserI
         userStore.setUserId(loggedUser.id as number)
+        if (loggedUser.avatarId) {
+          fetchAndSaveAvatar()
+        }
       } catch (error: any) {
         console.error('Invalid token:', error)
         notificationStore.showNotification('Invalid Token', false)
       }
       userStore.setUsername(username.value)
+      connectChatSocket(access_token)
       router.push('/home')
     } else {
       console.error('Login failed!! ' + response.status + ': ' + response.statusText)
@@ -60,10 +65,11 @@ const submitForm = async () => {
 
 <style>
 .login {
-  background-color: #0d1117;
+  background-color: transparent;
   width: 100vw;
   height: 100vh;
   position: relative;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .login-form {
@@ -71,7 +77,7 @@ const submitForm = async () => {
   height: 300px;
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 60%;
   transform: translateX(-50%) translateY(-50%);
   -webkit-transform: translateX(-50%) translateY(-50%);
   -moz-transform: translateX(-50%) translateY(-50%);
@@ -89,19 +95,60 @@ const submitForm = async () => {
   outline: solid 2px #ea9f42;
 }
 
-.login button {
-  text-align: center;
-  border: 0.1rem solid #e6edf3;
-  color: #e6edf3;
-  font-size: 1.75rem;
-  background-color: transparent;
-  padding: 0.25rem 2rem;
-  cursor: pointer;
-  transition: 0.15s ease-in-out;
+.font-color {
+  color: #ea9f42;
 }
 
-.login button:hover {
-  color: #0d1117;
-  background-color: #e6edf3;
+@keyframes entranceAnimation {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dynamic-button {
+  animation: entranceAnimation 0.5s forwards;
+  background-color: transparent;
+  border: 1px solid #ea9f42;
+  color: #ea9f42;
+  font-size: 1rem;
+  padding: 0.5rem 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.dynamic-button:hover {
+  background-color: #ea9f42;
+  color: white;
+}
+
+.dynamic-button:active {
+  transform: scale(0.95);
+  background-color: #d97c30;
+}
+
+.dynamic-button:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  background: linear-gradient(45deg, #ea9f42, transparent, #ea9f42);
+  transform: skewX(-20deg) scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s ease;
+}
+
+.dynamic-button:hover:before {
+  transform: skewX(-20deg) scaleX(1);
 }
 </style>

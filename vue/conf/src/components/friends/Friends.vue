@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
-import { connectWebSocket, disconnectWebSocket } from '../../websocket'
+import { onMounted, ref, computed } from 'vue'
+import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import type { UserI } from '../../model/user.interface'
-import type { FriendshipEntryI } from '../../model/friendshipEntry.interface'
+import type { FriendshipI } from '../../model/friendship/friendship.interface'
+import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import FriendsListItem from './FriendsListItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import FriendsModal from './FriendsModal.vue'
@@ -14,7 +15,11 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
-import jwtDecode from 'jwt-decode'
+import type { MatchI } from '../../model/match/match.interface'
+import type { ErrorI } from '../../model/error.interface'
+import type { UnreadMessageI } from '../../model/message/unreadMessage.interface'
+import type { DirectConverstationDto } from '../../model/message/directConversation.dto'
+import type { BlockUserDto } from '../../model/block-user.dto'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
@@ -25,7 +30,7 @@ const userId = computed(() => userStore.userId)
 const socket = ref<Socket | null>(null)
 
 const friends = ref<FriendshipEntryI[]>([])
-const friendRequests = ref<FriendshipEntryI[]>([])
+const unreadMessages = ref<UnreadMessageI[]>([])
 
 const modalTitle = ref('')
 const showFriendManagerAndChat = ref(false)
@@ -36,7 +41,7 @@ const showChat = ref(false)
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const updateSelectedFriend = () => {
@@ -51,6 +56,16 @@ const updateSelectedFriend = () => {
   }
 }
 
+const fetchUser = async (username: string): Promise<UserI> => {
+  const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`)
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+  }
+
+  return await response.json()
+}
+
 const setFriendData = async () => {
   try {
     const response = await fetch(
@@ -58,70 +73,73 @@ const setFriendData = async () => {
     )
 
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
     }
 
     const data = await response.json()
     friends.value = data
     updateSelectedFriend()
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message, false)
   }
 }
 
-const setFriendRequestData = async () => {
+const setDirectMessageData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`
+      `http://localhost:3000/api/directMessages/allUnreadByUserId?userId=${userId.value}`
     )
 
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
     }
 
     const data = await response.json()
-    friendRequests.value = data
+    unreadMessages.value = data
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message, false)
   }
 }
 
 const setFriendsListener = () => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
   socket.value.on('friends', () => {
-    console.log('friends listener fired')
     setFriendData()
   })
 }
 
-const setFriendRequestListener = () => {
+const setDirectMessageListener = () => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
-  socket.value.on('friendRequests', () => {
-    console.log('friendRequests listener fired')
-    setFriendRequestData()
+  socket.value.on('newDirectMessage', () => {
+    setDirectMessageData()
   })
 }
+
+const unreadMessageReactive = computed(() => {
+  const counts: { [key: number]: number } = {}
+
+  for (const message of unreadMessages.value) {
+    counts[message.senderId] = message.amountUnread
+  }
+
+  return counts
+})
 
 onMounted(() => {
   initSocket()
 
   setFriendsListener()
-  setFriendRequestListener()
+  setDirectMessageListener()
 
   setFriendData()
-  setFriendRequestData()
-})
-
-onBeforeUnmount(() => {
-  disconnectWebSocket()
-  console.log('onBeforeUnmount friends')
+  setDirectMessageData()
 })
 
 interface ModalResult {
@@ -161,7 +179,7 @@ const handleSubmit = computed(() => {
 const handleAdd = ({ username }: ModalResult) => {
   isModalOpened.value = false
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   if (username.trim() === '') {
@@ -169,23 +187,21 @@ const handleAdd = ({ username }: ModalResult) => {
     return
   }
 
-  socket.value.emit(
-    'sendFriendRequest',
-    username,
-    (response: FriendshipEntryI | { error: string }) => {
-      if ('error' in response) {
-        notificationStore.showNotification(response.error, false)
-      } else {
-        notificationStore.showNotification(
-          'Friend Request was sent to ' + response.friend.username,
-          true
-        )
-      }
+  socket.value.emit('sendFriendRequest', username, (response: FriendshipI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(
+        'Friend Request was sent to id:' +
+          response.receiverId +
+          '. username would be better though (TBD) ',
+        true
+      )
     }
-  )
+  })
 }
 
-const handleBlock = ({ username }: ModalResult) => {
+const handleBlock = async ({ username }: ModalResult) => {
   isModalOpened.value = false
 
   if (username.trim() === '') {
@@ -193,10 +209,34 @@ const handleBlock = ({ username }: ModalResult) => {
     return
   }
 
-  notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+  try {
+    const blockUser: UserI = await fetchUser(username)
+    if (!blockUser) {
+      throw new Error("Couldn't find user " + username)
+    }
+
+    const blockUserDto: BlockUserDto = {
+      userId: userId.value as number,
+      targetUserId: blockUser.id as number
+    }
+    const response = await fetch('http://localhost:3000/api/blockedUsers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(blockUserDto)
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    }
+    notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+  } catch (error: any) {
+    notificationStore.showNotification('Error: ' + error.message, false)
+  }
 }
 
-const handleUnblock = ({ username }: ModalResult) => {
+const handleUnblock = async ({ username }: ModalResult) => {
   isModalOpened.value = false
 
   if (username.trim() === '') {
@@ -204,11 +244,39 @@ const handleUnblock = ({ username }: ModalResult) => {
     return
   }
 
-  notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
+  try {
+    const unblockUser: UserI = await fetchUser(username)
+    if (!unblockUser) {
+      throw new Error("Couldn't find user " + username)
+    }
+
+    const blockUserDto: BlockUserDto = {
+      userId: userId.value as number,
+      targetUserId: unblockUser.id as number
+    }
+    const response = await fetch('http://localhost:3000/api/blockedUsers', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(blockUserDto)
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    }
+    notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
+  } catch (error: any) {
+    notificationStore.showNotification('Error: ' + error.message, false)
+  }
 }
 
-const closeFriendManagerAndChat = () => {
+const closeFriendManagerAndChat = async () => {
   showFriendManagerAndChat.value = false
+  if (selectedFriend.value) {
+    await markConversationAsRead(selectedFriend.value.friend.id!)
+    await setDirectMessageData()
+  }
   selectedFriend.value = null
 }
 
@@ -217,84 +285,86 @@ const handleFriendManagerOpened = (friend: FriendshipEntryI) => {
   showFriendManagerAndChat.value = true
 }
 
-const acceptFriendRequest = (requestId: number) => {
+const handleUnfriendUser = (username: String, friendshipId: Number) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
-    return
-  }
-
-  socket.value.emit('acceptFriendRequest', requestId)
-  setTimeout(() => {
-    setFriendData()
-    setFriendRequestData()
-    notificationStore.showNotification(`A new friend has been added successfully`, true)
-  }, 1250)
-}
-
-const rejectFriendRequest = (requestId: number) => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
-    return
-  }
-  socket.value.emit('rejectFriendRequest', requestId)
-  setTimeout(() => {
-    setFriendRequestData()
-    notificationStore.showNotification(`You have rejected friend request`, true)
-  }, 1250)
-}
-
-const handleUnfriendUser = (username: String, id: Number) => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
   if (username !== '') {
-    console.log('removeFriend id:' + id + ', username: ' + username)
-    socket.value
-      .emit('removeFriend', id, (response: any) => {
-        console.log('removeFriend response', response)
-        if (response && 'success' in response) {
-          if (response.success) {
-            notificationStore.showNotification(
-              `User ${username} was removed from friends list`,
-              true
-            )
-            closeFriendManagerAndChat()
-          } else {
-            notificationStore.showNotification(
-              `Error Could not remove ${username} from friends list: ${response.error}`,
-              false
-            )
-          }
-        } else {
-          console.error('removeFriend error', response)
-          notificationStore.showNotification(
-            `Unexpected error occurred while removing ${username} from friends list. Please try again.`,
-            false
-          )
-        }
-      })
-      .on('error', (error: any) => {
-        // Handle case when socket.emit fails
-        console.error('Socket emit error', error)
+    socket.value.emit('removeFriend', friendshipId, (response: FriendshipI | ErrorI) => {
+      if ('error' in response) {
         notificationStore.showNotification(
-          `Network error occurred while removing ${username} from friends list. Please try again.`,
+          `Error Could not remove ${username} from friends list: ${response.error}`,
           false
         )
-      })
+      } else {
+        notificationStore.showNotification(`User ${username} was removed from friends list`, true)
+      }
+    })
   }
 }
 
-const handleBlockUser = (username: String, id: Number) => {
+const handleBlockUser = async (username: string, blockUserId: number) => {
   if (username !== '') {
-    notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+    try {
+      const blockUser: UserI = await fetchUser(username)
+      if (!blockUser) {
+        throw new Error("Couldn't find user " + username)
+      }
+
+      const blockUserDto: BlockUserDto = {
+        userId: userId.value as number,
+        targetUserId: blockUser.id as number
+      }
+      const response = await fetch('http://localhost:3000/api/blockedUsers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(blockUserDto)
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+      }
+      notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+    } catch (error: any) {
+      notificationStore.showNotification('Error: ' + error.message, false)
+    }
   }
-  closeFriendManagerAndChat()
 }
 
 const handleInviteToGame = (username: String, id: Number) => {
   if (username !== '') {
     notificationStore.showNotification('User ' + username + ' was invited to play', true)
+  }
+}
+
+const markConversationAsRead = async (withUserId: number) => {
+  try {
+    const directConversationDto: DirectConverstationDto = {
+      readerUserId: userId.value as number,
+      withUserId: withUserId
+    }
+
+    const response = await fetch('http://localhost:3000/api/directMessages/markAsRead', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(directConversationDto)
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    }
+    const data = await response.json()
+    if (Array.isArray(data)) {
+    } else {
+      console.error('Expected an array from the API but received:', data)
+    }
+  } catch (error: any) {
+    console.error('Expected an array from the API but received:', error)
   }
 }
 
@@ -323,22 +393,13 @@ const goBack = () => {
           <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
             <FriendsListItem
               @click="handleFriendManagerOpened(entry)"
-              :status="entry.isOnline ? 'online' : 'offline'"
+              :status="entry.status!"
               :username="entry.friend.username"
+              :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
               :showActions="false"
             />
           </div>
         </ScrollViewer>
-        <h2 v-if="friendRequests?.length > 0">Friend Requests</h2>
-        <ul v-if="friendRequests?.length > 0" class="friendRequestsList">
-          <li v-for="request in friendRequests" :key="request.id">
-            <div class="friendInfo">
-              <span>{{ request.friend.username }}</span>
-              <button @click="acceptFriendRequest(request.id)">Accept</button>
-              <button @click="rejectFriendRequest(request.id)">Reject</button>
-            </div>
-          </li>
-        </ul>
         <button class="add-friend-button" @click="openAddModal">Add Friend</button>
         <button class="add-friend-button" @click="openBlockModal">Block User</button>
         <button class="add-friend-button" @click="openUnblockModal">Unblock User</button>
@@ -372,7 +433,7 @@ const goBack = () => {
   display: flex;
   flex-direction: column;
   height: calc(100% - 50px);
-  padding: 1rem 0.5rem 0.5rem 0.5rem;
+  padding: 1rem 0.5rem 1rem 0.5rem;
 }
 
 .friendsList {

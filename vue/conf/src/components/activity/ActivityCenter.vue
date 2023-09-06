@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import GameInvites from './GameInvites.vue'
 import FriendRequests from './FriendRequests.vue'
 import ChannelInvitations from './ChannelInvitations.vue'
 import BlockedUsers from './BlockedUsers.vue'
 import { ref, onMounted } from 'vue'
 
-const activePanel = ref('FriendRequests')
+const activePanel = ref('GameInvites')
 
 const setActivePanel = (value: string) => {
   activePanel.value = value
@@ -13,6 +14,13 @@ const setActivePanel = (value: string) => {
 <template>
   <nav class="activityCenter">
     <ul>
+      <li
+        @click="setActivePanel('GameInvites')"
+        class="navButton"
+        :class="{ selected: activePanel === 'GameInvites' }"
+      >
+        Game Invites
+      </li>
       <li
         @click="setActivePanel('FriendRequests')"
         class="navButton"
@@ -35,6 +43,7 @@ const setActivePanel = (value: string) => {
         Blocked Users
       </li>
     </ul>
+    <GameInvites v-show="activePanel === 'GameInvites'" />
     <FriendRequests v-show="activePanel === 'FriendRequests'" />
     <ChannelInvitations v-show="activePanel === 'ChannelInvitations'" />
     <BlockedUsers v-show="activePanel === 'BlockedUsers'" />

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { Match, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -9,6 +9,10 @@ export class MatchService {
   async create(newMatch: Prisma.MatchCreateInput): Promise<Match> {
     return await this.prisma.match.create({
       data: newMatch,
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
     });
   }
 
@@ -25,34 +29,58 @@ export class MatchService {
   async deleteById(id: number): Promise<Match | null> {
     return await this.prisma.match.delete({
       where: { id },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
     });
   }
 
-  async invite(id: number, invitedUserId: number): Promise<Match> {
+  async invite(id: number, invitedUserId: number): Promise<Match | null> {
+    const match = await this.findById(id);
+
+    if (!match) {
+      return null;
+    } else if (match.leftUserId == invitedUserId) {
+      throw new Error("Can't invite yourself to a match");
+    }
+
     return await this.prisma.match.update({
       where: { id },
       data: {
         rightUser: { connect: { id: invitedUserId } },
         state: 'INVITED',
       },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
     });
   }
 
-  async acceptInvite(id: number): Promise<Match> {
+  async acceptInvite(id: number): Promise<Match | null> {
     return await this.prisma.match.update({
       where: { id },
       data: {
         state: 'ACCEPTED',
       },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
     });
   }
 
-  async rejectInvite(id: number): Promise<Match> {
+  async rejectInvite(id: number): Promise<Match | null> {
     return await this.prisma.match.update({
       where: { id },
       data: {
-        rightUser: null,
+        rightUserId: null,
         state: 'CREATED',
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
       },
     });
   }
@@ -61,15 +89,53 @@ export class MatchService {
     return await this.prisma.match.findMany({
       where: {
         rightUserId: userId,
+        state: 'INVITED',
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
       },
     });
   }
 
-  async startMatch(id: number): Promise<Match> {
+  async isInGame(userId: number): Promise<Match | null> {
+    return await this.prisma.match.findFirst({
+      where: {
+        state: 'STARTED',
+        OR: [{ leftUserId: userId }, { rightUserId: userId }],
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
+    });
+  }
+
+  async startMatch(id: number): Promise<Match | null> {
     return await this.prisma.match.update({
       where: { id },
       data: {
         state: 'STARTED',
+        startedAt: new Date(),
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
+    });
+  }
+
+  //TODO: finish this with the object of the game gateway
+  async finishMatch(id: number): Promise<Match | null> {
+    return await this.prisma.match.update({
+      where: { id },
+      data: {
+        state: 'WINNERLEFT',
+        finishedAt: new Date(),
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
       },
     });
   }

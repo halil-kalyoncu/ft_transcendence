@@ -58,7 +58,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
 import Modal from '../utils/Modal.vue'
 import type { Socket } from 'socket.io-client'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 
 library.add(fas)
 const router = useRouter()
@@ -236,7 +236,7 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 onMounted(() => {

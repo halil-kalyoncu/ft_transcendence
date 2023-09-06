@@ -9,8 +9,11 @@ import {
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FriendshipService } from '../../service/friendship/friendship.service';
+import { Friendship } from '@prisma/client';
+import { BlockUserDto } from '../../dto/block-user.dto';
+import { ErrorDto } from '../../dto/error.dto';
 
-@ApiTags('Friendship module')
+@ApiTags('Friendship (Chat module)')
 @Controller('friendships')
 export class FriendshipController {
   constructor(private friendshipService: FriendshipService) {}
@@ -29,4 +32,25 @@ export class FriendshipController {
   ): Promise<FriendshipDto[]> {
     return this.friendshipService.getFriendRequests(userId);
   }
+
+  // @Get('blocked-users')
+  // async getBlockedUsers(
+  //   @Query('userId', ParseIntPipe) userId: number,
+  // ): Promise<Friendship[]> {
+  //   return this.friendshipService.getBlockedUsers(userId);
+  // }
+
+  // @Post('unblock-user')
+  // async unblockUser(
+  //   @Body() unblockUserDto: UnblockUserDto,
+  // ): Promise<Friendship | ErrorDto> {
+  //   try {
+  //     return this.friendshipService.unblock(
+  //       unblockUserDto.userId,
+  //       unblockUserDto.unblockUserId,
+  //     );
+  //   } catch (error) {
+  //     return { error: error.message };
+  //   }
+  // }
 }

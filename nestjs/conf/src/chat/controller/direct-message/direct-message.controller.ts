@@ -12,7 +12,7 @@ import { DirectConverstationDto } from '../../dto/direct-conversation.dto';
 import { UnreadMessagesDto } from '../../dto/unread-messages.dto';
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Direct message module')
+@ApiTags('Direct message (Chat module)')
 @Controller('directMessages')
 export class DirectMessageController {
   constructor(private directMessageService: DirectMessageService) {}

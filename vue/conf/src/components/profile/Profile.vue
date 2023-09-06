@@ -84,7 +84,7 @@ const props = defineProps({
 .profile {
   width: 100%;
   height: calc(100vh - 50.8px);
-  background-color: #171717;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
@@ -106,9 +106,10 @@ const props = defineProps({
 
 .profile-title {
   text-transform: uppercase;
-  font-size: 1.5rem;
-  color: darkgray;
+  font-size: 1rem;
+  color: #ea9f42;
   font-family: 'Gill Sans', sans-serif;
+  text-align: Center;
   margin: 0 0 1rem 0;
 }
 

@@ -25,7 +25,7 @@ import { useUserStore } from '../../stores/userInfo'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
@@ -45,7 +45,7 @@ const handleChannelEntered = (channelId: number) => {
 }
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const calculateUnreadMessages = async (channelId: number) => {

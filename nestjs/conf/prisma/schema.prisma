@@ -5,16 +5,28 @@ generator client {
     provider = "prisma-client-js"
 }
 
+generator prismaClassGenerator {
+    provider = "prisma-class-generator"
+    dryRun   = false
+}
+
 datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
 }
 
 model User {
-    id       Int    @id @default(autoincrement())
-    username String @unique
+    id          Int     @id @default(autoincrement())
+    username    String  @unique
+    avatarId    String?
+    ladderLevel Int     @default(1000)
+    enabled2FA  Boolean @default(false)
+    secret2FA   String?
 
     connectedUser ConnectedUser?
+
+    blockedUsers BlockedUser[] @relation("Blocked")
+    blockedBy    BlockedUser[] @relation("BlockedBy")
 
     sentFriendships     Friendship[] @relation("Sender")
     receivedFriendships Friendship[] @relation("Receiver")
@@ -29,6 +41,9 @@ model User {
 
     leftPlayerMatches  Match[] @relation("LeftPlayer")
     rightPlayerMatches Match[] @relation("RightPlayer")
+
+    queue    Matchmaking? @relation("WaitingLadderGame")
+    opponent Matchmaking? @relation("OpponentLadderGame")
 }
 
 model ConnectedUser {
@@ -200,4 +215,23 @@ model Match {
 
     leftUser  User  @relation("LeftPlayer", fields: [leftUserId], references: [id])
     rightUser User? @relation("RightPlayer", fields: [rightUserId], references: [id])
+}
+
+model BlockedUser {
+    id           Int      @id @default(autoincrement())
+    userId       Int
+    targetUserId Int
+    blockedAt    DateTime @default(now())
+
+    user       User @relation("BlockedBy", fields: [userId], references: [id])
+    targetUser User @relation("Blocked", fields: [targetUserId], references: [id])
+}
+
+model Matchmaking {
+    id             Int  @id @default(autoincrement())
+    userId         Int  @unique
+    opponentUserId Int? @unique
+
+    user     User  @relation("WaitingLadderGame", fields: [userId], references: [id])
+    opponent User? @relation("OpponentLadderGame", fields: [opponentUserId], references: [id])
 }

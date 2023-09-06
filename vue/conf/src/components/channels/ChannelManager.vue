@@ -18,7 +18,7 @@
         :requesterId="userId"
         :targetUserId="member.userId"
         :channelId="channelId"
-        :isUserBanned="member.isBanned"
+        :isUserBanned="member.banned"
       />
     </div>
   </ScrollViewer>
@@ -66,7 +66,7 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { ChannelManagerMemberI } from '../../model/channels/channelMessage.interface'
 import type { ChannelMemberRoleType } from '../../model/channels/createChannel.interface'
 import { ChannelMemberRole } from '../../model/channels/createChannel.interface'
@@ -120,7 +120,7 @@ onMounted(async () => {
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket( accessToken)
 }
 
 const setMembers = async () => {

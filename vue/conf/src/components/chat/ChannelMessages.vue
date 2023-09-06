@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import type { UserI } from '../../model/user.interface'
 import type { ChannelMessageI } from '../../model/channels/channelMessage.interface'
@@ -79,7 +79,7 @@ const formatDate = (createdAt: string) => {
 }
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const setNewChannelMessageListener = () => {
@@ -196,6 +196,6 @@ const sendMessage = () => {
 }
 
 .chat-input button:hover {
-  background-color: #ed901c;
+  background-color: #ea9f42;
 }
 </style>

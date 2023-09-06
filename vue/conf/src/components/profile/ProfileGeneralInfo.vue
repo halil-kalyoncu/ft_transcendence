@@ -28,9 +28,9 @@ const props = defineProps({
   display: flex;
   justify-content: space-evenly;
   align-items: center;
+  margin: 0 -1.5rem 1rem -1.5rem;
   border-bottom: 0.1px solid darkgray;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
+  padding: 0 1.5rem 0.5rem 1.5rem;
 }
 
 .profile-section {

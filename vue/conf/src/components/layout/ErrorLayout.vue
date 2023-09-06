@@ -17,7 +17,7 @@ const showLoginPage = computed(() => route.path === '/')
 <style scoped>
 main {
   font-family: 'Courier New', Courier, monospace;
-
+  background: rgba(0, 0, 0, 0.5);
   height: 100vh;
 }
 

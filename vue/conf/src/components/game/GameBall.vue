@@ -10,41 +10,50 @@
   ></div>
 </template>
 
-<script>
-export default {
-  props: ['posX', 'posY', 'width', 'height', 'fieldWidth', 'fieldHeight', 'socket'],
-  data() {
-    return {
-      x: 500,
-      y: 200,
-      wid: 15,
-      hgt: 15,
-      speed: 5,
-      dx: 4,
-      dy: 3
+<script lang="ts">
+import { defineComponent, ref } from 'vue'
+
+export default defineComponent({
+  setup() {
+    let x = ref(500)
+    let y = ref(200)
+    let wid = ref(15)
+    let hgt = ref(15)
+    let speed = ref(3)
+    let dx = ref(4)
+    let dy = ref(3)
+
+    function resetBall() {
+      x.value = 0
+      y.value = 0
+      wid.value = 15
+      hgt.value = 15
+      speed.value = 5
+      dx.value = 3
+      dy.value = 2
     }
-  },
 
-  methods: {
-    resetBall() {
-      this.x = 0
-      this.y = 0
-      this.wid = 15
-      this.hgt = 15
-      this.speed = 5
-      this.dx = 3
-      this.dy = 2
-    },
+    function setX(newX: number) {
+      x.value = newX
+    }
 
-    setX(x) {
-      this.x = x
-    },
+    function setY(newY: number) {
+      y.value = newY
+    }
 
-    setY(y) {
-      this.y = y
+    return {
+      x,
+      y,
+      wid,
+      hgt,
+      speed,
+      dx,
+      dy,
+      setX,
+      setY
     }
   }
-}
+})
 </script>
 
 <style scoped>

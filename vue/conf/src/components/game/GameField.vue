@@ -1,227 +1,312 @@
 <template>
-  <div>
-    <div class="field" ref="gameField">
-      <div class="left-border"></div>
-      <div class="right-border"></div>
-      <GameBall ref="ball" :fieldHeight="fieldHeight" :fieldWidth="fieldWidth" :socket="socket" />
-      <GamePaddle ref="paddleA" :fieldHeight="fieldHeight" :socket="socket" />
-      <GamePaddle ref="paddleB" :fieldHeight="fieldHeight" :socket="socket" />
-      <PowerUp
-        v-for="powerup in PowerUps"
-        :id="powerup.id"
-        :x="powerup.x"
-        :y="powerup.y"
-        :type="powerup.type"
-        :color="powerup.color"
-      />
+  <div class="field" ref="gameField">
+    <div class="left-border"></div>
+    <div class="right-border"></div>
+    <GameBall ref="ball" />
+    <GamePaddle ref="paddleA" />
+    <GamePaddle ref="paddleB" />
+    <!-- <PowerUp
+		v-for="powerup in PowerUps"
+		:id="powerup.id" 
+		:x="powerup.x"
+		:y="powerup.y"
+		:type="powerup.type"
+		:color="powerup.color"
+		:index="powerup.index"
+		/> -->
+  </div>
+  <div v-if="countdown === -1">
+    <div class="waiting">
+      <p>Waiting for opponent...</p>
     </div>
-    <!-- <div class="ball-coordinates" v-if="ballCoordinates">
+  </div>
+  <div v-else-if="countdown > 0">
+    <div class="countdown">
+      <p>Starting in {{ countdown }}</p>
+    </div>
+  </div>
+  <!-- <div class="ball-coordinates" v-if="ballCoordinates">
 			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
 		</div> -->
-    <form @submit.prevent="connectToWS">
-      <input type="text" v-model="serverIp" placeholder="Enter Server IP" />
-      <button type="submit">Connect</button>
-    </form>
-  </div>
+  <!-- <form @submit.prevent="connectToWS">
+			<input type="text" v-model="serverIp" placeholder="Enter Server IP"/>
+			<button type="submit">Connect</button>
+		</form> -->
 </template>
 
-<script>
+<script setup lang="ts">
+import { defineComponent, ref, onMounted, watch, onBeforeUnmount } from 'vue'
+import type { GamePaddleSetup } from './GamePaddle.vue'
 import GamePaddle from './GamePaddle.vue'
 import GameBall from './GameBall.vue'
 import PowerUp from './PowerUp.vue'
-import { io } from 'socket.io-client'
+import { Socket } from 'socket.io-client'
+import jwtDecode from 'jwt-decode'
+import type { UserI } from '../../model/user.interface'
+import { connectChatSocket, connectGameSocket, disconnectGameSocket } from '../../websocket'
+import { useRoute, useRouter } from 'vue-router'
+import { useNotificationStore } from '../../stores/notification'
 
-export default {
-  name: 'App',
-  components: {
-    GameBall,
-    GamePaddle,
-    PowerUp
-  },
-  mounted() {
-    this.fieldWidth = this.$refs.gameField.clientWidth
-    this.fieldHeight = this.$refs.gameField.clientHeight
+const accessToken = localStorage.getItem('ponggame') ?? ''
+const notificationStore = useNotificationStore()
+const route = useRoute()
+const matchId = route.params.matchId as string
+const router = useRouter()
 
-    setTimeout(() => {
-      this.update()
-    }, 200)
-    this.$refs.paddleA.setX(1)
-    this.$refs.paddleB.setX(this.fieldWidth - this.$refs.paddleB.getPaddleWidth() - 1)
-  },
+const gameField = ref<HTMLElement | null>(null)
+const hitCount = ref<number>(0)
+let isMovingUp = ref<boolean>(false)
+let isMovingDown = ref<boolean>(false)
+const isPaused = ref<boolean>(false)
+// let mouseX = ref<number | null>(null);
+// let mouseY = ref<number | null>(null);
+const fieldWidth = ref<number | null>(null)
+const fieldHeight = ref<number | null>(null)
+const socket = ref<Socket | null>(null)
+const serverIp = ref<string | null>(null)
+const side = ref<string | null>(null)
+const ballCoordinates = ref<{ x: number; y: number } | null>(null)
+const PowerUps = ref<any[]>([])
+const paddleA = ref<GamePaddleSetup | null>(null)
+const paddleB = ref<GamePaddleSetup | null>(null)
+const ball = ref<typeof GameBall | null>(null)
 
-  watch: {
-    isMovingUp(newState) {
-      this.socket.emit('moveUp', newState)
-    },
+let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
-    isMovingDown(newState) {
-      this.socket.emit('moveDown', newState)
-    }
-  },
+const chatSocket = ref<Socket | null>(null)
 
-  data() {
-    return {
-      hitCount: 0,
+const countdown = ref<number>(-1)
 
-      isMovingUp: false,
-      isMovingDown: false,
-      isPaused: false,
+const getUserFromAccessToken = () => {
+  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+  return decodedToken.user as UserI
+}
 
-      mouseX: null,
-      mouseY: null,
-      fieldWidth: null,
-      fieldHeight: null,
-
-      socket: null,
-      serverIp: null,
-
-      side: null,
-
-      ballCoordinates: null,
-
-      PowerUps: []
-    }
-  },
-
-  methods: {
-    connectToWS() {
-      if (this.socket) this.socket.close()
-      this.socket = io(`localhost:3000/game`, { transports: ['websocket'] })
-
-      this.socket.on('connect', () => {
-        console.log('Connected to Server')
-        this.socket.emit('message', 'Hello')
-      })
-
-      this.socket.on('direction', (data) => {
-        this.side = data
-        console.log('side: ', data)
-      })
-
-      this.socket.on('paddleMove', ({ playerId, newPos }) => {
-        if (playerId == 'left') {
-          this.$refs.paddleA.setY(newPos)
-          console.log(playerId, ': ', newPos)
-        } else {
-          this.$refs.paddleB.setY(newPos)
-          console.log(playerId, ': ', newPos)
-        }
-      })
-
-      this.socket.on('ballPosition', ({ x, y }) => {
-        if (this.$refs.ball) {
-          this.$refs.ball.setX(x)
-          this.$refs.ball.setY(y)
-        }
-        this.ballCoordinates = { x, y }
-      })
-
-      // this.socket.on("newPowerUp", ({ id, x, y, type }) => {
-      this.socket.on('newPowerUp', (data) => {
-        this.PowerUps.push(data)
-        // console.log("PU spawn remote");
-      })
-
-      this.socket.on('powerUpMove', ({ id, y }) => {
-        let powerUp = null
-        if (this.PowerUps) {
-          powerUp = this.PowerUps.find((powerup) => powerup.id === id)
-          if (powerUp) powerUp.y = y
-          // console.log("ID: ", powerUp.id, "Y:", y);
-        }
-      })
-
-      this.socket.on('newPaddleHeight', ({ player, hgt }) => {
-        if (this.$refs.paddleA && player == 'left') this.$refs.paddleA.setHgt(hgt)
-        else if (this.$refs.paddleB && player == 'right') this.$refs.paddleB.setHgt(hgt)
-      })
-
-      this.socket.on('destroyPowerUp', ({ id }) => {
-        // let powerUp = null;
-
-        // powerUp = this.PowerUps.find(powerup => powerup.id === id);
-        // if (powerUp) {
-        //     this.powerups.delete(powerUp);
-        // }
-        let index = this.PowerUps.findIndex((powerup) => powerup.id === id)
-        if (index != -1) {
-          this.PowerUps.splice(index, 1)
-          this.socket.emit('removePowerUp', id)
-          console.log('PU removed')
-        }
-      })
-    },
-
-    update() {
-      if (this.isPaused) {
-        requestAnimationFrame(this.update)
-        return
-      }
-
-      if (this.side && this.side == 'left') {
-        if (this.$refs.paddleA && this.isMovingUp) this.$refs.paddleA.movePaddleUp()
-        else if (this.$refs.paddleA && this.isMovingDown) this.$refs.paddleA.movePaddleDown()
-      } else if (this.side && this.side == 'right') {
-        if (this.$refs.paddleB && this.isMovingUp) this.$refs.paddleB.movePaddleUp()
-        else if (this.$refs.paddleB && this.isMovingDown) this.$refs.paddleB.movePaddleDown()
-      }
-
-      requestAnimationFrame(this.update)
-    },
-
-    keyHookDown(e) {
-      switch (e.key) {
-        case 'p':
-          this.isPaused = !this.isPaused
-          break
-        case 'ArrowUp':
-          this.isMovingUp = true
-          break
-        case 'ArrowDown':
-          this.isMovingDown = true
-          break
-      }
-    },
-
-    keyHookUp(e) {
-      switch (e.key) {
-        case 'ArrowUp':
-          this.isMovingUp = false
-          break
-        case 'ArrowDown':
-          this.isMovingDown = false
-          break
-        case 'n':
-          this.spawnPowerUp()
-          // this.socket.emit('activatePowerUp', { type: "increasePaddle", player: "left" })
-          break
-      }
-    },
-
-    spawnPowerUp() {
-      const newPowerUp = {
-        id: this.PowerUps.length + 1,
-        x: Math.floor(Math.random() * this.fieldWidth),
-        y: -30,
-        type: Math.floor(Math.random() * 4),
-        color: 'white',
-        wid: 30,
-        hgt: 30
-      }
-      if (newPowerUp.type == '0') newPowerUp.color = 'red'
-      else if (newPowerUp.type == '1') newPowerUp.color = 'green'
-      else if (newPowerUp.type == '2') newPowerUp.color = 'blue'
-      else if (newPowerUp.type == '3') newPowerUp.color = 'white'
-      this.socket.emit('spawnPowerUp', newPowerUp)
-      console.log('PU spawn local color:', newPowerUp.type)
-    }
-  },
-
-  created() {
-    window.addEventListener('keydown', this.keyHookDown)
-    window.addEventListener('keyup', this.keyHookUp)
+const keyHookDown = (e: KeyboardEvent) => {
+  switch (e.key) {
+    case 'p':
+      isPaused.value = !isPaused.value
+      break
+    case 'ArrowUp':
+      isMovingUp.value = true
+      break
+    case 'ArrowDown':
+      isMovingDown.value = true
+      break
   }
 }
+
+const keyHookUp = (e: KeyboardEvent) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  switch (e.key) {
+    case 'ArrowUp':
+      isMovingUp.value = false
+      break
+    case 'ArrowDown':
+      isMovingDown.value = false
+      break
+    case 'n':
+      spawnPowerUp()
+      socket.value.emit('activatePowerUp', { type: 'increasePaddle', player: 'left' })
+      break
+  }
+}
+
+window.addEventListener('keydown', keyHookDown)
+window.addEventListener('keyup', keyHookUp)
+
+const initGameSocket = () => {
+  const user: UserI = getUserFromAccessToken()
+  socket.value = connectGameSocket({
+    userId: user.id,
+    matchId: matchId
+  })
+}
+
+const initChatSocket = () => {
+  chatSocket.value = connectChatSocket(accessToken);
+}
+
+const initGameField = () => {
+  if (!gameField.value) {
+    //error handling
+    console.log('gameField value is not set')
+    return
+  }
+
+  fieldWidth.value = gameField.value?.clientWidth || 0
+  fieldHeight.value = gameField.value?.clientHeight || 0
+  // console.log(fieldWidth.value);
+  setTimeout(() => {
+    update()
+  }, 200)
+
+  paddleA.value?.setX(1)
+  if (fieldWidth.value && paddleB.value) {
+    console.log('setting paddle B')
+    paddleB.value.setX(fieldWidth.value - paddleB.value.getPaddleWidth() - 1)
+  }
+
+  // console.log("paddleA X: " + paddleA.value?.getPaddleX());
+  // console.log("paddleB X: " + paddleA.value?.getPaddleX());
+}
+
+onMounted(() => {
+  initGameSocket()
+  initChatSocket()
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.on('direction', (data: any) => {
+    side.value = data
+    console.log('side: ', data)
+  })
+
+  socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
+    if (playerId === 'left') {
+      paddleA.value?.setY(newPos)
+      console.log(playerId, ': ', newPos)
+    } else {
+      paddleB.value?.setY(newPos)
+      console.log(playerId, ': ', newPos)
+    }
+  })
+
+  socket.value.on('ballPosition', ({ x, y }: { x: number; y: number }) => {
+    ball.value?.setX(x)
+    ball.value?.setY(y)
+    ballCoordinates.value = { x, y }
+    // console.log("ball")
+  })
+
+  // socket.on("newPowerUp", ({ id, x, y, type }) => {
+  socket.value.on('newPowerUp', (data: any) => {
+    PowerUps.value?.push(data)
+    // console.log("PU spawn remote");
+  })
+
+  socket.value.on('powerUpMove', ({ id, y }: { id: number; y: number }) => {
+    let powerUp = null
+    if (PowerUps.value) {
+      powerUp = PowerUps.value?.find((powerup) => powerup.id === id)
+      if (powerUp) powerUp.y = y
+      // console.log("ID: ", powerUp.id, "Y:", y);
+    }
+  })
+  // socket?.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
+  // 	return ;
+  // 	if (paddleA.value && player == "left")
+  // 		paddleA.value?.setHgt(hgt);
+  // 	else if (paddleB.value && player == "right")
+  // 		paddleB.value?.setHgt(hgt);
+  // });
+
+  socket.value.on('destroyPowerUp', ({ id }: { id: number }) => {
+    if (!socket || !socket.value) {
+      notificationStore.showNotification(`Error: Connection problems`, true)
+      return
+    }
+
+    let index = PowerUps.value?.findIndex((powerup) => powerup.id == id)
+    if (index != -1) {
+      PowerUps.value?.splice(index, 1)
+      socket.value.emit('removePowerUp', id)
+      console.log('PU removed')
+    }
+  })
+
+  socket.value.on('gameFinished', (payload: any) => {
+    //show post game screen
+  })
+
+  socket.value.on('opponentDisconnect', (payload: any) => {
+    //show post game screen
+    router.push('/home')
+  })
+
+  socket.value.on('countdown', (payload: number) => {
+    countdown.value = payload
+  })
+
+  socket.value.on('startGame', () => {
+    countdown.value = 0
+  })
+
+  initGameField()
+})
+
+const handleFinishedMatch = () => {
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification('Error: Connection problem chat', false)
+    return 
+  }
+  chatSocket.value.emit('finishedMatch');
+}
+
+onBeforeUnmount(() => {
+  handleFinishedMatch();
+  window.removeEventListener('keydown', keyHookDown)
+  window.removeEventListener('keyup', keyHookUp)
+  disconnectGameSocket()
+})
+
+// watch(isMovingUp, () => {
+// 	if (socket.value) {
+// 		socket.value.emit('paddle', 'up');
+// 	}
+// });
+
+// watch(isMovingDown, () => {
+// 	if (socket.value) {
+// 		socket.value.emit('paddle', 'down');
+// 	}
+// });
+
+function update() {
+  // console.log("UPDATE");
+  if (isPaused.value) {
+    requestAnimationFrame(update)
+    return
+  }
+  // console.log(side.value);
+  if (side.value && side.value == 'left') {
+    // console.log("update");
+    if (paddleA.value && isMovingUp.value) {
+      if (socket.value) {
+        socket.value.emit('paddle', 'up')
+      }
+    }
+    // paddleA.movePaddleDown();
+    else if (paddleA.value && isMovingDown.value) {
+      if (socket.value) {
+        socket.value.emit('paddle', 'down')
+      }
+    }
+    // paddleA.movePaddleDown();
+  } else if (side.value && side.value == 'right') {
+    if (paddleB.value && isMovingUp.value) {
+      if (socket.value) {
+        socket.value.emit('paddle', 'up')
+      }
+    }
+    // paddleB.movePaddleDown();
+    else if (paddleB.value && isMovingDown.value) {
+      if (socket.value) {
+        socket.value.emit('paddle', 'down')
+      }
+    }
+  }
+  // console.log(isMovingUp.value);
+  requestAnimationFrame(update)
+}
+
+function spawnPowerUp() {}
 </script>
 
 <style scoped>

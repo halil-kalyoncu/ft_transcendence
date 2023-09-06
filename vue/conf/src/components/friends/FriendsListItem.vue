@@ -3,6 +3,16 @@
     <div class="friend-container">
       <font-awesome-icon class="icon" :icon="['fas', 'user']" />
       <p class="friend-name">{{ username }}</p>
+      <div class="icon-container">
+        <font-awesome-icon
+          :icon="['fas', 'envelope']"
+          class="envelope-icon"
+          v-if="unreadMessagesAmount && unreadMessagesAmount > 0"
+        />
+        <span v-if="unreadMessagesAmount && unreadMessagesAmount > 0" class="badge-number">{{
+          unreadMessagesAmount
+        }}</span>
+      </div>
     </div>
     <div class="friends-actions-container">
       <div v-if="showActions">
@@ -14,12 +24,12 @@
         </button>
       </div>
       <div
-        :title="status === 'online' ? 'Online' : status === 'offline' ? 'Offline' : 'In Game'"
+        :title="status"
         class="statusIndicator"
         :class="{
-          online: status === 'online',
-          offline: status === 'offline',
-          inGame: status === 'inGame'
+          online: status === 'ONLINE',
+          offline: status === 'OFFLINE',
+          inGame: status === 'INGAME'
         }"
       ></div>
     </div>
@@ -38,6 +48,7 @@ const router = useRouter()
 const props = defineProps({
   username: String,
   status: String,
+  unreadMessagesAmount: Number,
   showActions: Boolean
 })
 
@@ -66,6 +77,8 @@ const banUser = () => {
 .friend-container {
   cursor: pointer;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .friend-name {
@@ -74,10 +87,12 @@ const banUser = () => {
   font-size: 0.8rem;
   color: #ea9f42;
   font-weight: bold;
+  height: fit-content;
 }
 
 .friend-container .icon {
-  margin-right: 10px;
+  margin: 0.5rem;
+  width: 0.75rem;
 }
 
 .friend-list-item .statusIndicator {
@@ -90,5 +105,32 @@ const banUser = () => {
 .friends-actions-container {
   display: flex;
   align-items: center;
+}
+
+.icon-container {
+  position: relative;
+  display: inline-block;
+  font-size: 0.75rem;
+  margin: 0.5rem 0 0 0.5rem;
+}
+
+.badge-number {
+  position: absolute;
+  bottom: 0.3rem;
+  left: 100%;
+  transform: translate(-50%, 50%);
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  width: 0.65rem;
+  height: 0.65rem;
+  line-height: 0.65rem;
+  text-align: center;
+  font-size: 0.55rem;
+  font-weight: bold;
+}
+
+.envelope-icon {
+  width: 100%;
 }
 </style>

@@ -1,4 +1,4 @@
-import type { MessageI } from '../message.interface'
+import type { MessageI } from '../message/message.interface'
 import type { UserI } from '../user.interface'
 import type { ChannelMemberRoleType, ChannelMemberStatusType } from './createChannel.interface'
 

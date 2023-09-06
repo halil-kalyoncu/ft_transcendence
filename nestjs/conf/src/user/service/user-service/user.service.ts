@@ -1,15 +1,19 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { AuthService } from '../../../auth/service/auth.service';
+import { Injectable } from '@nestjs/common';
+import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, User, ChannelInvitationStatus } from '@prisma/client';
 import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
 import { ChannelInviteeUserDto } from '../../../chat/dto/channelInvitation.dto';
+import * as fs from 'fs';
+import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
+
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
-    private authService: AuthService,
+    private jwtAuthService: JwtAuthService,
+    private connectedUser: ConnectedUserService,
   ) {}
 
   //remove this, if 42 login works
@@ -18,42 +22,50 @@ export class UserService {
 
     if (!foundUser) {
       foundUser = await this.create(user);
+    } else {
+      const connectedUser = await this.connectedUser.findByUserId(foundUser.id);
+      if (connectedUser) {
+        throw new Error('User ' + foundUser.username + ' is already logged in');
+      }
     }
-    return this.authService.generateJwt(foundUser);
+    return await this.jwtAuthService.generateJwt(foundUser);
   }
 
   async create(newUser: Prisma.UserCreateInput): Promise<User> {
     try {
-      const user = await this.prisma.user.create({
+      return await this.prisma.user.create({
         data: newUser,
       });
-      return this.findById(user.id);
-    } catch {
-      throw new HttpException(
-        'Username is already in use',
-        HttpStatus.CONFLICT,
-      );
+    } catch (error) {
+      //P2002 is the prisma error code for the unique constraint
+      if (error.code === 'P2002') {
+        throw new Error('Username is already in use');
+      }
+      throw error;
     }
   }
 
-  async findById(id: number): Promise<User | null> {
-    return this.prisma.user.findUnique({
+  async findById(id: number): Promise<any | null> {
+    return await this.prisma.user.findUnique({
       where: { id },
+      include: {
+        blockedUsers: true,
+      },
     });
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    return this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { username },
     });
   }
 
   async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany();
+    return await this.prisma.user.findMany();
   }
 
   async findAllByUsername(username: string): Promise<User[]> {
-    return this.prisma.user.findMany({
+    return await this.prisma.user.findMany({
       where: {
         username: {
           contains: username,
@@ -99,5 +111,68 @@ export class UserService {
       channelInvitees.push(channelinvitee);
     }
     return channelInvitees;
+  }
+
+  async uploadAvatar(file: Express.Multer.File, userId: number): Promise<User> {
+    const user: User = await this.findById(userId);
+
+    if (!user) {
+      throw new Error('user not found');
+    }
+
+    if (user.avatarId) {
+      fs.unlinkSync(user.avatarId);
+    }
+
+    return await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        avatarId: file.path,
+      },
+    });
+  }
+
+  async deleteAvatar(userId: number) {
+    const user: User = await this.findById(userId);
+
+    if (!user) {
+      throw new Error('user not found');
+    }
+
+    if (user.avatarId) {
+      fs.unlinkSync(user.avatarId);
+    }
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        avatarId: null,
+      },
+    });
+  }
+
+  async setTwoFactorAuthSecret(userId: number, secret: string) {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        secret2FA: secret,
+      },
+    });
+  }
+
+  async turnOnTwoFactorAuth(userId: number): Promise<User> {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        enabled2FA: true,
+      },
+    });
   }
 }

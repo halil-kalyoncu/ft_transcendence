@@ -127,8 +127,6 @@ watch(inputName, (newValue) => {
 })
 
 const goToProfile = (username: String | undefined) => {
-  console.log('u9')
-
   if (username === undefined) {
     return
   }
@@ -311,6 +309,6 @@ const goToProfile = (username: String | undefined) => {
 }
 
 .inGame {
-  background-color: orange;
+  background-color: #ea9f42;
 }
 </style>

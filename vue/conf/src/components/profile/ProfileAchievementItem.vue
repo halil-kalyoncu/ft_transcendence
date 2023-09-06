@@ -27,6 +27,7 @@ defineProps<Props>()
   display: flex;
   align-items: center;
   background: linear-gradient(to right, #051139, #0d2265);
+  opacity: 0.9;
   padding: 1rem;
   color: white;
   border-radius: 0.25rem;
