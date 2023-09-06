@@ -138,6 +138,11 @@ const setBannedFromChannelListener = () => {
     setUserBanned()
     return
   })
+  socket.value.on('memberUnBanned', () => {
+	console.log('memberUnBanned fired from JoinedChannelsList.vue')
+	setUserBanned()
+	return
+  })
 }
 onMounted(() => {
   initSocket()

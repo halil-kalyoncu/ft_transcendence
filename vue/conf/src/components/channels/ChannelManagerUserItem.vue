@@ -31,15 +31,14 @@
         <button
           class="action-button-ban"
           @click="banUnbanUser"
-          :title="banTitle"
-          :class="isUserBanned ? 'Unban' : 'Ban'"
+          :title="isUserBanned ? 'Unban' : 'Ban'"
         >
           <font-awesome-icon :icon="isUserBanned ? ['fas', 'ban'] : ['fas', 'check']" />
         </button>
         <button
           class="action-button-mute"
           @click="openModal"
-          :title="muteTitle"
+          :title="isUserMuted ? 'Unmute' : 'Mute'"
           :class="isUserMuted ? 'disableMuteOption' : ''"
         >
           <font-awesome-icon :icon="isUserMuted ? ['fas', 'volume-mute'] : ['fas', 'volume-up']" />
@@ -66,9 +65,8 @@ const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 const minutesMuted = ref(0)
 const maxValue = ref(100)
-const isUserMuted = ref(false)
 const muteTitle = ref('Mute')
-const banTitle = ref('Ban')
+
 
 //get the props from parent
 const props = defineProps({
@@ -79,7 +77,8 @@ const props = defineProps({
   requesterId: Number,
   targetUserId: Number,
   channelId: Number,
-  isUserBannedProp: Boolean
+  isUserBannedProp: Boolean,
+  isUserMutedProp: Boolean
 })
 // const emit = defineEmits(['changedProperties']);
 
@@ -89,9 +88,17 @@ const props = defineProps({
 
 const role = ref(props.roleProp)
 const isUserBanned = ref(props.isUserBannedProp)
+const isUserMuted = ref(props.isUserMutedProp)
 
 watchEffect(() => {
   role.value = props.roleProp
+})
+
+watchEffect(() => {
+  isUserBanned.value = props.isUserBannedProp
+})
+watchEffect(() => {
+  isUserMuted.value = props.isUserMutedProp
 })
 
 const goToProfile = () => {
@@ -116,7 +123,7 @@ const kickUser = async () => {
 
 const banUnbanUser = async () => {
   if (isUserBanned.value) {
-    unBanUser()
+	unBanUser()
   } else {
     banUser()
   }
@@ -170,7 +177,24 @@ const makeAdmin = async () => {
   }
 }
 
-const muteUser = () => {
+const muteUser = async() => {
+  if (!socket || !socket.value) {
+	notificationStore.showNotification('Error: Connection problems', true)
+	return
+  }
+  try {
+	console.log(minutesMuted.value)
+	  socket.value.emit('muteChannelMember', {
+	  requesterId: props.requesterId,
+	  targetUserId: props.targetUserId,
+	  channelId: props.channelId,
+	  minutesToMute: minutesMuted.value})
+  } catch (error: any) {
+	notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
+const muteAUser = () => {
   if (minutesMuted.value === 0) {
     notificationStore.showNotification('Error: Minutes to be muted cannot be 0', false)
     return
@@ -178,20 +202,36 @@ const muteUser = () => {
 
   let muted = true
 
-  if (muted) {
-    notificationStore.showNotification(
-      props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
-      true
-    )
-    isUserMuted.value = true
-    muteTitle.value = 'User is muted'
+try{
+	if (muted) {
+	  muteUser()
+	  notificationStore.showNotification(
+		props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
+		true
+	  )
+	}
+	minutesMuted.value = 0
+
+}
+catch (error: any) {
+	notificationStore.showNotification(`Error` + error.message, true)
   }
-  minutesMuted.value = 0
 }
 
-const unmuteUser = () => {
-  isUserMuted.value = false
-  muteTitle.value = 'Mute'
+const unMuteUser = async() => {
+  if (!socket || !socket.value) {
+	notificationStore.showNotification('Error: Connection problems', true)
+	return
+  }
+  try {
+	  socket.value.emit('unMuteChannelMember', {
+	  requesterId: props.requesterId,
+	  targetUserId: props.targetUserId,
+	  channelId: props.channelId})
+	  muteTitle.value = 'Mute'
+  } catch (error: any) {
+	notificationStore.showNotification(`Error` + error.message, true)
+  }
 }
 
 const getRoleIcon = (role: string | undefined) => {
@@ -215,9 +255,9 @@ interface ModalResult {
 }
 
 const isModalOpened = ref(false)
-const openModal = () => {
+const openModal = async () => {
   if (isUserMuted.value === true) {
-    unmuteUser()
+    await unMuteUser()
     return
   }
   isModalOpened.value = true
@@ -231,7 +271,7 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
   isModalOpened.value = false
 
   minutesMuted.value = minutesOfMute !== undefined ? minutesOfMute : 0
-  muteUser()
+  muteAUser()
 }
 
 const initSocket = () => {

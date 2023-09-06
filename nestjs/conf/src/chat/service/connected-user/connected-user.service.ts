@@ -14,6 +14,10 @@ export class ConnectedUserService {
     });
   }
 
+  async getAll(): Promise<ConnectedUser[]> {
+	return this.prisma.connectedUser.findMany();
+	  }
+
   async findByUserId(userId: number): Promise<ConnectedUser | null> {
     return this.prisma.connectedUser.findFirst({
       where: {

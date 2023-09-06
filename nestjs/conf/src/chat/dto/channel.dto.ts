@@ -53,6 +53,9 @@ export class AdminActionDto {
 
   @IsNotEmpty()
   channelId: number;
+
+  @IsOptional()
+  minutesToMute?: number;
 }
 
 export class ChannelInfoDto {

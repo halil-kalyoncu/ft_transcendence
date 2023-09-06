@@ -23,6 +23,16 @@ import { onMounted, computed, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
+import { Socket } from 'socket.io-client'
+import { connectChatSocket } from '../../websocket'
+
+const socket = ref<Socket | null>(null)
+	const notificationStore = useNotificationStore()
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
 
 const emit = defineEmits(['channel-entered'])
 const handleChannelEntered = (channelId: number) => {
@@ -49,9 +59,26 @@ const setPublicChannels = async () => {
   }
 }
 
+const setChannelListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  socket.value.on('ChannelDestroy', () => {
+    console.log('ChannelDestroy fired from AvaibleChannelsList.vue')
+    setPublicChannels()
+    return
+  })
+  socket.value.on('channelCreated', () => {
+    console.log('channelCreated fired from AvaibleChannelsList.vue')
+    setPublicChannels()
+    return
+  })
+}
 onMounted(async () => {
+	initSocket()
   await setPublicChannels()
-  //listener
+  setChannelListener()
 })
 </script>
 

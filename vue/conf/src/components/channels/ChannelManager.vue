@@ -9,16 +9,17 @@
       @submit="handleSubmit"
       @close="handleClose"
     />
-    <div v-for="member in Members" :key="member.userId">
+    <div v-for="memberItem in memberItems" :key="`${memberItem.isUserBannedProp}-${memberItem.isUserMutedProp}`">
       <ChannelManagerUserItem
-        :username="member.username"
-        :date="member.statusSince"
-        :roleProp="member.role.toLowerCase()"
-        :currentUserRole="currentUserRole.toLowerCase()"
-        :requesterId="userId"
-        :targetUserId="member.userId"
-        :channelId="channelId"
-        :isUserBanned="member.banned"
+        :username="memberItem.username"
+        :date="memberItem.date"
+        :roleProp="memberItem.roleProp"
+        :currentUserRole="memberItem.currentUserRole"
+        :requesterId="memberItem.requesterId"
+        :targetUserId="memberItem.targetUserId"
+        :channelId="memberItem.channelId"
+        :isUserBannedProp="memberItem.isUserBannedProp"
+		:isUserMutedProp="memberItem.isUserMutedProp"
       />
     </div>
   </ScrollViewer>
@@ -83,7 +84,7 @@ const notificationStore = useNotificationStore()
 const userStore = useUserStore()
 const userId = computed<number>(() => userStore.userId)
 const username = computed(() => userStore.username)
-const channelId: Number = props.channelId
+const channelId: number = props.channelId
 const Members = ref<ChannelManagerMemberI[]>([])
 let currentUserRole = ref<ChannelMemberRoleType>(ChannelMemberRole.MEMBER)
 let ChannelName = ref<string>('')
@@ -101,6 +102,30 @@ const handleChangedProperties = () => {
   console.log('handleChangedProperties')
   getMembers()
 }
+const memberItems = computed(() => {
+  return Members.value.map((member) => {
+    return {
+    username: member.username,
+    date: member.statusSince,
+    roleProp: member.role.toLowerCase(),
+	currentUserRole: currentUserRole.value.toLowerCase(),
+    requesterId: userId.value,
+    targetUserId: member.userId,
+	channelId: channelId,
+    isUserBannedProp: member.banned,
+	isUserMutedProp: isUserMuted(member.unmuteAt)
+    };
+  });
+});
+
+const isUserMuted = (memberUnmuteAt: string | null) => {
+	if (memberUnmuteAt == null) {
+		return false;
+	}
+	const unmuteAt = new Date(memberUnmuteAt);
+	const now = new Date();
+	return unmuteAt > now;
+}
 
 const getMembers = async () => {
   await setMembers().then(() => {
@@ -116,6 +141,8 @@ onMounted(async () => {
   getSignOutButtonText()
   setDestroyChannelListener()
   setUserSignedListener()
+for (const memberitems of memberItems.value)
+  console.log(memberitems)
 })
 
 const initSocket = () => {
@@ -202,14 +229,36 @@ const setUserSignedListener = () => {
   socket.value.on('memberBanned', (membership: any) => {
     console.log('memberBanned fired')
     //await notificationStore.showNotification('User Banned', true)
-    if (membership.userId === userId.value) {
-      emit('channel-force-leave')
-    }
-    setMembers().then(() => {
-      setCurrentUserRole()
-    })
+	if (membership.userId === userId.value) {
+		emit('channel-force-leave')
+	}
+	setMembers().then(() => {
+		setCurrentUserRole()
+	})
+})
+socket.value.on('memberUnBanned', (membership: any) => {
+  console.log('memberUnBanned fired')
+  //await notificationStore.showNotification('User UnBanned', true)
+  setMembers().then(() => {
+	setCurrentUserRole()
   })
+})
+socket.value.on('memberMuted', (membership: any) => {
+    console.log('memberMuted fired')
+    //await notificationStore.showNotification('User Banned', true)
+	setMembers().then(() => {
+		setCurrentUserRole()
+	})
+})
+socket.value.on('memberUnMuted', (membership: any) => {
+  console.log('memberUnMuted fired')
+  //await notificationStore.showNotification('User UnBanned', true)
+  setMembers().then(() => {
+	setCurrentUserRole()
+  })
+})
 }
+
 const getSignOutButtonText = () => {
   if (currentUserRole.value === ChannelMemberRole.OWNER) {
     return 'Destroy'

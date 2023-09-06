@@ -107,6 +107,11 @@ const setNewChannelMessageListener = () => {
     setUnreadMessages()
     return
   })
+  socket.value.on('ChannelDestroy', () => {
+    console.log('ChannelDestroy fired from JoinedChannelsList.vue')
+    setChannels()
+    return
+  })
 }
 
 onMounted(async () => {

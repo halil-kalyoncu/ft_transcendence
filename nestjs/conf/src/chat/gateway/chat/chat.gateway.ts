@@ -323,6 +323,13 @@ export class ChatGateway
         createChannelDto,
       );
       socket.emit('channelCreated', true);
+	  const onlineMembers: ConnectedUser[] = 
+	  await this.connectedUserService.getAll();
+	for (const onlineMember of onlineMembers) {
+		if (onlineMember){
+			socket.to(onlineMember.socketId).emit('channelCreated', true);
+		}
+    }
     } catch (error: any) {
       socket.emit('error', error.message);
     }
@@ -338,6 +345,13 @@ export class ChatGateway
         createChannelDto,
       );
       socket.emit('channelCreated', true);
+	  const onlineMembers: ConnectedUser[] = 
+	  await this.connectedUserService.getAll();
+	for (const onlineMember of onlineMembers) {
+		if (onlineMember){
+			socket.to(onlineMember.socketId).emit('channelCreated', true);
+		}
+    }
     } catch (error: any) {
       socket.emit('error', error.message);
     }
@@ -492,17 +506,87 @@ export class ChatGateway
     }
   }
 
+  @SubscribeMessage('unBanChannelMember')
+  async handleUnBanChannelMember(
+    socket: Socket,
+    adminActionDto: AdminActionDto,
+  ): Promise<void> {
+    try {
+      const membership = await this.channelService.unBanChannelMember(
+        adminActionDto,
+      );
+      
+	  socket.emit('memberUnBanned', membership);
+      const members: User[] = await this.channelService.getMembers(
+        adminActionDto.channelId,
+      );
+      for (const member of members) {
+        const memberOnline: ConnectedUser =
+          await this.connectedUserService.findByUserId(member.id);
+        if (
+          memberOnline &&
+          memberOnline.userId !== adminActionDto.requesterId
+        ) {
+          socket.to(memberOnline.socketId).emit('memberUnBanned', membership);
+        }
+      }
+    } catch (error: any) {
+      socket.emit('error', error.message);
+    }
+  }
+
   @SubscribeMessage('muteChannelMember')
   async handleMuteChannelMember(
     socket: Socket,
-    @MessageBody() adminActionDto: AdminActionDto,
+    adminActionDto: AdminActionDto,
   ): Promise<void> {
     try {
       const membership = await this.channelService.muteChannelMember(
-        adminActionDto,
+        adminActionDto
       );
       socket.emit('memberMuted', membership);
-    } catch (error) {
+	  const members: User[] = await this.channelService.getMembers(
+        adminActionDto.channelId,
+      );
+      for (const member of members) {
+        const memberOnline: ConnectedUser =
+          await this.connectedUserService.findByUserId(member.id);
+        if (
+          memberOnline &&
+          memberOnline.userId !== adminActionDto.requesterId
+        ) {
+          socket.to(memberOnline.socketId).emit('memberMuted', membership);
+        }
+      }
+    } catch (error: any) {
+      socket.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('unMuteChannelMember')
+  async handleUnMuteChannelMember(
+    socket: Socket,
+    adminActionDto: AdminActionDto,
+  ): Promise<void> {
+    try {
+      const membership = await this.channelService.unMuteChannelMember(
+        adminActionDto,
+      );
+      socket.emit('memberUnMuted', membership);
+	  const members: User[] = await this.channelService.getMembers(
+        adminActionDto.channelId,
+      );
+      for (const member of members) {
+        const memberOnline: ConnectedUser =
+          await this.connectedUserService.findByUserId(member.id);
+        if (
+          memberOnline &&
+          memberOnline.userId !== adminActionDto.requesterId
+        ) {
+          socket.to(memberOnline.socketId).emit('memberUnMuted', membership);
+        }
+      }
+    } catch (error: any) {
       socket.emit('error', error.message);
     }
   }
@@ -521,9 +605,16 @@ export class ChatGateway
       if (memberOnline && memberOnline.userId !== senderId) {
         socket.to(memberOnline.socketId).emit('ChannelDestroy', channelId);
       }
+	const onlineMembers: ConnectedUser[] = 
+	  await this.connectedUserService.getAll();
+	for (const onlineMember of onlineMembers) {
+		if (onlineMember){
+			socket.to(onlineMember.socketId).emit('ChannelDestroy', channelId);
+		}
     }
     this.channelService.destroyChannel(channelId);
   }
+}
 
   @SubscribeMessage('SignOutChannel')
   async handleSignOutChannel(

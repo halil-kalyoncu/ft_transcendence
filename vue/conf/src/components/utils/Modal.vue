@@ -45,12 +45,11 @@
         />
       </div>
 
-      <div class="checkbox-container">
+      <div class="checkbox-container" v-if="!isNumberSelection">
         <label for="check-box">
           Password
           <input
             type="checkbox"
-            v-show="!isNumberSelection"
             id="check-box"
             v-model="checkPassword"
           />
