@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
-import { ChannelVisibility } from '@prisma/client';
+import { ChannelVisibility, Channel, User, Message } from '@prisma/client';
+
 
 export class CreateChannelDto {
   @IsNotEmpty()
@@ -52,4 +53,30 @@ export class AdminActionDto {
 
   @IsNotEmpty()
   channelId: number;
+}
+
+export class ChannelInfoDto {
+  channel: Channel;
+  owner: User;
+}
+
+export class ChannelMessageDto {
+  id?: number;
+  message: Message;
+  sender: User;
+  createdAt: Date;
+  //ChannelMessageReadStatus: ChannelMessageReadStatus;
+}
+
+export class ChannelMemberDto {
+  channelMemberId: number;
+  channelName: string;
+  userId: number;
+  username: string;
+  role: string;
+  roleSince: Date;
+  status: string;
+  statusSince: Date;
+  banned: boolean;
+  unmuteAt: Date;
 }

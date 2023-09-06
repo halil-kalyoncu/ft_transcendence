@@ -3,3 +3,9 @@ export interface UserI {
   username?: string
   avatarId?: string
 }
+
+export interface ChannelInviteeUserI {
+  id: number
+  username: string
+  status?: string
+}

@@ -26,6 +26,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, computed, onMounted } from 'vue'
+import { connectChatSocket } from '../../websocket'
+import { Socket } from 'socket.io-client'
+
 import { useRouter } from 'vue-router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
@@ -35,11 +39,22 @@ import { useNotificationStore } from '../../stores/notification'
 library.add(fas)
 const router = useRouter()
 const notificationStore = useNotificationStore()
+const socket = ref<Socket | null>(null)
 
 const props = defineProps({
   username: String,
   channelName: String,
-  isPasswordProtected: Boolean
+  isPasswordProtected: Boolean,
+  invitationId: Number
+})
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
+
+onMounted(() => {
+  initSocket()
 })
 
 const viewProfile = () => {
@@ -47,11 +62,23 @@ const viewProfile = () => {
 }
 
 const acceptRequest = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.emit('acceptChannelInvitation', props.invitationId)
   notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
 }
 
 const rejectRequest = () => {
-  notificationStore.showNotification(`You rejected ${props.username}'s channel invitation`, true)
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  socket.value.emit('rejectChannelInvitation', props.invitationId)
+  notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
 }
 </script>
 

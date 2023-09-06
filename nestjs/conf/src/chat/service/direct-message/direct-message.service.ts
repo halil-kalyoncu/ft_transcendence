@@ -35,7 +35,7 @@ export class DirectMessageService {
     userId1: number,
     userId2: number,
   ): Promise<DirectMessage[]> {
-    return this.prisma.directMessage.findMany({
+    return await this.prisma.directMessage.findMany({
       where: {
         OR: [
           { senderId: userId1, receiverId: userId2 },

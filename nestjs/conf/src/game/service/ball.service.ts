@@ -41,7 +41,6 @@ export class Ball {
 
     if (paddle == 'A') this.dx = -this.speed * Math.cos(bounceAngle);
     else this.dx = this.speed * Math.cos(bounceAngle);
-
     this.dy = this.speed * Math.sin(bounceAngle);
     this.dx = -this.dx;
 

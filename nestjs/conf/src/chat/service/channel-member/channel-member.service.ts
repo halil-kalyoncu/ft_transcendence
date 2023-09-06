@@ -14,4 +14,27 @@ export class ChannelMemberService {
       },
     });
   }
+
+  async find(channelId: number, userId: number): Promise<ChannelMember> {
+    return this.prisma.channelMember.findFirst({
+      where: {
+        userId,
+        channelId,
+      },
+    });
+  }
+
+  async isUserBanned(userId: number, channelId: number): Promise<boolean> {
+    const channelMember = await this.prisma.channelMember.findFirst({
+      where: {
+        channelId,
+        userId,
+      },
+      include: {
+        user: true,
+      },
+    });
+    if (!channelMember) return false;
+    return channelMember.banned;
+  }
 }
