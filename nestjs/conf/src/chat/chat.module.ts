@@ -34,7 +34,14 @@ import { ChannelInvitationsService } from './service/channel-invitations/channel
     ChannelMessageReadStatusService,
     ChannelInvitationsService,
   ],
-  controllers: [DirectMessageController, FriendshipController, ChannelController, ChannelMessageController, ChannelMessageReadStatusController, ChannelInvitationsController],
+  controllers: [
+    DirectMessageController,
+    FriendshipController,
+    ChannelController,
+    ChannelMessageController,
+    ChannelMessageReadStatusController,
+    ChannelInvitationsController,
+  ],
   exports: [FriendshipService, ConnectedUserService],
 })
 export class ChatModule {}

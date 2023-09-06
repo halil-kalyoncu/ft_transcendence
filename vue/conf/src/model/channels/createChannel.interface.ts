@@ -1,4 +1,4 @@
-import type { UserI } from "../user.interface"
+import type { UserI } from '../user.interface'
 
 export const ChannelVisibility = {
   PUBLIC: 'PUBLIC' as const,
@@ -7,15 +7,15 @@ export const ChannelVisibility = {
 }
 
 export const ChannelMemberRole = {
-	  OWNER: 'OWNER' as const,
-	  ADMIN: 'ADMIN' as const,
-	  MEMBER: 'MEMBER' as const
+  OWNER: 'OWNER' as const,
+  ADMIN: 'ADMIN' as const,
+  MEMBER: 'MEMBER' as const
 }
 
 export const ChannelMemberStatus = {
-	  NORMAL: 'NORMAL' as const,
-	  MUTED: 'MUTED' as const,
-	  BANNED: 'BANNED' as const
+  NORMAL: 'NORMAL' as const,
+  MUTED: 'MUTED' as const,
+  BANNED: 'BANNED' as const
 }
 
 export type ChannelMemberRoleType = (typeof ChannelMemberRole)[keyof typeof ChannelMemberRole]
@@ -30,23 +30,23 @@ export interface CreateChannelDto {
 }
 
 export interface ChannelMemberI {
-	id: number
-	userId: number
-	channelId: number
-	role: ChannelMemberRoleType
-	status: ChannelMemberStatusType
+  id: number
+  userId: number
+  channelId: number
+  role: ChannelMemberRoleType
+  status: ChannelMemberStatusType
 }
 
 export interface ChannelI {
-	id: number
-	name: string
-	visibility: ChannelVisibilityType
-	protected: boolean
-	passwordHash?: string
+  id: number
+  name: string
+  visibility: ChannelVisibilityType
+  protected: boolean
+  passwordHash?: string
 
-	members: ChannelMemberI[]
+  members: ChannelMemberI[]
 }
-export interface ChannelEntryI{
-	channel: ChannelI
-	owner: UserI
+export interface ChannelEntryI {
+  channel: ChannelI
+  owner: UserI
 }

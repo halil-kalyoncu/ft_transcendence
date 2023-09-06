@@ -1,4 +1,11 @@
-import { Body, Controller, Get, ParseIntPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { UserService } from '../service/user-service/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
@@ -43,13 +50,13 @@ export class UserController {
   async findAllByUsername(
     @Query('username') username: string,
   ): Promise<User[]> {
-    return this.userService.findAllByUsername(username);
+    return await this.userService.findAllByUsername(username);
   }
 
   @Get('findUsersNotInChannel')
   async findUsersNotInChannel(
-	@Query('channelId', ParseIntPipe) channelId: number
+    @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<User[]> {
-	return this.userService.findUsersNotInChannel(channelId);
+    return this.userService.findUsersNotInChannel(channelId);
   }
 }

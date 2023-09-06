@@ -108,16 +108,15 @@ const isOwnMessage = (senderId: number | undefined) => {
   return senderId !== undefined && senderId === loggedUser.value.id
 }
 
-const formatDate = (createdAt: string) =>
-{
-	const date = new Date(createdAt)
-	const day = date.getDate()
-	const month = date.getMonth() + 1
-	const year = date.getFullYear()
-	const hours = date.getHours()
-	const minutes = date.getMinutes()
+const formatDate = (createdAt: string) => {
+  const date = new Date(createdAt)
+  const day = date.getDate()
+  const month = date.getMonth() + 1
+  const year = date.getFullYear()
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
 
-	return `${day}/${month}/${year} ${hours}:${minutes}`
+  return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 </script>
 

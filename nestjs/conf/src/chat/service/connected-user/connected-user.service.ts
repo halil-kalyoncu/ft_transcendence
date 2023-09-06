@@ -35,23 +35,21 @@ export class ConnectedUserService {
       },
     });
   }
-  
-  async deleteBySocketId(socketId: string): Promise<ConnectedUser> {
-	const user = await this.prisma.connectedUser.findUnique({
-		where: { socketId: socketId }
-	});
-	if (user){
-		return this.prisma.connectedUser.delete({
-			where: {
-				socketId,
-			},
-		});
-	}
-	else
-	return null;
-}
 
-async deleteAll() {
-	return this.prisma.connectedUser.deleteMany();
-}
+  async deleteBySocketId(socketId: string): Promise<ConnectedUser> {
+    const user = await this.prisma.connectedUser.findUnique({
+      where: { socketId: socketId },
+    });
+    if (user) {
+      return this.prisma.connectedUser.delete({
+        where: {
+          socketId,
+        },
+      });
+    } else return null;
+  }
+
+  async deleteAll() {
+    return this.prisma.connectedUser.deleteMany();
+  }
 }

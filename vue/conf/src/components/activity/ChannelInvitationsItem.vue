@@ -54,7 +54,7 @@ const initSocket = () => {
 }
 
 onMounted(() => {
-	initSocket()
+  initSocket()
 })
 
 const viewProfile = () => {
@@ -62,26 +62,24 @@ const viewProfile = () => {
 }
 
 const acceptRequest = () => {
-	if (!socket || !socket.value) {
+  if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
 
   socket.value.emit('acceptChannelInvitation', props.invitationId)
   notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
-  
 }
 
 const rejectRequest = () => {
-	if (!socket || !socket.value) {
-	notificationStore.showNotification(`Error: Connection problems`, true)
-	return
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
   }
 
   socket.value.emit('rejectChannelInvitation', props.invitationId)
   notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
 }
-
 </script>
 
 <style>

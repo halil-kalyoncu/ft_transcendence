@@ -4,7 +4,7 @@ export interface UserI {
 }
 
 export interface ChannelInviteeUserI {
-	id: number
-	username: string
-	status?: string
+  id: number
+  username: string
+  status?: string
 }

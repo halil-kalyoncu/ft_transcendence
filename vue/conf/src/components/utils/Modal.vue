@@ -1,4 +1,3 @@
-
 <!-- CHECK IN THE MUTED! -->
 <template>
   <div v-if="isOpened" class="modal" @click="handleClickOutside">
@@ -22,19 +21,18 @@
           :placeholder="placeholderText"
           type="text"
           class="input-text"
-		  required
+          required
         />
-</div>
+      </div>
       <div v-if="showVisibilitySelection && !isNumberSelection">
         <div class="radio-button-input-group">
           <input type="radio" id="Public" value="Public" v-model="channelVisibility" hidden />
           <label for="Public">Public</label>
-<!-- TODO: Change layout -->
+          <!-- TODO: Change layout -->
 
           <input type="radio" id="Private" value="Private" v-model="channelVisibility" hidden />
           <label for="Private">Private</label>
         </div>
-
       </div>
 
       <div class="input-group" v-if="checkPassword">
@@ -46,17 +44,18 @@
           class="input-text"
         />
       </div>
-	
-	  <div class="checkbox-container">
-	<label for="check-box"> Password 
-		<input
-		type="checkbox"
-		 v-show = "!isNumberSelection"
-		 id="check-box"
-		 v-model="checkPassword"
-		/>
-	</label>
-		</div>
+
+      <div class="checkbox-container">
+        <label for="check-box">
+          Password
+          <input
+            type="checkbox"
+            v-show="!isNumberSelection"
+            id="check-box"
+            v-model="checkPassword"
+          />
+        </label>
+      </div>
 
       <div class="button-group">
         <button class="submit-button" @click="isNumberSelection ? submitNumber() : submit()">
@@ -99,19 +98,19 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'close'])
 
 const submit = () => {
-	if (inputName.value.trim() === '') {
-		notificationStore.showNotification('Set Channel-Name', true)
-		return
-	}
-	if (checkPassword.value && inputPassword.value.trim() === '') {
-		notificationStore.showNotification('Set Password', true)
-		return
-	}
+  if (inputName.value.trim() === '') {
+    notificationStore.showNotification('Set Channel-Name', true)
+    return
+  }
+  if (checkPassword.value && inputPassword.value.trim() === '') {
+    notificationStore.showNotification('Set Password', true)
+    return
+  }
   const result: ModalResult = {
     name: inputName.value,
     password: inputPassword.value,
     channelVisibility: channelVisibility.value,
-	passwordSet: checkPassword.value
+    passwordSet: checkPassword.value
   }
 
   emit('submit', result)
@@ -280,7 +279,6 @@ watch(numberValue, (newValue) => {
   align-items: center;
   margin-top: -0.2rem;
   width: 8px; /* Set the desired width */
-  height: 8px; 
+  height: 8px;
 }
-
 </style>

@@ -16,6 +16,5 @@ describe('MatchController', () => {
   //   expect(controller).toBeDefined();
   // });
 
-  it.skip('Not writing tests is a bad practice', () => {
-  });
+  it.skip('Not writing tests is a bad practice', () => {});
 });

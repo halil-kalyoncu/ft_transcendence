@@ -19,17 +19,22 @@
         </button>
       </template>
       <template
-        v-if="(currentUserRole === 'owner' || currentUserRole === 'admin') && (role !== 'owner') && (requesterId !== targetUserId)"
+        v-if="
+          (currentUserRole === 'owner' || currentUserRole === 'admin') &&
+          role !== 'owner' &&
+          requesterId !== targetUserId
+        "
       >
         <button class="action-button-kick" @click="kickUser" title="Kick">
           <font-awesome-icon :icon="['fas', 'futbol']" />
         </button>
-        <button class="action-button-ban" 
-		@click="banUnbanUser" 
-		:title="banTitle"
-		:class="isUserBanned ? 'Unban' : 'Ban'"
-		>
-          <font-awesome-icon :icon=" isUserBanned ? ['fas', 'ban'] : ['fas', 'check']" />
+        <button
+          class="action-button-ban"
+          @click="banUnbanUser"
+          :title="banTitle"
+          :class="isUserBanned ? 'Unban' : 'Ban'"
+        >
+          <font-awesome-icon :icon="isUserBanned ? ['fas', 'ban'] : ['fas', 'check']" />
         </button>
         <button
           class="action-button-mute"
@@ -55,11 +60,10 @@ import Modal from '../utils/Modal.vue'
 import type { Socket } from 'socket.io-client'
 import { connectWebSocket } from '../../websocket'
 
-
 library.add(fas)
 const router = useRouter()
 const notificationStore = useNotificationStore()
-const socket = ref <Socket | null >(null)
+const socket = ref<Socket | null>(null)
 const minutesMuted = ref(0)
 const maxValue = ref(100)
 const isUserMuted = ref(false)
@@ -95,82 +99,76 @@ const goToProfile = () => {
 }
 
 const kickUser = async () => {
-	if (!socket || !socket.value) {
-      notificationStore.showNotification('Error: Connection problems', true);
-      return;
-    }
-	try {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  try {
     socket.value.emit('kickChannelMember', {
-		requesterId: props.requesterId,
-		targetUserId: props.targetUserId,
-		channelId: props.channelId
-	});
-	}
-	catch (error: any) {
-		notificationStore.showNotification(`Error` + error.message, true)
-	}
+      requesterId: props.requesterId,
+      targetUserId: props.targetUserId,
+      channelId: props.channelId
+    })
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
 }
 
 const banUnbanUser = async () => {
-	if (isUserBanned.value){
-		unBanUser()
-	}
-	else {
-		banUser()
-	}
+  if (isUserBanned.value) {
+    unBanUser()
+  } else {
+    banUser()
+  }
 }
 
 const unBanUser = async () => {
-	if (!socket || !socket.value) {
-      notificationStore.showNotification('Error: Connection problems', true);
-      return;
-    }
-	try {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  try {
     socket.value.emit('unBanChannelMember', {
-		requesterId: props.requesterId,
-		targetUserId: props.targetUserId,
-		channelId: props.channelId
-	});
-	}
-	catch (error: any) {
-		notificationStore.showNotification(`Error` + error.message, true)
-	}
+      requesterId: props.requesterId,
+      targetUserId: props.targetUserId,
+      channelId: props.channelId
+    })
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
 }
 
 const banUser = async () => {
-	if (!socket || !socket.value) {
-      notificationStore.showNotification('Error: Connection problems', true);
-      return;
-    }
-	try {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  try {
     socket.value.emit('banChannelMember', {
-		requesterId: props.requesterId,
-		targetUserId: props.targetUserId,
-		channelId: props.channelId
-	});
-	}
-	catch (error: any) {
-		notificationStore.showNotification(`Error` + error.message, true)
-	}
+      requesterId: props.requesterId,
+      targetUserId: props.targetUserId,
+      channelId: props.channelId
+    })
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
 }
 
 const makeAdmin = async () => {
-	if (!socket || !socket.value) {
-      notificationStore.showNotification('Error: Connection problems', true);
-      return;
-    }
-	try {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  try {
     socket.value.emit('makeChannelAdmin', {
-		requesterId: props.requesterId,
-		targetUserId: props.targetUserId,
-		channelId: props.channelId
-	});
-	}
-	catch (error: any) {
-		notificationStore.showNotification(`Error` + error.message, true)
-	}
+      requesterId: props.requesterId,
+      targetUserId: props.targetUserId,
+      channelId: props.channelId
+    })
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
 }
-
 
 const muteUser = () => {
   if (minutesMuted.value === 0) {
@@ -241,9 +239,8 @@ const initSocket = () => {
   socket.value = connectWebSocket('http://localhost:3000', accessToken)
 }
 
-
-onMounted( () => {
-	initSocket();
+onMounted(() => {
+  initSocket()
 })
 </script>
 

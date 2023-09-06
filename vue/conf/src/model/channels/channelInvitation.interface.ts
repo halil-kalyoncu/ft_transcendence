@@ -1,6 +1,6 @@
-export interface ChannelInvitationI{
-	invitationId: number
-	inviterName: string
-	channelName: string
-	isPasswordProtected: boolean
-  }
+export interface ChannelInvitationI {
+  invitationId: number
+  inviterName: string
+  channelName: string
+  isPasswordProtected: boolean
+}

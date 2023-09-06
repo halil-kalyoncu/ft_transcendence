@@ -6,8 +6,7 @@ import { MessageService } from '../message/message.service';
 describe('DirectMessageService', () => {
   let service: DirectMessageService;
 
-  it.skip('Not writing tests is a bad practice', () => {
-  });
+  it.skip('Not writing tests is a bad practice', () => {});
 
   // beforeEach(async () => {
   //   const module: TestingModule = await Test.createTestingModule({

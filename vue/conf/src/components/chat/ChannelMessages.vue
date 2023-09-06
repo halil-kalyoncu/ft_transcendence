@@ -1,24 +1,27 @@
 <template>
-	<div class="messages-container">
-	  <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'" class="messages-scrollviewer">
-		<div class="messages">
-		  <Message
-			v-for="channelmessage in channelMessages"
-			:key="channelmessage.id"
-			:createdAt="formatDate(channelmessage.createdAt)"
-          	:message="channelmessage.message?.message ?? ''"
-          	:sender="channelmessage.sender?.username ?? ''"
-          	:isOwnMessage="isOwnMessage(channelmessage.sender.id)"
-		  />
-		</div>
-	  </ScrollViewer>
-	  <div class="chat-input">
-		<textarea v-model="newchannelMessages" placeholder="Type your message here..." rows="1"></textarea>
-		<button @click="sendMessage">Send</button>
-	  </div>
-
-	 </div>
-  </template>
+  <div class="messages-container">
+    <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'" class="messages-scrollviewer">
+      <div class="messages">
+        <Message
+          v-for="channelmessage in channelMessages"
+          :key="channelmessage.id"
+          :createdAt="formatDate(channelmessage.createdAt)"
+          :message="channelmessage.message?.message ?? ''"
+          :sender="channelmessage.sender?.username ?? ''"
+          :isOwnMessage="isOwnMessage(channelmessage.sender.id)"
+        />
+      </div>
+    </ScrollViewer>
+    <div class="chat-input">
+      <textarea
+        v-model="newchannelMessages"
+        placeholder="Type your message here..."
+        rows="1"
+      ></textarea>
+      <button @click="sendMessage">Send</button>
+    </div>
+  </div>
+</template>
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
@@ -34,10 +37,10 @@ import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
 
 const props = defineProps({
-		channelId: {
-			type: Number,
-			required: true
-		},
+  channelId: {
+    type: Number,
+    required: true
+  }
 })
 
 const channelId: Number = props.channelId
@@ -64,16 +67,15 @@ const loggedUser = computed<User>(() => ({
 const isOwnMessage = (senderId: number | undefined) => {
   return senderId !== undefined && senderId === loggedUser.value.id
 }
-const formatDate = (createdAt: string) =>
-{
-	const date = new Date(createdAt)
-	const day = date.getDate()
-	const month = date.getMonth() + 1
-	const year = date.getFullYear()
-	const hours = date.getHours()
-	const minutes = date.getMinutes()
+const formatDate = (createdAt: string) => {
+  const date = new Date(createdAt)
+  const day = date.getDate()
+  const month = date.getMonth() + 1
+  const year = date.getFullYear()
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
 
-	return `${day}/${month}/${year} ${hours}:${minutes}`
+  return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -81,45 +83,42 @@ const initSocket = () => {
 }
 
 const setNewChannelMessageListener = () => {
-	if(!socket || !socket.value) {
-		notificationStore.showNotification('Error: Connection problems', true)
-		return
-	}
-	socket.value.on('newChannelMessage', (newChannelMessageData: ChannelMessageI) => {
-		console.log('newChannelMessage fired')
-		channelMessages.value.unshift(newChannelMessageData)
-	})
-	socket.value.on('UserSignedOut', (channelId: Number) => {
-		console.log('UserSignedOut from ChannelMessages fired')
-		notificationStore.showNotification(' Signed out Channel', true)
-		setNewChannelMessages()
-	})
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  socket.value.on('newChannelMessage', (newChannelMessageData: ChannelMessageI) => {
+    console.log('newChannelMessage fired')
+    channelMessages.value.unshift(newChannelMessageData)
+  })
+  socket.value.on('UserSignedOut', (channelId: Number) => {
+    console.log('UserSignedOut from ChannelMessages fired')
+    notificationStore.showNotification(' Signed out Channel', true)
+    setNewChannelMessages()
+  })
 }
 
 const setNewChannelMessages = async () => {
-	try{
-		const response = await fetch (
-			`http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}`
-			)
-		if (!response.ok) {
-			throw new Error(`HTTP error! Status: ${response.status}`)
-		}
-		const data = await response.json()
-		channelMessages.value = data
-	}
-	catch (error: any)
-	{
-		console.error("Error: ", error)
-	}
-	finally {
-		loading.value = false
-	}
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    const data = await response.json()
+    channelMessages.value = data
+  } catch (error: any) {
+    console.error('Error: ', error)
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
-	initSocket()
-	setNewChannelMessages()
-	setNewChannelMessageListener()
+  initSocket()
+  setNewChannelMessages()
+  setNewChannelMessageListener()
 })
 
 //Todo Check for selectedChannel after implementaiton

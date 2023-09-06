@@ -18,8 +18,7 @@ describe('ChatGateaway', () => {
   let mockChannelService = { createChannel: jest.fn() };
   let mockSocket = { emit: jest.fn() } as any as Socket;
 
-  it.skip('Not writing tests is a bad practice', () => {
-  });
+  it.skip('Not writing tests is a bad practice', () => {});
 
   // beforeEach(async () => {
   //   const module: TestingModule = await Test.createTestingModule({

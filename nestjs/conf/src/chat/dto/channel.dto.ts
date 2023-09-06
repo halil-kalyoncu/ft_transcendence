@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { ChannelVisibility, Channel, User, Message } from '@prisma/client';
-//import { DateTime } from 'luxon'; 
+
 
 export class CreateChannelDto {
   @IsNotEmpty()
@@ -61,22 +61,22 @@ export class ChannelInfoDto {
 }
 
 export class ChannelMessageDto {
-	id?: number
-	message: Message;
-	sender: User;
-	createdAt: Date;
-	//ChannelMessageReadStatus: ChannelMessageReadStatus;
+  id?: number;
+  message: Message;
+  sender: User;
+  createdAt: Date;
+  //ChannelMessageReadStatus: ChannelMessageReadStatus;
 }
 
-export class ChannelMemberDto{
-	channelMemberId: number;
-	channelName: string;
-	userId: number;
-	username: string;
-	role: string;
-	roleSince: Date;
-	status: string;
-	statusSince: Date;
-	banned: boolean;
-	unmuteAt: Date;
+export class ChannelMemberDto {
+  channelMemberId: number;
+  channelName: string;
+  userId: number;
+  username: string;
+  role: string;
+  roleSince: Date;
+  status: string;
+  statusSince: Date;
+  banned: boolean;
+  unmuteAt: Date;
 }

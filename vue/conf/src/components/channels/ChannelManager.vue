@@ -1,24 +1,24 @@
 <template>
   <h2 class="current-channel-name">{{ ChannelName }}</h2>
   <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'">
-	<InvitePrivateChannelModal
-		  v-if="isModalOpened"
-		  :isOpened="isModalOpened"
-		  :title="modalTitle"
-		  :channelId = "channelId"
-		  @submit="handleSubmit"
-		  @close="handleClose"
-		/>
+    <InvitePrivateChannelModal
+      v-if="isModalOpened"
+      :isOpened="isModalOpened"
+      :title="modalTitle"
+      :channelId="channelId"
+      @submit="handleSubmit"
+      @close="handleClose"
+    />
     <div v-for="member in Members" :key="member.userId">
       <ChannelManagerUserItem
         :username="member.username"
         :date="member.statusSince"
         :roleProp="member.role.toLowerCase()"
         :currentUserRole="currentUserRole.toLowerCase()"
-		:requesterId = "userId"
-		:targetUserId = "member.userId"
-		:channelId = "channelId"
-		:isUserBanned = "member.isBanned"
+        :requesterId="userId"
+        :targetUserId="member.userId"
+        :channelId="channelId"
+        :isUserBanned="member.isBanned"
       />
     </div>
   </ScrollViewer>
@@ -43,16 +43,18 @@
     <button :class="['join-channel-button', 'leave-channel-button']" @click="handleLeaveChannel">
       Leave
     </button>
-	<button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
+    <button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
       {{ getSignOutButtonText() }}
-    
-	  </button>
-	  <button 
-	  v-show="currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN"
-	  :class="['join-channel-button', 'add-user-button']" 
-	  @click="openAddModal">
+    </button>
+    <button
+      v-show="
+        currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN
+      "
+      :class="['join-channel-button', 'add-user-button']"
+      @click="openAddModal"
+    >
       Add User
-	  </button>
+    </button>
   </div>
 </template>
 
@@ -67,13 +69,12 @@ import { Socket } from 'socket.io-client'
 import { connectWebSocket } from '../../websocket'
 import type { ChannelManagerMemberI } from '../../model/channels/channelMessage.interface'
 import type { ChannelMemberRoleType } from '../../model/channels/createChannel.interface'
-import  { ChannelMemberRole } from '../../model/channels/createChannel.interface'
+import { ChannelMemberRole } from '../../model/channels/createChannel.interface'
 import InvitePrivateChannelModal from './InvitePrivateChannelModal.vue'
 const props = defineProps({
-  channelId: 
-  {
-	type: Number,
-	required: true
+  channelId: {
+    type: Number,
+    required: true
   }
 })
 
@@ -88,13 +89,12 @@ let currentUserRole = ref<ChannelMemberRoleType>(ChannelMemberRole.MEMBER)
 let ChannelName = ref<string>('')
 const emit = defineEmits(['channel-left', 'channel-signedout', 'channel-force-leave'])
 
-
 const showPasswordField = ref(false)
 const password = ref('')
 
-const modalVisible = ref(false);
-const modalTitle = ref('');
-const modalMessage = ref('');
+const modalVisible = ref(false)
+const modalTitle = ref('')
+const modalMessage = ref('')
 const isModalOpened = ref(false)
 
 const handleChangedProperties = () => {
@@ -103,20 +103,19 @@ const handleChangedProperties = () => {
 }
 
 const getMembers = async () => {
-	await setMembers().then(() => {
-		setCurrentUserRole()
-		setChannelName()
-	})
-	return
+  await setMembers().then(() => {
+    setCurrentUserRole()
+    setChannelName()
+  })
+  return
 }
 
 onMounted(async () => {
-
-	initSocket()
-	await getMembers()
-	getSignOutButtonText()
-	setDestroyChannelListener()
-	setUserSignedListener()
+  initSocket()
+  await getMembers()
+  getSignOutButtonText()
+  setDestroyChannelListener()
+  setUserSignedListener()
 })
 
 const initSocket = () => {
@@ -125,108 +124,105 @@ const initSocket = () => {
 }
 
 const setMembers = async () => {
-	try{
-		const response = await fetch (
-			`http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`
-			)
-		if (!response.ok) {
-			throw new Error(`HTTP error! Status: ${response.status}`)
-		}
-		const data = response.json()
-		Members.value = await data
-	}
-	catch (error: any)
-	{
-		console.error("Error: ", error)
-	}
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    const data = response.json()
+    Members.value = await data
+  } catch (error: any) {
+    console.error('Error: ', error)
+  }
 }
 const setCurrentUserRole = () => {
-for (const member of Members.value)
-	if(member.userId === userId.value)
-		currentUserRole.value = member.role
-};
+  for (const member of Members.value)
+    if (member.userId === userId.value) currentUserRole.value = member.role
+}
 
 const setChannelName = () => {
-	ChannelName.value = Members.value[0].channelName
+  ChannelName.value = Members.value[0].channelName
 }
 
 const setDestroyChannelListener = () => {
-	if(!socket || !socket.value) {
-		notificationStore.showNotification('Error: Connection problems', true)
-		return
-	}
-	socket.value.on('ChannelDestroy', (channelId: Number) => {
-		console.log('ChannelDestroy fired')
-		notificationStore.showNotification('Channel has been destroyed', true)
-		emit('channel-force-leave')
-	})
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  socket.value.on('ChannelDestroy', (channelId: Number) => {
+    console.log('ChannelDestroy fired')
+    notificationStore.showNotification('Channel has been destroyed', true)
+    emit('channel-force-leave')
+  })
 }
 const setUserSignedListener = () => {
-	if(!socket || !socket.value) {
-		notificationStore.showNotification('Error: Connection problems', true)
-		return
-	}
-	socket.value.on('UserSignedOut', (channelId: Number) => {
-		console.log('UserSignedOut from ChannelManager fired')
-		setMembers().then(() => {
-			setCurrentUserRole()
-		})
-	})
-	socket.value.on('UserSignedIn', (channelId: Number) => {
-		console.log('UserSignedIn fired')
-		//notificationStore.showNotification(' Signed in Channel', true)
-		setMembers().then(() => {
-			setCurrentUserRole()
-		})
-	})
-	socket.value.on('ChannelInvitationAccepted', (channelId: Number) => {
-		console.log('ChannelInvitationAccepted fired')
-		//notificationStore.showNotification(' Signed in Channel', true)
-		setMembers().then(() => {
-			setCurrentUserRole()
-		})
-	})
-	socket.value.on('madeAdmin', (membership: any) => {
-		console.log('madeAdmin fired')
-		//await notificationStore.showNotification('New Admin Added', true)
-		setMembers().then(() => {
-			setCurrentUserRole()
-		})
-	})
-	socket.value.on('memberKicked', (membership: any) => {
-		console.log('memberKicked fired')
-		//await notificationStore.showNotification('User Kicked', true)
-		if (membership.userId === userId.value){
-			emit('channel-force-leave')
-		}
-		setMembers().then(() => {
-			setCurrentUserRole()
-		})
-	})
-	socket.value.on('memberBanned', (membership: any) => {
-		console.log('memberBanned fired')
-		//await notificationStore.showNotification('User Banned', true)
-		if (membership.userId === userId.value){
-			emit('channel-force-leave')
-		}
-		setMembers().then(() => {
-			setCurrentUserRole()
-		})
-	})
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  socket.value.on('UserSignedOut', (channelId: Number) => {
+    console.log('UserSignedOut from ChannelManager fired')
+    setMembers().then(() => {
+      setCurrentUserRole()
+    })
+  })
+  socket.value.on('UserSignedIn', (channelId: Number) => {
+    console.log('UserSignedIn fired')
+    //notificationStore.showNotification(' Signed in Channel', true)
+    setMembers().then(() => {
+      setCurrentUserRole()
+    })
+  })
+  socket.value.on('ChannelInvitationAccepted', (channelId: Number) => {
+    console.log('ChannelInvitationAccepted fired')
+    //notificationStore.showNotification(' Signed in Channel', true)
+    setMembers().then(() => {
+      setCurrentUserRole()
+    })
+  })
+  socket.value.on('madeAdmin', (membership: any) => {
+    console.log('madeAdmin fired')
+    //await notificationStore.showNotification('New Admin Added', true)
+    setMembers().then(() => {
+      setCurrentUserRole()
+    })
+  })
+  socket.value.on('memberKicked', (membership: any) => {
+    console.log('memberKicked fired')
+    //await notificationStore.showNotification('User Kicked', true)
+    if (membership.userId === userId.value) {
+      emit('channel-force-leave')
+    }
+    setMembers().then(() => {
+      setCurrentUserRole()
+    })
+  })
+  socket.value.on('memberBanned', (membership: any) => {
+    console.log('memberBanned fired')
+    //await notificationStore.showNotification('User Banned', true)
+    if (membership.userId === userId.value) {
+      emit('channel-force-leave')
+    }
+    setMembers().then(() => {
+      setCurrentUserRole()
+    })
+  })
 }
 const getSignOutButtonText = () => {
   if (currentUserRole.value === ChannelMemberRole.OWNER) {
-	return 'Destroy'
+    return 'Destroy'
   } else {
-	return 'Sign Out'
+    return 'Sign Out'
   }
 }
 
 const handleSignOut = () => {
   if (currentUserRole.value === ChannelMemberRole.OWNER) {
-	DestroyChannel();
+    DestroyChannel()
   } else {
-	SignOutChannel();
+    SignOutChannel()
   }
 }
 
@@ -236,8 +232,8 @@ const openAddModal = () => {
 }
 
 const handleSubmit = () => {
-	console.log('SUBMIT')
-	isModalOpened.value = false
+  console.log('SUBMIT')
+  isModalOpened.value = false
 }
 
 const handleClose = () => {
@@ -250,13 +246,13 @@ const handleLeaveChannel = () => {
 }
 
 const DestroyChannel = () => {
-	if (!socket || !socket.value) {
+  if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
   socket.value.emit('DestroyChannel', {
-	  channelId: channelId,
-	  senderId: userId.value
+    channelId: channelId,
+    senderId: userId.value
   })
 }
 
@@ -268,8 +264,8 @@ const SignOutChannel = async () => {
   }
   await emit('channel-signedout')
   await socket.value.emit('SignOutChannel', {
-	  channelId: channelId,
-	  senderId: userId.value
+    channelId: channelId,
+    senderId: userId.value
   })
 }
 
@@ -286,8 +282,6 @@ const changePassword = () => {
   }
 }
 
-
-
 /* const showSignOutConfirmation = () => {
   modalTitle.value = 'Confirmation';
   modalMessage.value = currentUserRolelower === 'owner'
@@ -299,7 +293,6 @@ const changePassword = () => {
  */
 //TODO: 1 Define on mounte, init Socket, Define the people int he channel etc, setChannellistener for channel destoyed (later for member left etc.)
 </script>
-
 
 <style>
 /* TODO: distribution of buttons */
@@ -345,8 +338,8 @@ const changePassword = () => {
   width: 100%;
 }
 
-.channel-manager-info .add-user-button{
-	background-color: #ffbd09;
+.channel-manager-info .add-user-button {
+  background-color: #ffbd09;
 }
 .change-password-container {
   width: 100%;

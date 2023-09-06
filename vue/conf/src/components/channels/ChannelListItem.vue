@@ -7,16 +7,16 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
       <div class="channel-owner-container">
         <font-awesome-icon class="icon" :icon="['fas', 'star']" />
         <p class="channel-owner">{{ ownerName }}</p>
-		<div class="icon-container">
-        <font-awesome-icon
-          :icon="['fas', 'envelope']"
-          class="envelope-icon"
-          v-if="unreadMessageCount && unreadMessageCount > 0"
-        />
-        <span v-if="unreadMessageCount && unreadMessageCount > 0" class="badge-number">{{
-          unreadMessageCount
-        }}</span>
-      </div>
+        <div class="icon-container">
+          <font-awesome-icon
+            :icon="['fas', 'envelope']"
+            class="envelope-icon"
+            v-if="unreadMessageCount && unreadMessageCount > 0"
+          />
+          <span v-if="unreadMessageCount && unreadMessageCount > 0" class="badge-number">{{
+            unreadMessageCount
+          }}</span>
+        </div>
       </div>
       <input
         v-if="showPasswordField"
@@ -27,13 +27,19 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
       />
     </div>
     <div class="channel-button-container">
-		<div v-if=" unreadMessageCount && unreadMessageCount > 0" class="unread-messages">
+      <div v-if="unreadMessageCount && unreadMessageCount > 0" class="unread-messages">
         +{{ unreadMessageCount }}
       </div>
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
-      <button class="join-channel-button" @click="handleJoin" :disabled="userBanned"
-	  :class="{ 'disabled-button': userBanned }"
-	  :title="tooltipText()">{{ joinChannelButtonName }}</button>
+      <button
+        class="join-channel-button"
+        @click="handleJoin"
+        :disabled="userBanned"
+        :class="{ 'disabled-button': userBanned }"
+        :title="tooltipText()"
+      >
+        {{ joinChannelButtonName }}
+      </button>
     </div>
   </div>
 </template>
@@ -47,7 +53,6 @@ import { Socket } from 'socket.io-client'
 import { connectWebSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 
-
 library.add(fas)
 
 const props = defineProps({
@@ -57,7 +62,7 @@ const props = defineProps({
   joinChannelButtonName: String,
   channelId: Number,
   unreadMessageCount: Number,
-  userId: Number,
+  userId: Number
 })
 //const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
@@ -66,7 +71,6 @@ const password = ref('')
 const userBanned = ref(false)
 const socket = ref<Socket | null>(null)
 const notificationStore = useNotificationStore()
-
 
 const handleJoin = () => {
   if (props.isPasswordProtected && password.value === '') {
@@ -87,12 +91,11 @@ const handleJoin = () => {
 }
 
 const tooltipText = () => {
-	if (userBanned) {
-		return 'You are banned from this channel'
-	}
-	else{
-		return 'Go to channel'
-	}
+  if (userBanned) {
+    return 'You are banned from this channel'
+  } else {
+    return 'Go to channel'
+  }
 }
 watch(password, (newValue) => {
   if (newValue) {
@@ -110,43 +113,40 @@ const initSocket = () => {
 }
 
 const setUserBanned = async () => {
-	try{
-		const response = await fetch (
-			`http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${props.userId}`
-			)
-		if (!response.ok) {
-			throw new Error(`HTTP error! Status: ${response.status}`)
-		}
-		const data = response.json()
-		 userBanned.value = await data
-		return
-	}
-	catch (error: any)
-	{
-		console.error("Error: ", error)
-	}
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${props.userId}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    const data = response.json()
+    userBanned.value = await data
+    return
+  } catch (error: any) {
+    console.error('Error: ', error)
+  }
 }
 
 const setBannedFromChannelListener = () => {
-	if(!socket || !socket.value) {
-		notificationStore.showNotification('Error: Connection problems', true)
-		return
-	}
-	socket.value.on('memberBanned', () => {
-		console.log('memberBanned fired from JoinedChannelsList.vue')
-		setUserBanned()
-		return
-	})
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  socket.value.on('memberBanned', () => {
+    console.log('memberBanned fired from JoinedChannelsList.vue')
+    setUserBanned()
+    return
+  })
 }
-onMounted( () => {
-	initSocket();
-	setUserBanned()
-	setBannedFromChannelListener()
+onMounted(() => {
+  initSocket()
+  setUserBanned()
+  setBannedFromChannelListener()
 })
 </script>
 
 <style>
-
 .channel-list-item {
   display: flex;
   justify-content: space-between;
@@ -235,7 +235,7 @@ onMounted( () => {
 }
 
 .unread-messages {
-	background: #428dea;
+  background: #428dea;
   border: 0.5px solid aliceblue;
   font-size: 0.75rem;
   font-weight: light;
@@ -266,10 +266,8 @@ onMounted( () => {
 }
 
 .disabled-button {
-  background-color: #ccc; 
-  color: #666; 
+  background-color: #ccc;
+  color: #666;
   cursor: not-allowed;
 }
 </style>
-
-

@@ -9,15 +9,15 @@ import { EventsGateway } from './game/gateway/events/events.gateway';
 import { MatchModule } from './match/match.module';
 
 @Module({
-	imports: [
-		ConfigModule.forRoot({ isGlobal: true }),
-		UserModule,
-		ChatModule,
-		AuthModule,
-		PrismaModule,
-		MatchModule,
-	],
-	controllers: [],
-	providers: [EventsGateway, GameService],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    UserModule,
+    ChatModule,
+    AuthModule,
+    PrismaModule,
+    MatchModule,
+  ],
+  controllers: [],
+  providers: [EventsGateway, GameService],
 })
-export class AppModule { }
+export class AppModule {}

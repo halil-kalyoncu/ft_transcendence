@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString } from 'class-validator';
-import { Message, User,  } from '@prisma/client';
+import { Message, User } from '@prisma/client';
 
 export class CreateChannelMessageDto {
   @IsNotEmpty()
@@ -14,25 +14,25 @@ export class CreateChannelMessageDto {
 }
 
 export class ChannelMessageDto {
-	@IsNotEmpty()
-	id: number
-	
-	@IsString()
-	@IsNotEmpty()
-	message: Message;
+  @IsNotEmpty()
+  id: number;
 
-	@IsNotEmpty()
-	sender: User;
+  @IsString()
+  @IsNotEmpty()
+  message: Message;
 
-	@IsNotEmpty()
-	createdAt: Date;
-	//channelMessageReadStatus: ChannelMessageReadStatusI[];
+  @IsNotEmpty()
+  sender: User;
+
+  @IsNotEmpty()
+  createdAt: Date;
+  //channelMessageReadStatus: ChannelMessageReadStatusI[];
 }
 
-export class DestroyChannelDto{
-	@IsNotEmpty()
-	channelId: number
+export class DestroyChannelDto {
+  @IsNotEmpty()
+  channelId: number;
 
-	@IsNotEmpty()
-	senderId: number
+  @IsNotEmpty()
+  senderId: number;
 }

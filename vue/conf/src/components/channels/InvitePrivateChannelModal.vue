@@ -20,27 +20,26 @@
             <li
               v-for="suggestion in userSuggestions"
               :key="suggestion.id"
-			  @mousedown="toggleUserSelection(suggestion || '')"
+              @mousedown="toggleUserSelection(suggestion || '')"
               class="suggested-item"
             >
-				<input
-		type="checkbox"
-		:checked="checkSelection(suggestion)"
-		 id="check-box"
-		 :disabled="suggestion.status === 'PENDING'"
-		/>		
-				<span class="suggested-item-username">
-					{{ suggestion.username }} 
+              <input
+                type="checkbox"
+                :checked="checkSelection(suggestion)"
+                id="check-box"
+                :disabled="suggestion.status === 'PENDING'"
+              />
+              <span class="suggested-item-username">
+                {{ suggestion.username }}
+              </span>
 
-				</span>
-				
-				<font-awesome-icon
+              <font-awesome-icon
                 class="icon"
                 :icon="['fas', 'eye']"
                 @mousedown="goToProfile(suggestion.username)"
-				/>
+              />
             </li>
-		</ul>
+          </ul>
         </ScrollViewer>
       </div>
       <div class="button-group">
@@ -64,7 +63,6 @@ import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
 import { connectWebSocket } from '../../websocket'
 
-
 library.add(fas)
 
 const notificationStore = useNotificationStore()
@@ -79,55 +77,50 @@ const channelInvitees = ref<string[]>([])
 const selectedUsers = ref<string[]>([])
 
 const props = defineProps({
-	isOpened: {
+  isOpened: {
     type: Boolean,
     default: false
-},
-title: {
-	type: String,
+  },
+  title: {
+    type: String,
     default: false
-},
+  },
 
-channelId: {
-	type: Number,
-	required: true
-}
+  channelId: {
+    type: Number,
+    required: true
+  }
 })
 
 const channelId: Number = props.channelId
 const emit = defineEmits(['submit', 'close'])
 
-
-
 const checkSelection = (user: ChannelInviteeUserI) => {
-   try{
-	if (user.status &&user.status === 'PENDING') {
-	   return true
-   }
-   	if ( selectedUsers.value.includes(user.username)) {
-	   return true
-}
-   return false
-}
-catch (error:any)
-{
-	console.error("Error: ", error)
-}
+  try {
+    if (user.status && user.status === 'PENDING') {
+      return true
+    }
+    if (selectedUsers.value.includes(user.username)) {
+      return true
+    }
+    return false
+  } catch (error: any) {
+    console.error('Error: ', error)
+  }
 }
 
 const toggleUserSelection = (user: ChannelInviteeUserI) => {
-	const index = selectedUsers.value.indexOf(user.username!)
+  const index = selectedUsers.value.indexOf(user.username!)
   if (index === -1 && user.status !== 'PENDING') {
     selectedUsers.value.push(user.username)
-  } 
-  else{
-	selectedUsers.value.splice(index, 1)
+  } else {
+    selectedUsers.value.splice(index, 1)
   }
   inputName.value = ''
 }
 
 const sendSubmitEvent = (inviteeUsername: string) => {
-	if (!socket || !socket.value) {
+  if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
@@ -136,33 +129,31 @@ const sendSubmitEvent = (inviteeUsername: string) => {
 
 const submit = async () => {
   for (const inviteeUsername of selectedUsers.value) {
-    await inviteUser(channelId, inviteeUsername, userId.value);
-	sendSubmitEvent(inviteeUsername)
+    await inviteUser(channelId, inviteeUsername, userId.value)
+    sendSubmitEvent(inviteeUsername)
   }
-  
+
   emit('submit')
 }
 
-const inviteUser = async (channelId:Number, inviteeUsername:string, inviterId:Number) =>{
-	try{
-	const response = await fetch(
-		`http://localhost:3000/api/channel-invitations/InviteUserNameToChannel?channelId=${channelId}&inviteeName=${inviteeUsername}&inviterId=${inviterId}`,
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		}
-	)
-	if (!response.ok){
-		throw new Error('Could not fetch channel manager members')
-	}
-	channelInvitees.value.push(inviteeUsername)
- }
- catch (error:any)
- {
-	console.error("Error: ", error)
- }
+const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId: Number) => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/channel-invitations/InviteUserNameToChannel?channelId=${channelId}&inviteeName=${inviteeUsername}&inviterId=${inviterId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (!response.ok) {
+      throw new Error('Could not fetch channel manager members')
+    }
+    channelInvitees.value.push(inviteeUsername)
+  } catch (error: any) {
+    console.error('Error: ', error)
+  }
 }
 
 const handleClickOutside = () => {
@@ -171,11 +162,12 @@ const handleClickOutside = () => {
 }
 
 const findUserSuggestions = async (input: string) => {
-const response = await fetch(
-	`http://localhost:3000/api/users/findUsersNotInChannel?channelId=${channelId}`)
+  const response = await fetch(
+    `http://localhost:3000/api/users/findUsersNotInChannel?channelId=${channelId}`
+  )
 
   if (!response.ok) {
-	throw new Error('Could not fetch user suggestions')
+    throw new Error('Could not fetch user suggestions')
   }
   const data = await response.json()
   if (input.trim() === '') {
@@ -184,24 +176,22 @@ const response = await fetch(
   }
   // Filter user suggestions based on the provided letters in the right order
   const filteredSuggestions = data.filter((user: any) => {
-    const username = user.username.toLowerCase();
-    const lettersLower = input.toLowerCase();
-    
-    let currentIndex = 0;
+    const username = user.username.toLowerCase()
+    const lettersLower = input.toLowerCase()
+
+    let currentIndex = 0
     for (let i = 0; i < username.length; i++) {
       if (username[i] === lettersLower[currentIndex]) {
-        currentIndex++;
+        currentIndex++
       }
       if (currentIndex === lettersLower.length) {
-        return true; // All letters found in the right order
+        return true // All letters found in the right order
       }
     }
-    return false;
-  });
-  userSuggestions.value = filteredSuggestions;
-};
-
-
+    return false
+  })
+  userSuggestions.value = filteredSuggestions
+}
 
 const showSuggestions = () => {
   showSuggestionList.value = true
@@ -225,9 +215,8 @@ const goToProfile = (username: String | undefined) => {
 }
 
 const updateSelection = () => {
-  for (const suggestion of userSuggestions.value)
-  {
-	checkSelection(suggestion)
+  for (const suggestion of userSuggestions.value) {
+    checkSelection(suggestion)
   }
 }
 
@@ -237,35 +226,33 @@ const initSocket = () => {
 }
 
 const setInvitationUpdateListener = () => {
-	  if (!socket || !socket.value) {
-	notificationStore.showNotification(`Error: Connection problems`, true)
-	return
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
   }
   socket.value.on('ChannelInvitationAccepted', (channelName, UserName) => {
-	 findUserSuggestions(inputName.value)
+    findUserSuggestions(inputName.value)
   })
   socket.value.on('ChannelInvitationRejected', (channelName, UserName) => {
-	findUserSuggestions(inputName.value)
-})
-  socket.value.on('NewChannelInvitation', () => { 
-	findUserSuggestions(inputName.value)
-	updateSelection()
+    findUserSuggestions(inputName.value)
   })
-
+  socket.value.on('NewChannelInvitation', () => {
+    findUserSuggestions(inputName.value)
+    updateSelection()
+  })
 }
 
 const initSelectedUsers = () => {
   selectedUsers.value = []
 }
 
-onMounted(async() => {
+onMounted(async () => {
   initSelectedUsers()
   await findUserSuggestions('')
   initSocket()
   setInvitationUpdateListener()
-updateSelection()
+  updateSelection()
 })
-
 </script>
 <style>
 .modal {
@@ -445,6 +432,4 @@ updateSelection()
 .inGame {
   background-color: orange;
 }
-
-
 </style>
