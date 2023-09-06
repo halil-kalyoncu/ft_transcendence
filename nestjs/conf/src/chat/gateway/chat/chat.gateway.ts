@@ -145,6 +145,7 @@ export class ChatGateway
     }
   }
 
+  
   @SubscribeMessage('acceptFriendRequest')
   async acceptFriendRequest(
     socket: Socket,
