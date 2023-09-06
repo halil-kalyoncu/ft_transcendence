@@ -530,7 +530,9 @@ export class ChatGateway
         .emit('matchInviteRejected', updatedMatch);
     }
   }
-
+  /************
+  *** Match ***
+  *************/
   @SubscribeMessage('hostLeaveMatch')
   async hostLeaveMatch(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
@@ -566,8 +568,15 @@ export class ChatGateway
     }
 
     const updatedMatch: Match = await this.matchService.startMatch(matchId);
+    this.updateFriendsOf(socket.data.user.id);
+    this.updateFriendsOf(match.rightUserId);
     socket.emit('goToGame', updatedMatch);
     socket.to(receiverOnline.socketId).emit('goToGame', updatedMatch);
+  }
+
+  @SubscribeMessage('finishedMatch')
+  async finishedMatch(socket: Socket): Promise<void> {
+    this.updateFriendsOf(socket.data.user.id);
   }
 
   /******************

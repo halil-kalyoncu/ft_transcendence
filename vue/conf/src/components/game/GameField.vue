@@ -43,7 +43,7 @@ import PowerUp from './PowerUp.vue'
 import { Socket } from 'socket.io-client'
 import jwtDecode from 'jwt-decode'
 import type { UserI } from '../../model/user.interface'
-import { connectGameSocket, disconnectGameSocket } from '../../websocket'
+import { connectChatSocket, connectGameSocket, disconnectGameSocket } from '../../websocket'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notification'
 
@@ -72,6 +72,8 @@ const paddleB = ref<GamePaddleSetup | null>(null)
 const ball = ref<typeof GameBall | null>(null)
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
+
+const chatSocket = ref<Socket | null>(null)
 
 const countdown = ref<number>(-1)
 
@@ -125,6 +127,10 @@ const initGameSocket = () => {
   })
 }
 
+const initChatSocket = () => {
+  chatSocket.value = connectChatSocket(accessToken);
+}
+
 const initGameField = () => {
   if (!gameField.value) {
     //error handling
@@ -151,6 +157,7 @@ const initGameField = () => {
 
 onMounted(() => {
   initGameSocket()
+  initChatSocket()
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
@@ -234,7 +241,16 @@ onMounted(() => {
   initGameField()
 })
 
+const handleFinishedMatch = () => {
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification('Error: Connection problem chat', false)
+    return 
+  }
+  chatSocket.value.emit('finishedMatch');
+}
+
 onBeforeUnmount(() => {
+  handleFinishedMatch();
   window.removeEventListener('keydown', keyHookDown)
   window.removeEventListener('keyup', keyHookUp)
   disconnectGameSocket()
