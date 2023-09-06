@@ -25,7 +25,7 @@
           <font-awesome-icon :icon="['fas', 'futbol']" />
         </button>
         <button class="action-button-ban" 
-		@click="banUser" 
+		@click="banUnbanUser" 
 		:title="banTitle"
 		:class="isUserBanned ? 'Unban' : 'Ban'"
 		>
@@ -101,6 +101,32 @@ const kickUser = async () => {
     }
 	try {
     socket.value.emit('kickChannelMember', {
+		requesterId: props.requesterId,
+		targetUserId: props.targetUserId,
+		channelId: props.channelId
+	});
+	}
+	catch (error: any) {
+		notificationStore.showNotification(`Error` + error.message, true)
+	}
+}
+
+const banUnbanUser = async () => {
+	if (isUserBanned.value){
+		unBanUser()
+	}
+	else {
+		banUser()
+	}
+}
+
+const unBanUser = async () => {
+	if (!socket || !socket.value) {
+      notificationStore.showNotification('Error: Connection problems', true);
+      return;
+    }
+	try {
+    socket.value.emit('unBanChannelMember', {
 		requesterId: props.requesterId,
 		targetUserId: props.targetUserId,
 		channelId: props.channelId
