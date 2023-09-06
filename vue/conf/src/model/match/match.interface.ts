@@ -26,7 +26,6 @@ export interface MatchI {
   rightUserId?: number
   type?: MatchTypeType
   state?: MatchStateType
-  password?: string
   goalsLeftPlayer?: number
   goalsRightPlayer?: number
   createdAt?: Date

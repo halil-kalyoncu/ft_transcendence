@@ -5,6 +5,7 @@ import { Room } from '../../service/room.service';
 import { PowerUp } from 'src/game/service/powerup.service';
 import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
+import { Match } from '@prisma/client';
 
 let ballPos = {x: 0, y: 0};
 let magnet = 0;
@@ -35,7 +36,7 @@ export class EventsGateway {
 		// players = new Map<string, string>(); -> individual socket holds information if it is the left or right player
 		
 		startGame(room: Room) {
-			setInterval(() => {
+			const gameInterval = setInterval(async () => {
 				if (room.gameIsRunning) {
 					let newBallPos;
 					if (magnet == 0){
@@ -63,11 +64,19 @@ export class EventsGateway {
 
 					
 				}
+				else {
+					const finishedMatch: Match = await this.matchService.finishMatch(room);
+					this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
+					this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
+					clearInterval(gameInterval);
+				}
 			}, 15);
-	
-		
-		}
 
+			//doesn't work here, setInterval doesn't seem to be blocking
+			// const finishedMatch: Match = await this.matchService.finishMatch(room);
+			// this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
+			// this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
+		}
 
 		// afterInit(server: Server) {
 		// 	this.server = server;
@@ -125,8 +134,6 @@ export class EventsGateway {
 				room.socketIds[1] = socket.id;
 			}
 
-			// console.log(socket.data.user);
-			// console.log(socket.data.match);
 			//both players are connected to the games if both socket ids are set, better solution?
 			if (room.socketIds[0] != '' && room.socketIds[1] != '') {
 				this.startCountdown(room);
@@ -136,16 +143,23 @@ export class EventsGateway {
 		async handleDisconnect(socket: Socket) {
 			//this.players.delete(client.id);
 			const room = this.rooms.get(socket.data.match.id);
+			console.log(socket.data.user.username + ' disconnected');
 			if (room.gameIsRunning) {
 				room.gameIsRunning = false;
-				//later give the room (or a custom object) with it
-				const match = await this.matchService.finishMatch(socket.data.match.id);
+
 				if (socket.data.isLeftPlayer) {
 					room.leftPlayerDisconnect = true;
-					socket.to(room.socketIds[1]).emit('opponentDisconnect', match);
 				}
 				else {
 					room.rightPlayerDisconnect = true;
+				}
+
+				const match = await this.matchService.finishMatch(room);
+
+				if (socket.data.isLeftPlayer) {
+					socket.to(room.socketIds[1]).emit('opponentDisconnect', match);
+				}
+				else {
 					socket.to(room.socketIds[0]).emit('opponentDisconnect', match);
 				}
 			}

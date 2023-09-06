@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Match, Prisma } from '@prisma/client';
+import { Match, MatchState, Prisma } from '@prisma/client';
+import { Room } from '../../game/service/room.service';
 
 @Injectable()
 export class MatchService {
@@ -125,12 +126,26 @@ export class MatchService {
     });
   }
 
-  //TODO: finish this with the object of the game gateway
-  async finishMatch(id: number): Promise<Match | null> {
+  async finishMatch(room: Room): Promise<Match | null> {
+    let gameState: MatchState;
+
+    if (room.leftPlayerGoals === 5) {
+      gameState = 'WINNERLEFT';
+    }
+    else if (room.rightPlayerGoals === 5) {
+      gameState = 'WINNERRIGHT';
+    }
+    else if (room.leftPlayerDisconnect) {
+      gameState = 'DISCONNECTLEFT';
+    }
+    else {
+      gameState = 'DISCONNECTRIGHT';
+    }
+
     return await this.prisma.match.update({
-      where: { id },
+      where: { id: room.id },
       data: {
-        state: "WINNERLEFT",
+        state: gameState,
         finishedAt: new Date(),
       },
       include: {
