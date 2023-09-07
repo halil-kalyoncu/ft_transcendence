@@ -424,11 +424,27 @@ export class ChannelService {
       },
       data: {
         unmuteAt: unmuteAt,
-		statusSince: new Date(),
-		status: ChannelMemberStatus.MUTED,
       },
     });
   }
+
+ async unMuteMember(
+targetUserId: number, channelId: number): 
+ Promise<ChannelMember> {
+	return this.prisma.channelMember.update({
+		where: {
+		  userId_channelId: {
+			userId: targetUserId,
+			channelId: channelId,
+		  },
+		},
+		data: {
+		  unmuteAt: null,
+		  statusSince: new Date(),
+		  status: ChannelMemberStatus.NORMAL,
+		},
+	  });
+	}
 
   async unMuteChannelMember(
     adminActionDto: AdminActionDto,
@@ -459,19 +475,7 @@ export class ChannelService {
       throw new Error('Target user is not a member of the channel.');
     }
 
-    return this.prisma.channelMember.update({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.targetUserId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-      data: {
-        unmuteAt: null,
-		statusSince: new Date(),
-		status: ChannelMemberStatus.NORMAL,
-      },
-    });
+    return this.unMuteMember(adminActionDto.targetUserId, adminActionDto.channelId);
   }
 
   async find(channelId: number): Promise<Channel> {
@@ -702,5 +706,26 @@ export class ChannelService {
     );
 
     return channelMembersEntries;
+  }
+
+  async updateMutedUsers(
+	channelId: number,
+  ) : Promise<ChannelMember[]> {
+	try {
+		const channelMembers: ChannelMember[] = await this.findMembers(
+			channelId);
+		const membersToUnmute: ChannelMember[] = [];
+	for (const channelMember of channelMembers) {
+		if (channelMember.unmuteAt && channelMember.unmuteAt.getTime() < Date.now()) {
+			membersToUnmute.push(channelMember);
+			await this.unMuteMember(channelMember.userId, channelId);
+		}	
+	}
+	return membersToUnmute;
+	}
+	catch (error: any) {
+		console.error('Error updating muted users:', error);
+		throw error;
+}
   }
 }

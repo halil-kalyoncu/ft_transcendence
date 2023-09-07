@@ -245,14 +245,13 @@ socket.value.on('memberUnBanned', (membership: any) => {
 })
 socket.value.on('memberMuted', (membership: any) => {
     console.log('memberMuted fired')
-    //await notificationStore.showNotification('User Banned', true)
 	setMembers().then(() => {
 		setCurrentUserRole()
 	})
 })
 socket.value.on('memberUnMuted', (membership: any) => {
   console.log('memberUnMuted fired')
-  //await notificationStore.showNotification('User UnBanned', true)
+  notificationStore.showNotification('User UnMuted', true)
   setMembers().then(() => {
 	setCurrentUserRole()
   })

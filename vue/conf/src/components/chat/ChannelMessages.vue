@@ -122,8 +122,9 @@ onMounted(() => {
 })
 
 //Todo Check for selectedChannel after implementaiton
-const sendMessage = () => {
-  if (!socket || !socket.value) {
+
+const sendChannelMessage = async () => {
+	if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
@@ -140,6 +141,46 @@ const sendMessage = () => {
     message: newchannelMessages.value
   })
   newchannelMessages.value = ''
+  return
+}
+
+const updateMutedUsers = async () => {
+  try {
+    const response = await fetch(`http://localhost:3000/api/channel/updateMutedUsers?channelId=${channelId}`,
+	{
+		method:'PATCH',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	})
+    if (!response.ok) {
+      throw new Error('Failed to add user to channel')
+    }
+	const data = await response.json()
+	return data
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
+const checkForMutedUsers = async () => {
+  const membersToUnmute = await updateMutedUsers()
+
+  if (!socket || !socket.value) {
+	notificationStore.showNotification(`Error: Connection problems`, true)
+	return
+  }
+  console.log('checkForMutedUsers')
+  console.log(membersToUnmute)
+  if (membersToUnmute.length > 0) {
+	socket.value.emit('sendUpdateUnMuted', membersToUnmute)
+  }
+  return
+}
+
+const sendMessage = async () => {
+	await checkForMutedUsers()
+	await sendChannelMessage()
 }
 </script>
 

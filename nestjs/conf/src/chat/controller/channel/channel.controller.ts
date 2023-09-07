@@ -122,6 +122,15 @@ export class ChannelController {
     await this.ChannelService.kickChannelMember(AdminActionDto);
   }
 
+  @Patch('updateMutedUsers')
+  async updateMutedUsers(
+    @Query('channelId', ParseIntPipe) channelId: number,
+  ): Promise<ChannelMember[]> {
+    return await this.ChannelService.updateMutedUsers(
+      channelId,
+    );
+  }
+
   @Delete('removeUserFromChannel')
   async removeUserFromChannel(
     @Body() ChannelMembershipDto: ChannelMembershipDto,
@@ -135,4 +144,5 @@ export class ChannelController {
   ): Promise<void> {
     await this.ChannelService.destroyChannel(channelId);
   }
+
 }

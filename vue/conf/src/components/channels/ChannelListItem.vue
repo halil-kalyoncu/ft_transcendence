@@ -27,9 +27,6 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
       />
     </div>
     <div class="channel-button-container">
-      <div v-if="unreadMessageCount && unreadMessageCount > 0" class="unread-messages">
-        +{{ unreadMessageCount }}
-      </div>
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
       <button
         class="join-channel-button"
@@ -64,7 +61,7 @@ const props = defineProps({
   unreadMessageCount: Number,
   userId: Number
 })
-//const unreadMessageCount = ref(4)
+// const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
 const showPasswordField = ref(false)
 const password = ref('')
@@ -151,7 +148,7 @@ onMounted(() => {
 })
 </script>
 
-<style>
+<style >
 .channel-list-item {
   display: flex;
   justify-content: space-between;
@@ -250,9 +247,13 @@ onMounted(() => {
   margin-right: 5px;
 }
 
-.envelope-icon {
-  width: 100%;
+.icon-container {
+  position: relative;
+  display: inline-block;
+  font-size: 0.75rem;
+  margin: 0.5rem 0 0 0.5rem;
 }
+
 
 .badge-number {
   position: absolute;
@@ -268,6 +269,10 @@ onMounted(() => {
   text-align: center;
   font-size: 0.55rem;
   font-weight: bold;
+}
+
+.envelope-icon {
+  width: 100%;
 }
 
 .disabled-button {

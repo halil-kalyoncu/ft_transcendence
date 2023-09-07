@@ -237,7 +237,8 @@ const closeChannelManagerAndChat = async () => {
   return
 }
 
-const goBack = () => {
+const goBack = async () => {
+  await MarkMessagesAsRead()
   closeJoinChannels()
   closeMyChannels()
   closeChannelManagerAndChat()

@@ -76,6 +76,10 @@ export class ChannelMessageService {
       throw new Error('Member is not part of the channel');
     }
 
+	if (member.unmuteAt) {
+		throw new Error('Member is muted');
+		}
+
     const createdMessage = await this.messageService.createOne({ message });
     const createdChannelMessage = await this.prisma.channelMessage.create({
       data: {
@@ -115,6 +119,8 @@ export class ChannelMessageService {
     return channelMessageDto;
   }
 
+
+//TODO Filter Channelmember  is Muted in Channel! 
   async getChannelMessagesforChannel(
     channelId: number,
   ): Promise<ChannelMessageDto[]> {
@@ -141,7 +147,23 @@ export class ChannelMessageService {
           },
         },
       });
+	  /* TODO: DELTE IF NOT NEEDED 
+	  const filteredChannelMessages = channelMessages.map((message) =>{
+		const {sender} = message;
 
+		if (sender.status === 'MUTED') {
+			return null;
+		}
+
+		const roleSinceDate = new Date(sender.roleSince);
+		const createdAtDate = new Date(message.message.createdAt);
+		if (roleSinceDate > createdAtDate) {
+			return null;
+		}
+		return message;
+	  }).filter(Boolean)
+ */
+	  console.log('channelMessages', channelMessages)
       const channelMessageDtos: ChannelMessageDto[] = channelMessages.map(
         (channelMessage) => ({
           id: channelMessage.id,
@@ -206,4 +228,6 @@ export class ChannelMessageService {
       throw new Error('Error fetching unread messages: ' + error.message);
     }
   }
+
+  
 }
