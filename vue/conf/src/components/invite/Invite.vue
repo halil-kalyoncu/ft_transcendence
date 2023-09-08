@@ -37,6 +37,8 @@ const lobbyIsFinished = ref(false)
 
 const invitedUser = ref<UserI | null>(null)
 
+const authorized = ref<boolean>(true)
+
 const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
 }
@@ -82,12 +84,31 @@ async function fetchMatchData(): Promise<void> {
   }
 }
 
+//check if match object is correct and user is part of this queue
+const checkAuthorized = (user: UserI): boolean => {
+  if (!match.value) {
+    notificationStore.showNotification('Unexpected error occured', false)
+    return false
+  } else if (match.value.id! !== parseInt(matchId, 10)) {
+    notificationStore.showNotification('Something went wrong while directing to the lobby', false)
+    return false
+  }
+
+  if (user.id! === match.value.leftUserId!) {
+    return true
+  } else if (match.value.rightUserId && match.value.rightUserId! === user.id!) {
+    return true
+  }
+  notificationStore.showNotification('You are not a part of this lobby', false)
+  return false
+}
+
 const handleHostLeaveMatch = () => {
   if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  chatSocket.value.emit('hostLeaveMatch', matchId)
+  chatSocket.value.emit('hostLeaveMatch', parseInt(matchId, 10))
 }
 
 const handleLeaveMatch = () => {
@@ -95,7 +116,8 @@ const handleLeaveMatch = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  chatSocket.value.emit('leaveMatch', matchId)
+
+  chatSocket.value.emit('leaveMatch', parseInt(matchId, 10))
 }
 
 const handleStartMatch = () => {
@@ -117,8 +139,12 @@ onMounted(async () => {
   }
 
   await fetchMatchData()
-
   const user: UserI = getUserFromAccessToken()
+
+  if (!checkAuthorized(user)) {
+    authorized.value = false
+    router.push('/home')
+  }
 
   if (user.id === leftPlayer.value.id) {
     userIsHost.value = true
@@ -177,14 +203,25 @@ const cancelWaiting = () => {
 }
 
 onBeforeUnmount(() => {
-  if (lobbyIsFinished.value) {
+  if (authorized.value) {
+    if (!lobbyIsFinished.value && userIsHost.value) {
+      handleHostLeaveMatch()
+    } else if (!lobbyIsFinished.value && !userIsHost.value) {
+      handleLeaveMatch()
+    }
+  }
+
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
-  if (userIsHost.value) {
-    handleHostLeaveMatch()
-  } else {
-    handleLeaveMatch()
-  }
+
+  chatSocket.value.off('matchInviteSent')
+  chatSocket.value.off('matchInviteAccepted')
+  chatSocket.value.off('matchInviteRejected')
+  chatSocket.value.off('hostLeftMatch')
+  chatSocket.value.off('leftMatch')
+  chatSocket.value.off('goToGame')
 })
 </script>
 

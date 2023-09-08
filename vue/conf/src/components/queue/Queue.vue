@@ -26,6 +26,8 @@ let timerId: NodeJS.Timer | null = null
 const waitingTime = ref<number>(0)
 const maxWaitingTime = 1 * 60
 
+const authorized = ref<boolean>(true)
+
 const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
 }
@@ -56,16 +58,10 @@ const checkAuthorized = async () => {
     })
 
     if (response.ok) {
-      const matchmaking: MatchmakingI = await response.json()
-      const loggedUser: UserI = getUserFromAccessToken()
+      const responseText = await response.text()
+      const matchmaking: MatchmakingI | null = responseText ? JSON.parse(responseText) : null
+
       if (!matchmaking) {
-        throw Error('Something went wrong while adding you to the queue')
-      }
-      if (
-        matchmaking.userId !== loggedUser.id &&
-        matchmaking.opponentUserId &&
-        matchmaking.opponentUserId !== loggedUser.id
-      ) {
         throw Error('You are not authorized to visit this site')
       } else if (matchmaking.id !== parseInt(matchmakingId, 10)) {
         throw Error('Something went wrong while directing to the queue')
@@ -75,6 +71,7 @@ const checkAuthorized = async () => {
     }
   } catch (error: any) {
     notificationStore.showNotification(error.message, false)
+    authorized.value = false
     router.push('/home')
   }
 }
@@ -166,7 +163,7 @@ onMounted(async () => {
 
 onBeforeUnmount(async () => {
   cancelTimer()
-  if (waitingForGame.value) {
+  if (authorized.value && waitingForGame.value) {
     await handleDeleteMatchmakingEntry()
   }
 

@@ -711,14 +711,19 @@ export class ChatGateway
         .emit('matchInviteRejected', updatedMatch);
     }
   }
+
   /************
    *** Match ***
    *************/
   @SubscribeMessage('hostLeaveMatch')
   async hostLeaveMatch(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(match.rightUserId);
+    let receiverOnline: ConnectedUser = null;
+    if (match.rightUserId) {
+      receiverOnline = await this.connectedUserService.findByUserId(
+        match.rightUserId,
+      );
+    }
 
     if (receiverOnline) {
       socket.to(receiverOnline.socketId).emit('hostLeftMatch');
@@ -806,7 +811,6 @@ export class ChatGateway
       waitForPlayer = await this.matchmakingService.createByUserId(
         socket.data.user.id,
       );
-      console.log('return waitFOrPlayer');
       return waitForPlayer;
     } catch (error) {
       return { error: error.message as string };
