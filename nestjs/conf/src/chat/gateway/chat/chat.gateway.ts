@@ -777,9 +777,6 @@ export class ChatGateway
         socket.data.user.id,
       );
       if (existingMatchmaking) {
-        //remove
-        console.log('return existing game');
-        console.log(existingMatchmaking);
         return existingMatchmaking;
       }
 
@@ -798,13 +795,10 @@ export class ChatGateway
         );
         if (!connectedUser) {
           await this.matchmakingService.deleteByUserId(socket.data.user.id);
-          //remove
-          console.log('return error connectedUser not online');
           return { error: 'Opponent is not online' };
         }
         socket.to(connectedUser.socketId).emit('readyLadderGame', findOpponent);
         socket.emit('readyLadderGame', findOpponent);
-        console.log('return findOpponent');
         return findOpponent;
       }
 
@@ -840,25 +834,17 @@ export class ChatGateway
         rightUser: { connect: { id: matchmaking.opponentUserId } },
       };
       ladderMatch = await this.matchService.create(ladderGameData);
-      //remove
-      console.log(socket.data.user.username + ' created ladderMatch');
-      console.log(ladderMatch);
       connectedUser = await this.connectedUserService.findByUserId(
         matchmaking.opponentUserId,
       );
       if (!connectedUser) {
         await this.matchService.deleteById(ladderMatch.id);
         await this.matchmakingService.deleteByUserId(matchmaking.userId);
-        //remove
-        console.log('should happen, returned error opponent is offline');
         return { error: 'Opponent is not online' };
       }
       await this.matchmakingService.deleteByUserId(matchmaking.userId);
       socket.to(connectedUser.socketId).emit('goToLadderGame', ladderMatch);
       socket.emit('goToLadderGame', ladderMatch);
-      //remove
-      console.log('returning ladderMatch');
-      console.log(ladderMatch);
       return ladderMatch;
     } catch (error) {
       return { error: error.message as string };
