@@ -4,19 +4,19 @@ import { ChannelMessageReadStatusController } from './channel-message-read-statu
 describe('ChannelMessageReadStatusController', () => {
   let controller: ChannelMessageReadStatusController;
 
-//   beforeEach(async () => {
-//     const module: TestingModule = await Test.createTestingModule({
-//       controllers: [ChannelMessageReadStatusController],
-//     }).compile();
+  //   beforeEach(async () => {
+  //     const module: TestingModule = await Test.createTestingModule({
+  //       controllers: [ChannelMessageReadStatusController],
+  //     }).compile();
 
-//     controller = module.get<ChannelMessageReadStatusController>(
-//       ChannelMessageReadStatusController,
-//     );
-//   });
+  //     controller = module.get<ChannelMessageReadStatusController>(
+  //       ChannelMessageReadStatusController,
+  //     );
+  //   });
 
-//   it('should be defined', () => {
-//     expect(controller).toBeDefined();
-//   });
+  //   it('should be defined', () => {
+  //     expect(controller).toBeDefined();
+  //   });
 
-it.skip('Not writing tests is a bad practice', () => {});
+  it.skip('Not writing tests is a bad practice', () => {});
 });

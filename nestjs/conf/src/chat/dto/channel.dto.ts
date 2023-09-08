@@ -1,7 +1,6 @@
 import { IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { ChannelVisibility, Channel, User, Message } from '@prisma/client';
 
-
 export class CreateChannelDto {
   @IsNotEmpty()
   userId: number;

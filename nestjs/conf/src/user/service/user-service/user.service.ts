@@ -7,7 +7,6 @@ import { ChannelInviteeUserDto } from '../../../chat/dto/channelInvitation.dto';
 import * as fs from 'fs';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 
-
 @Injectable()
 export class UserService {
   constructor(

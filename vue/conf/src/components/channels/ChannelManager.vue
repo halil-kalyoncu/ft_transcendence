@@ -120,7 +120,7 @@ onMounted(async () => {
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectChatSocket( accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const setMembers = async () => {

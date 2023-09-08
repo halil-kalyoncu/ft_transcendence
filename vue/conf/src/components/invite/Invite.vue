@@ -3,7 +3,7 @@ import InvitePlayerAccepted from './InvitePlayerAccepted.vue'
 import Spinner from '../utils/Spinner.vue'
 import InviteFriend from './InviteFriend.vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { connectChatSocket } from '../../websocket'
+import { connectChatSocket, connectGameSocket } from '../../websocket'
 import type { UserI } from '../../model/user.interface'
 import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
@@ -24,7 +24,8 @@ const notificationStore = useNotificationStore()
 const router = useRouter()
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
-const socket = ref<Socket | null>(null)
+const chatSocket = ref<Socket | null>(null)
+const gameSocket = ref<Socket | null>(null)
 
 const match = ref<MatchI>({})
 const leftPlayer = ref<UserI>({})
@@ -36,11 +37,25 @@ const lobbyIsFinished = ref(false)
 
 const invitedUser = ref<UserI | null>(null)
 
-const initSocket = () => {
-  socket.value = connectChatSocket(accessToken)
+const initChatSocket = () => {
+  chatSocket.value = connectChatSocket(accessToken)
 }
 
-async function fetchMatchData(matchId: string): Promise<void> {
+const initGameSocket = () => {
+  const user: UserI = getUserFromAccessToken()
+  const query = {
+    userId: user.id,
+    matchId
+  }
+  gameSocket.value = connectGameSocket(query)
+}
+
+const getUserFromAccessToken = (): UserI => {
+  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+  return decodedToken.user as UserI
+}
+
+async function fetchMatchData(): Promise<void> {
   try {
     const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
       method: 'GET',
@@ -67,64 +82,64 @@ async function fetchMatchData(matchId: string): Promise<void> {
   }
 }
 
-const handleHostLeaveMatch = (matchId: number) => {
-  if (!socket || !socket.value) {
+const handleHostLeaveMatch = () => {
+  if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.emit('hostLeaveMatch', matchId)
+  chatSocket.value.emit('hostLeaveMatch', matchId)
 }
 
-const handleLeaveMatch = (matchId: number) => {
-  if (!socket || !socket.value) {
+const handleLeaveMatch = () => {
+  if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.emit('leaveMatch', matchId)
+  chatSocket.value.emit('leaveMatch', matchId)
 }
 
 const handleStartMatch = () => {
   if (!userIsHost) {
     return
   }
-  if (!socket || !socket.value) {
+  if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.emit('startMatch', match.value.id)
+  chatSocket.value.emit('startMatch', match.value.id)
 }
 
 onMounted(async () => {
-  initSocket()
-  if (!socket || !socket.value) {
+  initChatSocket()
+  if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
-  const user: UserI = decodedToken.user as UserI
 
-  await fetchMatchData(matchId)
+  await fetchMatchData()
+
+  const user: UserI = getUserFromAccessToken()
 
   if (user.id === leftPlayer.value.id) {
     userIsHost.value = true
   }
 
-  socket.value.on('matchInviteSent', (updatedMatch: MatchI) => {
+  chatSocket.value.on('matchInviteSent', (updatedMatch: MatchI) => {
     match.value = updatedMatch
   })
 
-  socket.value.on('matchInviteAccepted', (updatedMatch: MatchI) => {
+  chatSocket.value.on('matchInviteAccepted', (updatedMatch: MatchI) => {
     match.value = updatedMatch
     rightPlayer.value = match.value.rightUser as UserI
     isWaitingForResponse.value = false
   })
 
-  socket.value.on('matchInviteRejected', (updatedMatch: MatchI) => {
+  chatSocket.value.on('matchInviteRejected', (updatedMatch: MatchI) => {
     match.value = updatedMatch
     isWaitingForResponse.value = false
   })
 
-  socket.value.on('hostLeftMatch', () => {
+  chatSocket.value.on('hostLeftMatch', () => {
     if (!userIsHost.value) {
       notificationStore.showNotification(
         'Host ' + match.value.rightUser!.username + ' left the match',
@@ -135,7 +150,7 @@ onMounted(async () => {
     }
   })
 
-  socket.value.on('leftMatch', (updatedMatch: MatchI) => {
+  chatSocket.value.on('leftMatch', (updatedMatch: MatchI) => {
     if (userIsHost.value) {
       notificationStore.showNotification(match.value.rightUser!.username + ' left the match', false)
       match.value = updatedMatch
@@ -144,9 +159,10 @@ onMounted(async () => {
     }
   })
 
-  socket.value.on('goToGame', (updatedMatch: MatchI) => {
+  chatSocket.value.on('goToGame', (updatedMatch: MatchI) => {
     match.value = updatedMatch
     lobbyIsFinished.value = true
+    initGameSocket()
     router.push(`/game/${matchId}`)
   })
 })
@@ -165,9 +181,9 @@ onBeforeUnmount(() => {
     return
   }
   if (userIsHost.value) {
-    handleHostLeaveMatch(match.value.id!)
+    handleHostLeaveMatch()
   } else {
-    handleLeaveMatch(match.value.id!)
+    handleLeaveMatch()
   }
 })
 </script>

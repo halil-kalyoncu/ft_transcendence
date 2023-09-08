@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notification'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { connectChatSocket } from '../../websocket'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { connectChatSocket, connectGameSocket } from '../../websocket'
 import { Socket } from 'socket.io-client'
 import type { MatchmakingI } from '../../model/match/matchmaking.interface'
 import type { UserI } from '../../model/user.interface'
@@ -17,16 +17,29 @@ const notificationStore = useNotificationStore()
 const router = useRouter()
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
-const socket = ref<Socket | null>(null)
+const chatSocket = ref<Socket | null>(null)
+const gameSocket = ref<Socket | null>(null)
 
 const waitingForGame = ref<boolean>(true)
 
-const initSocket = () => {
-  socket.value = connectChatSocket(accessToken)
+let timerId: NodeJS.Timer | null = null
+const waitingTime = ref<number>(0)
+const maxWaitingTime = 1 * 60
+
+const initChatSocket = () => {
+  chatSocket.value = connectChatSocket(accessToken)
+}
+
+const initGameSocket = (matchId: number) => {
+  const user: UserI = getUserFromAccessToken()
+  const query = {
+    userId: user.id,
+    matchId
+  }
+  gameSocket.value = connectGameSocket(query)
 }
 
 const getUserFromAccessToken = (): UserI => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
   const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
   return decodedToken.user as UserI
 }
@@ -67,23 +80,19 @@ const checkAuthorized = async () => {
 }
 
 const handleStartLadderGame = (matchmaking: MatchmakingI) => {
-  if (!socket || !socket.value) {
+  if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
   const loggedUser: UserI = getUserFromAccessToken()
   if (matchmaking.userId === loggedUser.id) {
-    socket.value.emit(
-      'startLadderGame',
-      matchmaking.id,
-      async (response: MatchmakingI | ErrorI) => {
-        if ('error' in response) {
-          notificationStore.showNotification(response.error, false)
-          router.push('/home')
-        }
+    chatSocket.value.emit('startLadderGame', matchmaking.id, (response: MatchmakingI | ErrorI) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error, false)
+        router.push('/home')
       }
-    )
+    })
   }
 }
 
@@ -108,34 +117,73 @@ const handleDeleteMatchmakingEntry = async () => {
   }
 }
 
+const formattedTimer = computed(() => {
+  const minutes = Math.floor(waitingTime.value / 60)
+  const seconds = waitingTime.value % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+})
+
+const startTimer = () => {
+  timerId = setInterval(() => {
+    waitingTime.value++
+    if (waitingTime.value >= maxWaitingTime) {
+      cancelTimer()
+      notificationStore.showNotification("Couldn't find an opponent, please try again later", false)
+      router.push('/home')
+    }
+  }, 1000)
+}
+
+const cancelTimer = () => {
+  if (timerId) {
+    clearInterval(timerId)
+    timerId = null
+  }
+}
+
 onMounted(async () => {
-  initSocket()
-  if (!socket || !socket.value) {
+  initChatSocket()
+  if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
   await checkAuthorized()
 
-  socket.value.on('readyLadderGame', (matchmaking: MatchmakingI) => {
+  startTimer()
+
+  chatSocket.value.on('readyLadderGame', (matchmaking: MatchmakingI) => {
     waitingForGame.value = false
     handleStartLadderGame(matchmaking)
   })
 
-  socket.value.on('goToLadderGame', (match: MatchI) => {
+  chatSocket.value.on('goToLadderGame', (match: MatchI) => {
     waitingForGame.value = false
+    initGameSocket(match.id!)
     router.push(`/game/${match.id}`)
   })
 })
 
 onBeforeUnmount(async () => {
+  cancelTimer()
   if (waitingForGame.value) {
     await handleDeleteMatchmakingEntry()
   }
+
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  chatSocket.value.off('readyLadderGame')
+  chatSocket.value.off('goToLadderGame')
 })
 </script>
 <template>
-  <div v-if="waitingForGame">Waiting for game</div>
+  <div v-if="waitingForGame">
+    Waiting for game
+    <div>{{ formattedTimer }}</div>
+  </div>
   <div v-else>Found Game</div>
 </template>
 

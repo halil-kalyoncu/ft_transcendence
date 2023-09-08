@@ -128,7 +128,7 @@ const initGameSocket = () => {
 }
 
 const initChatSocket = () => {
-  chatSocket.value = connectChatSocket(accessToken);
+  chatSocket.value = connectChatSocket(accessToken)
 }
 
 const initGameField = () => {
@@ -244,13 +244,13 @@ onMounted(() => {
 const handleFinishedMatch = () => {
   if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification('Error: Connection problem chat', false)
-    return 
+    return
   }
-  chatSocket.value.emit('finishedMatch');
+  chatSocket.value.emit('finishedMatch')
 }
 
 onBeforeUnmount(() => {
-  handleFinishedMatch();
+  handleFinishedMatch()
   window.removeEventListener('keydown', keyHookDown)
   window.removeEventListener('keyup', keyHookUp)
   disconnectGameSocket()
