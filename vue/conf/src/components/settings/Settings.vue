@@ -26,7 +26,7 @@
     </div>
 
     <div class="input-group">
-      <button class="secondary-btn">Enable 2FA</button>
+      <button class="secondary-btn" :class="{enabled2FA : is2FAEnabled}" @click="toggle2FA">{{is2FAEnabled ? 'Disable 2FA': 'Enable 2FA'}}</button>
     </div>
 
     <div class="button-group">
@@ -49,6 +49,7 @@ const userId = computed(() => userStore.userId)
 
 const username = ref('')
 const enable2FA = ref(false)
+const is2FAEnabled = ref(true)
 const avatarInput: Ref<HTMLInputElement | null> = ref(null)
 const uploadedAvatarFile: Ref<File | null> = ref(null)
 const selectedFileName = ref('')
@@ -134,6 +135,10 @@ const deleteAccount = () => {
   if (confirmDelete) {
   }
 }
+
+const toggle2FA = () =>{
+  is2FAEnabled.value = !is2FAEnabled.value;
+}
 </script>
 
 <style scoped>
@@ -177,10 +182,6 @@ input[type='text']::placeholder {
   font-size: 15px;
 }
 
-input[type='text']:focus {
-  outline: solid 1px #ea9f42;
-  border: none;
-}
 .page-title {
   text-align: left;
   margin: 0 0 1.25rem 0;
@@ -206,10 +207,6 @@ input[type='text']:focus {
   justify-content: flex-start;
 }
 
-.secondary-btn:focus {
-  outline: solid 0.25px #ea9f42;
-}
-
 .file-upload-wrapper {
   position: relative;
   display: inline-block;
@@ -226,10 +223,22 @@ input[type='text']:focus {
 
 .input[type='text']:hover,
 .secondary-btn:hover,
-.secondary-btn.upload-btn:hover {
+.secondary-btn.upload-btn:hover,
+.enabled2FA {
   color: aliceblue;
   border: 1px solid #ea9f42;
   font-weight: bold;
+}
+
+.enabled2FA{
+    color: #ea9f42 !important;
+}
+
+input[type='text']:focus,
+input[type='file']:focus,
+.secondary-btn:focus {
+  outline: solid 1px #ea9f42;
+  border: none;
 }
 
 .secondary-btn {
