@@ -201,7 +201,7 @@ onBeforeUnmount(async () => {
   height: calc(100vh - 50.8px);
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   padding: 1.5rem 1.5rem 1.5rem 1.5rem;
   display: flex;
   flex-direction: row;

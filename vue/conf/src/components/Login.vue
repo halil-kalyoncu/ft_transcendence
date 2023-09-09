@@ -69,7 +69,7 @@ const submitForm = async () => {
   width: 100vw;
   height: 100vh;
   position: relative;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .login-form {

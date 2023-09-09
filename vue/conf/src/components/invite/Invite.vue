@@ -245,16 +245,22 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <div v-if="rightPlayer" class="flex-row">
-      <p>
-        '<span class="orange-font">{{ (invitedUser == null || invitedUser?.username == '') ? leftPlayer?.username :  invitedUser?.username}}</span
+      <p v-if="invitedUser && invitedUser.username">
+        '<span class="orange-font">{{ invitedUser.username }}</span
         >' is ready to play
       </p>
+
+      <p v-else class="waiting-container">
+        <Spinner />
+        waiting for '<span class="orange-font">{{ leftPlayer.username }} </span> ' to launch game...
+      </p>
       <button
+        v-if="invitedUser != null && invitedUser?.username != ''"
         class="dynamic-button"
         @click="handleStartMatch"
         :class="{ disabledButton: !userIsHost || !rightPlayer }"
       >
-        PLAY
+        Launch Game
       </button>
     </div>
   </article>
@@ -282,7 +288,7 @@ onBeforeUnmount(() => {
   height: calc(100vh - 50.8px);
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   padding: 1.5rem 1.5rem 1.5rem 1.5rem;
   display: flex;
   flex-direction: row;

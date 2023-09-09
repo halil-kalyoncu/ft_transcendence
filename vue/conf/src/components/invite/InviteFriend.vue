@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { UserI } from '../../model/user.interface'
 import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
@@ -13,9 +14,14 @@ const props = defineProps({
     required: true
   }
 })
-
+const router = useRouter()
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
+const areRadioButtonsDisabled = computed(() => activePanel.value === 'DefaultGame')
+const activePanel = ref('DefaultGame')
+const selectedGoals = ref('five')
+const selectedPowerup1 = ref('slow')
+const selectedPowerup2 = ref('small')
 
 const numericMatchId = parseInt(props.matchId, 10)
 
@@ -93,6 +99,10 @@ const sendInvite = async () => {
     socket.emit('sendMatchInvite', {
       matchId: numericMatchId,
       invitedUserId: invitedUser.value?.id
+      // todo check exact args
+      // goals: selectedRadio.value,
+      // powerup1: selectedPowerup1.value,
+      // powerup2: selectedPowerup2.value
     })
 
     emit('send-match-invite', invitedUser.value)
@@ -102,72 +112,284 @@ const sendInvite = async () => {
   }
   invitedUsername.value = ''
 }
+
+const setActivePanel = (value: string) => {
+  activePanel.value = value
+}
 </script>
 
 <template>
-  <div>
-    <input
-      type="text"
-      class="invite-friend-input"
-      v-model="invitedUsername"
-      placeholder="Enter username"
-      @focus="showSuggestions"
-      @blur="hideSuggestions"
-    />
-    <button @click="sendInvite" class="send-game-invitation-button">Send Game Invitation</button>
-
-    <ScrollViewer :maxHeight="'50vh'" class="suggestionList" :class="'game-invite-suggestions'">
-      <ul v-if="showSuggestionList && userSuggestions.length" class="suggestionList">
-        <li
-          v-for="suggestion in userSuggestions"
-          :key="suggestion.id"
-          @mousedown="selectSuggestion(suggestion)"
-        >
-          {{ suggestion.username }}
-        </li>
-      </ul>
-    </ScrollViewer>
+  <div class="friend-invite">
+    <ul>
+      <li
+        @click="setActivePanel('DefaultGame')"
+        class="navButton"
+        :class="{ selected: activePanel === 'DefaultGame' }"
+      >
+        Default Game
+      </li>
+      <li
+        @click="setActivePanel('CustomGame')"
+        class="navButton"
+        :class="{ selected: activePanel === 'CustomGame' }"
+      >
+        Custom Game
+      </li>
+    </ul>
+    <div class="invite-friend-container">
+      <input
+        type="text"
+        class="invite-friend-input"
+        v-model="invitedUsername"
+        placeholder="Enter username"
+        @focus="showSuggestions"
+        @blur="hideSuggestions"
+      />
+      <ScrollViewer :maxHeight="'50vh'" class="suggestionList" :class="'game-invite-suggestions'">
+        <ul v-if="showSuggestionList && userSuggestions.length" class="suggestionList">
+          <li
+            v-for="suggestion in userSuggestions"
+            :key="suggestion.id"
+            @mousedown="selectSuggestion(suggestion)"
+          >
+            {{ suggestion.username }}
+          </li>
+        </ul>
+      </ScrollViewer>
+    </div>
+    <div class="container">
+      <div class="radio_container">
+        <input
+          type="radio"
+          name="radio"
+          id="three"
+          v-model="selectedGoals"
+          value="3"
+          :disabled="areRadioButtonsDisabled"
+        />
+        <label for="three" class="goals-label">3 goals</label>
+        <input
+          type="radio"
+          name="radio"
+          id="five"
+          v-model="selectedGoals"
+          value="5"
+          :disabled="areRadioButtonsDisabled"
+          checked
+        />
+        <label for="five" class="goals-label">5 goals</label>
+        <input
+          type="radio"
+          name="radio"
+          id="ten"
+          v-model="selectedGoals"
+          value="10"
+          :disabled="areRadioButtonsDisabled"
+        />
+        <label for="ten" class="goals-label">10 goals</label>
+        <input
+          type="radio"
+          name="radio"
+          id="twentyone"
+          v-model="selectedGoals"
+          value="21"
+          :disabled="areRadioButtonsDisabled"
+        />
+        <label for="twentyone" class="goals-label">21 goals</label>
+      </div>
+      <div class="radio_container">
+        <input
+          type="radio"
+          name="powerup1"
+          id="slow"
+          v-model="selectedPowerup1"
+          value="slow"
+          :disabled="areRadioButtonsDisabled"
+        />
+        <label for="slow" class="goals-label">slow</label>
+        <input
+          type="radio"
+          name="powerup1"
+          id="fast"
+          v-model="selectedPowerup1"
+          value="fast"
+          :disabled="areRadioButtonsDisabled"
+        />
+        <label for="fast" class="goals-label">fast</label>
+      </div>
+      <div class="radio_container">
+        <input
+          type="radio"
+          name="powerup2"
+          id="small"
+          v-model="selectedPowerup2"
+          value="small"
+          :disabled="areRadioButtonsDisabled"
+        />
+        <label for="small" class="goals-label">small</label>
+        <input
+          type="radio"
+          name="powerup2"
+          id="big"
+          v-model="selectedPowerup2"
+          value="big"
+          :disabled="areRadioButtonsDisabled"
+        />
+        <label for="big" class="goals-label">big</label>
+      </div>
+    </div>
+    <div class="invite-controls-container">
+      <button @click="sendInvite" class="dynamic-button" :class="'send-game-invitation-button'">
+        Send Game Invitation
+      </button>
+      <RouterLink class="send-game-invitation-button" :class="'quit-button'" to="/home">
+        Quit
+      </RouterLink>
+    </div>
   </div>
 </template>
 
 <style>
+.invite-friend-container {
+  position: relative;
+}
+
 .invite-friend-input {
   padding: 0.5rem 1rem;
   font-size: 1rem;
   background-color: transparent;
   color: aliceblue;
-  border: 1px solid aliceblue;
-  margin-right: 1.5rem;
+  border: 0.25px solid aliceblue;
+  margin: 2rem 0 1rem 0;
+  width: 540px;
+  font-family: 'Courier New', Courier, monospace !important;
 }
 
 .invite-friend-input:focus {
   outline: solid 0.25px #ea9f42;
+  border: none;
+  padding: 0.55rem 1.05rem;
 }
 
 .game-invite-suggestions {
-  min-height: 15rem;
-  max-width: 228px;
+  position: absolute;
+  top: 5rem;
+  left: 0;
+  min-width: 540px;
+  background: rgba(0, 0, 0, 0.8);
   max-height: 500px;
 }
 
 ::placeholder {
-  color: lightgray;
+  color: aliceblue;
+  font-weight: light;
+  text-align: center;
 }
 
 ::-moz-placeholder {
   color: aliceblue;
   opacity: 1;
+  font-weight: light;
+  text-align: center;
 }
 
 ::-webkit-input-placeholder {
   color: aliceblue;
+  font-weight: light;
+  text-align: center;
 }
 
 :-ms-input-placeholder {
   color: aliceblue;
+  font-weight: light;
+  text-align: center;
 }
 
 ::-ms-input-placeholder {
   color: aliceblue;
+  font-weight: light;
+  text-align: center;
+}
+
+.friend-invite {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.5rem 1.5rem;
+  align-items: center;
+}
+
+.friend-invite ul {
+  list-style: none;
+  display: flex;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 0;
+}
+
+.friend-invite .container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.friend-invite .radio_container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 1rem;
+  width: calc(540px + 1rem);
+}
+
+.friend-invite input[type='radio'] {
+  appearance: none;
+  display: none;
+}
+
+.friend-invite input[type='radio']:checked + label {
+  color: #ea9f42;
+  font-weight: normal;
+  transition: 0.3s;
+  border-color: #ea9f42;
+}
+
+.friend-invite .goals-label {
+  font-size: 1rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: linear 0.3s;
+  color: aliceblue;
+  border: 1px solid aliceblue;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  width: 100%;
+  margin: 0 0.5rem;
+}
+
+.friend-invite input[type='radio']:disabled + label {
+  opacity: 0.5; /* makes it semi-transparent */
+  cursor: not-allowed; /* indicates non-clickable item */
+}
+
+.invite-controls-container {
+  width: 540px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.quit-button {
+  text-decoration: none;
+  border-color: #ea6442;
+  color: #ea6442;
+}
+
+.send-invite-button {
+  font-weight: light !important;
 }
 </style>
