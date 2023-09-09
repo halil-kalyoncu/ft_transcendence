@@ -15,7 +15,8 @@
       </div>
     </ScrollViewer>
     <div class="chat-input">
-      <textarea @keyup.enter.prevent="handleEnterKey($event)"
+      <textarea
+        @keyup.enter.prevent="handleEnterKey($event)"
         v-model="newchannelMessages"
         placeholder="Type your message here..."
         rows="1"
@@ -119,8 +120,8 @@ const setNewChannelMessages = async () => {
 
 const handleEnterKey = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
-    sendMessage();
-    event.preventDefault();
+    sendMessage()
+    event.preventDefault()
   }
 }
 

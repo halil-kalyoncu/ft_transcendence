@@ -86,8 +86,8 @@ onMounted(() => {
 
 const handleEnterKey = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
-    sendMessage();
-    event.preventDefault();
+    sendMessage()
+    event.preventDefault()
   }
 }
 
@@ -141,7 +141,13 @@ const formatDate = (createdAt: string) => {
       <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
     <div class="chat-input">
-      <textarea type="text" v-model="newMessage" placeholder="Type your message here..." rows="1" @keyup.enter.prevent="handleEnterKey($event)"/>
+      <textarea
+        type="text"
+        v-model="newMessage"
+        placeholder="Type your message here..."
+        rows="1"
+        @keyup.enter.prevent="handleEnterKey($event)"
+      />
       <button @click="sendMessage">Send</button>
     </div>
   </div>
@@ -213,5 +219,4 @@ const formatDate = (createdAt: string) => {
   font-size: 0.8rem;
   padding-left: 0.75rem;
 }
-
 </style>

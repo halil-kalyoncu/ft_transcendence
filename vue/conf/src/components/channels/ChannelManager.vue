@@ -1,62 +1,62 @@
 <template>
-<div :style="{ 'min-height': '150px' }">
-  <h2 class="current-channel-name">{{ ChannelName }}</h2>
-  <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'" >
-    <InvitePrivateChannelModal
-      v-if="isModalOpened"
-      :isOpened="isModalOpened"
-      :title="modalTitle"
-      :channelId="channelId"
-      @submit="handleSubmit"
-      @close="handleClose"
-    />
-    <div v-for="member in Members" :key="member.userId">
-      <ChannelManagerUserItem
-        :username="member.username"
-        :date="member.statusSince"
-        :roleProp="member.role.toLowerCase()"
-        :currentUserRole="currentUserRole.toLowerCase()"
-        :requesterId="userId"
-        :targetUserId="member.userId"
+  <div :style="{ 'min-height': '150px' }">
+    <h2 class="current-channel-name">{{ ChannelName }}</h2>
+    <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'">
+      <InvitePrivateChannelModal
+        v-if="isModalOpened"
+        :isOpened="isModalOpened"
+        :title="modalTitle"
         :channelId="channelId"
-        :isUserBanned="member.banned"
+        @submit="handleSubmit"
+        @close="handleClose"
       />
-    </div>
-  </ScrollViewer>
-  <div class="channel-manager-info">
-    <div class="change-password-container">
-      <button
-        v-show="currentUserRole === ChannelMemberRole.OWNER"
-        class="join-channel-button"
-        @click="changePassword"
-      >
-        Change Password
-      </button>
-      <input
-        v-if="showPasswordField"
-        v-model="password"
-        placeholder="Enter password"
-        type="password"
-        class="password-input"
-      />
-    </div>
+      <div v-for="member in Members" :key="member.userId">
+        <ChannelManagerUserItem
+          :username="member.username"
+          :date="member.statusSince"
+          :roleProp="member.role.toLowerCase()"
+          :currentUserRole="currentUserRole.toLowerCase()"
+          :requesterId="userId"
+          :targetUserId="member.userId"
+          :channelId="channelId"
+          :isUserBanned="member.banned"
+        />
+      </div>
+    </ScrollViewer>
+    <div class="channel-manager-info">
+      <div class="change-password-container">
+        <button
+          v-show="currentUserRole === ChannelMemberRole.OWNER"
+          class="join-channel-button"
+          @click="changePassword"
+        >
+          Change Password
+        </button>
+        <input
+          v-if="showPasswordField"
+          v-model="password"
+          placeholder="Enter password"
+          type="password"
+          class="password-input"
+        />
+      </div>
 
-    <button :class="['join-channel-button', 'leave-channel-button']" @click="handleLeaveChannel">
-      Leave
-    </button>
-    <button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
-      {{ getSignOutButtonText() }}
-    </button>
-    <button
-      v-show="
-        currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN
-      "
-      :class="['join-channel-button', 'add-user-button']"
-      @click="openAddModal"
-    >
-      Add User
-    </button>
-  </div>
+      <button :class="['join-channel-button', 'leave-channel-button']" @click="handleLeaveChannel">
+        Leave
+      </button>
+      <button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
+        {{ getSignOutButtonText() }}
+      </button>
+      <button
+        v-show="
+          currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN
+        "
+        :class="['join-channel-button', 'add-user-button']"
+        @click="openAddModal"
+      >
+        Add User
+      </button>
+    </div>
   </div>
 </template>
 
@@ -350,8 +350,7 @@ const changePassword = () => {
   box-sizing: border-box;
 }
 
-.min-height{
+.min-height {
   min-height: 200px !important;
 }
-
 </style>

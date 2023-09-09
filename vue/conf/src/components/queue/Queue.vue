@@ -182,21 +182,21 @@ onBeforeUnmount(async () => {
 })
 </script>
 <template>
-<div class="queue">
-  <div v-if="waitingForGame" class="waiting-container">
+  <div class="queue">
+    <div v-if="waitingForGame" class="waiting-container">
       <Spinner />
-    waiting for game&nbsp;
-    <span class="timer"> {{ formattedTimer }}</span>
-    <RouterLink class="icon-button-reject" title="Cancel waiting" to="/home">
-      <font-awesome-icon :icon="['fas', 'times']" />
-    </RouterLink>
-  </div>
-  <div v-else>Found Game</div>
+      waiting for opponent&nbsp;
+      <span class="timer">{{ formattedTimer }}</span>
+      <RouterLink class="icon-button-reject" title="Cancel waiting" to="/home">
+        <font-awesome-icon :icon="['fas', 'times']" />
+      </RouterLink>
+    </div>
+    <div v-else>Found Game</div>
   </div>
 </template>
 
 <style>
-.queue{
+.queue {
   width: 100%;
   height: calc(100vh - 50.8px);
   display: flex;
@@ -209,7 +209,7 @@ onBeforeUnmount(async () => {
   align-items: flex-start;
 }
 
-.timer{
+.timer {
   color: #ea9f42;
 }
 

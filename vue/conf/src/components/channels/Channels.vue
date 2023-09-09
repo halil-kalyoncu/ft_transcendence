@@ -340,10 +340,9 @@ const updateChannelManager = async () => {
   text-shadow: 0px 0px 1px aliceblue;
 }
 
-.channel-outer-container{
+.channel-outer-container {
   display: flex;
   flex-direction: column;
   height: calc(100% - 50px);
 }
-
 </style>
