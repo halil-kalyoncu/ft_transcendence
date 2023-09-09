@@ -175,9 +175,6 @@ onBeforeUnmount(() => {
 <template>
   <article class="createCustomGame">
     <div>
-      <!-- <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer" /> -->
-      <!-- <div v-else>Something went wrong</div> -->
-      <!-- <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" /> -->
       <InviteFriend
         v-if="!rightPlayer && !isWaitingForResponse"
         :matchId="match.id!"
@@ -196,7 +193,7 @@ onBeforeUnmount(() => {
     </div>
     <div v-if="rightPlayer" class="flex-row">
       <p>
-        '<span class="orange-font">{{ invitedUser?.username }}</span
+        '<span class="orange-font">{{ (invitedUser == null || invitedUser?.username == '') ? leftPlayer?.username :  invitedUser?.username}}</span
         >' is ready to play
       </p>
       <button
