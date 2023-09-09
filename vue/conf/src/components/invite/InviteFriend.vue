@@ -3,15 +3,17 @@ import { ref, watch } from 'vue'
 import type { UserI } from '../../model/user.interface'
 import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 
 const props = defineProps({
   matchId: {
-    type: Number,
+    type: String,
     required: true
   }
 })
+
+const numericMatchId = parseInt(props.matchId, 10)
 
 const notificationStore = useNotificationStore()
 
@@ -21,7 +23,7 @@ const userSuggestions = ref<UserI[]>([])
 const showSuggestionList = ref(false)
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
-const socket = connectWebSocket('http://localhost:3000', accessToken)
+const socket = connectChatSocket(accessToken)
 
 const findUserSuggestions = async (username: string) => {
   if (username.trim() === '') {
@@ -83,7 +85,10 @@ const sendInvite = async () => {
       return
     }
 
-    socket.emit('sendMatchInvite', { matchId: props.matchId, invitedUserId: invitedUser.value?.id })
+    socket.emit('sendMatchInvite', {
+      matchId: numericMatchId,
+      invitedUserId: invitedUser.value?.id
+    })
 
     emit('send-match-invite', invitedUser.value)
   } catch (error) {

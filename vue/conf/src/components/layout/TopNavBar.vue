@@ -6,7 +6,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import router from '../../router'
-import { disconnectWebSocket, connectWebSocket } from '../../websocket'
+import { disconnectChatSocket } from '../../websocket'
 import { Socket } from 'socket.io-client'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
@@ -27,7 +27,7 @@ const hasNotification = ref(false)
 const logout = () => {
   localStorage.removeItem('ponggame')
   userStore.clearUsername()
-  disconnectWebSocket()
+  disconnectChatSocket()
   router.push('/')
 }
 </script>
@@ -66,6 +66,7 @@ const logout = () => {
   display: flex;
   align-items: center;
 }
+
 .header {
   width: calc(100vw - 300px);
   background: rgba(0, 0, 0, 0.75);

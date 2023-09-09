@@ -188,6 +188,22 @@ const router = createRouter({
       ): void => jwtGuard(to, from, next)
     },
     {
+      path: '/queue/:matchmakingId',
+      component: MainLayout,
+      children: [
+        {
+          path: '',
+          name: 'queue',
+          component: () => import('../views/QueueView.vue') //lazy load
+        }
+      ],
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => jwtGuard(to, from, next)
+    },
+    {
       path: '/:catchAll(.*)',
       component: ErrorLayout,
       children: [

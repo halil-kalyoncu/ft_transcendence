@@ -10,72 +10,93 @@
   ></div>
 </template>
 
-<script>
-export default {
-  props: ['top', 'left', 'height', 'width', 'fieldHeight', 'socket'],
-  data() {
-    return {
-      x: 1,
-      y: 100,
-      wid: 15,
-      hgt: 100,
-      speed: 7
+<script lang="ts">
+import { ref, defineComponent } from 'vue'
+import { Socket } from 'socket.io-client'
+
+export type GamePaddleSetup = {
+  x: ReturnType<typeof ref>
+  y: ReturnType<typeof ref>
+  wid: ReturnType<typeof ref>
+  hgt: ReturnType<typeof ref>
+  speed: ReturnType<typeof ref>
+  movePaddleUp: () => void
+  movePaddleDown: () => void
+  getPaddleX: () => number
+  getPaddleY: () => number
+  setY: (newY: number) => void
+  setX: (newX: number) => void
+  setHgt: (newhgt: number) => void
+  setWid: (newwid: number) => void
+  getPaddleWidth: () => number
+  getPaddleHeight: () => number
+  getPaddleSpeed: () => number
+}
+
+export default defineComponent({
+  setup() {
+    // const fieldHeight = ref(props.fieldHeight);
+    // const socket = ref(props.socket);
+
+    let x = ref(1)
+    let y = ref(100)
+    let wid = ref(15)
+    let hgt = ref(100)
+    let speed = ref(7)
+
+    function getPaddleX() {
+      return x.value
     }
-  },
 
-  methods: {
-    getPaddleX() {
-      return this.x
-    },
+    function getPaddleY() {
+      return y.value
+    }
 
-    getPaddleY() {
-      return this.y
-    },
+    function setY(newY: number) {
+      y.value = newY
+    }
 
-    setY(newY) {
-      this.y = newY
-    },
+    function setX(newX: number) {
+      x.value = newX
+    }
 
-    setX(newX) {
-      this.x = newX
-    },
+    function setHgt(newhgt: number) {
+      hgt.value = newhgt
+    }
 
-    setHgt(hgt) {
-      this.hgt = hgt
-    },
+    function setWid(newwid: number) {
+      wid.value = newwid
+    }
 
-    setWid(wid) {
-      this.wid = wid
-    },
+    function getPaddleWidth() {
+      return wid.value
+    }
 
-    getPaddleWidth() {
-      return this.wid
-    },
+    function getPaddleHeight() {
+      return hgt.value
+    }
 
-    getPaddleHeight() {
-      return this.hgt
-    },
-
-    getPaddleSpeed() {
-      return this.speed
-    },
-
-    movePaddleUp() {
-      let data = {
-        direction: 'up'
-      }
-
-      this.socket.emit('paddleMove', data)
-    },
-
-    movePaddleDown() {
-      let data = {
-        direction: 'down'
-      }
-      this.socket.emit('paddleMove', data)
+    function getPaddleSpeed() {
+      return speed.value
+    }
+    return {
+      x,
+      y,
+      wid,
+      hgt,
+      speed,
+      getPaddleX,
+      getPaddleY,
+      setY,
+      setX,
+      setHgt,
+      setWid,
+      getPaddleWidth,
+      getPaddleHeight,
+      getPaddleSpeed
     }
   }
-}
+})
 </script>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import type { UserI } from '../../model/user.interface'
 import type { FriendshipI } from '../../model/friendship/friendship.interface'
@@ -41,7 +41,7 @@ const showChat = ref(false)
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const updateSelectedFriend = () => {
@@ -393,7 +393,7 @@ const goBack = () => {
           <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
             <FriendsListItem
               @click="handleFriendManagerOpened(entry)"
-              :status="entry.isOnline ? 'online' : 'offline'"
+              :status="entry.status!"
               :username="entry.friend.username"
               :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
               :showActions="false"

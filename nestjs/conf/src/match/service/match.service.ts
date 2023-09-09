@@ -98,12 +98,40 @@ export class MatchService {
     });
   }
 
+  async isInGame(userId: number): Promise<Match | null> {
+    return await this.prisma.match.findFirst({
+      where: {
+        state: 'STARTED',
+        OR: [{ leftUserId: userId }, { rightUserId: userId }],
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
+    });
+  }
+
   async startMatch(id: number): Promise<Match | null> {
     return await this.prisma.match.update({
       where: { id },
       data: {
         state: 'STARTED',
         startedAt: new Date(),
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
+    });
+  }
+
+  //TODO: finish this with the object of the game gateway
+  async finishMatch(id: number): Promise<Match | null> {
+    return await this.prisma.match.update({
+      where: { id },
+      data: {
+        state: 'WINNERLEFT',
+        finishedAt: new Date(),
       },
       include: {
         leftUser: true,

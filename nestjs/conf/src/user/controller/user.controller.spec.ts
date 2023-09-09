@@ -118,6 +118,7 @@ describe('UserController', () => {
           id: 1,
           username: 'mmustermann',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -125,6 +126,7 @@ describe('UserController', () => {
           id: 2,
           username: 'mmusterfrau',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -148,6 +150,7 @@ describe('UserController', () => {
           id: 1,
           username: 'mmustermann',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -184,10 +187,11 @@ describe('UserController', () => {
   describe('find', () => {
     it('should return a user when username matches', async () => {
       const username = 'mmustermann';
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -228,6 +232,7 @@ describe('UserController', () => {
           id: 1,
           username: 'mmustermann',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -235,6 +240,7 @@ describe('UserController', () => {
           id: 2,
           username: 'mmusterfrau',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -259,6 +265,7 @@ describe('UserController', () => {
           id: 2,
           username: 'mmusterfrau',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },

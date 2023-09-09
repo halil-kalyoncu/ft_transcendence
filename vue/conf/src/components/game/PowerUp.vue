@@ -1,9 +1,27 @@
 <template>
-  <div class="powerup" :style="{ top: `${y}px`, left: `${x}px`, background: `${color}` }"></div>
+  <div
+    class="powerup"
+    :style="{
+      top: `${y}px`,
+      left: `${x}px`,
+      backgroundColor: `${color}`,
+      backgroundImage: `url(${images[index]})`
+    }"
+  ></div>
 </template>
 
 <script>
+import widePaddle from '../../assets/bigger_paddle.png'
+import magnet from '../../assets/magnet.png'
+import image2 from '../../assets/avatar-2.png'
+import image1 from '../../assets/avatar-1.png'
+
 export default {
+  data() {
+    return {
+      images: [widePaddle, magnet, image2, image1]
+    }
+  },
   props: {
     id: {
       type: Number,
@@ -16,6 +34,11 @@ export default {
     y: {
       type: Number,
       required: true
+    },
+    index: {
+      type: Number,
+      required: true,
+      default: 0
     },
     color: {
       type: String,
@@ -43,6 +66,7 @@ export default {
 <style>
 .powerup {
   position: absolute;
+  background-position: center;
   width: 30px;
   height: 30px;
   border-radius: 75%;

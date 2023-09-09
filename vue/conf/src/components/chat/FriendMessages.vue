@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
-import { connectWebSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import type { UserI } from '../../model/user.interface'
 import type { directMessageI } from '../../model/message/directMessage.interface'
@@ -40,7 +40,7 @@ const loggedUser = computed<User>(() => ({
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const setNewDirectMessageListener = () => {
@@ -140,6 +140,17 @@ const sendMessage = () => {
 const isOwnMessage = (senderId: number | undefined) => {
   return senderId !== undefined && senderId === loggedUser.value.id
 }
+
+const formatDate = (createdAt: string) => {
+  const date = new Date(createdAt)
+  const day = date.getDate()
+  const month = date.getMonth() + 1
+  const year = date.getFullYear()
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`
+}
 </script>
 
 <template>
@@ -199,6 +210,7 @@ const isOwnMessage = (senderId: number | undefined) => {
 .chat .chat-input input:focus {
   outline: solid 2px #ea9f42;
 }
+
 .chat .chat-input button {
   height: 100%;
   background-color: #32a852;
@@ -212,6 +224,7 @@ const isOwnMessage = (senderId: number | undefined) => {
   cursor: pointer;
   transition: 0.3s;
 }
+
 .chat .chat-input button:hover {
   background-color: #ea9f42;
 }
@@ -226,6 +239,7 @@ const isOwnMessage = (senderId: number | undefined) => {
 .chat-input textarea:focus {
   outline: none;
 }
+
 .chat .loading-text {
   font-size: 0.8rem;
   padding-left: 0.75rem;

@@ -28,8 +28,13 @@
         @channel-entered="handleChannelEntered"
       />
       <div v-if="showChannelManagerAndChat">
-        <ChannelManager :channelId="joinedChannelId" @channel-left="handleChannelLeft" />
-        <ChannelMessages />
+        <ChannelManager
+          :channelId="joinedChannelId"
+          @channel-left="handleChannelLeft"
+          @channel-signedout="hanndleChannelSignedout"
+          @channel-force-leave="hanndleChannelforceLeave"
+        />
+        <ChannelMessages :channelId="joinedChannelId" />
       </div>
     </template>
   </section>
@@ -44,47 +49,52 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
-import { connectWebSocket, disconnectWebSocket } from '../../websocket'
+import { connectChatSocket, disconnectChatSocket } from '../../websocket'
 import { ChannelVisibility } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
 import JoinedChannels from './JoinedChannelsList.vue'
 import AvailableChannels from './AvailableChannelsList.vue'
 import type {
   CreateChannelDto,
-  ChannelVisibilityType
+  ChannelVisibilityType,
+  ChannelMemberI
 } from '../../model/channels/createChannel.interface'
 import { Socket } from 'socket.io-client'
 import Modal from '../utils/Modal.vue'
 
 const notificationStore = useNotificationStore()
+const socket = ref<Socket | null>(null)
 
-let socket: Socket | null = null
 onMounted(() => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 
-  if (socket) {
-    socket.on('channelCreated', (success: boolean) => {
-      notificationStore.showNotification('Channel Succesfully Created!', true)
-    })
-
-    socket.on('error', (error: string) => {
-      notificationStore.showNotification('Error: ' + error, false)
-    })
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
   }
+  socket.value.on('channelCreated', (success: boolean) => {
+    notificationStore.showNotification('Channel Succesfully Created!', true)
+  })
+
+  socket.value.on('error', (error: string) => {
+    notificationStore.showNotification('Error: ' + error, false)
+  })
 })
 onBeforeUnmount(() => {
-  disconnectWebSocket()
+  disconnectChatSocket()
 })
 
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
+const userId = computed(() => userStore.userId)
 
 interface ModalResult {
   name?: string
   password?: string
-  visibility?: string
+  channelVisibility?: string
   minutesOfMute?: number
+  passwordSet?: boolean
 }
 
 const isModalOpened = ref(false)
@@ -96,29 +106,44 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResult) => {
+const handleConfirm = ({
+  name,
+  password,
+  channelVisibility,
+  minutesOfMute,
+  passwordSet
+}: ModalResult) => {
   isModalOpened.value = false
-  if (visibility === undefined) {
-    visibility = ChannelVisibility.PUBLIC
+  if (channelVisibility === undefined) {
+    channelVisibility = ChannelVisibility.PUBLIC
   }
   if (
-    !Object.values(ChannelVisibility).includes(visibility.toUpperCase() as ChannelVisibilityType)
+    !Object.values(ChannelVisibility).includes(
+      channelVisibility.toUpperCase() as ChannelVisibilityType
+    )
   ) {
-    console.error(`Invalid channel visibility:: ${visibility.toUpperCase()}`)
+    console.error(`Invalid channel visibility:: ${channelVisibility.toUpperCase()}`)
     return
   }
-
-  const createChannelDto: CreateChannelDto = {
-    userId: 1,
-    name: name || '',
-    password: password || '',
-    channelVisibility: visibility.toUpperCase() as ChannelVisibilityType
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
   }
-
-  if (socket) {
-    socket.emit('createChannel', createChannelDto)
+  if (passwordSet === true) {
+    const createChannelDto: CreateChannelDto = {
+      userId: userId.value,
+      name: name || '',
+      password: password || '',
+      channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
+    }
+    socket.value.emit('createProtectedChannel', createChannelDto)
   } else {
-    console.error('Socket is not connected')
+    const createChannelDto: CreateChannelDto = {
+      userId: userId.value,
+      name: name || '',
+      channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
+    }
+    socket.value.emit('createUnProtectedChannel', createChannelDto)
   }
 }
 
@@ -126,6 +151,67 @@ const showChannelManagerAndChat = ref(false)
 const joinedChannelId = ref(0)
 const showAvailableChannels = ref(false)
 const showJoinedChannels = ref(false)
+
+const addUsertoChannel = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/api/channel/addUserToChannel', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: userId.value,
+        channelId: joinedChannelId.value
+      })
+    })
+    if (!response.ok) {
+      throw new Error('Failed to add user to channel')
+    }
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+const removeUserFromChannel = async () => {
+  try {
+    console.log(joinedChannelId.value)
+    const response = await fetch('http://localhost:3000/api/channel/removeUserFromChannel', {
+      method: 'Delete',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: userId.value,
+        channelId: joinedChannelId.value
+      })
+    })
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
+const MarkMessagesAsRead = async () => {
+  if (joinedChannelId.value !== 0) {
+    console.log('call mark messages')
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${userId.value}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to mark messages as read')
+      }
+      return
+    } catch (error: any) {
+      notificationStore.showNotification(`Error` + error.message, false)
+    }
+  }
+}
 
 const openJoinChannels = () => {
   showAvailableChannels.value = true
@@ -135,17 +221,20 @@ const openMyChannels = () => {
   showJoinedChannels.value = true
 }
 
-const closeJoinChannels = () => {
+const closeJoinChannels = async () => {
   showAvailableChannels.value = false
+  return
 }
 
-const closeMyChannels = () => {
+const closeMyChannels = async () => {
   showJoinedChannels.value = false
+  return
 }
 
-const closeChannelManagerAndChat = () => {
+const closeChannelManagerAndChat = async () => {
   joinedChannelId.value = 0
   showChannelManagerAndChat.value = false
+  return
 }
 
 const goBack = () => {
@@ -154,15 +243,40 @@ const goBack = () => {
   closeChannelManagerAndChat()
 }
 
-const handleChannelEntered = (channelId: number) => {
+const handleChannelEntered = async (channelId: number) => {
   joinedChannelId.value = channelId
-  closeJoinChannels()
-  closeMyChannels()
-  showChannelManagerAndChat.value = true
+  await updateChannelManager()
+  await closeJoinChannels()
+  await closeMyChannels()
+  await addUsertoChannel().then(() => {
+    showChannelManagerAndChat.value = true
+  })
 }
 
-const handleChannelLeft = () => {
+const handleChannelLeft = async () => {
+  await MarkMessagesAsRead()
+  await closeChannelManagerAndChat()
+}
+const hanndleChannelforceLeave = async () => {
+  await closeChannelManagerAndChat()
+}
+
+const hanndleChannelSignedout = async () => {
+  await MarkMessagesAsRead()
+  removeUserFromChannel()
   closeChannelManagerAndChat()
+}
+
+const updateChannelManager = async () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  try {
+    socket.value.emit('SignInChannel', joinedChannelId.value)
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
 }
 </script>
 

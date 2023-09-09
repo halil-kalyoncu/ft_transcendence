@@ -19,7 +19,7 @@ import { Socket } from 'socket.io-client'
 import { computed, ref, onMounted } from 'vue'
 import type { MatchI } from '../../model/match/match.interface'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
-import { disconnectWebSocket, connectWebSocket } from '../../websocket'
+import { disconnectChatSocket, connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import { useFriendRequestStore } from '../../stores/friendRequests'
 import { useMatchRequestsStore } from '../../stores/matchRequests'
@@ -44,7 +44,7 @@ const hasNotification = ref(false)
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectWebSocket('http://localhost:3000', accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 onMounted(() => {

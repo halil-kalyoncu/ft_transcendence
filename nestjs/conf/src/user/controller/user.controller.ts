@@ -29,6 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import { Response } from 'express';
 import { PrismaModel } from '../../_gen/prisma-class/index';
+import { ChannelInviteeUserDto } from '../../chat/dto/channelInvitation.dto';
 
 @ApiTags('User module')
 @Controller('users')
@@ -113,6 +114,13 @@ export class UserController {
     @Query('username') username: string,
   ): Promise<User[]> {
     return await this.userService.findAllByUsername(username);
+  }
+
+  @Get('findUsersNotInChannel')
+  async findUsersNotInChannel(
+    @Query('channelId', ParseIntPipe) channelId: number,
+  ): Promise<ChannelInviteeUserDto[]> {
+    return this.userService.findUsersNotInChannel(channelId);
   }
 
   @ApiOperation({ summary: 'Upload user avatar' })

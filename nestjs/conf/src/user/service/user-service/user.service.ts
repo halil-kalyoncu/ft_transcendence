@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User, ChannelInvitationStatus } from '@prisma/client';
+import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
+import { ChannelInviteeUserDto } from '../../../chat/dto/channelInvitation.dto';
 import * as fs from 'fs';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 
@@ -69,6 +71,45 @@ export class UserService {
         },
       },
     });
+  }
+  async findUsersNotInChannel(
+    channelId: number,
+  ): Promise<ChannelInviteeUserDto[]> {
+    const channelInvitees: ChannelInviteeUserDto[] = [];
+    const usersNotInChannel = await this.prisma.user.findMany({
+      where: {
+        NOT: {
+          ChannelMember: {
+            some: {
+              channelId: channelId,
+            },
+          },
+        },
+      },
+      include: {
+        inviteeforChannels: true,
+      },
+    });
+
+    console.log(usersNotInChannel);
+    for (const user of usersNotInChannel) {
+      const status = await this.prisma.channelInvitation.findMany({
+        where: {
+          inviteeId: user.id,
+        },
+        select: {
+          status: true,
+        },
+      });
+
+      const channelinvitee = {
+        id: user.id,
+        username: user.username,
+        status: (status[0]?.status as ChannelInvitationStatus) || null,
+      };
+      channelInvitees.push(channelinvitee);
+    }
+    return channelInvitees;
   }
 
   async uploadAvatar(file: Express.Multer.File, userId: number): Promise<User> {

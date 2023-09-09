@@ -46,10 +46,11 @@ describe('UserService', () => {
       const input: Prisma.UserCreateInput = {
         username: 'mmustermann',
       };
-      const createdUser = {
+      const createdUser: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -91,10 +92,11 @@ describe('UserService', () => {
       const input: Prisma.UserCreateInput = {
         username: 'mmustermann',
       };
-      const foundUser = {
+      const foundUser: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -131,10 +133,11 @@ describe('UserService', () => {
       const input: Prisma.UserCreateInput = {
         username: 'mmustermann',
       };
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -180,10 +183,11 @@ describe('UserService', () => {
       const newUser: Prisma.UserCreateInput = {
         username: 'mmustermann',
       };
-      const expectedResult = {
+      const expectedResult: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -248,10 +252,11 @@ describe('UserService', () => {
   describe('findById', () => {
     it('should find a user by id', async () => {
       const userId = 1;
-      const user = {
+      const user: User = {
         id: userId,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -293,10 +298,11 @@ describe('UserService', () => {
   describe('findByUsername', () => {
     it('should find a user by username', async () => {
       const username = 'mmustermann';
-      const user = {
+      const user: User = {
         id: 1,
         username,
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -335,11 +341,12 @@ describe('UserService', () => {
 
   describe('findAll', () => {
     it('should find all users', async () => {
-      const users = [
+      const users: User[] = [
         {
           id: 1,
           username: 'mmustermann',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -347,6 +354,7 @@ describe('UserService', () => {
           id: 2,
           username: 'mmusterfrau',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -365,11 +373,12 @@ describe('UserService', () => {
     });
 
     it('should return no users', async () => {
-      const users = [
+      const users: User[] = [
         {
           id: 1,
           username: 'mmustermann',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -388,7 +397,7 @@ describe('UserService', () => {
     });
 
     it('should return one user', async () => {
-      const users = [];
+      const users: User[] = [];
 
       const findManySpy = jest
         .spyOn(prismaService.user, 'findMany')
@@ -411,6 +420,7 @@ describe('UserService', () => {
           id: 1,
           username: 'mmustermann',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -418,6 +428,7 @@ describe('UserService', () => {
           id: 2,
           username: 'mmusterfrau',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -443,11 +454,12 @@ describe('UserService', () => {
 
     it('should return an array with one user', async () => {
       const username = 'frau';
-      const expectedResult = [
+      const expectedResult: User[] = [
         {
           id: 2,
           username: 'mmusterfrau',
           avatarId: null,
+          ladderLevel: 1000,
           enabled2FA: false,
           secret2FA: null,
         },
@@ -498,10 +510,11 @@ describe('UserService', () => {
     it('should upload an avatar and update the user', async () => {
       const userId = 1;
       const file = { path: './files/abc-123.png' } as Express.Multer.File;
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -534,10 +547,11 @@ describe('UserService', () => {
     it('should upload an avatar and delete the existing one', async () => {
       const userId = 1;
       const file = { path: './files/def-456.png' } as Express.Multer.File;
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: './files/abc-123.png',
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -591,10 +605,11 @@ describe('UserService', () => {
   describe('deleteAvatar', () => {
     it('should delete the avatar and update the user', async () => {
       const userId = 1;
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: './files/abc-123.png',
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -626,10 +641,11 @@ describe('UserService', () => {
 
     it('should return the user if no avatar is uploaded', async () => {
       const userId = 1;
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -681,10 +697,11 @@ describe('UserService', () => {
     it('should set the two-factor authentication secret', async () => {
       const userId = 1;
       const secret = 'mysecret';
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -725,10 +742,11 @@ describe('UserService', () => {
   describe('turnOnTwoFactorAuth', () => {
     it('should set the two-factor flag to true', async () => {
       const userId = 1;
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
       };
@@ -750,10 +768,11 @@ describe('UserService', () => {
 
     it('should return user if flag is already set to true', async () => {
       const userId = 1;
-      const user = {
+      const user: User = {
         id: 1,
         username: 'mmustermann',
         avatarId: null,
+        ladderLevel: 1000,
         enabled2FA: true,
         secret2FA: null,
       };

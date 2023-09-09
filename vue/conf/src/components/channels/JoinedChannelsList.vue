@@ -1,13 +1,16 @@
 <template>
   <div class="joinned-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
-      <div v-for="(channel, index) in dummyChannelData" :key="index">
+      <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
-          :isPasswordProtected="false"
-          :channelName="channel.channelName"
-          :ownerName="channel.ownerName"
+          :isPasswordProtected="channel.channel.protected"
+          :channelName="channel.channel.name"
+          :ownerName="channel.owner.username"
           :joinChannelButtonName="'Enter'"
-          @channel-entered="handleChannelEntered"
+          :channelId="channel.channel.id"
+          :unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
+          :userId="userId"
+          @channelEntered="handleChannelEntered(channel.channel.id)"
         />
       </div>
     </ScrollViewer>
@@ -17,47 +20,100 @@
 <script setup lang="ts">
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import ChannelListItem from './ChannelListItem.vue'
+import { onMounted, computed, ref } from 'vue'
+import { useUserStore } from '../../stores/userInfo'
+import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
+import { useNotificationStore } from '../../stores/notification'
+import { Socket } from 'socket.io-client'
+import { connectChatSocket } from '../../websocket'
+
+const userStore = useUserStore()
+const userId = computed(() => userStore.userId)
+const socket = ref<Socket | null>(null)
+type UnreadMessageCounts = Record<number, number>
+const unreadMessageCounts = ref<UnreadMessageCounts>({})
+const bannedUsers = ref<Record<number, boolean>>({})
+
+const notificationStore = useNotificationStore()
+const channelData = ref<ChannelEntryI[]>([])
+const unreadMessages = ref([])
+const role = 'all'
 
 const emit = defineEmits(['channel-entered'])
 const handleChannelEntered = (channelId: number) => {
   emit('channel-entered', channelId)
 }
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
 
-const dummyChannelData = [
-  {
-    channelId: 1,
-    channelName: 'My Channel 1',
-    ownerName: 'Halil'
-  },
-  {
-    channelId: 2,
-    ownerName: 'Max',
-    channelName: 'My Channel 2'
-  },
-  {
-    channelId: 3,
-    channelName: 'My Channel 3',
-    ownerName: 'Ezra'
-  },
-  {
-    channelId: 4,
-    channelName: 'My Channel 4',
-    ownerName: 'Vytautas'
-  },
-  {
-    channelId: 5,
-    channelName: 'My Channel 5',
-    ownerName: 'Leo'
-  },
-  {
-    channelId: 6,
-    channelName: 'My Channel 6',
-    ownerName: 'Thomas'
+const calculateUnreadMessages = async (channelId: number) => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${userId.value}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    unreadMessages.value = data
+    return unreadMessages.value.length
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+    return 0
   }
-]
+}
 
-const props = defineProps({
-  username: String
+const setChannels = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    channelData.value = data
+    console.log(channelData.value)
+    return
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+    return
+  }
+}
+
+const setUnreadMessages = async () => {
+  try {
+    for (const channel of channelData.value) {
+      const count = await calculateUnreadMessages(channel.channel.id)
+      const channelId = channel.channel.id
+      unreadMessageCounts.value[channelId] = count
+    }
+    return
+  } catch (error: any) {
+    console.log('error: ' + error.message)
+    notificationStore.showNotification(`Error` + error.message, true)
+    return
+  }
+}
+const setNewChannelMessageListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  socket.value.on('newChannelMessage', () => {
+    console.log('newChannelMessage fired from JoinedChannelsList.vue to update unread messages')
+    setUnreadMessages()
+    return
+  })
+}
+
+onMounted(async () => {
+  await setChannels()
+  await setUnreadMessages()
+  initSocket()
+  setNewChannelMessageListener()
 })
 </script>
 
