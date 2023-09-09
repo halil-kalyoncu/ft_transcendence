@@ -191,12 +191,7 @@ const handleAdd = ({ username }: ModalResult) => {
     if ('error' in response) {
       notificationStore.showNotification(response.error, false)
     } else {
-      notificationStore.showNotification(
-        'Friend Request was sent to id:' +
-          response.receiverId +
-          '. username would be better though (TBD) ',
-        true
-      )
+      notificationStore.showNotification('Friend Request was successfully sent', true)
     }
   })
 }

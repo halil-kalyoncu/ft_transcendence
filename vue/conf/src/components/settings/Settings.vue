@@ -26,11 +26,9 @@
     </div>
 
     <div class="input-group">
-      <button class="secondary-btn" :class="{enabled2FA : is2FAEnabled}" @click="toggle2FA">{{is2FAEnabled ? 'Disable 2FA': 'Enable 2FA'}}</button>
-    </div>
-
-    <div class="button-group">
-      <button @click="deleteAccount" class="delete-button secondary-btn">Delete Account</button>
+      <button class="secondary-btn" :class="{ enabled2FA: is2FAEnabled }" @click="toggle2FA">
+        {{ is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA' }}
+      </button>
     </div>
   </div>
 </template>
@@ -130,14 +128,8 @@ const deleteAvatar = async () => {
   }
 }
 
-const deleteAccount = () => {
-  const confirmDelete = window.confirm('Are you sure you want to delete your account?')
-  if (confirmDelete) {
-  }
-}
-
-const toggle2FA = () =>{
-  is2FAEnabled.value = !is2FAEnabled.value;
+const toggle2FA = () => {
+  is2FAEnabled.value = !is2FAEnabled.value
 }
 </script>
 
@@ -230,8 +222,8 @@ input[type='text']::placeholder {
   font-weight: bold;
 }
 
-.enabled2FA{
-    color: #ea9f42 !important;
+.enabled2FA {
+  color: #ea9f42 !important;
 }
 
 input[type='text']:focus,
@@ -280,37 +272,6 @@ input[type='file']:focus,
 
 .disabled:hover {
   background: #2a2a2a;
-}
-
-.delete-button {
-  background-color: transparent;
-  border: none;
-  padding: 0.5rem 1rem;
-  margin-left: 0.25rem;
-  margin-top: -0.5rem;
-  font-size: 15px;
-  min-width: 540px;
-  min-height: 40px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: block;
-  background-color: #a83232;
-  color: aliceblue;
-  border-color: #ff3333;
-}
-
-.delete-button:hover {
-  background-color: #ba4646;
-  border: none;
-}
-
-.delete-button:active {
-  background-color: #6a1e1e;
-}
-
-.delete-button:disabled {
-  background-color: #4c4c4c;
-  cursor: not-allowed;
 }
 
 .margin-top {
