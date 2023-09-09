@@ -78,47 +78,18 @@ const setDirectMessages = async () => {
   }
 }
 
-// const setDirectMessages = async () => {
-//   if (!props.selectedFriendEntry || !props.selectedFriendEntry.friend) {
-//     return
-//   }
-//   try {
-//     const directConversationDto: DirectConverstationDto = {
-//       readerUserId: userId.value as number,
-//       withUserId: props.selectedFriendEntry?.friend?.id as number
-//     }
-
-//     const response = await fetch('http://localhost:3000/api/directMessages/markAsRead', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify(directConversationDto)
-//     })
-
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! Status: ${response.status}`)
-//     }
-//     const data = await response.json()
-//     if (Array.isArray(data)) {
-//       messages.value = data
-//       console.log('FriendMessages')
-//       console.log(messages.value)
-//     } else {
-//       console.error('Expected an array from the API but received:', data)
-//     }
-//   } catch (error: any) {
-//     console.error('Expected an array from the API but received:', error)
-//   } finally {
-//     loading.value = false
-//   }
-// }
-
 onMounted(() => {
   initSocket()
   setDirectMessages()
   setNewDirectMessageListener()
 })
+
+const handleEnterKey = (event: KeyboardEvent) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    sendMessage();
+    event.preventDefault();
+  }
+}
 
 const sendMessage = () => {
   if (!socket || !socket.value) {
@@ -156,7 +127,7 @@ const formatDate = (createdAt: string) => {
 <template>
   <div class="chat">
     <div></div>
-    <ScrollViewer :maxHeight="'60vh'" class="messages-scrollviewer">
+    <ScrollViewer :maxHeight="'60vh'">
       <div class="messages" v-if="!loading" ref="chatContainerRef">
         <Message
           v-for="message in messages"
@@ -170,7 +141,7 @@ const formatDate = (createdAt: string) => {
       <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
     <div class="chat-input">
-      <textarea type="text" v-model="newMessage" placeholder="Type your message here..." rows="1" />
+      <textarea type="text" v-model="newMessage" placeholder="Type your message here..." rows="1" @keyup.enter.prevent="handleEnterKey($event)"/>
       <button @click="sendMessage">Send</button>
     </div>
   </div>
@@ -187,9 +158,6 @@ const formatDate = (createdAt: string) => {
 
 .chat > div:first-child {
   flex-grow: 1;
-}
-
-.chat .messages-scrollviewer {
 }
 
 .chat .messages {
@@ -232,7 +200,8 @@ const formatDate = (createdAt: string) => {
 .chat-input textarea {
   width: 100%;
   padding: 0.5rem 0.25rem;
-  background-color: lightgray;
+  background-color: transparent;
+  color: aliceblue;
   resize: none;
 }
 
@@ -244,4 +213,5 @@ const formatDate = (createdAt: string) => {
   font-size: 0.8rem;
   padding-left: 0.75rem;
 }
+
 </style>

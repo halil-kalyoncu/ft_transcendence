@@ -1,6 +1,7 @@
 <template>
+<div :style="{ 'min-height': '150px' }">
   <h2 class="current-channel-name">{{ ChannelName }}</h2>
-  <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'">
+  <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'" >
     <InvitePrivateChannelModal
       v-if="isModalOpened"
       :isOpened="isModalOpened"
@@ -55,6 +56,7 @@
     >
       Add User
     </button>
+  </div>
   </div>
 </template>
 
@@ -347,4 +349,9 @@ const changePassword = () => {
   padding: 0;
   box-sizing: border-box;
 }
+
+.min-height{
+  min-height: 200px !important;
+}
+
 </style>
