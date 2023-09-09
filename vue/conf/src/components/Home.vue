@@ -77,7 +77,7 @@ onMounted(() => {
 
 <template>
   <div class="home">
-    <button @click="handleQueueUpLadder" class="dynamic-button">QUEUE UP FOR LADDER GAME</button>
+    <button @click="handleQueueUpLadder" class="dynamic-button" :class="'margin-right-queue'">QUEUE UP FOR LADDER GAME</button>
     <button @click="handleInviteClick" class="dynamic-button">START A CUSTOM GAME</button>
   </div>
 </template>
@@ -124,6 +124,10 @@ onMounted(() => {
 }
 .send-game-invitation-button:hover {
   background-color: transparent;
+}
+
+.margin-right-queue{
+  margin-right: 1.5rem;
 }
 
 @keyframes appear {

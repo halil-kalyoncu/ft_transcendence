@@ -9,7 +9,12 @@ import type { UserI } from '../../model/user.interface'
 import type { ErrorI } from '../../model/error.interface'
 import type { MatchI } from '../../model/match/match.interface'
 import jwtDecode from 'jwt-decode'
+import Spinner from '../utils/Spinner.vue'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
+library.add(faArrowLeft)
 const route = useRoute()
 const matchmakingId: string = route.params.matchmakingId as string
 
@@ -177,11 +182,51 @@ onBeforeUnmount(async () => {
 })
 </script>
 <template>
-  <div v-if="waitingForGame">
-    Waiting for game
-    <div>{{ formattedTimer }}</div>
+<div class="queue">
+  <div v-if="waitingForGame" class="waiting-container">
+      <Spinner />
+    waiting for game&nbsp;
+    <span class="timer"> {{ formattedTimer }}</span>
+    <RouterLink class="icon-button-reject" title="Cancel waiting" to="/home">
+      <font-awesome-icon :icon="['fas', 'times']" />
+    </RouterLink>
   </div>
   <div v-else>Found Game</div>
+  </div>
 </template>
 
-<style></style>
+<style>
+.queue{
+  width: 100%;
+  height: calc(100vh - 50.8px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: flex-start;
+}
+
+.timer{
+  color: #ea9f42;
+}
+
+.waiting-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.queue .icon-button-reject {
+  color: red;
+  background: none;
+  font-size: 1.25rem;
+  border: none;
+  cursor: pointer;
+  color: #e47264;
+  padding: 5px;
+  margin-left: 1rem;
+}
+</style>
