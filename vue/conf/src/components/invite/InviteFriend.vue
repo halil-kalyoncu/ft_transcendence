@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { UserI } from '../../model/user.interface'
 import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
 import { connectChatSocket } from '../../websocket'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+import { useUserStore } from '../../stores/userInfo'
 
 const props = defineProps({
   matchId: {
@@ -12,6 +13,9 @@ const props = defineProps({
     required: true
   }
 })
+
+const userStore = useUserStore()
+const username = computed(() => userStore.username)
 
 const numericMatchId = parseInt(props.matchId, 10)
 
@@ -25,14 +29,14 @@ const showSuggestionList = ref(false)
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const socket = connectChatSocket(accessToken)
 
-const findUserSuggestions = async (username: string) => {
-  if (username.trim() === '') {
+const findUserSuggestions = async (usernameSuggestion: string) => {
+  if (usernameSuggestion.trim() === '') {
     userSuggestions.value = []
     return
   }
 
   const response = await fetch(
-    `http://localhost:3000/api/users/find-by-username?username=${username}`,
+    `http://localhost:3000/api/users/find-by-username?username=${usernameSuggestion}`,
     {
       method: 'GET',
       headers: {
@@ -64,7 +68,8 @@ watch(invitedUsername, (newValue) => {
 
 const sendInvite = async () => {
   try {
-    if (invitedUsername.value.trim() === '') {
+    if (invitedUsername.value.trim() === '' || invitedUsername.value == username.value) {
+      notificationStore.showNotification('Error: Invalid username', false)
       return
     }
 
