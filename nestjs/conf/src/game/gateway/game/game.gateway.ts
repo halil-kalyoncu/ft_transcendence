@@ -7,7 +7,6 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { GameService } from '../../service/game.service';
 import { Room } from '../../service/room.service';
 import { PowerUp } from '../../service/powerup.service';
 import { MatchService } from '../../../match/service/match.service';
@@ -26,7 +25,6 @@ let end;
 })
 export class EventsGateway {
   constructor(
-    private gameService: GameService,
     private userService: UserService,
     private matchService: MatchService,
   ) {
