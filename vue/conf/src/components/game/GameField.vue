@@ -36,6 +36,7 @@ import type { UserI } from '../../model/user.interface'
 import { connectGameSocket, disconnectGameSocket } from '../../websocket';
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notification'
+import type { MatchI } from '../../model/match/match.interface';
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const notificationStore = useNotificationStore()
@@ -215,8 +216,9 @@ onMounted(() => {
 		}
 	});
 
-	socket.value.on('gameFinished', (payload: any) => {
+	socket.value.on('gameFinished', (match: MatchI) => {
 		//show post game screen
+		router.push('/home');
 	});
 
 	socket.value.on('opponentDisconnect', (payload: any) => {

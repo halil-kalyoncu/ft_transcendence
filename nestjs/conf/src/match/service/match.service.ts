@@ -126,12 +126,26 @@ export class MatchService {
     });
   }
 
-  //TODO: finish this with the object of the game gateway
-  async finishMatch(id: number, room: Room): Promise<Match | null> {
+  async finishMatch(room: Room): Promise<Match | null> {
+    let gameState: MatchState;
+
+    if (room.leftPlayerGoals === 5) {
+      gameState = 'WINNERLEFT';
+    }
+    else if (room.rightPlayerGoals === 5) {
+      gameState = 'WINNERRIGHT';
+    }
+    else if (room.leftPlayerDisconnect) {
+      gameState = 'DISCONNECTLEFT';
+    }
+    else {
+      gameState = 'DISCONNECTRIGHT';
+    }
+
     return await this.prisma.match.update({
-      where: { id },
+      where: { id: room.id },
       data: {
-        state: "WINNERLEFT",
+        state: gameState,
         finishedAt: new Date(),
       },
       include: {

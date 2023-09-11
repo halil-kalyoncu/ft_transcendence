@@ -87,19 +87,22 @@ export class Ball {
 			return false;
 		}
 
-		scoreGoal(room: Room, nextBallX: number) {
+		scoreGoal(room: Room, nextBallX: number): boolean {
+			let scoredGoal = false;
+
 			if (((nextBallX <= 0) && nextBallX < this.x)) {
-				room.leftPlayerGoals++;
+				room.rightPlayerGoals++;
 				// this.magdiff = this.y - padd
-				// console.log(room.leftPlayerGoals);
-				return true;
+				scoredGoal = true;
 			}
 			else if (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x) {
-				room.rightPlayerGoals++;
-				// console.log(room.rightPlayerGoals);
-				return true;
+				room.leftPlayerGoals++;
+				scoredGoal = true;
 			}
-			return false;
+			if (scoredGoal) {
+				room.checkGameFinished();
+			}
+			return scoredGoal;
 		}
 
 		moveBall(room: Room, server: Server) {
