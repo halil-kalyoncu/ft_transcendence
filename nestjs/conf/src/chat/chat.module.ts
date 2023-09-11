@@ -21,6 +21,7 @@ import { BlockedUserService } from './service/blocked-user/blocked-user.service'
 import { BlockedUserController } from './controller/blocked-user/blocked-user.controller';
 import { MatchModule } from '../match/match.module';
 import { MatchmakingModule } from '../matchmaking/matchmaking.module';
+import { PowerupModule } from '../powerup/powerup.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MatchmakingModule } from '../matchmaking/matchmaking.module';
     forwardRef(() => UserModule),
     forwardRef(() => MatchModule),
     forwardRef(() => MatchmakingModule),
+    PowerupModule
   ],
   providers: [
     ChatGateway,

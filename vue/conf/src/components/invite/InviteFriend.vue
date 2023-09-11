@@ -20,8 +20,12 @@ const username = computed(() => userStore.username)
 const areRadioButtonsDisabled = computed(() => activePanel.value === 'DefaultGame')
 const activePanel = ref('DefaultGame')
 const selectedGoals = ref('five')
-const selectedPowerup1 = ref('slow')
-const selectedPowerup2 = ref('small')
+const selectedPowerups = ref({
+  slow: false,
+  fast: false,
+  small: false,
+  big: false
+})
 
 const numericMatchId = parseInt(props.matchId, 10)
 
@@ -115,7 +119,15 @@ const sendInvite = async () => {
 
 const setActivePanel = (value: string) => {
   activePanel.value = value
+  if (value === 'DefaultGame') {
+    selectedGoals.value = "5"
+  }
 }
+
+const togglePowerup = (powerup: string) => {
+  
+}
+
 </script>
 
 <template>
@@ -197,27 +209,17 @@ const setActivePanel = (value: string) => {
         />
         <label for="twentyone" class="goals-label">21 goals</label>
       </div>
-      <div class="radio_container">
-        <input
-          type="radio"
-          name="powerup1"
-          id="slow"
-          v-model="selectedPowerup1"
-          value="slow"
-          :disabled="areRadioButtonsDisabled"
-        />
-        <label for="slow" class="goals-label">slow</label>
-        <input
-          type="radio"
-          name="powerup1"
-          id="fast"
-          v-model="selectedPowerup1"
-          value="fast"
-          :disabled="areRadioButtonsDisabled"
-        />
-        <label for="fast" class="goals-label">fast</label>
+      <div>Ball Speed</div>
+      <div class="button_container">
+        <button
+          :class="{ selected: selectedPowerups.slow }"
+          @click="togglePowerup('slow')"
+        >
+          slow
+        </button>
       </div>
-      <div class="radio_container">
+      <div>Paddle Size</div>
+      <div class="button_container">
         <input
           type="radio"
           name="powerup2"
@@ -336,6 +338,22 @@ const setActivePanel = (value: string) => {
   flex-direction: column;
 }
 
+.friend-invite .goals-label {
+  font-size: 1rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: linear 0.3s;
+  color: aliceblue;
+  border: 1px solid aliceblue;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  width: 100%;
+  margin: 0 0.5rem;
+}
+
 .friend-invite .radio_container {
   display: flex;
   justify-content: space-around;
@@ -356,25 +374,17 @@ const setActivePanel = (value: string) => {
   border-color: #ea9f42;
 }
 
-.friend-invite .goals-label {
-  font-size: 1rem;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  transition: linear 0.3s;
-  color: aliceblue;
-  border: 1px solid aliceblue;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  width: 100%;
-  margin: 0 0.5rem;
-}
-
 .friend-invite input[type='radio']:disabled + label {
   opacity: 0.5; /* makes it semi-transparent */
   cursor: not-allowed; /* indicates non-clickable item */
+}
+
+.friend-invite .button_container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 1rem;
+  width: calc(540px + 1rem);
 }
 
 .invite-controls-container {

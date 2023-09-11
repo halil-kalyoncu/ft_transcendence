@@ -9,4 +9,11 @@ export class SendGameInviteDto {
   @ApiProperty()
   @IsNotEmpty()
   invitedUserId: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  goalsToWin: number;
+
+  @ApiProperty()
+  powerupNames: string[];
 }

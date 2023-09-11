@@ -34,6 +34,7 @@ import {
   Match,
   Matchmaking,
   Prisma,
+  Powerup,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
@@ -45,6 +46,7 @@ import { SendGameInviteDto } from '../../../chat/dto/send-game-invite.dto';
 import { MatchService } from '../../../match/service/match.service';
 import { ErrorDto } from '../../../chat/dto/error.dto';
 import { MatchmakingService } from '../../../matchmaking/service/matchmaking.service';
+import { PowerupService } from '../../../powerup/service/powerup.service';
 
 @WebSocketGateway({
   cors: {
@@ -69,6 +71,7 @@ export class ChatGateway
     private matchService: MatchService,
     private channelInvitationService: ChannelInvitationsService,
     private matchmakingService: MatchmakingService,
+    private powerupService: PowerupService
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -672,9 +675,12 @@ export class ChatGateway
       return;
     }
 
+    const powerups: Powerup[] = await this.powerupService.findByNames(sendGameInviteDto.powerupNames);
     const updatedMatch: Match = await this.matchService.invite(
       sendGameInviteDto.matchId,
       sendGameInviteDto.invitedUserId,
+      sendGameInviteDto.goalsToWin,
+      powerups
     );
     socket.emit('matchInviteSent', updatedMatch);
     socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);

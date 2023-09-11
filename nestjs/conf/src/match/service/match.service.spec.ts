@@ -43,6 +43,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
@@ -79,6 +80,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
@@ -136,6 +138,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
@@ -185,6 +188,8 @@ describe('MatchService', () => {
     it('should change the state of the match to INVITED and set rightUserId', async () => {
       const matchId = 1;
       const invitedUserId = 2;
+      const goalsToWin = 5;
+      const powerups = [];
       const currentTime = new Date();
       const match: Match = {
         id: 1,
@@ -194,6 +199,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
@@ -210,7 +216,7 @@ describe('MatchService', () => {
           state: 'INVITED',
         });
 
-      const result = await service.invite(matchId, invitedUserId);
+      const result = await service.invite(matchId, invitedUserId, goalsToWin, powerups);
 
       expect(result).toStrictEqual({
         ...match,
@@ -237,6 +243,8 @@ describe('MatchService', () => {
     it('should return null if match is not found', async () => {
       const matchId = 4242;
       const invitedUserId = 2;
+      const goalsToWin = 5;
+      const powerups = [];
 
       const findByIdSpy = jest
         .spyOn(service, 'findById')
@@ -245,7 +253,7 @@ describe('MatchService', () => {
         .spyOn(prismaService.match, 'update')
         .mockResolvedValue(null);
 
-      const result = await service.invite(matchId, invitedUserId);
+      const result = await service.invite(matchId, invitedUserId, goalsToWin, powerups);
 
       expect(result).toBeNull;
       expect(findByIdSpy).toHaveBeenCalledWith(matchId);
@@ -258,6 +266,8 @@ describe('MatchService', () => {
     it('should throw an error if invitedUserId is the same as leftUserId of the found match', async () => {
       const matchId = 1;
       const invitedUserId = 1;
+      const goalsToWin = 5;
+      const powerups = [];
       const currentTime = new Date();
       const match: Match = {
         id: 1,
@@ -267,6 +277,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
@@ -284,7 +295,7 @@ describe('MatchService', () => {
         });
 
       try {
-        await service.invite(matchId, invitedUserId);
+        await service.invite(matchId, invitedUserId, goalsToWin, powerups);
       } catch (e) {
         expect(e).toBeInstanceOf(Error);
         expect(e.message).toBe("Can't invite yourself to a match");
@@ -300,6 +311,8 @@ describe('MatchService', () => {
     it('should throw an error if user is not found', async () => {
       const matchId = 1;
       const invitedUserId = 4242;
+      const goalsToWin = 5;
+      const powerups = [];
       const currentTime = new Date();
       const match: Match = {
         id: 1,
@@ -309,6 +322,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
@@ -322,7 +336,7 @@ describe('MatchService', () => {
         .mockRejectedValue(new Error());
 
       try {
-        await service.invite(matchId, invitedUserId);
+        await service.invite(matchId, invitedUserId, goalsToWin, powerups);
       } catch (e) {
         expect(e).toBeInstanceOf(Error);
       }
@@ -356,6 +370,7 @@ describe('MatchService', () => {
         state: 'ACCEPTED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
@@ -419,6 +434,7 @@ describe('MatchService', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: null,
         finishedAt: null,
@@ -485,6 +501,7 @@ describe('MatchService', () => {
           state: 'INVITED',
           goalsLeftPlayer: 0,
           goalsRightPlayer: 0,
+          goalsToWin: 5,
           createdAt: currentTime,
           startedAt: null,
           finishedAt: null,
@@ -497,6 +514,7 @@ describe('MatchService', () => {
           state: 'INVITED',
           goalsLeftPlayer: 0,
           goalsRightPlayer: 0,
+          goalsToWin: 5,
           createdAt: currentTime,
           startedAt: null,
           finishedAt: null,
@@ -562,6 +580,7 @@ describe('MatchService', () => {
         state: 'STARTED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: currentTime,
         finishedAt: null,
@@ -599,6 +618,7 @@ describe('MatchService', () => {
         state: 'STARTED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: currentTime,
         finishedAt: null,
@@ -686,6 +706,7 @@ describe('MatchService', () => {
         state: 'STARTED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: currentTime,
         startedAt: currentTime,
         finishedAt: null,

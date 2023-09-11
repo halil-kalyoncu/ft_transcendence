@@ -8,6 +8,7 @@ import { GameService } from './game/service/game.service';
 import { EventsGateway } from './game/gateway/events/events.gateway';
 import { MatchModule } from './match/match.module';
 import { MatchmakingModule } from './matchmaking/matchmaking.module';
+import { PowerupModule } from './powerup/powerup.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MatchmakingModule } from './matchmaking/matchmaking.module';
     PrismaModule,
     MatchModule,
     MatchmakingModule,
+    PowerupModule,
   ],
   controllers: [],
   providers: [EventsGateway, GameService],

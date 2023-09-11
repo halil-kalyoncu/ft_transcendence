@@ -8,9 +8,10 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "npx wait-on tcp:postgres:5432 && npx prisma generate && npx prisma migrate deploy && nest start",
-    "db:up": "npx wait-on tcp:postgres:5432 && npx prisma generate && npx prisma migrate deploy",
+    "db:up": "npx wait-on tcp:postgres:5432 && npx prisma generate && npx prisma migrate deploy && npm run db:seed",
     "db:update": "npx prisma generate && npx prisma migrate dev --name ponggame",
+    "db:seed": "ts-node prisma/seed/seed.ts",
+    "start": "npm run db:up && nest start",
     "start:dev": "npm run db:up && nest start --watch",
     "start:debug": "npm run db:up && nest start --debug --watch",
     "start:prod": "node dist/main",

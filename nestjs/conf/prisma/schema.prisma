@@ -202,19 +202,39 @@ enum MatchState {
 }
 
 model Match {
-    id               Int        @id @default(autoincrement())
+    id               Int            @id @default(autoincrement())
     leftUserId       Int
     rightUserId      Int?
     type             MatchType
-    state            MatchState @default(CREATED)
-    goalsLeftPlayer  Int        @default(0)
-    goalsRightPlayer Int        @default(0)
-    createdAt        DateTime   @default(now())
+    state            MatchState     @default(CREATED)
+    goalsLeftPlayer  Int            @default(0)
+    goalsRightPlayer Int            @default(0)
+    goalsToWin       Int            @default(5)
+    powerups         MatchPowerup[]
+    createdAt        DateTime       @default(now())
     startedAt        DateTime?
     finishedAt       DateTime?
 
     leftUser  User  @relation("LeftPlayer", fields: [leftUserId], references: [id])
     rightUser User? @relation("RightPlayer", fields: [rightUserId], references: [id])
+}
+
+model Powerup {
+    id   Int    @id @default(autoincrement())
+    name String @unique
+
+    matches MatchPowerup[]
+}
+
+model MatchPowerup {
+    id        Int @id @default(autoincrement())
+    matchId   Int
+    powerupId Int
+
+    match   Match   @relation(fields: [matchId], references: [id])
+    powerup Powerup @relation(fields: [powerupId], references: [id])
+
+    @@unique([matchId, powerupId])
 }
 
 model BlockedUser {

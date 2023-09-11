@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Match, Prisma } from '@prisma/client';
+import { Match, Powerup, Prisma } from '@prisma/client';
 
 @Injectable()
 export class MatchService {
@@ -36,7 +36,7 @@ export class MatchService {
     });
   }
 
-  async invite(id: number, invitedUserId: number): Promise<Match | null> {
+  async invite(id: number, invitedUserId: number, goalsToWin: number, powerups: Powerup[]): Promise<Match | null> {
     const match = await this.findById(id);
 
     if (!match) {
@@ -50,6 +50,14 @@ export class MatchService {
       data: {
         rightUser: { connect: { id: invitedUserId } },
         state: 'INVITED',
+        goalsToWin,
+        powerups: {
+          connect: powerups.map(
+            p => ({
+              id: p.id
+            })
+          )
+        }
       },
       include: {
         leftUser: true,
