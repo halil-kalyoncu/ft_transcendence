@@ -16,6 +16,9 @@ export class Ball {
     public dy: number = 3,
     public fieldWidth: number = 800,
     public fieldHeight: number = 600,
+    public magnet: boolean = false,
+    public ballSticking: boolean = false,
+    public magdiff: number = 0,
   ) {}
 
   getBallPosition() {
@@ -31,6 +34,7 @@ export class Ball {
     this.dx = 5;
     this.dy = 3;
     this.speed = 4;
+    this.magnet = false;
   }
 
   moveBallDir(paddleBY: number, paddleHeight: number, paddle: string): void {
@@ -40,6 +44,7 @@ export class Ball {
     let bounceAngle = (paddleHitLocation * 45 * Math.PI) / 180;
 
     this.speed++;
+    // console.log("Speed", this.speed);
 
     if (paddle == 'A') this.dx = -this.speed * Math.cos(bounceAngle);
     else this.dx = this.speed * Math.cos(bounceAngle);
@@ -93,17 +98,21 @@ export class Ball {
     return false;
   }
 
-  scoreGoal(room: Room, nextBallX: number) {
+  scoreGoal(room: Room, nextBallX: number): boolean {
+    let scoredGoal = false;
+
     if (nextBallX <= 0 && nextBallX < this.x) {
-      room.leftPlayerGoals++;
-      // console.log(room.leftPlayerGoals);
-      return true;
-    } else if (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x) {
       room.rightPlayerGoals++;
-      // console.log(room.rightPlayerGoals);
-      return true;
+      // this.magdiff = this.y - padd
+      scoredGoal = true;
+    } else if (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x) {
+      room.leftPlayerGoals++;
+      scoredGoal = true;
     }
-    return false;
+    if (scoredGoal) {
+      room.checkGameFinished();
+    }
+    return scoredGoal;
   }
 
   moveBall(room: Room, server: Server) {
@@ -115,15 +124,25 @@ export class Ball {
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;
     else if (this.handleBallCollision(nextBallX, nextBallY, room, 'A')) {
+      if (this.magnet) {
+        this.ballSticking = true;
+        // console.log("DIFFERENCE: ", this.y)
+        return;
+      }
       this.moveBallDir(room.paddleA.y, room.paddleA.hgt, 'A');
       this.x = room.paddleA.x + room.paddleA.wid;
     } else if (this.handleBallCollision(nextBallX, nextBallY, room, 'B')) {
+      if (this.magnet) {
+        this.ballSticking = true;
+        return;
+      }
       this.moveBallDir(room.paddleB.y, room.paddleB.hgt, 'B');
       this.x = room.paddleB.x - this.wid;
     } else {
       this.x = nextBallX;
       this.y = nextBallY;
     }
+
     for (let powerup of room.powerups) {
       // console.log(this.dx);
       if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)) {

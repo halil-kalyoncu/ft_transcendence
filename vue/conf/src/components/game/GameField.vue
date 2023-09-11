@@ -40,6 +40,7 @@ import type { UserI } from '../../model/user.interface'
 import { connectGameSocket, disconnectGameSocket } from '../../websocket'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notification'
+import type { MatchI } from '../../model/match/match.interface'
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const notificationStore = useNotificationStore()
@@ -94,17 +95,20 @@ const keyHookUp = (e: KeyboardEvent) => {
     return
   }
 
-  switch (e.key) {
+  switch (e.code) {
     case 'ArrowUp':
       isMovingUp.value = false
       break
     case 'ArrowDown':
       isMovingDown.value = false
       break
-    case 'n':
-      spawnPowerUp()
-      // socket.value.emit('activatePowerUp', { type: "magnet", player: "left" })
+    case 'KeyN':
+      // spawnPowerUp();
+      socket.value.emit('activatePowerUp', { type: 'magnet', player: 'left' })
       // socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
+      break
+    case 'Space':
+      socket.value.emit('fire')
       break
   }
 }
@@ -210,8 +214,9 @@ onMounted(() => {
     }
   })
 
-  socket.value.on('gameFinished', (payload: any) => {
+  socket.value.on('gameFinished', (match: MatchI) => {
     //show post game screen
+    router.push('/home')
   })
 
   socket.value.on('opponentDisconnect', (payload: any) => {
