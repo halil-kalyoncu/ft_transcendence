@@ -43,7 +43,7 @@ import { ErrorDto } from '../../../chat/dto/error.dto';
   cors: {
     origin: ['http://localhost:3000', 'http://localhost:4200'],
   },
-  path: '/chat'
+  path: '/chat',
 })
 export class ChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit

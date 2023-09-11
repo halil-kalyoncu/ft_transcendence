@@ -178,11 +178,17 @@ onBeforeUnmount(() => {
       <!-- <InvitePlayerAccepted v-if="leftPlayer !== null" :user="leftPlayer" /> -->
       <!-- <div v-else>Something went wrong</div> -->
       <!-- <InvitePlayerAccepted v-if="rightPlayer !== null" :user="rightPlayer" /> -->
-      <InviteFriend v-if="!rightPlayer && !isWaitingForResponse" :matchId="matchId"
-        @send-match-invite="handleSendMatchInvite" />
+      <InviteFriend
+        v-if="!rightPlayer && !isWaitingForResponse"
+        :matchId="matchId"
+        @send-match-invite="handleSendMatchInvite"
+      />
       <div v-if="isWaitingForResponse" class="waiting-container">
         <Spinner />
-        <span>waiting for <span class="orange-font">{{ invitedUser?.username }}</span>...</span>
+        <span
+          >waiting for <span class="orange-font">{{ invitedUser?.username }}</span
+          >...</span
+        >
         <button class="icon-button-reject" title="Cancel request" @click="cancelWaiting">
           <font-awesome-icon :icon="['fas', 'times']" />
         </button>
@@ -190,9 +196,14 @@ onBeforeUnmount(() => {
     </div>
     <div v-if="rightPlayer" class="flex-row">
       <p>
-        '<span class="orange-font">{{ invitedUser?.username }}</span>' is ready to play
+        '<span class="orange-font">{{ invitedUser?.username }}</span
+        >' is ready to play
       </p>
-      <button class="dynamic-button" @click="handleStartMatch" :class="{ disabledButton: !userIsHost || !rightPlayer }">
+      <button
+        class="dynamic-button"
+        @click="handleStartMatch"
+        :class="{ disabledButton: !userIsHost || !rightPlayer }"
+      >
         PLAY
       </button>
     </div>

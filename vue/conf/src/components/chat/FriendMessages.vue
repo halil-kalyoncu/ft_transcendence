@@ -147,9 +147,14 @@ const isOwnMessage = (senderId: number | undefined) => {
     <div></div>
     <ScrollViewer :maxHeight="'60vh'" class="messages-scrollviewer">
       <div class="messages" v-if="!loading" ref="chatContainerRef">
-        <Message v-for="message in messages" :key="message.id" :createdAt="'one minute ago'"
-          :message="message.message?.message ?? ''" :sender="message.sender?.username ?? ''"
-          :isOwnMessage="isOwnMessage(message.sender.id)" />
+        <Message
+          v-for="message in messages"
+          :key="message.id"
+          :createdAt="'one minute ago'"
+          :message="message.message?.message ?? ''"
+          :sender="message.sender?.username ?? ''"
+          :isOwnMessage="isOwnMessage(message.sender.id)"
+        />
       </div>
       <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
@@ -169,11 +174,12 @@ const isOwnMessage = (senderId: number | undefined) => {
   margin-top: 0.5rem;
 }
 
-.chat>div:first-child {
+.chat > div:first-child {
   flex-grow: 1;
 }
 
-.chat .messages-scrollviewer {}
+.chat .messages-scrollviewer {
+}
 
 .chat .messages {
   display: flex;

@@ -3,7 +3,11 @@
     <RouterLink class="navButton header-username" to="/activity-center">
       <button class="settings-button" :class="'icon-wrapper'">
         <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
-        <span v-if="friendRequests?.length > 0 || matchInvites?.length > 0" class="notification-badge">1+</span>
+        <span
+          v-if="friendRequests?.length > 0 || matchInvites?.length > 0"
+          class="notification-badge"
+          >1+</span
+        >
       </button>
     </RouterLink>
   </div>
