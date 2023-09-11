@@ -144,8 +144,6 @@ export class EventsGateway {
 			console.log(socket.data.user.username + ' disconnected');
 			if (room.gameIsRunning) {
 				room.gameIsRunning = false;
-				//later give the room (or a custom object) with it
-				const match = await this.matchService.finishMatch(socket.data.match.id, room);
 				if (socket.data.isLeftPlayer) {
 					room.leftPlayerDisconnect = true;
 				}

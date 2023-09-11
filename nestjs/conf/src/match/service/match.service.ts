@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Match, Prisma } from '@prisma/client';
+import { Match, MatchState, Prisma } from '@prisma/client';
 import { Room } from '../../game/service/room.service';
 
 @Injectable()
