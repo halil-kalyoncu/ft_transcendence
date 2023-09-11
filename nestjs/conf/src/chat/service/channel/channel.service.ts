@@ -146,6 +146,7 @@ export class ChannelService {
     return this.prisma.channel.update({
       where: { id: setPasswordDto.channelId },
       data: {
+		protected: true,
         passwordHash: hashedPassword,
       },
     });
