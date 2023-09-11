@@ -30,7 +30,7 @@
         class="join-channel-button"
         @click="changePassword"
       >
-        Change Password
+	  {{ showPasswordField ? 'Confirm' : 'Change Password' }}
       </button>
       <input
         v-if="showPasswordField"
@@ -44,9 +44,17 @@
     <button :class="['join-channel-button', 'leave-channel-button']" @click="handleLeaveChannel">
       Leave
     </button>
+	<div class = "destroy-container">
     <button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
       {{ getSignOutButtonText() }}
     </button>
+	<input
+        v-if="showConfirmDestroyField"
+        v-model="confirmDestroy"
+        placeholder="Confirm with 'OK'"
+        class="password-input"
+      />
+	</div>
     <button
       v-show="
         currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN
@@ -72,6 +80,7 @@ import type { ChannelManagerMemberI } from '../../model/channels/channelMessage.
 import type { ChannelMemberRoleType } from '../../model/channels/createChannel.interface'
 import { ChannelMemberRole } from '../../model/channels/createChannel.interface'
 import InvitePrivateChannelModal from './InvitePrivateChannelModal.vue'
+import { ErrorI } from '../../model/error.interface'
 const props = defineProps({
   channelId: {
     type: Number,
@@ -91,17 +100,14 @@ let ChannelName = ref<string>('')
 const emit = defineEmits(['channel-left', 'channel-signedout', 'channel-force-leave'])
 
 const showPasswordField = ref(false)
+const showConfirmDestroyField = ref(false)
 const password = ref('')
+const confirmDestroy = ref('')
 
-const modalVisible = ref(false)
 const modalTitle = ref('')
-const modalMessage = ref('')
 const isModalOpened = ref(false)
 
-const handleChangedProperties = () => {
-  console.log('handleChangedProperties')
-  getMembers()
-}
+
 const memberItems = computed(() => {
   return Members.value.map((member) => {
     return {
@@ -141,8 +147,6 @@ onMounted(async () => {
   getSignOutButtonText()
   setDestroyChannelListener()
   setUserSignedListener()
-for (const memberitems of memberItems.value)
-  console.log(memberitems)
 })
 
 const initSocket = () => {
@@ -178,9 +182,8 @@ const setDestroyChannelListener = () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('ChannelDestroy', (channelId: Number) => {
-    console.log('ChannelDestroy fired')
-    notificationStore.showNotification('Channel has been destroyed', true)
+  socket.value.on('ChannelDestroy', (channelId: number) => {
+    notificationStore.showNotification(ChannelName.value + ' has been destroyed', false)
     emit('channel-force-leave')
   })
 }
@@ -189,15 +192,16 @@ const setUserSignedListener = () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('UserSignedOut', (channelId: Number) => {
+  socket.value.on('UserSignedOut', (userSignedOutName: string) => {
     console.log('UserSignedOut from ChannelManager fired')
+	notificationStore.showNotification(userSignedOutName + ' has signed out ' + ChannelName.value, true)
     setMembers().then(() => {
       setCurrentUserRole()
     })
   })
-  socket.value.on('UserSignedIn', (channelId: Number) => {
+  socket.value.on('UserSignedIn', (username: string) => {
     console.log('UserSignedIn fired')
-    //notificationStore.showNotification(' Signed in Channel', true)
+     notificationStore.showNotification(username + ' entered in Channel', true)
     setMembers().then(() => {
       setCurrentUserRole()
     })
@@ -209,9 +213,9 @@ const setUserSignedListener = () => {
       setCurrentUserRole()
     })
   })
-  socket.value.on('madeAdmin', (membership: any) => {
+  socket.value.on('madeAdmin', (username: string) => {
     console.log('madeAdmin fired')
-    //await notificationStore.showNotification('New Admin Added', true)
+    notificationStore.showNotification(username + ' was declared Admin', true)
     setMembers().then(() => {
       setCurrentUserRole()
     })
@@ -243,15 +247,31 @@ socket.value.on('memberUnBanned', (membership: any) => {
 	setCurrentUserRole()
   })
 })
-socket.value.on('memberMuted', (membership: any) => {
+socket.value.on('memberMuted', (user: string, timeMuted: number) => {
     console.log('memberMuted fired')
+	if (user === username.value) {
+		notificationStore.showNotification('You have been muted for ' + timeMuted.toString() + ' min.', true)
+	} else {
+		notificationStore.showNotification(user + ' muted for ' + timeMuted.toString() + ' min.', true)
+	}
 	setMembers().then(() => {
 		setCurrentUserRole()
 	})
 })
-socket.value.on('memberUnMuted', (membership: any) => {
+socket.value.on('memberUnMuted', (user: string) => {
   console.log('memberUnMuted fired')
-  notificationStore.showNotification('User UnMuted', true)
+  if (user === username.value) {
+	notificationStore.showNotification('You have been unmuted', true)
+  } else {
+	notificationStore.showNotification(user + ' unmuted', true)
+  }
+  setMembers().then(() => {
+	setCurrentUserRole()
+  })
+})
+socket.value.on('passwordSet', (channelName: string) => {
+  console.log('passwordSet fired')
+  notificationStore.showNotification(channelName + ' has new password')
   setMembers().then(() => {
 	setCurrentUserRole()
   })
@@ -260,6 +280,8 @@ socket.value.on('memberUnMuted', (membership: any) => {
 
 const getSignOutButtonText = () => {
   if (currentUserRole.value === ChannelMemberRole.OWNER) {
+	if (showConfirmDestroyField.value)
+		return 'Confirm'
     return 'Destroy'
   } else {
     return 'Sign Out'
@@ -289,23 +311,41 @@ const handleClose = () => {
 }
 
 const handleLeaveChannel = () => {
-  notificationStore.showNotification('You have left the channel: ' + ChannelName, true)
   emit('channel-left')
 }
 
-const DestroyChannel = () => {
+const destroyChannel = async () => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
-    return
+	notificationStore.showNotification(`Error: Connection problems`, true)
+	return
   }
-  socket.value.emit('DestroyChannel', {
-    channelId: channelId,
-    senderId: userId.value
+  console.log('destroyChannel')
+  console.log(channelId)
+  console.log(userId.value)
+  await socket.value.emit('DestroyChannel', {
+	channelId: channelId,
+	senderId: userId.value
   })
 }
 
+const DestroyChannel = async() => {
+	console.log(confirmDestroy.value)
+  if (!showConfirmDestroyField.value) {
+	showConfirmDestroyField.value = true
+  } else {
+	if (confirmDestroy.value === 'OK') {
+	  await destroyChannel()
+	} else {
+	  notificationStore.showNotification('Wrong confirmation')
+	}
+	confirmDestroy.value = ''
+	showConfirmDestroyField.value = false
+  }
+  
+}
+
 const SignOutChannel = async () => {
-  notificationStore.showNotification('You have signed out the channel: ' + ChannelName, true)
+  notificationStore.showNotification('You have signed out the channel: ' + ChannelName.value, true)
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
@@ -317,16 +357,43 @@ const SignOutChannel = async () => {
   })
 }
 
-const changePassword = () => {
+const setPassword = async () => {
+	if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+  
+  await socket.value.emit('setChannelPassword', {
+    channelId: channelId,
+    userId: userId.value,
+	password: password.value
+  }, async (response: any | ErrorI) => {
+	if ('error' in response) {
+		await notificationStore.showNotification(response.error)
+		return
+	}
+	else {
+		await notificationStore.showNotification('Password changed', true)
+		return
+	}
+  })
+}
+const resetPasswordField = async () => {
+	password.value = ''
+	showPasswordField.value = false
+}
+
+const changePassword = async () => {
   if (!showPasswordField.value) {
     showPasswordField.value = true
   } else {
-    //todo: fix notification to not share password
-    notificationStore.showNotification(
-      'Password has been successfully changed to: ' + password.value,
-      true
-    )
-    showPasswordField.value = false
+    if (password.value === '') {
+	  notificationStore.showNotification('No new Password set.', true)
+	}
+	else {
+		await setPassword()
+	}
+	await resetPasswordField()
   }
 }
 
@@ -394,5 +461,12 @@ const changePassword = () => {
   margin: -1.25px 0 0 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+.destroy-container {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  align-items: flex-start; /* Align items to the start (left) */
+ 
 }
 </style>

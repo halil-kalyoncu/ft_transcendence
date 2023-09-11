@@ -61,6 +61,7 @@ import type {
 } from '../../model/channels/createChannel.interface'
 import { Socket } from 'socket.io-client'
 import Modal from '../utils/Modal.vue'
+import type { ErrorI } from '../../model/error.interface'
 
 const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
@@ -73,9 +74,6 @@ onMounted(() => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('channelCreated', (success: boolean) => {
-    notificationStore.showNotification('Channel Succesfully Created!', true)
-  })
 
   socket.value.on('error', (error: string) => {
     notificationStore.showNotification('Error: ' + error, false)
@@ -106,7 +104,8 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-const handleConfirm = ({
+//Todo check with halil why there is a difference in the noticitaions
+const handleConfirm = async ({
   name,
   password,
   channelVisibility,
@@ -126,25 +125,43 @@ const handleConfirm = ({
     return
   }
   if (!socket || !socket.value) {
-    notificationStore.showNotification('Error: Connection problems', true)
+    notificationStore.showNotification('Error: Connection problems')
     return
   }
-  if (passwordSet === true) {
+  if ( passwordSet === true) {
     const createChannelDto: CreateChannelDto = {
       userId: userId.value,
       name: name || '',
       password: password || '',
       channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
     }
-    socket.value.emit('createProtectedChannel', createChannelDto)
-  } else {
+    const response = await socket.value.emit('createProtectedChannel', createChannelDto, (error: ErrorI) => {
+	if ('error' in error) {
+	  notificationStore.showNotification(error.error)
+	  return
+	}
+	else {
+	  notificationStore.showNotification('Channel created', true)
+	  return
+	}
+	})
+	} else {
     const createChannelDto: CreateChannelDto = {
       userId: userId.value,
       name: name || '',
       channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
     }
-    socket.value.emit('createUnProtectedChannel', createChannelDto)
-  }
+    const response = await socket.value.emit('createUnProtectedChannel', createChannelDto, (error: ErrorI) => {
+	if ('error' in error) {
+	  notificationStore.showNotification(error.error)
+	  return
+	}
+	else {
+	  notificationStore.showNotification('Channel created', true)
+	  return
+	}
+	})
+}
 }
 
 const showChannelManagerAndChat = ref(false)
@@ -168,7 +185,7 @@ const addUsertoChannel = async () => {
       throw new Error('Failed to add user to channel')
     }
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message)
   }
 }
 const removeUserFromChannel = async () => {
@@ -270,13 +287,15 @@ const hanndleChannelSignedout = async () => {
 
 const updateChannelManager = async () => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification('Error: Connection problems', true)
+    notificationStore.showNotification('Error: Connection problems')
     return
   }
   try {
-    socket.value.emit('SignInChannel', joinedChannelId.value)
+    socket.value.emit('SignInChannel', {
+	channelId: joinedChannelId.value, 
+	username: username.value})
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message)
   }
 }
 </script>

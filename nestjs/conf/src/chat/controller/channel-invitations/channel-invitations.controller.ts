@@ -13,6 +13,7 @@ import { ChannelInvitationsService } from '../../service/channel-invitations/cha
 import { UserService } from '../../../user/service/user-service/user.service';
 import type { ChannelInvitationDto } from '../../dto/channelInvitation.dto';
 import { User } from '@prisma/client';
+import type { ErrorDto } from '../../dto/error.dto';
 
 @ApiTags('Channel-Invitations module')
 @Controller('channel-invitations')
@@ -47,16 +48,24 @@ export class ChannelInvitationsController {
     @Query('channelId', ParseIntPipe) channelId: number,
     @Query('inviteeName') inviteeName: string,
     @Query('inviterId', ParseIntPipe) inviterId: number,
-  ): Promise<ChannelInvitation> {
-    const user = await this.userService.findByUsername(inviteeName);
-    const inviteeId = user.id;
-    console.log(inviteeId);
-    return this.channelInvitationsService.inviteUserToChannel(
-      channelId,
-      inviteeId,
-      inviterId,
-    );
+  ): Promise<ChannelInvitation | ErrorDto> {
+	try{
+		const user = await this.userService.findByUsername(inviteeName);
+		if (!user) {
+			throw new Error('User not found');
+		}
+		const inviteeId = user.id;
+		console.log(inviteeId);
+		return this.channelInvitationsService.inviteUserToChannel(
+		  channelId,
+		  inviteeId,
+		  inviterId,
+		);
+	}catch (error: any)
+	{
+		return {error: error.message};
   }
+}
 
   @Patch('RejectInvitation')
   async RejectInvitation(

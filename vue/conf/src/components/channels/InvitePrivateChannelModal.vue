@@ -62,6 +62,7 @@ import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
+import type { ErrorI } from '../../model/error.interface'
 
 library.add(fas)
 
@@ -124,13 +125,25 @@ const sendSubmitEvent = (inviteeUsername: string) => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.emit('gotChannelInvitation', inviteeUsername)
+  socket.value.emit('gotChannelInvitation', inviteeUsername, (response: any | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+	}})
 }
 
 const submit = async () => {
+   const userSelected = selectedUsers.value.length
   for (const inviteeUsername of selectedUsers.value) {
     await inviteUser(channelId, inviteeUsername, userId.value)
     sendSubmitEvent(inviteeUsername)
+  }
+  if (userSelected === 1)
+  {
+	notificationStore.showNotification(`Invitation sent`, true)
+  }
+  if (userSelected > 1)
+  {
+	notificationStore.showNotification(`Invitations sent`, true)
   }
 
   emit('submit')

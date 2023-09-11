@@ -52,9 +52,6 @@ export class ChannelMessageService {
       },
     });
 
-    // Add a log to indicate that the ChannelMessage was created
-    console.log('ChannelMessage created:', createdChannelMessage);
-
     // Return the created ChannelMessage
     return createdChannelMessage;
   }
@@ -77,7 +74,7 @@ export class ChannelMessageService {
     }
 
 	if (member.unmuteAt) {
-		throw new Error('Member is muted');
+		throw new Error('You are muted');
 		}
 
     const createdMessage = await this.messageService.createOne({ message });
@@ -119,8 +116,6 @@ export class ChannelMessageService {
     return channelMessageDto;
   }
 
-
-//TODO Filter Channelmember  is Muted in Channel! 
   async getChannelMessagesforChannel(
     channelId: number,
   ): Promise<ChannelMessageDto[]> {

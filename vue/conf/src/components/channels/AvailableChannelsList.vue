@@ -75,6 +75,7 @@ const setChannelListener = () => {
     return
   })
 }
+
 onMounted(async () => {
 	initSocket()
   await setPublicChannels()

@@ -35,6 +35,7 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
+import type { ErrorI } from '../../model/error.interface'
 
 const props = defineProps({
   channelId: {
@@ -133,12 +134,14 @@ const sendChannelMessage = async () => {
     return
   }
 
-  console.log(loggedUser.value.id + ' ' + channelId + ' ' + newchannelMessages.value)
-
   socket.value.emit('sendChannelMessage', {
     senderId: loggedUser.value.id,
     channelId: channelId,
     message: newchannelMessages.value
+  }, (response: any | ErrorI ) =>{
+	if ('error' in response){
+		notificationStore.showNotification(response.error, false)
+	}
   })
   newchannelMessages.value = ''
   return
@@ -170,10 +173,12 @@ const checkForMutedUsers = async () => {
 	notificationStore.showNotification(`Error: Connection problems`, true)
 	return
   }
-  console.log('checkForMutedUsers')
-  console.log(membersToUnmute)
   if (membersToUnmute.length > 0) {
-	socket.value.emit('sendUpdateUnMuted', membersToUnmute)
+	socket.value.emit('sendUpdateUnMuted', membersToUnmute, (response: any | ErrorI ) =>{
+		if ('error' in response){
+			notificationStore.showNotification(response.error, false)
+		}
+	})
   }
   return
 }

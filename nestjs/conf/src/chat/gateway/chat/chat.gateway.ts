@@ -35,6 +35,7 @@ import {
 	Match,
 	Matchmaking,
 	Prisma,
+	Channel,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
@@ -316,7 +317,7 @@ export class ChatGateway
 	async handleCreateUnProtectedChannel(
 		@ConnectedSocket() socket: Socket,
 		@MessageBody() createChannelDto: CreateChannelDto,
-	): Promise<void> {
+	): Promise<Channel | { error: string }> {
 		try {
 			console.log('create unprotected channel');
 			const newChannel = await this.channelService.createUnProtectedChannel(
@@ -330,8 +331,9 @@ export class ChatGateway
 					socket.to(onlineMember.socketId).emit('channelCreated', true);
 				}
 			}
-		} catch (error: any) {
-			socket.emit('error', error.message);
+			return (newChannel)
+		} catch (error) {
+			return { error: error.message as string };
 		}
 	}
 
@@ -339,7 +341,7 @@ export class ChatGateway
 	async handlecreateProtectedChannel(
 		@ConnectedSocket() socket: Socket,
 		@MessageBody() createChannelDto: CreateChannelDto,
-	): Promise<void> {
+	): Promise<Channel | ErrorDto> {
 		try {
 			const newChannel = await this.channelService.createProtectedChannel(
 				createChannelDto,
@@ -352,21 +354,36 @@ export class ChatGateway
 					socket.to(onlineMember.socketId).emit('channelCreated', true);
 				}
 			}
-		} catch (error: any) {
-			socket.emit('error', error.message);
+		} catch (error) {
+			return { error: error.message as string };
 		}
 	}
 
 	@SubscribeMessage('setChannelPassword')
 	async handleSetPassword(
 		socket: Socket,
-		@MessageBody() setPasswordDto: SetPasswordDto,
-	): Promise<void> {
+		setPasswordDto: SetPasswordDto,
+	): Promise<Channel | ErrorDto> {
 		try {
+			console.log(socket)
 			const channel = await this.channelService.setPassword(setPasswordDto);
-			socket.emit('passwordSet', channel);
+			
+			const members: User[] = await this.channelService.getMembers(
+				setPasswordDto.channelId,
+			);
+			for (const member of members) {
+				const memberOnline: ConnectedUser =
+					await this.connectedUserService.findByUserId(member.id);
+				if (
+					memberOnline &&
+					memberOnline.userId !== setPasswordDto.userId
+				) {
+					socket.to(memberOnline.socketId).emit('passwordSet', channel.name);
+				}
+			}
+			return channel;
 		} catch (error) {
-			socket.emit('error', error.message);
+			return { error: error.message };
 		}
 	}
 
@@ -422,7 +439,8 @@ export class ChatGateway
 	): Promise<void> {
 		try {
 			const membership = await this.channelService.makeAdmin(adminActionDto);
-			socket.emit('madeAdmin', membership);
+			const target = await this.userService.findById(adminActionDto.targetUserId);
+			socket.emit('madeAdmin', target.username);
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
@@ -433,7 +451,7 @@ export class ChatGateway
 					memberOnline &&
 					memberOnline.userId !== adminActionDto.requesterId
 				) {
-					socket.to(memberOnline.socketId).emit('madeAdmin', membership);
+					socket.to(memberOnline.socketId).emit('madeAdmin', target.username);
 				}
 			}
 		} catch (error: any) {
@@ -541,10 +559,11 @@ export class ChatGateway
 		adminActionDto: AdminActionDto,
 	): Promise<void> {
 		try {
-			const membership = await this.channelService.muteChannelMember(
+			 await this.channelService.muteChannelMember(
 				adminActionDto
 			);
-			socket.emit('memberMuted', membership);
+			const target = await this.userService.findById(adminActionDto.targetUserId);
+			socket.emit('memberMuted', target.username, adminActionDto.minutesToMute);
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
@@ -555,7 +574,7 @@ export class ChatGateway
 					memberOnline &&
 					memberOnline.userId !== adminActionDto.requesterId
 				) {
-					socket.to(memberOnline.socketId).emit('memberMuted', membership);
+					socket.to(memberOnline.socketId).emit('memberMuted', target.username, adminActionDto.minutesToMute);
 				}
 			}
 		} catch (error: any) {
@@ -569,10 +588,11 @@ export class ChatGateway
 		adminActionDto: AdminActionDto,
 	): Promise<void> {
 		try {
-			const membership = await this.channelService.unMuteChannelMember(
+			await this.channelService.unMuteChannelMember(
 				adminActionDto,
 			);
-			socket.emit('memberUnMuted', membership);
+			const target = await this.userService.findById(adminActionDto.targetUserId);
+			socket.emit('memberUnMuted', target.username);
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
@@ -583,7 +603,7 @@ export class ChatGateway
 					memberOnline &&
 					memberOnline.userId !== adminActionDto.requesterId
 				) {
-					socket.to(memberOnline.socketId).emit('memberUnMuted', membership);
+					socket.to(memberOnline.socketId).emit('memberUnMuted', target.username);
 				}
 			}
 		} catch (error: any) {
@@ -595,98 +615,104 @@ export class ChatGateway
 	async handleSendUpdateUnMuted(
 		socket: Socket,
 		membersToUnmute: ChannelMember[],
-	): Promise<ChannelMember[]> {
+	): Promise<ChannelMember[] | ErrorDto> {
 		try {
-			console.log('sendUpdateUnMuted')
-			console.log(membersToUnmute)
 			const channelMembers: ChannelMember[] = await this.channelService.findMembers(membersToUnmute[0].channelId);
 
 			for (const member of membersToUnmute) {
 				for (const channelMember of channelMembers) {
 					socket.emit('memberUnMuted', member);
 					const onlineMember = await this.findOnlineMember(channelMember.userId);
-				if (onlineMember) {
-					console.log('memberUnMuted')
-					console.log(onlineMember)
-					socket.to(onlineMember.socketId).emit('memberUnMuted', member);
+					if (onlineMember) {
+						console.log('memberUnMuted')
+						console.log(onlineMember)
+						socket.to(onlineMember.socketId).emit('memberUnMuted', member);
+					}
 				}
-			}
 			}
 			return membersToUnmute;
 		}
-			catch (error: any) {
-				socket.emit('error', error.message);
+		catch (error: any) {
+			return { error: error.message };
 		}
 	}
 
-  @SubscribeMessage('DestroyChannel')
-		async handleDestroyChannel(
-			socket: Socket,
-			destroyChannelDto: DestroyChannelDto,
-		): Promise < void> {
+	@SubscribeMessage('DestroyChannel')
+	async handleDestroyChannel(
+		socket: Socket,
+		destroyChannelDto: DestroyChannelDto,
+	): Promise<number | ErrorDto> {
+		try {
 			const { senderId, channelId } = destroyChannelDto;
 			const members: User[] = await this.channelService.getMembers(channelId);
 			socket.emit('ChannelDestroy');
-			for(const member of members) {
-				const memberOnline: ConnectedUser =
-					await this.connectedUserService.findByUserId(member.id);
-				if (memberOnline && memberOnline.userId !== senderId) {
-					socket.to(memberOnline.socketId).emit('ChannelDestroy', channelId);
-				}
-				const onlineMembers: ConnectedUser[] =
-					await this.connectedUserService.getAll();
-				for (const onlineMember of onlineMembers) {
-					if (onlineMember) {
-						socket.to(onlineMember.socketId).emit('ChannelDestroy', channelId);
-					}
-				}
-				this.channelService.destroyChannel(channelId);
-			}
-		}
-
-		@SubscribeMessage('SignOutChannel')
-		async handleSignOutChannel(
-			socket: Socket,
-			destroyChannelDto: DestroyChannelDto,
-		): Promise < void> {
-			const { senderId, channelId } = destroyChannelDto;
-			const members: User[] = await this.channelService.getMembers(channelId);
-			for(const member of members) {
+			for (const member of members) {
 				const memberOnline: ConnectedUser =
 					await this.connectedUserService.findByUserId(member.id);
 				if (memberOnline) {
-					socket.to(memberOnline.socketId).emit('UserSignedOut', channelId);
+					socket.to(memberOnline.socketId).emit('ChannelDestroy');
 				}
 			}
+			this.channelService.destroyChannel(channelId);
+		} catch (error: any) {
+			return { error: error.message };
 		}
+	}
 
-		@SubscribeMessage('SignInChannel')
-		async handleSignInChannel(socket: Socket, channelId: number): Promise < void> {
-			const members: User[] = await this.channelService.getMembers(channelId);
-			for(const member of members) {
-				const memberOnline: ConnectedUser =
-					await this.connectedUserService.findByUserId(member.id);
-				if (memberOnline) {
-					socket.to(memberOnline.socketId).emit('UserSignedIn', channelId);
-				}
+
+	@SubscribeMessage('SignOutChannel')
+	async handleSignOutChannel(
+		socket: Socket,
+		destroyChannelDto: DestroyChannelDto,
+	): Promise<void> {
+		const { senderId, channelId } = destroyChannelDto;
+		const members: User[] = await this.channelService.getMembers(channelId);
+		const user = await this.userService.findById(senderId);
+		for (const member of members) {
+			const memberOnline: ConnectedUser =
+				await this.connectedUserService.findByUserId(member.id);
+			if (memberOnline) {
+				socket.to(memberOnline.socketId).emit('UserSignedOut', user.username);
 			}
 		}
-		/**********************
-		 *** ChannelMessages ***
-		 ***********************/
+	}
 
-		@SubscribeMessage('groupMessages')
-		async handlegetGroupMessages(socket: Socket, channelId: number) {
-			return await this.channelMessageService.getChannelMessagesforChannel(
-				channelId,
-			);
+	@SubscribeMessage('SignInChannel')
+	async handleSignInChannel(socket: Socket,
+		data: {
+			channelId: number,
+			username: string
+		}): Promise<void> {
+		const { channelId, username } = data;
+
+		const members: User[] = await this.channelService.getMembers(channelId);
+		for (const member of members) {
+			const memberOnline: ConnectedUser =
+				await this.connectedUserService.findByUserId(member.id);
+			if (memberOnline) {
+				console.log('UserSignedIn')
+				console.log(memberOnline)
+				socket.to(memberOnline.socketId).emit('UserSignedIn', username);
+			}
 		}
+	}
+	/**********************
+	 *** ChannelMessages ***
+	 ***********************/
 
-		@SubscribeMessage('sendChannelMessage')
-		async handleSendChannelMessage(
-			socket: Socket,
-			createChannelMessageDto: CreateChannelMessageDto,
-		): Promise < void> {
+	@SubscribeMessage('groupMessages')
+	async handlegetGroupMessages(socket: Socket, channelId: number) {
+		return await this.channelMessageService.getChannelMessagesforChannel(
+			channelId,
+		);
+	}
+
+	@SubscribeMessage('sendChannelMessage')
+	async sendChannelMessage(
+		socket: Socket,
+		createChannelMessageDto: CreateChannelMessageDto,
+	): Promise<any | ErrorDto> {
+		try {
 			const { senderId, channelId, message } = createChannelMessageDto;
 			const newMessage = await this.channelMessageService.createChannelMessageI(
 				createChannelMessageDto,
@@ -697,88 +723,100 @@ export class ChatGateway
 			);
 
 			socket.emit('newChannelMessage', newMessage);
-			for(const member of members) {
+			for (const member of members) {
 				const memberOnline: ConnectedUser =
 					await this.connectedUserService.findByUserId(member.id);
 				if (memberOnline && memberOnline.userId !== senderId) {
 					socket.to(memberOnline.socketId).emit('newChannelMessage', newMessage);
 				}
 			}
+			return newMessage
+		} catch (error: any) {
+			return { error: error.message as string };
 		}
-		/**********************
-		 *** ChannelInvitations ***
-		 ***********************/
-		@SubscribeMessage('acceptChannelInvitation')
-		async handleAcceptChannelInvitation(
-			socket: Socket,
-			invitationId: number,
-		): Promise < void> {
-			const invitation = await this.channelInvitationService.getOne(invitationId);
-			await this.channelInvitationService.acceptInvitation(
-				invitation.channelId,
-				invitation.inviteeId,
-			);
-			const channelName = invitation.channel.name;
-			const inviteeName = invitation.invitee.username;
-			socket.emit('ChannelInvitationAccepted', channelName, inviteeName);
-			const members: User[] = await this.channelService.getMembers(
-				invitation.channelId,
-			);
-			for(const member of members) {
-				const memberOnline: ConnectedUser =
-					await this.connectedUserService.findByUserId(member.id);
-				if (memberOnline) {
-					socket
-						.to(memberOnline.socketId)
-						.emit('ChannelInvitationAccepted', channelName, inviteeName);
-				}
-			}
-		}
-
-		@SubscribeMessage('rejectChannelInvitation')
-		async handleRejectChannelInvitation(
-			socket: Socket,
-			invitationId: number,
-		): Promise < void> {
-			const invitation = await this.channelInvitationService.getOne(invitationId);
-			await this.channelInvitationService.rejectInvitation(
-				invitation.channelId,
-				invitation.inviteeId,
-			);
-			const channelName = invitation.channel.name;
-			const inviteeName = invitation.invitee.username;
-			socket.emit('ChannelInvitationRejected', channelName, inviteeName);
-			const inviterOnline: ConnectedUser =
-			await this.connectedUserService.findByUserId(invitation.inviterId);
-			if(inviterOnline) {
+	}
+	/**********************
+	 *** ChannelInvitations ***
+	 ***********************/
+	@SubscribeMessage('acceptChannelInvitation')
+	async handleAcceptChannelInvitation(
+		socket: Socket,
+		invitationId: number,
+	): Promise<void> {
+		const invitation = await this.channelInvitationService.getOne(invitationId);
+		await this.channelInvitationService.acceptInvitation(
+			invitation.channelId,
+			invitation.inviteeId,
+		);
+		const channelName = invitation.channel.name;
+		const inviteeName = invitation.invitee.username;
+		socket.emit('ChannelInvitationAccepted', channelName, inviteeName);
+		const members: User[] = await this.channelService.getMembers(
+			invitation.channelId,
+		);
+		for (const member of members) {
+			const memberOnline: ConnectedUser =
+				await this.connectedUserService.findByUserId(member.id);
+			if (memberOnline) {
 				socket
-					.to(inviterOnline.socketId)
-					.emit('ChannelInvitationRejected', channelName, inviteeName);
+					.to(memberOnline.socketId)
+					.emit('ChannelInvitationAccepted', channelName, inviteeName);
 			}
 		}
+	}
 
-		@SubscribeMessage('gotChannelInvitation')
-		async handlGotChannelInvitation(
-			socket: Socket,
-			inviteeUsername: string,
-		): Promise < void> {
+	@SubscribeMessage('rejectChannelInvitation')
+	async handleRejectChannelInvitation(
+		socket: Socket,
+		invitationId: number,
+	): Promise<void> {
+		const invitation = await this.channelInvitationService.getOne(invitationId);
+		await this.channelInvitationService.rejectInvitation(
+			invitation.channelId,
+			invitation.inviteeId,
+		);
+		const channelName = invitation.channel.name;
+		const inviteeName = invitation.invitee.username;
+		socket.emit('ChannelInvitationRejected', channelName, inviteeName);
+		const inviterOnline: ConnectedUser =
+			await this.connectedUserService.findByUserId(invitation.inviterId);
+		if (inviterOnline) {
+			socket
+				.to(inviterOnline.socketId)
+				.emit('ChannelInvitationRejected', channelName, inviteeName);
+		}
+	}
+
+	@SubscribeMessage('gotChannelInvitation')
+	async handlGotChannelInvitation(
+		socket: Socket,
+		inviteeUsername: string,
+	): Promise<User | ErrorDto> {
+		try{
 			const invitee = await this.userService.findByUsername(inviteeUsername);
+			if (!invitee) {
+				throw new Error('User not found');
+			}
 			const inviteeOnline: ConnectedUser =
-			await this.connectedUserService.findByUserId(invitee.id);
-			if(inviteeOnline) {
+				await this.connectedUserService.findByUserId(invitee.id);
+			if (inviteeOnline) {
 				socket.to(inviteeOnline.socketId).emit('NewChannelInvitation');
 			}
+		return invitee
+		} catch (error: any) {
+			return { error: error.message as string };
 		}
-		/******************
-		 *** MatchInvites ***
-		 *******************/
+	}
+	/******************
+	 *** MatchInvites ***
+	 *******************/
 
-		@SubscribeMessage('sendMatchInvite')
-		async sendGameInvite(
-			socket: Socket,
-			sendGameInviteDto: SendGameInviteDto,
-		): Promise < void> {
-			if(sendGameInviteDto.invitedUserId === socket.data.user.id) {
+	@SubscribeMessage('sendMatchInvite')
+	async sendGameInvite(
+		socket: Socket,
+		sendGameInviteDto: SendGameInviteDto,
+	): Promise<void> {
+		if (sendGameInviteDto.invitedUserId === socket.data.user.id) {
 			socket.emit('Error', "Can't invite yourself to a game");
 			return;
 		}

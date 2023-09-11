@@ -98,11 +98,11 @@ const emit = defineEmits(['submit', 'close'])
 
 const submit = () => {
   if (inputName.value.trim() === '') {
-    notificationStore.showNotification('Set Channel-Name', true)
+    notificationStore.showNotification('Set Channel-Name')
     return
   }
   if (checkPassword.value && inputPassword.value.trim() === '') {
-    notificationStore.showNotification('Set Password', true)
+    notificationStore.showNotification('Set Password')
     return
   }
   const result: ModalResult = {

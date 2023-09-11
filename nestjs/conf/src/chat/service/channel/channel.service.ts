@@ -41,7 +41,7 @@ export class ChannelService {
     name: string;
     password?: string;
     channelVisibility: ChannelVisibility;
-  }): Promise<Channel> {
+  }): Promise<Channel | { error: string}> {
     console.log('createProtectedChannel');
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
@@ -50,7 +50,6 @@ export class ChannelService {
       throw new Error('Channel name already exists');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create the channel without the members initially
     const channel = await this.prisma.channel.create({
       data: {
@@ -69,7 +68,6 @@ export class ChannelService {
         role: ChannelMemberRole.OWNER,
       },
     });
-
     return channel;
   }
 
@@ -81,7 +79,7 @@ export class ChannelService {
     userId: number;
     name: string;
     channelVisibility: ChannelVisibility;
-  }): Promise<Channel> {
+  }): Promise<Channel | { error: string }> {
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
     });
@@ -89,14 +87,13 @@ export class ChannelService {
     if (existingChannel) {
       throw new Error('Channel name already exists');
     }
-
     const channel = await this.prisma.channel.create({
-      data: {
-        name: name,
-        visibility: channelVisibility,
-      },
+		data: {
+			name: name,
+			visibility: channelVisibility,
+		},
     });
-
+	
     // Add the user creating the channel as a member (owner)
     await this.prisma.channelMember.create({
       data: {
@@ -105,7 +102,7 @@ export class ChannelService {
         role: ChannelMemberRole.OWNER,
       },
     });
-
+	
     return channel;
   }
 
@@ -168,6 +165,20 @@ export class ChannelService {
         passwordHash: null,
       },
     });
+  }
+
+
+  async comparePassword(channelId:number, password: string): Promise<boolean> {
+	const channel = await this.find(channelId);
+	if (!channel) {
+	  throw new Error('Channel does not exist.');
+	}
+
+	if (!channel.passwordHash) {
+	  throw new Error('Channel does not have a password.');
+	}
+
+	return bcrypt.compare(password, channel.passwordHash);
   }
 
   async addUserToChannel(

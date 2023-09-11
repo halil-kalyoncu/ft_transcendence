@@ -68,27 +68,30 @@ const password = ref('')
 const userBanned = ref(false)
 const socket = ref<Socket | null>(null)
 const notificationStore = useNotificationStore()
+const isPasswordProtected = props.isPasswordProtected
 
-const handleJoin = () => {
-  if (props.isPasswordProtected && password.value === '') {
-    showPasswordField.value = true
+const handleJoin = async () => {
+if (isPasswordProtected){
+	if (password.value === '') {
+		notificationStore.showNotification('Error: Password is required')
+		return}
+	else {
+		const correct: boolean = await comparePassword()
+		if (!correct) {
+			notificationStore.showNotification('Error: Wrong password')
+			return
+		}
+		else {
+			emit('channel-entered', props.channelId)
+		}
+	}
   } else {
-    // console.log(
-    //   'password: ' +
-    //     password.value +
-    //     ', channel name: ' +
-    //     props.channelName +
-    //     ', owner: ' +
-    //     props.ownerName +
-    //     ', channelId: ' +
-    //     props.channelId
-    // )
     emit('channel-entered', props.channelId)
   }
 }
 
 const tooltipText = () => {
-  if (userBanned) {
+  if (userBanned.value) {
     return 'You are banned from this channel'
   } else {
     return 'Go to channel'
@@ -107,6 +110,22 @@ watch(userBanned, (newValue) => {
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
+}
+
+const comparePassword = async () : Promise<boolean> =>{
+  try {
+	const response = await fetch(
+	  `http://localhost:3000/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`
+	)
+	if (!response.ok) {
+	  throw new Error(`HTTP error! Status: ${response.status}`)
+	}
+	const data = response.json()
+	const correct = await data
+	return correct
+  } catch (error: any) {
+	console.error('Error: ', error)
+  }
 }
 
 const setUserBanned = async () => {
@@ -141,8 +160,14 @@ const setBannedFromChannelListener = () => {
 	return
   })
 }
+const setPasswordField = () => {
+  if (isPasswordProtected && password.value === '') {
+	showPasswordField.value = true
+  }
+}
 onMounted(() => {
   initSocket()
+  setPasswordField()
   setUserBanned()
   setBannedFromChannelListener()
 })
