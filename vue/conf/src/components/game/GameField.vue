@@ -5,25 +5,19 @@
     <GameBall ref="ball" />
     <GamePaddle ref="paddleA" />
     <GamePaddle ref="paddleB" />
-    <!-- <PowerUp
-		v-for="powerup in PowerUps"
-		:id="powerup.id" 
-		:x="powerup.x"
-		:y="powerup.y"
-		:type="powerup.type"
-		:color="powerup.color"
-		:index="powerup.index"
-		/> -->
-  </div>
-  <div v-if="countdown === -1">
-    <div class="waiting">
-      <p>Waiting for opponent...</p>
+    <div v-if="countdown === -1" class="waiting"><p>Waiting for opponent...</p></div>
+    <div v-else-if="countdown > 0" class="countdown">
+      <p>{{ countdown }}</p>
     </div>
-  </div>
-  <div v-else-if="countdown > 0">
-    <div class="countdown">
-      <p>Starting in {{ countdown }}</p>
-    </div>
+    <PowerUp
+      v-for="powerup in PowerUps"
+      :id="powerup.id"
+      :x="powerup.x"
+      :y="powerup.y"
+      :type="powerup.type"
+      :color="powerup.color"
+      :index="powerup.index"
+    />
   </div>
   <!-- <div class="ball-coordinates" v-if="ballCoordinates">
 			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
@@ -46,6 +40,7 @@ import type { UserI } from '../../model/user.interface'
 import { connectChatSocket, connectGameSocket, disconnectGameSocket } from '../../websocket'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notification'
+import type { MatchI } from '../../model/match/match.interface'
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const notificationStore = useNotificationStore()
@@ -102,16 +97,20 @@ const keyHookUp = (e: KeyboardEvent) => {
     return
   }
 
-  switch (e.key) {
+  switch (e.code) {
     case 'ArrowUp':
       isMovingUp.value = false
       break
     case 'ArrowDown':
       isMovingDown.value = false
       break
-    case 'n':
-      spawnPowerUp()
-      socket.value.emit('activatePowerUp', { type: 'increasePaddle', player: 'left' })
+    case 'KeyN':
+      // spawnPowerUp();
+      socket.value.emit('activatePowerUp', { type: 'magnet', player: 'left' })
+      // socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
+      break
+    case 'Space':
+      socket.value.emit('fire')
       break
   }
 }
@@ -165,16 +164,16 @@ onMounted(() => {
 
   socket.value.on('direction', (data: any) => {
     side.value = data
-    console.log('side: ', data)
+    // console.log("side: ", data);
   })
 
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
     if (playerId === 'left') {
       paddleA.value?.setY(newPos)
-      console.log(playerId, ': ', newPos)
+      // console.log(playerId, ": ", newPos);
     } else {
       paddleB.value?.setY(newPos)
-      console.log(playerId, ': ', newPos)
+      // console.log(playerId, ": ", newPos);
     }
   })
 
@@ -199,8 +198,9 @@ onMounted(() => {
       // console.log("ID: ", powerUp.id, "Y:", y);
     }
   })
-  // socket?.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
-  // 	return ;
+
+  // socket.value.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
+  // 	// return ;
   // 	if (paddleA.value && player == "left")
   // 		paddleA.value?.setHgt(hgt);
   // 	else if (paddleB.value && player == "right")
@@ -221,8 +221,9 @@ onMounted(() => {
     }
   })
 
-  socket.value.on('gameFinished', (payload: any) => {
+  socket.value.on('gameFinished', (match: MatchI) => {
     //show post game screen
+    router.push('/home')
   })
 
   socket.value.on('opponentDisconnect', (payload: any) => {
@@ -236,6 +237,20 @@ onMounted(() => {
 
   socket.value.on('startGame', () => {
     countdown.value = 0
+  })
+
+  socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
+    let target
+    console.log(player)
+    if (player == 'left') target = paddleA.value
+    else target = paddleB.value
+
+    if (type == 'increasePaddleHeight') {
+      target?.setHgt(400)
+      socket.value?.emit('activatePowerUp', { type: type, player: player })
+    }
+
+    // console.log(player, type);
   })
 
   initGameField()
@@ -306,7 +321,33 @@ function update() {
   requestAnimationFrame(update)
 }
 
-function spawnPowerUp() {}
+function spawnPowerUp() {
+  const newPowerUp = {
+    id: Math.floor(Date.now()),
+    x: Math.floor(Math.random() * fieldWidth.value!),
+    y: -30,
+    index: 0,
+    type: Math.floor(Math.random() * 4),
+    color: 'white',
+    wid: 30,
+    hgt: 30
+  }
+  if (newPowerUp.type == 0) {
+    newPowerUp.color = 'red'
+    newPowerUp.index = 0
+  } else if (newPowerUp.type == 1) {
+    newPowerUp.color = 'green'
+    newPowerUp.index = 3
+  } else if (newPowerUp.type == 2) {
+    newPowerUp.color = 'blue'
+    newPowerUp.index = 2
+  } else if (newPowerUp.type == 3) {
+    newPowerUp.color = 'white'
+    newPowerUp.index = 1
+  }
+  socket.value?.emit('spawnPowerUp', newPowerUp)
+  console.log('PU spawn local')
+}
 </script>
 
 <style scoped>
@@ -359,5 +400,25 @@ function spawnPowerUp() {}
 
 .right-border {
   right: 0;
+}
+
+.waiting {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  text-align: center;
+}
+
+.countdown {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 100px;
+  text-align: center;
 }
 </style>
