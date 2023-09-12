@@ -12,7 +12,6 @@
 
 <script lang="ts">
 import { ref, defineComponent } from 'vue'
-import { Socket } from 'socket.io-client'
 
 export type GamePaddleSetup = {
   x: ReturnType<typeof ref>

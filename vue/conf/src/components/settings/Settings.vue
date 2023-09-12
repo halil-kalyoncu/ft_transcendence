@@ -8,9 +8,7 @@
 
     <div class="input-group">
       <div class="file-upload-wrapper">
-        <label for="avatar" class="secondary-btn upload-btn">
-          {{ selectedFileName || 'Choose Avatar' }}
-        </label>
+        <label for="avatar" class="secondary-btn upload-btn"> Choose Avatar </label>
         <input
           class="file-input"
           type="file"
@@ -83,7 +81,6 @@ const previousImages = () => {
 }
 const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {
-    selectedFileName.value = avatarInput.value.files[0].name
     uploadedAvatarFile.value = avatarInput.value.files[0]
 
     try {
@@ -111,9 +108,8 @@ const handleAvatarUpload = async () => {
 }
 
 const deleteAvatar = async () => {
-  avatarInput.value = null
   try {
-    const response = await fetch(`http://localhost:3000/api/users/avatar?userId=${userId.value}`, {
+    const response = await fetch(`http://localhost:3000/api/users/avatar/${userId.value}`, {
       method: 'PATCH'
     })
 
@@ -121,7 +117,7 @@ const deleteAvatar = async () => {
       notificationStore.showNotification('Success delete avatar', true)
       userStore.clearAvatarImageData()
     } else {
-      notificationStore.showNotification('Failed to delete avatar', false)
+      notificationStore.showNotification('User has no avatar', false)
     }
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)

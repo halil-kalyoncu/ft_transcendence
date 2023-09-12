@@ -22,6 +22,7 @@ services:
       NODE_ENV: development
       JWT_SECRET: hard_to_guess_secret_123
       PORT: 3000
+      AVATARPATH: ./files
     restart: unless-stopped
     ports:
       - 3000:3000
