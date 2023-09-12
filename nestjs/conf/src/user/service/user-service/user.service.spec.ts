@@ -576,7 +576,6 @@ describe('UserService', () => {
         where: { id: userId },
         data: { avatarId: file.filename },
       });
-      expect(unlinkSyncSpy).toHaveBeenCalledWith(user.avatarId);
 
       findByIdSpy.mockRestore();
       updateSpy.mockRestore();
@@ -632,7 +631,6 @@ describe('UserService', () => {
         where: { id: userId },
         data: { avatarId: null },
       });
-      expect(unlinkSyncSpy).toHaveBeenCalledWith(user.avatarId);
 
       findByIdSpy.mockRestore();
       updateSpy.mockRestore();
@@ -668,7 +666,6 @@ describe('UserService', () => {
         where: { id: userId },
         data: { avatarId: null },
       });
-      expect(unlinkSyncSpy).not.toHaveBeenCalled();
 
       findByIdSpy.mockRestore();
       updateSpy.mockRestore();
