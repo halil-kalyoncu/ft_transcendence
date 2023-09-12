@@ -70,8 +70,8 @@ const PowerUps = ref<any[]>([])
 const paddleA = ref<GamePaddleSetup | null>(null)
 const paddleB = ref<GamePaddleSetup | null>(null)
 const ball = ref<typeof GameBall | null>(null)
-let playerAName = ref<string>(null);
-let playerBName = ref<string>(null);
+let playerAName = ref<string>('');
+let playerBName = ref<string>('');
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
@@ -119,10 +119,6 @@ const keyHookUp = (e: KeyboardEvent) => {
     case 'Space':
       socket.value.emit('fire')
       break
-
-	case 'KeyB':
-		getUserNames();
-		break
   }
 }
 
@@ -141,7 +137,7 @@ const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
 }
 
-const initGameField = () => {
+const initGameField = async () => {
   if (!gameField.value) {
     //error handling
     console.log('gameField value is not set')
@@ -151,18 +147,27 @@ const initGameField = () => {
   fieldWidth.value = gameField.value?.clientWidth || 0
   fieldHeight.value = gameField.value?.clientHeight || 0
   // console.log(fieldWidth.value);
+  await getUserNames()
+  if (!playerAName || playerAName.value === '' || !playerBName || playerBName.value === '') {
+    //TODO what to do if the usernames are not set
+    console.log('something went wrong fetching the usernames')
+    return 
+  }
   setTimeout(() => {
     update()
   }, 200)
 
   paddleA.value?.setX(1)
   if (fieldWidth.value && paddleB.value) {
-    console.log('setting paddle B')
     paddleB.value.setX(fieldWidth.value - paddleB.value.getPaddleWidth() - 1)
   }
 
-  // console.log("paddleA X: " + paddleA.value?.getPaddleX());
-  // console.log("paddleB X: " + paddleA.value?.getPaddleX());
+  const loggedUser: UserI = getUserFromAccessToken()
+  if (playerAName.value == loggedUser.username) {
+    side.value = 'left'
+  } else {
+    side.value = 'right'
+  }
 }
 
 onMounted(() => {
@@ -172,11 +177,6 @@ onMounted(() => {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
-
-  socket.value.on('direction', (data: any) => {
-    side.value = data
-    // console.log("side: ", data);
-  })
 
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
     if (playerId === 'left') {
@@ -244,12 +244,6 @@ onMounted(() => {
 
   socket.value.on('countdown', (payload: number) => {
     countdown.value = payload
-	if (!playerAName.value || !playerBName.value)
-	{
-		getUserNames();
-		console.log("A:", playerAName);
-		console.log("B:", playerBName);
-	}
   })
 
   socket.value.on('startGame', () => {

@@ -133,11 +133,9 @@ export class EventsGateway {
     const room = this.rooms.get(queryMatchId);
     if (queryUserId === socket.data.match.leftUserId) {
       socket.data.isLeftPlayer = true;
-      socket.emit('direction', 'left');
       room.socketIds[0] = socket.id;
     } else {
       socket.data.isLeftPlayer = false;
-      socket.emit('direction', 'right');
       room.socketIds[1] = socket.id;
     }
 
