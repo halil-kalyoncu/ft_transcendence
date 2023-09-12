@@ -2,17 +2,14 @@
   <div class="field" ref="gameField">
     <div class="left-border"></div>
     <div class="right-border"></div>
-	<PlayerView ref="playerview"
-		:playerA="playerAName"
-		:playerB="playerBName"
-	/>
+    <PlayerView ref="playerview" :playerA="playerAName" :playerB="playerBName" />
     <GameBall ref="ball" />
     <GamePaddle ref="paddleA" />
     <GamePaddle ref="paddleB" />
     <div v-if="countdown === -1" class="waiting"><p>Waiting for opponent...</p></div>
     <div v-else-if="countdown > 0" class="countdown">
       <p>{{ countdown }}</p>
-	  </div>
+    </div>
     <PowerUp
       v-for="powerup in PowerUps"
       :id="powerup.id"
@@ -70,8 +67,8 @@ const PowerUps = ref<any[]>([])
 const paddleA = ref<GamePaddleSetup | null>(null)
 const paddleB = ref<GamePaddleSetup | null>(null)
 const ball = ref<typeof GameBall | null>(null)
-let playerAName = ref<string>('');
-let playerBName = ref<string>('');
+let playerAName = ref<string>('')
+let playerBName = ref<string>('')
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
@@ -151,7 +148,7 @@ const initGameField = async () => {
   if (!playerAName || playerAName.value === '' || !playerBName || playerBName.value === '') {
     //TODO what to do if the usernames are not set
     console.log('something went wrong fetching the usernames')
-    return 
+    return
   }
   setTimeout(() => {
     update()
@@ -370,10 +367,9 @@ async function getUserNames(): Promise<void> {
     })
 
     if (response.ok) {
-		const matchData = await response.json()
-		playerAName = matchData.leftUser.username;
-		playerBName = matchData.rightUser.username;
-
+      const matchData = await response.json()
+      playerAName = matchData.leftUser.username
+      playerBName = matchData.rightUser.username
     } else {
       notificationStore.showNotification(
         'Something went wrong while fetching the match data',
@@ -386,7 +382,6 @@ async function getUserNames(): Promise<void> {
     router.push('/home')
   }
 }
-
 </script>
 
 <style scoped>

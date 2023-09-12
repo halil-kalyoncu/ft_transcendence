@@ -120,7 +120,7 @@ export class UserService {
     }
 
     if (user.avatarId) {
-      fs.unlinkSync(user.avatarId);
+      fs.unlinkSync(this.generateAvatarPath(user.avatarId));
     }
 
     return await this.prisma.user.update({
@@ -128,7 +128,7 @@ export class UserService {
         id: user.id,
       },
       data: {
-        avatarId: file.path,
+        avatarId: file.filename,
       },
     });
   }
@@ -141,7 +141,7 @@ export class UserService {
     }
 
     if (user.avatarId) {
-      fs.unlinkSync(user.avatarId);
+      fs.unlinkSync(this.generateAvatarPath(user.avatarId));
     }
     return await this.prisma.user.update({
       where: {
@@ -173,5 +173,9 @@ export class UserService {
         enabled2FA: true,
       },
     });
+  }
+
+  private generateAvatarPath(avatarId: string): string {
+    return process.env.AVATARPATH + '/' + avatarId;
   }
 }

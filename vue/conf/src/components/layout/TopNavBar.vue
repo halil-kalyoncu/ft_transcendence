@@ -24,6 +24,14 @@ const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
 const hasNotification = ref(false)
 
+const avatarSrc = computed(() => {
+  if (userAvatar.value === null) {
+    //can't happen because if check it before i call this function
+    return ''
+  }
+  return URL.createObjectURL(userAvatar.value)
+})
+
 const logout = () => {
   localStorage.removeItem('ponggame')
   userStore.clearUsername()
@@ -44,7 +52,8 @@ const logout = () => {
         <RouterLink class="navButton header-username" :to="`/profile/${username}`">
           <div class="link-content">
             {{ username ? username : 'TBD' }}
-            <img class="profile-image" src=../../assets/defaultAvatar.png alt="Profile" />
+            <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />
+            <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
           </div>
         </RouterLink>
         <NotificationBell />

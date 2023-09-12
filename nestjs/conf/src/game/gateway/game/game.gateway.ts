@@ -45,16 +45,20 @@ export class EventsGateway {
         let newBallPos;
 
         if (room.ball.magnet && room.ball.ballSticking) {
-		  if (room.ball.magnet == 1 && room.ball.ballSticking == 1){
-		    if (diffPadBall == 0)
-		      diffPadBall = room.ball.y - room.paddleA.y;
-			newBallPos = { x: room.paddleA.wid, y: room.paddleA.y + diffPadBall };
-		  }
-		  else if (room.ball.magnet == 2 && room.ball.ballSticking == 2) {
-			if (diffPadBall == 0)
-		      diffPadBall = (room.ball.y + room.ball.wid) - room.paddleB.y;
-			newBallPos = { x: room.paddleB.x - room.ball.wid, y: room.paddleB.y + diffPadBall};
-		  }
+          if (room.ball.magnet == 1 && room.ball.ballSticking == 1) {
+            if (diffPadBall == 0) diffPadBall = room.ball.y - room.paddleA.y;
+            newBallPos = {
+              x: room.paddleA.wid,
+              y: room.paddleA.y + diffPadBall,
+            };
+          } else if (room.ball.magnet == 2 && room.ball.ballSticking == 2) {
+            if (diffPadBall == 0)
+              diffPadBall = room.ball.y + room.ball.wid - room.paddleB.y;
+            newBallPos = {
+              x: room.paddleB.x - room.ball.wid,
+              y: room.paddleB.y + diffPadBall,
+            };
+          }
           this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos);
           this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
           room.ball.x = newBallPos.x;
@@ -317,10 +321,8 @@ export class EventsGateway {
     if (data.type == 'magnet') {
       // const room = this.rooms.get(socket.data.match.id);
       console.log('EVENT: magnet');
-	  if (data.player == "left")
-      	room.ball.magnet = 1;
-	  else
-		room.ball.magnet = 2;
+      if (data.player == 'left') room.ball.magnet = 1;
+      else room.ball.magnet = 2;
       // let end = Date.now() + 5000;
       // while (Date.now() < end){
       // 	let newBallPos= {x: room.paddleA.wid, y: room.paddleA.y + (room.paddleA.hgt / 2)};

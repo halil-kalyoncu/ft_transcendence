@@ -1,16 +1,16 @@
 <template>
   <div class="playerView">
-	<div class="player1Name">{{ playerA }}</div>
-	<!-- <div class="player1Sore">{{ playerA }}</div> -->
-	<div class="player2">{{ playerB }}</div>
-	</div>
+    <div class="player1Name">{{ playerA }}</div>
+    <!-- <div class="player1Sore">{{ playerA }}</div> -->
+    <div class="player2">{{ playerB }}</div>
+  </div>
 </template>
 
 <script setup lang="ts">
-	const props = defineProps<{
-		playerA: string;
-		playerB: string;
-	}>();
+const props = defineProps<{
+  playerA: string
+  playerB: string
+}>()
 </script>
 
 <style scoped>
@@ -28,8 +28,8 @@
   /* z-index: 999; */
 }
 .player1 {
-	text-align: left;
-	margin-left: 15%;
+  text-align: left;
+  margin-left: 15%;
   /* position: absolute; */
   /* top: 50px;
   left: 120px; */
@@ -41,8 +41,8 @@
   /* z-index: 999; */
 }
 .player2 {
-	text-align: right;
-	margin-right: 15%;
+  text-align: right;
+  margin-right: 15%;
   /* position: absolute; */
   /* top: 50px; */
   /* left:  50%; */
