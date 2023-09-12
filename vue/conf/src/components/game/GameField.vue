@@ -2,13 +2,17 @@
   <div class="field" ref="gameField">
     <div class="left-border"></div>
     <div class="right-border"></div>
+	<PlayerView ref="playerview"
+		:playerA="playerAName"
+		:playerB="playerBName"
+	/>
     <GameBall ref="ball" />
     <GamePaddle ref="paddleA" />
     <GamePaddle ref="paddleB" />
     <div v-if="countdown === -1" class="waiting"><p>Waiting for opponent...</p></div>
     <div v-else-if="countdown > 0" class="countdown">
       <p>{{ countdown }}</p>
-    </div>
+	  </div>
     <PowerUp
       v-for="powerup in PowerUps"
       :id="powerup.id"
@@ -31,6 +35,7 @@
 <script setup lang="ts">
 import { defineComponent, ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import type { GamePaddleSetup } from './GamePaddle.vue'
+import PlayerView from './PlayerView.vue'
 import GamePaddle from './GamePaddle.vue'
 import GameBall from './GameBall.vue'
 import PowerUp from './PowerUp.vue'
@@ -65,6 +70,8 @@ const PowerUps = ref<any[]>([])
 const paddleA = ref<GamePaddleSetup | null>(null)
 const paddleB = ref<GamePaddleSetup | null>(null)
 const ball = ref<typeof GameBall | null>(null)
+let playerAName = ref<string>(null);
+let playerBName = ref<string>(null);
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
@@ -112,6 +119,10 @@ const keyHookUp = (e: KeyboardEvent) => {
     case 'Space':
       socket.value.emit('fire')
       break
+
+	case 'KeyB':
+		getUserNames();
+		break
   }
 }
 
@@ -233,6 +244,12 @@ onMounted(() => {
 
   socket.value.on('countdown', (payload: number) => {
     countdown.value = payload
+	if (!playerAName.value || !playerBName.value)
+	{
+		getUserNames();
+		console.log("A:", playerAName);
+		console.log("B:", playerBName);
+	}
   })
 
   socket.value.on('startGame', () => {
@@ -348,6 +365,34 @@ function spawnPowerUp() {
   socket.value?.emit('spawnPowerUp', newPowerUp)
   console.log('PU spawn local')
 }
+
+async function getUserNames(): Promise<void> {
+  try {
+    const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (response.ok) {
+		const matchData = await response.json()
+		playerAName = matchData.leftUser.username;
+		playerBName = matchData.rightUser.username;
+
+    } else {
+      notificationStore.showNotification(
+        'Something went wrong while fetching the match data',
+        false
+      )
+      router.push('/home')
+    }
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while fetching the match data', false)
+    router.push('/home')
+  }
+}
+
 </script>
 
 <style scoped>

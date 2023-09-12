@@ -63,7 +63,7 @@ export class EventsGateway {
           powerup.moveDown();
           this.server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
         }
-        this.server.emit('ballPosition', newBallPos);
+        // this.server.emit('ballPosition', newBallPos);
 
         // console.log(room.ball.speed);
       } else {

@@ -19,6 +19,7 @@ export class Room {
   leftPlayerDisconnect: boolean;
   rightPlayerDisconnect: boolean;
 
+  
   constructor(id: number) {
     this.id = id;
     this.ball = new Ball(500, 200, 15, 15, 5, 4, 3, 800, 600);
