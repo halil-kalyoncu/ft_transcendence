@@ -105,10 +105,12 @@ export class Ball {
     if (nextBallX <= 0 && nextBallX < this.x) {
       room.rightPlayerGoals++;
       server.to(room.socketIds[0]).emit('scoreGoal', 'playerB');
+      server.to(room.socketIds[1]).emit('scoreGoal', 'playerB');
       // this.magdiff = this.y - padd
       scoredGoal = true;
     } else if (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x) {
       server.to(room.socketIds[0]).emit('scoreGoal', 'playerA');
+      server.to(room.socketIds[1]).emit('scoreGoal', 'playerA');
       room.leftPlayerGoals++;
       scoredGoal = true;
     }
