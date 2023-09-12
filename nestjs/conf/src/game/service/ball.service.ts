@@ -16,8 +16,8 @@ export class Ball {
     public dy: number = 3,
     public fieldWidth: number = 800,
     public fieldHeight: number = 600,
-    public magnet: boolean = false,
-    public ballSticking: boolean = false,
+    public magnet: number = 0,
+    public ballSticking: number = 0,
     public magdiff: number = 0,
   ) {}
 
@@ -34,7 +34,7 @@ export class Ball {
     this.dx = 5;
     this.dy = 3;
     this.speed = 4;
-    this.magnet = false;
+    this.magnet = 0;
   }
 
   moveBallDir(paddleBY: number, paddleHeight: number, paddle: string): void {
@@ -124,16 +124,16 @@ export class Ball {
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;
     else if (this.handleBallCollision(nextBallX, nextBallY, room, 'A')) {
-      if (this.magnet) {
-        this.ballSticking = true;
+      if (this.magnet == 1) {
+        this.ballSticking = 1;
         // console.log("DIFFERENCE: ", this.y)
         return;
       }
       this.moveBallDir(room.paddleA.y, room.paddleA.hgt, 'A');
       this.x = room.paddleA.x + room.paddleA.wid;
     } else if (this.handleBallCollision(nextBallX, nextBallY, room, 'B')) {
-      if (this.magnet) {
-        this.ballSticking = true;
+      if (this.magnet == 2) {
+        this.ballSticking = 2;
         return;
       }
       this.moveBallDir(room.paddleB.y, room.paddleB.hgt, 'B');

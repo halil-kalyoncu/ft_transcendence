@@ -35,8 +35,8 @@ export class Room {
   }
 
   checkGameFinished(): void {
-    if (this.leftPlayerGoals === 5 || this.rightPlayerGoals === 5) {
-      this.gameIsRunning = false;
-    }
+    // if (this.leftPlayerGoals === 5 || this.rightPlayerGoals === 5) {
+    //   this.gameIsRunning = false;
+    // }
   }
 }

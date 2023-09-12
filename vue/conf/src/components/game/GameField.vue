@@ -113,7 +113,7 @@ const keyHookUp = (e: KeyboardEvent) => {
       break
     case 'KeyN':
       // spawnPowerUp();
-      socket.value.emit('activatePowerUp', { type: 'magnet', player: 'left' })
+      socket.value.emit('activatePowerUp', { type: 'magnet', player: 'right' })
       // socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
       break
     case 'Space':
