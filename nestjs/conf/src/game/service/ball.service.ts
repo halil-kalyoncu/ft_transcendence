@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Room } from './room.service';
 import { Server } from 'socket.io';
 import { PowerUp } from './powerup.service';
+import { Socket } from 'dgram';
 
 //500, 200, 15, 15, 5, 4, 3, 800, 600
 @Injectable()
@@ -98,14 +99,16 @@ export class Ball {
     return false;
   }
 
-  scoreGoal(room: Room, nextBallX: number): boolean {
+  scoreGoal(room: Room, nextBallX: number, server: Server): boolean {
     let scoredGoal = false;
 
     if (nextBallX <= 0 && nextBallX < this.x) {
       room.rightPlayerGoals++;
+      server.to(room.socketIds[0]).emit('scoreGoal', 'playerB');
       // this.magdiff = this.y - padd
       scoredGoal = true;
     } else if (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x) {
+      server.to(room.socketIds[0]).emit('scoreGoal', 'playerA');
       room.leftPlayerGoals++;
       scoredGoal = true;
     }
@@ -119,7 +122,7 @@ export class Ball {
     let nextBallX = this.x + this.dx;
     let nextBallY = this.y + this.dy;
 
-    if (this.scoreGoal(room, nextBallX)) this.resetBall();
+    if (this.scoreGoal(room, nextBallX, server)) this.resetBall();
     else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;
