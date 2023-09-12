@@ -135,9 +135,9 @@ const handleConfirm = async ({
       password: password || '',
       channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
     }
-    const response = await socket.value.emit('createProtectedChannel', createChannelDto, (error: ErrorI) => {
-	if ('error' in error) {
-	  notificationStore.showNotification(error.error)
+    const response = await socket.value.emit('createProtectedChannel', createChannelDto, (response: ErrorI | any) => {
+	if ('error' in response) {
+	  notificationStore.showNotification(response.error)
 	  return
 	}
 	else {
@@ -151,9 +151,10 @@ const handleConfirm = async ({
       name: name || '',
       channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
     }
-    const response = await socket.value.emit('createUnProtectedChannel', createChannelDto, (error: ErrorI) => {
-	if ('error' in error) {
-	  notificationStore.showNotification(error.error)
+    await socket.value.emit('createUnProtectedChannel', createChannelDto, (response: ErrorI | any) => {
+	if ('error' in response) {
+		console.log('HERE')
+	  notificationStore.showNotification(response.error)
 	  return
 	}
 	else {

@@ -4,9 +4,10 @@
       <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
           :isPasswordProtected="channel.channel.protected"
+		  :isPrivate="false"
           :channelName="channel.channel.name"
           :ownerName="channel.owner.username"
-          :joinChannelButtonName="'Join'"
+          :joinChannelButtonNameProps="'Join'"
           :channelId="channel.channel.id"
           :userId="userId"
           @channelEntered="handleChannelEntered(channel.channel.id)"
@@ -53,7 +54,7 @@ const setPublicChannels = async () => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    channelData.value = data
+    channelData.value = await data
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, true)
   }

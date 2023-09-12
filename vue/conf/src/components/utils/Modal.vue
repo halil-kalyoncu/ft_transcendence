@@ -27,7 +27,7 @@
       <div v-if="showVisibilitySelection && !isNumberSelection">
         <div class="radio-button-input-group">
           <input type="radio" id="Public" value="Public" v-model="channelVisibility" hidden />
-          <label for="Public">Public</label>
+          <label for="Public">Public </label>
           <!-- TODO: Change layout -->
 
           <input type="radio" id="Private" value="Private" v-model="channelVisibility" hidden />
@@ -100,6 +100,10 @@ const submit = () => {
   if (inputName.value.trim() === '') {
     notificationStore.showNotification('Set Channel-Name')
     return
+  }
+  if ( inputName.value.length > 15){
+	notificationStore.showNotification('Channel-Name too long')
+	return
   }
   if (checkPassword.value && inputPassword.value.trim() === '') {
     notificationStore.showNotification('Set Password')

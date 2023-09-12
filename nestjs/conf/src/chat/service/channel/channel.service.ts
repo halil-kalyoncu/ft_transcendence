@@ -96,13 +96,13 @@ export class ChannelService {
 	
     // Add the user creating the channel as a member (owner)
     await this.prisma.channelMember.create({
-      data: {
-        userId: userId,
-        channelId: channel.id,
-        role: ChannelMemberRole.OWNER,
-      },
+		data: {
+			userId: userId,
+			channelId: channel.id,
+			role: ChannelMemberRole.OWNER,
+		},
     });
-	
+
     return channel;
   }
 

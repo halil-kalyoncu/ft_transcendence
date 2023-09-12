@@ -4,9 +4,10 @@
       <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
           :isPasswordProtected="channel.channel.protected"
+		  :isPrivate=" channel.channel.visibility === 'PRIVATE' ? true : false"
           :channelName="channel.channel.name"
           :ownerName="channel.owner.username"
-          :joinChannelButtonName="'Enter'"
+          :joinChannelButtonNameProps="'Enter'"
           :channelId="channel.channel.id"
           :unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
           :userId="userId"

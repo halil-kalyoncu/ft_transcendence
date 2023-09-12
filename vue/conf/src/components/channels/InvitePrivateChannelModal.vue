@@ -74,7 +74,6 @@ const userSuggestions = ref<ChannelInviteeUserI[]>([])
 const showSuggestionList = ref(false)
 const userStore = useUserStore()
 const userId = computed<number>(() => userStore.userId)
-const channelInvitees = ref<string[]>([])
 const selectedUsers = ref<string[]>([])
 
 const props = defineProps({
@@ -145,7 +144,7 @@ const submit = async () => {
   {
 	notificationStore.showNotification(`Invitations sent`, true)
   }
-
+  findUserSuggestions('')
   emit('submit')
 }
 
@@ -163,7 +162,7 @@ const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId:
     if (!response.ok) {
       throw new Error('Could not fetch channel manager members')
     }
-    channelInvitees.value.push(inviteeUsername)
+
   } catch (error: any) {
     console.error('Error: ', error)
   }
@@ -185,6 +184,9 @@ const findUserSuggestions = async (input: string) => {
   const data = await response.json()
   if (input.trim() === '') {
     userSuggestions.value = data
+	for (const user of userSuggestions.value) {
+		console.log(user.status)
+	}
     return
   }
   // Filter user suggestions based on the provided letters in the right order
@@ -227,11 +229,6 @@ const goToProfile = (username: String | undefined) => {
   router.push(`/profile/${username}`)
 }
 
-const updateSelection = () => {
-  for (const suggestion of userSuggestions.value) {
-    checkSelection(suggestion)
-  }
-}
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -249,9 +246,9 @@ const setInvitationUpdateListener = () => {
   socket.value.on('ChannelInvitationRejected', (channelName, UserName) => {
     findUserSuggestions(inputName.value)
   })
-  socket.value.on('NewChannelInvitation', () => {
+  socket.value.on('NewChannelInvitation', (channelName, UserName) => {
+	notificationStore.showNotification('New invitation', true)
     findUserSuggestions(inputName.value)
-    updateSelection()
   })
 }
 
@@ -264,7 +261,6 @@ onMounted(async () => {
   await findUserSuggestions('')
   initSocket()
   setInvitationUpdateListener()
-  updateSelection()
 })
 </script>
 <style>

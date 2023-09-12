@@ -80,7 +80,7 @@ import type { ChannelManagerMemberI } from '../../model/channels/channelMessage.
 import type { ChannelMemberRoleType } from '../../model/channels/createChannel.interface'
 import { ChannelMemberRole } from '../../model/channels/createChannel.interface'
 import InvitePrivateChannelModal from './InvitePrivateChannelModal.vue'
-import { ErrorI } from '../../model/error.interface'
+import type { ErrorI } from '../../model/error.interface'
 const props = defineProps({
   channelId: {
     type: Number,

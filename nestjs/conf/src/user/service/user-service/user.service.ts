@@ -92,17 +92,19 @@ export class UserService {
       },
     });
 
-    console.log(usersNotInChannel);
+	console.log("usersNotInChannel")	
     for (const user of usersNotInChannel) {
       const status = await this.prisma.channelInvitation.findMany({
         where: {
           inviteeId: user.id,
+		  channelId: channelId,
         },
         select: {
           status: true,
         },
       });
-
+      console.log("status")
+    console.log(status);
       const channelinvitee = {
         id: user.id,
         username: user.username,

@@ -4,9 +4,9 @@
       <button class="settings-button" :class="'icon-wrapper'">
         <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
         <span
-          v-if="friendRequests?.length > 0 || matchInvites?.length > 0"
+          v-if="friendRequests?.length > 0 || matchInvites?.length > 0 || channelInvitations?.length > 0"
           class="notification-badge"
-          >1+</span
+          >{{ channelInvitations?.length + friendRequests?.length +  matchInvites?.length }}</span
         >
       </button>
     </RouterLink>
@@ -23,15 +23,21 @@ import { disconnectChatSocket, connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import { useFriendRequestStore } from '../../stores/friendRequests'
 import { useMatchRequestsStore } from '../../stores/matchRequests'
+import { useChannelInvitationsStore } from '../../stores/channelInvitations'
+import type { ChannelInvitationI } from '../../model/channels/channelInvitation.interface'
 import { useUserStore } from '../../stores/userInfo'
 import router from '../../router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
+
 library.add(fas)
 const friendRequestsStore = useFriendRequestStore()
 const friendRequests = computed(() => friendRequestsStore.friendRequests)
+
+//const channelInvitationsStore = useChannelInvitationsStore()
+//const channelInvitations = computed(() => channelInvitationsStore.channelInvitations)
 
 const socket = ref<Socket | null>(null)
 const matchInvites = ref<MatchI[]>([])
@@ -41,6 +47,7 @@ const notificationStore = useNotificationStore()
 const username = computed(() => userStore.username)
 const userId = computed(() => userStore.userId)
 const hasNotification = ref(false)
+const channelInvitations= ref <ChannelInvitationI[]>([])
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -52,9 +59,12 @@ onMounted(() => {
 
   setFriendRequestListener()
   setMatchInviteListener()
+  setchannelInvitationListener()
 
   setFriendRequestData()
   setMatchInviteData()
+  setChannelInvitationData()
+
 })
 
 const setMatchInviteListener = () => {
@@ -117,6 +127,44 @@ const setFriendRequestListener = () => {
   }
   socket.value.on('friendRequests', () => {
     setFriendRequestData()
+  })
+}
+
+const setChannelInvitationData = async () => {
+	try {
+    const response = await fetch(
+      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+
+	console.log('setChannelInvitationData')
+	console.log(data)
+    if (data && data.length > 0) {
+      hasNotification.value = true
+    }
+    channelInvitations.value = data
+  } catch (error: any) {
+    notificationStore.showNotification(`Error From Set Channel` + error.message, false)
+  }
+}
+
+const setchannelInvitationListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+  socket.value.on('NewChannelInvitation', () => {
+    setChannelInvitationData()
+  })
+  socket.value.on('ChannelInvitationRejected', (channelName, inviteeName) => {
+    setChannelInvitationData()
+  })
+  socket.value.on('ChannelInvitationAccepted', (channelName, inviteeName) => {
+    setChannelInvitationData()
   })
 }
 </script>

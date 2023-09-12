@@ -3,7 +3,15 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
 <template>
   <div class="channel-list-item">
     <div class="channel-info">
-      <p class="channel-name">{{ channelName }}</p>
+		<div class="channel-name-container">
+			<p class="channel-name">{{ channelName }}</p>
+			<font-awesome-icon 
+			v-if="isPrivate" 
+			class="icon" 
+			:icon="['fas', 'user-secret']"
+			title="Private Channel" 
+			></font-awesome-icon>
+      </div>
       <div class="channel-owner-container">
         <font-awesome-icon class="icon" :icon="['fas', 'star']" />
         <p class="channel-owner">{{ ownerName }}</p>
@@ -35,7 +43,7 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
         :class="{ 'disabled-button': userBanned }"
         :title="tooltipText()"
       >
-        {{ joinChannelButtonName }}
+		{{ joinChannelButtonName }}
       </button>
     </div>
   </div>
@@ -54,9 +62,10 @@ library.add(fas)
 
 const props = defineProps({
   isPasswordProtected: Boolean,
+  isPrivate: Boolean,
   channelName: String,
   ownerName: String,
-  joinChannelButtonName: String,
+  joinChannelButtonNameProps: String,
   channelId: Number,
   unreadMessageCount: Number,
   userId: Number
@@ -64,30 +73,49 @@ const props = defineProps({
 // const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
 const showPasswordField = ref(false)
+
 const password = ref('')
 const userBanned = ref(false)
 const socket = ref<Socket | null>(null)
 const notificationStore = useNotificationStore()
 const isPasswordProtected = props.isPasswordProtected
+let joinChannelButtonName = ref(props.joinChannelButtonNameProps)
 
 const handleJoin = async () => {
 if (isPasswordProtected){
-	if (password.value === '') {
-		notificationStore.showNotification('Error: Password is required')
-		return}
-	else {
-		const correct: boolean = await comparePassword()
-		if (!correct) {
-			notificationStore.showNotification('Error: Wrong password')
-			return
-		}
+	console.log(showPasswordField)
+	if (!showPasswordField.value)
+	{
+		showPasswordField.value = true
+		joinChannelButtonName.value = 'Confirm'
+		return
+	}
+	else
+	{
+		if (password.value === '') {
+			notificationStore.showNotification('Error: Password is required')
+			return}
 		else {
-			emit('channel-entered', props.channelId)
+			const correct: boolean = await comparePassword()
+			if (!correct) {
+				notificationStore.showNotification('Error: Wrong password')
+				showPasswordField.value = false
+				joinChannelButtonName.value = 'Enter'
+				password.value = ''
+				return
+			}
+			else {
+				showPasswordField.value = false
+				joinChannelButtonName.value = 'Enter'
+				password.value = ''
+				emit('channel-entered', props.channelId)
+			}
 		}
 	}
-  } else {
-    emit('channel-entered', props.channelId)
-  }
+} 
+else {
+  emit('channel-entered', props.channelId)
+}
 }
 
 const tooltipText = () => {
@@ -125,6 +153,7 @@ const comparePassword = async () : Promise<boolean> =>{
 	return correct
   } catch (error: any) {
 	console.error('Error: ', error)
+	return false
   }
 }
 
@@ -144,6 +173,14 @@ const setUserBanned = async () => {
   }
 }
 
+const getJoinChannelButtonName = async () => {
+  if (showPasswordField.value) {
+	return 'Confirm'
+  } else {
+	return 'Enter'
+  }
+}
+
 const setBannedFromChannelListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
@@ -160,14 +197,12 @@ const setBannedFromChannelListener = () => {
 	return
   })
 }
-const setPasswordField = () => {
-  if (isPasswordProtected && password.value === '') {
-	showPasswordField.value = true
-  }
-}
+
+
+
 onMounted(() => {
   initSocket()
-  setPasswordField()
+  getJoinChannelButtonName()
   setUserBanned()
   setBannedFromChannelListener()
 })
@@ -201,6 +236,18 @@ onMounted(() => {
   font-size: 0.75rem;
 }
 
+.channel-name-container {
+  display: flex;
+  align-items: center; 
+}
+
+.channel-name-container .icon {
+  margin: 0 0.5rem 0.25rem 0;
+  margin-left: 0.25rem;
+  color: #fff9f9;
+  font-size: 0.75rem; 
+  cursor: pointer;
+}
 .channel-name {
   margin: 0;
   padding: 0;
