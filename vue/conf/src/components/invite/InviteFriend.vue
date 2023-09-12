@@ -20,11 +20,14 @@ const username = computed(() => userStore.username)
 const areRadioButtonsDisabled = computed(() => activePanel.value === 'DefaultGame')
 const activePanel = ref('DefaultGame')
 const selectedGoals = ref('five')
-const selectedPowerups = ref({
-  slow: false,
-  fast: false,
-  small: false,
-  big: false
+const selectedPowerups = ref([
+  { name: 'slow', value: false },
+  { name: 'fast', value: false },
+  { name: 'small', value: false },
+  { name: 'big', value: false }
+])
+const selectedPowerupNames = computed(() => {
+  return selectedPowerups.value.filter(p => p.value).map(p => p.name)
 })
 
 const numericMatchId = parseInt(props.matchId, 10)
@@ -102,11 +105,8 @@ const sendInvite = async () => {
 
     socket.emit('sendMatchInvite', {
       matchId: numericMatchId,
-      invitedUserId: invitedUser.value?.id
-      // todo check exact args
-      // goals: selectedRadio.value,
-      // powerup1: selectedPowerup1.value,
-      // powerup2: selectedPowerup2.value
+      invitedUserId: invitedUser.value?.id,
+      powerupNames: selectedPowerupNames.value
     })
 
     emit('send-match-invite', invitedUser.value)
@@ -124,8 +124,11 @@ const setActivePanel = (value: string) => {
   }
 }
 
-const togglePowerup = (powerup: string) => {
-  
+const togglePowerup = (powerupName: string) => {
+  const powerup = selectedPowerups.value.find(p => p.name === powerupName)
+  if (powerup) {
+    powerup.value = !powerup.value
+  }
 }
 
 </script>
@@ -212,32 +215,32 @@ const togglePowerup = (powerup: string) => {
       <div>Ball Speed</div>
       <div class="button_container">
         <button
-          :class="{ selected: selectedPowerups.slow }"
+          :class="{ selected: selectedPowerups.find(p => p.name === 'slow')?.value }"
           @click="togglePowerup('slow')"
         >
           slow
         </button>
+        <button
+          :class="{ selected: selectedPowerups.find(p => p.name === 'fast')?.value }"
+          @click="togglePowerup('fast')"
+        >
+          fast
+        </button>
       </div>
       <div>Paddle Size</div>
       <div class="button_container">
-        <input
-          type="radio"
-          name="powerup2"
-          id="small"
-          v-model="selectedPowerup2"
-          value="small"
-          :disabled="areRadioButtonsDisabled"
-        />
-        <label for="small" class="goals-label">small</label>
-        <input
-          type="radio"
-          name="powerup2"
-          id="big"
-          v-model="selectedPowerup2"
-          value="big"
-          :disabled="areRadioButtonsDisabled"
-        />
-        <label for="big" class="goals-label">big</label>
+        <button
+          :class="{ selected: selectedPowerups.find(p => p.name === 'small')?.value }"
+          @click="togglePowerup('small')"
+        >
+          small
+        </button>
+        <button
+          :class="{ selected: selectedPowerups.find(p => p.name === 'big')?.value }"
+          @click="togglePowerup('big')"
+        >
+          big
+        </button>
       </div>
     </div>
     <div class="invite-controls-container">
@@ -385,6 +388,29 @@ const togglePowerup = (powerup: string) => {
   align-items: center;
   margin-bottom: 1rem;
   width: calc(540px + 1rem);
+}
+
+.friend-invite .button_container button {
+  appearance: none;
+  border: 1px solid aliceblue;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: aliceblue;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  margin: 0 0.5rem;
+  width: 100%;
+  text-align: center;
+}
+
+.friend-invite .button_container button.selected {
+  color: #ea9f42;
+  border-color: #ea9f42;
+}
+
+.friend-invite .button_container button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;  
 }
 
 .invite-controls-container {

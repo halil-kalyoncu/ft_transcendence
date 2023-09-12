@@ -38,6 +38,7 @@ export class MatchService {
   }
 
   async invite(id: number, invitedUserId: number, goalsToWin: number, powerups: Powerup[]): Promise<Match | null> {
+    console.log(powerups);
     const match = await this.findById(id);
 
     if (!match) {
@@ -53,16 +54,15 @@ export class MatchService {
         state: 'INVITED',
         goalsToWin,
         powerups: {
-          connect: powerups.map(
-            p => ({
-              id: p.id
-            })
+          set: powerups.map(
+            powerup => ({ id: powerup.id })
           )
         }
       },
       include: {
         leftUser: true,
         rightUser: true,
+        powerups: true
       },
     });
   }

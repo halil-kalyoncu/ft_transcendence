@@ -676,12 +676,14 @@ export class ChatGateway
     }
 
     const powerups: Powerup[] = await this.powerupService.findByNames(sendGameInviteDto.powerupNames);
+    console.log(powerups);
     const updatedMatch: Match = await this.matchService.invite(
       sendGameInviteDto.matchId,
       sendGameInviteDto.invitedUserId,
       sendGameInviteDto.goalsToWin,
       powerups
     );
+    console.log(updatedMatch);
     socket.emit('matchInviteSent', updatedMatch);
     socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
   }
