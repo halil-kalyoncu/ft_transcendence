@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 //TODO: Need joined at or do we just say the role time
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import ChannelManagerUserItem from './ChannelManagerUserItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
@@ -145,29 +145,68 @@ onMounted(async () => {
   initSocket()
   await getMembers()
   getSignOutButtonText()
-  setDestroyChannelListener()
+  await setDestroyChannelListener()
   setUserSignedListener()
 })
 
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+	notificationStore.showNotification('Error: Connection problems', false)
+	return
+  }
+  socket.value.off('ChannelDestroy')
+  socket.value.off('UserSignedOut')
+  socket.value.off('UserSignedIn')
+  socket.value.off('ChannelInvitationAccepted')
+  socket.value.off('madeAdmin')
+  socket.value.off('memberKicked')
+  socket.value.off('memberBanned')
+  socket.value.off('memberUnBanned')
+  socket.value.off('memberMuted')
+  socket.value.off('memberUnMuted')
+  socket.value.off('passwordSet')
+
+})
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket( accessToken)
 }
 
-const setMembers = async () => {
-  try {
+const fetchDebug = async () => {
+	try {
+	// console.log('setMembers called')
     const response = await fetch(
       `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`
     )
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`)
     }
-    const data = response.json()
-    Members.value = await data
+    const data = await response.json()
+	console.log("Response from fetchDebug")
+	console.log(data)
   } catch (error: any) {
     console.error('Error: ', error)
   }
 }
+
+const setMembers = async () => {
+  try {
+	// console.log('setMembers called')
+    const response = await fetch(
+      `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    const data = await response.json()
+    Members.value = await data
+	console.log("Response from setMembers")
+	console.log(Members.value)
+  } catch (error: any) {
+    console.error('Error: ', error)
+  }
+}
+
 const setCurrentUserRole = () => {
   for (const member of Members.value)
     if (member.userId === userId.value) currentUserRole.value = member.role
@@ -177,7 +216,7 @@ const setChannelName = () => {
   ChannelName.value = Members.value[0].channelName
 }
 
-const setDestroyChannelListener = () => {
+const setDestroyChannelListener = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
     return
@@ -192,12 +231,16 @@ const setUserSignedListener = () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('UserSignedOut', (userSignedOutName: string) => {
+  socket.value.on('UserSignedOut', async (userSignedOutName: string) => {
     console.log('UserSignedOut from ChannelManager fired')
 	notificationStore.showNotification(userSignedOutName + ' has signed out ' + ChannelName.value, true)
-    setMembers().then(() => {
+    await setMembers().then(() => {
       setCurrentUserRole()
     })
+	console.log("CHANNEL MEMBERS_ITEM IN MANGERs")
+  console.log(memberItems.value)
+  console.log("CHANNEL MEMBERS IN MANGER")
+  console.log(Members.value)
   })
   socket.value.on('UserSignedIn', (username: string) => {
     console.log('UserSignedIn fired')
@@ -302,7 +345,6 @@ const openAddModal = () => {
 }
 
 const handleSubmit = () => {
-  console.log('SUBMIT')
   isModalOpened.value = false
 }
 
@@ -319,9 +361,6 @@ const destroyChannel = async () => {
 	notificationStore.showNotification(`Error: Connection problems`, true)
 	return
   }
-  console.log('destroyChannel')
-  console.log(channelId)
-  console.log(userId.value)
   await socket.value.emit('DestroyChannel', {
 	channelId: channelId,
 	senderId: userId.value
@@ -329,7 +368,6 @@ const destroyChannel = async () => {
 }
 
 const DestroyChannel = async() => {
-	console.log(confirmDestroy.value)
   if (!showConfirmDestroyField.value) {
 	showConfirmDestroyField.value = true
   } else {
@@ -350,11 +388,7 @@ const SignOutChannel = async () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  await emit('channel-signedout')
-  await socket.value.emit('SignOutChannel', {
-    channelId: channelId,
-    senderId: userId.value
-  })
+  emit('channel-signedout')
 }
 
 const setPassword = async () => {

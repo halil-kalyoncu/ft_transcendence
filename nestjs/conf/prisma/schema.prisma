@@ -90,7 +90,7 @@ model ChannelMessage {
     messageId Int @unique
     senderId  Int
 
-    message Message       @relation(fields: [messageId], references: [id])
+    message Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
     sender  ChannelMember @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
     channelMessageReadStatus ChannelMessageReadStatus[]
@@ -104,8 +104,10 @@ model ChannelMessageReadStatus {
     readerId  Int
     isRead    Boolean
 
-    message ChannelMessage @relation(fields: [messageId], references: [messageId], onDelete: Cascade)
+    message ChannelMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
     reader  ChannelMember  @relation(fields: [readerId], references: [id], onDelete: Cascade)
+
+	@@unique([messageId, readerId])
 }
 
 model Message {
@@ -116,6 +118,7 @@ model Message {
     directMessage  DirectMessage?
     channelMessage ChannelMessage?
 }
+
 
 enum ChannelInvitationStatus {
     PENDING

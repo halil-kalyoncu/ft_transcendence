@@ -319,7 +319,6 @@ export class ChatGateway
 		@MessageBody() createChannelDto: CreateChannelDto,
 	): Promise<Channel | { error: string }> {
 		try {
-			console.log('create unprotected channel');
 			const newChannel = await this.channelService.createUnProtectedChannel(
 				createChannelDto,
 			);
@@ -354,6 +353,7 @@ export class ChatGateway
 					socket.to(onlineMember.socketId).emit('channelCreated', true);
 				}
 			}
+			return newChannel;
 		} catch (error) {
 			return { error: error.message as string };
 		}
@@ -365,7 +365,6 @@ export class ChatGateway
 		setPasswordDto: SetPasswordDto,
 	): Promise<Channel | ErrorDto> {
 		try {
-			console.log(socket)
 			const channel = await this.channelService.setPassword(setPasswordDto);
 			
 			const members: User[] = await this.channelService.getMembers(
@@ -672,7 +671,9 @@ export class ChatGateway
 			const memberOnline: ConnectedUser =
 				await this.connectedUserService.findByUserId(member.id);
 			if (memberOnline) {
-				socket.to(memberOnline.socketId).emit('UserSignedOut', user.username);
+				console.log('UserSignedOut')
+				console.log(memberOnline)
+				await socket.to(memberOnline.socketId).emit('UserSignedOut', user.username);
 			}
 		}
 	}
@@ -682,7 +683,7 @@ export class ChatGateway
 		data: {
 			channelId: number,
 			username: string
-		}): Promise<void> {
+		}): Promise<string> {
 		const { channelId, username } = data;
 
 		const members: User[] = await this.channelService.getMembers(channelId);
@@ -690,11 +691,10 @@ export class ChatGateway
 			const memberOnline: ConnectedUser =
 				await this.connectedUserService.findByUserId(member.id);
 			if (memberOnline) {
-				console.log('UserSignedIn')
-				console.log(memberOnline)
 				socket.to(memberOnline.socketId).emit('UserSignedIn', username);
 			}
 		}
+		return username
 	}
 	/**********************
 	 *** ChannelMessages ***

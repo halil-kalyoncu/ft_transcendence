@@ -112,10 +112,24 @@ export class ChannelService {
       throw new Error('Channel does not exist.');
     }
 
+	// Find all ChannelMessage records related to the channel
+	const channelMessages = await this.prisma.channelMessage.findMany({
+	where: { sender: { channelId: channelId } },
+	});
+
+	// Extract messageIds from channelMessages
+	const messageIds = channelMessages.map((channelMessage) => channelMessage.messageId);
+
+	// Delete associated Message records
+	await this.prisma.message.deleteMany({
+		where: { id: { in: messageIds } },
+	});
+
     // Delete Associated Channel Messages
     await this.prisma.channelMessage.deleteMany({
       where: { sender: { channelId: channelId } },
     });
+
 
     // Delete Associated Channel Members
     await this.prisma.channelMember.deleteMany({
@@ -205,7 +219,6 @@ export class ChannelService {
   async removeUserFromChannel(
     channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
-    try {
       const { userId, channelId } = channelMembershipDto;
 
       const member = await this.prisma.channelMember.findFirst({
@@ -225,18 +238,11 @@ export class ChannelService {
         });
       }
 
-      await this.prisma.channelMember.delete({
+      return await this.prisma.channelMember.delete({
         where: {
-          userId_channelId: {
-            userId: channelMembershipDto.userId,
-            channelId: channelMembershipDto.channelId,
-          },
+          id: member.id,
         },
       });
-      return member;
-    } catch (error) {
-      console.error('Error deleting ChannelMember:', error);
-    }
   }
 
   async makeAdmin(adminActionDto: AdminActionDto): Promise<ChannelMember> {

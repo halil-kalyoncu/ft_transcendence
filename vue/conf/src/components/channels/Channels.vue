@@ -135,7 +135,7 @@ const handleConfirm = async ({
       password: password || '',
       channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
     }
-    const response = await socket.value.emit('createProtectedChannel', createChannelDto, (response: ErrorI | any) => {
+    await socket.value.emit('createProtectedChannel', createChannelDto, (response: ErrorI | any) => {
 	if ('error' in response) {
 	  notificationStore.showNotification(response.error)
 	  return
@@ -151,9 +151,8 @@ const handleConfirm = async ({
       name: name || '',
       channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
     }
-    await socket.value.emit('createUnProtectedChannel', createChannelDto, (response: ErrorI | any) => {
+	await socket.value.emit('createUnProtectedChannel', createChannelDto, (response: ErrorI | any) => {
 	if ('error' in response) {
-		console.log('HERE')
 	  notificationStore.showNotification(response.error)
 	  return
 	}
@@ -202,6 +201,11 @@ const removeUserFromChannel = async () => {
         channelId: joinedChannelId.value
       })
     })
+	console.log("RESPONSE FROM DESTROY")
+	console.log(await response.json())
+	if (!response.ok) {
+	  notificationStore.showNotification('Error: Failed to remove user from channel', false)
+	}
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, true)
   }
@@ -264,12 +268,12 @@ const goBack = async () => {
 
 const handleChannelEntered = async (channelId: number) => {
   joinedChannelId.value = channelId
-  await updateChannelManager()
   await closeJoinChannels()
   await closeMyChannels()
   await addUsertoChannel().then(() => {
-    showChannelManagerAndChat.value = true
-  })
+	  showChannelManagerAndChat.value = true
+	})
+  await updateChannelManager()
 }
 
 const handleChannelLeft = async () => {
@@ -282,7 +286,11 @@ const hanndleChannelforceLeave = async () => {
 
 const hanndleChannelSignedout = async () => {
   await MarkMessagesAsRead()
-  removeUserFromChannel()
+  await removeUserFromChannel()
+  socket.value?.emit('SignOutChannel', {
+    channelId: joinedChannelId.value,
+    senderId: userId.value
+  })
   closeChannelManagerAndChat()
 }
 

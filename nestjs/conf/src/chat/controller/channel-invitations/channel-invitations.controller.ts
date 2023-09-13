@@ -55,7 +55,7 @@ export class ChannelInvitationsController {
 			throw new Error('User not found');
 		}
 		const inviteeId = user.id;
-		console.log(inviteeId);
+
 		return this.channelInvitationsService.inviteUserToChannel(
 		  channelId,
 		  inviteeId,

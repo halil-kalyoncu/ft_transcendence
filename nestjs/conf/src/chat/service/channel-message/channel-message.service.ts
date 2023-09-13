@@ -100,13 +100,13 @@ export class ChannelMessageService {
       sender: createdChannelMessage.sender.user,
       createdAt: createdChannelMessage.message.createdAt,
     };
-
     // Create a ChannelMessageReadStatus for each member of the channel
     const channelMembers = await this.channelService.findMembers(channelId);
+
     for (const channelMember of channelMembers) {
       await this.prisma.channelMessageReadStatus.create({
         data: {
-          message: { connect: { id: createdMessage.id } },
+          message: { connect: { id: createdChannelMessage.id } },
           reader: { connect: { id: channelMember.id } },
           isRead: channelMember.userId === member.userId,
         },
@@ -158,7 +158,6 @@ export class ChannelMessageService {
 		return message;
 	  }).filter(Boolean)
  */
-	  console.log('channelMessages', channelMessages)
       const channelMessageDtos: ChannelMessageDto[] = channelMessages.map(
         (channelMessage) => ({
           id: channelMessage.id,
@@ -216,7 +215,6 @@ export class ChannelMessageService {
             isRead: false,
           },
         });
-      console.log('unreadMessages', unreadMessages);
       return unreadMessages;
     } catch (error) {
       // Handle errors appropriately

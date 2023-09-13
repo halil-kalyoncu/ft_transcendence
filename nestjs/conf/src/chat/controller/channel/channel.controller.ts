@@ -21,6 +21,7 @@ import {
 } from '../../dto/channel.dto';
 import { ChannelMemberService } from '../../service/channel-member/channel-member.service';
 import { ErrorDto } from 'src/chat/dto/error.dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @ApiTags('Channel module')
 @Controller('channel')
@@ -158,8 +159,12 @@ export class ChannelController {
   @Delete('removeUserFromChannel')
   async removeUserFromChannel(
     @Body() ChannelMembershipDto: ChannelMembershipDto,
-  ): Promise<void> {
-    await this.ChannelService.removeUserFromChannel(ChannelMembershipDto);
+  ): Promise<ChannelMember> {
+	try{
+   return await this.ChannelService.removeUserFromChannel(ChannelMembershipDto);
+	} catch (error) {
+		throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
   }
 
   @Delete('destroyChannel')
