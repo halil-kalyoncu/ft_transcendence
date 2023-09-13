@@ -141,8 +141,6 @@ const setChannelInvitationData = async () => {
 
     const data = await response.json()
 
-	console.log('setChannelInvitationData')
-	console.log(data)
     if (data && data.length > 0) {
       hasNotification.value = true
     }

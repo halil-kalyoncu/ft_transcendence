@@ -174,7 +174,6 @@ const initSocket = () => {
 
 const fetchDebug = async () => {
 	try {
-	// console.log('setMembers called')
     const response = await fetch(
       `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`
     )
@@ -191,7 +190,6 @@ const fetchDebug = async () => {
 
 const setMembers = async () => {
   try {
-	// console.log('setMembers called')
     const response = await fetch(
       `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`
     )
@@ -200,8 +198,6 @@ const setMembers = async () => {
     }
     const data = await response.json()
     Members.value = await data
-	console.log("Response from setMembers")
-	console.log(Members.value)
   } catch (error: any) {
     console.error('Error: ', error)
   }
@@ -226,26 +222,27 @@ const setDestroyChannelListener = async () => {
     emit('channel-force-leave')
   })
 }
+// TODO: CHECK FOR NOTIFICATIONS HERE! 
 const setUserSignedListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('UserSignedOut', async (userSignedOutName: string) => {
+  socket.value.on('UserSignedOut', async (userSignedOutName: string, channelIdSignOut: number) => {
     console.log('UserSignedOut from ChannelManager fired')
-	notificationStore.showNotification(userSignedOutName + ' has signed out ' + ChannelName.value, true)
+	if (channelIdSignOut === channelId){
+		notificationStore.showNotification(userSignedOutName + ' signed out Channel', true)
+	}
     await setMembers().then(() => {
       setCurrentUserRole()
     })
-	console.log("CHANNEL MEMBERS_ITEM IN MANGERs")
-  console.log(memberItems.value)
-  console.log("CHANNEL MEMBERS IN MANGER")
-  console.log(Members.value)
   })
-  socket.value.on('UserSignedIn', (username: string) => {
+  socket.value.on('UserSignedIn', (userSignedInName: string, channelSignIn: number) => {
     console.log('UserSignedIn fired')
-     notificationStore.showNotification(username + ' entered in Channel', true)
-    setMembers().then(() => {
+	if (channelSignIn === channelId){
+		notificationStore.showNotification(userSignedInName + ' signed in Channel', true)
+	}
+	setMembers().then(() => {
       setCurrentUserRole()
     })
   })
@@ -258,15 +255,13 @@ const setUserSignedListener = () => {
   })
   socket.value.on('madeAdmin', (username: string) => {
     console.log('madeAdmin fired')
-    notificationStore.showNotification(username + ' was declared Admin', true)
     setMembers().then(() => {
       setCurrentUserRole()
     })
   })
-  socket.value.on('memberKicked', (membership: any) => {
-    console.log('memberKicked fired')
-    //await notificationStore.showNotification('User Kicked', true)
-    if (membership.userId === userId.value) {
+  socket.value.on('memberKicked', (response: String | ErrorI) => {
+	console.log('memberKicked fired')
+    if (response === username.value) {
       emit('channel-force-leave')
     }
     setMembers().then(() => {

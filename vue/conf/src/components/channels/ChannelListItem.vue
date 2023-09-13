@@ -83,7 +83,6 @@ let joinChannelButtonName = ref(props.joinChannelButtonNameProps)
 
 const handleJoin = async () => {
 if (isPasswordProtected){
-	console.log(showPasswordField)
 	if (!showPasswordField.value)
 	{
 		showPasswordField.value = true

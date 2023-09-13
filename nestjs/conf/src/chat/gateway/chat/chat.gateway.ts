@@ -462,35 +462,29 @@ export class ChatGateway
 	async handleKickChannelMember(
 		socket: Socket,
 		adminActionDto: AdminActionDto,
-	): Promise<void> {
+	): Promise<string | ErrorDto> {
 		try {
-			const membership = await this.channelService.kickChannelMember(
-				adminActionDto,
-			);
-			socket.emit('memberKicked', membership);
 
-			const memberOnline: ConnectedUser =
-				await this.connectedUserService.findByUserId(
-					adminActionDto.targetUserId,
-				);
-			if (memberOnline && memberOnline.userId !== adminActionDto.requesterId) {
-				socket.to(memberOnline.socketId).emit('memberKicked', membership);
-			}
+			
+			const targetUser = await this.userService.findById(adminActionDto.targetUserId);
+
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
 			for (const member of members) {
 				const memberOnline: ConnectedUser =
 					await this.connectedUserService.findByUserId(member.id);
-				if (
-					memberOnline &&
-					memberOnline.userId !== adminActionDto.requesterId
-				) {
-					socket.to(memberOnline.socketId).emit('memberKicked', membership);
+				if (memberOnline) {
+					socket.to(memberOnline.socketId).emit('memberKicked', targetUser.username);
 				}
 			}
+			const membership = await this.channelService.kickChannelMember(
+				adminActionDto,
+			);
+			socket.emit('memberKicked', targetUser.username);
+			return targetUser.username;
 		} catch (error: any) {
-			socket.emit('error', error.message);
+			return { error: error.message as string };
 		}
 	}
 
@@ -673,7 +667,7 @@ export class ChatGateway
 			if (memberOnline) {
 				console.log('UserSignedOut')
 				console.log(memberOnline)
-				await socket.to(memberOnline.socketId).emit('UserSignedOut', user.username);
+				await socket.to(memberOnline.socketId).emit('UserSignedOut', user.username, channelId);
 			}
 		}
 	}
@@ -685,13 +679,13 @@ export class ChatGateway
 			username: string
 		}): Promise<string> {
 		const { channelId, username } = data;
-
+		socket.emit('UserSignedIn', username, channelId);
 		const members: User[] = await this.channelService.getMembers(channelId);
 		for (const member of members) {
 			const memberOnline: ConnectedUser =
 				await this.connectedUserService.findByUserId(member.id);
 			if (memberOnline) {
-				socket.to(memberOnline.socketId).emit('UserSignedIn', username);
+				socket.to(memberOnline.socketId).emit('UserSignedIn', username, channelId);
 			}
 		}
 		return username

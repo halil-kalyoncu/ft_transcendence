@@ -50,17 +50,20 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref, watch, watchEffect, onMounted } from 'vue'
+import { computed, ref, watch, watchEffect, onMounted, onUnmounted} from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
+import { useUserStore } from '../../stores/userInfo'
 import Modal from '../utils/Modal.vue'
 import type { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 
 library.add(fas)
 const router = useRouter()
+const userStore = useUserStore()
+const usernameUserStore = computed(() => userStore.username)
 const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 const minutesMuted = ref(0)
@@ -274,14 +277,19 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
   muteAUser()
 }
 
-const initSocket = () => {
+const initSocket = async () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
+  return 
 }
 
-onMounted(() => {
-  initSocket()
+
+//CHECK FOR NOTIFICTAIONS HERE
+onMounted( async () => {
+  await initSocket()
+  socket.value.off('UserSignedOut')
 })
+
 </script>
 
 <style>
