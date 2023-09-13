@@ -231,7 +231,7 @@ model MatchPowerup {
     matchId   Int
     powerupId Int
 
-    match   Match   @relation(fields: [matchId], references: [id])
+    match   Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
     powerup Powerup @relation(fields: [powerupId], references: [id])
 
     @@unique([matchId, powerupId])

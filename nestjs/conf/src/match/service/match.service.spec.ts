@@ -2,10 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MatchService } from './match.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Match, Prisma } from '@prisma/client';
+import { PowerupService } from '../../powerup/service/powerup.service';
 
 describe('MatchService', () => {
   let service: MatchService;
   let prismaService: PrismaService;
+  let powerupService: PowerupService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -15,11 +17,13 @@ describe('MatchService', () => {
           provide: PrismaService,
           useValue: PrismaService.getInstance(),
         },
+        PowerupService,
       ],
     }).compile();
 
     service = module.get<MatchService>(MatchService);
     prismaService = module.get<PrismaService>(PrismaService);
+    powerupService = module.get<PowerupService>(PowerupService);
   });
 
   it('should be defined', () => {
@@ -98,6 +102,7 @@ describe('MatchService', () => {
         include: {
           leftUser: true,
           rightUser: true,
+          powerups: true,
         },
       });
 
@@ -119,6 +124,7 @@ describe('MatchService', () => {
         include: {
           leftUser: true,
           rightUser: true,
+          powerups: true,
         },
       });
 
@@ -216,7 +222,12 @@ describe('MatchService', () => {
           state: 'INVITED',
         });
 
-      const result = await service.invite(matchId, invitedUserId, goalsToWin, powerups);
+      const result = await service.invite(
+        matchId,
+        invitedUserId,
+        goalsToWin,
+        powerups,
+      );
 
       expect(result).toStrictEqual({
         ...match,
@@ -229,10 +240,15 @@ describe('MatchService', () => {
         data: {
           rightUser: { connect: { id: invitedUserId } },
           state: 'INVITED',
+          goalsToWin,
+          powerups: {
+            connect: [],
+          },
         },
         include: {
           leftUser: true,
           rightUser: true,
+          powerups: true,
         },
       });
 
@@ -253,7 +269,12 @@ describe('MatchService', () => {
         .spyOn(prismaService.match, 'update')
         .mockResolvedValue(null);
 
-      const result = await service.invite(matchId, invitedUserId, goalsToWin, powerups);
+      const result = await service.invite(
+        matchId,
+        invitedUserId,
+        goalsToWin,
+        powerups,
+      );
 
       expect(result).toBeNull;
       expect(findByIdSpy).toHaveBeenCalledWith(matchId);
@@ -346,10 +367,15 @@ describe('MatchService', () => {
         data: {
           rightUser: { connect: { id: invitedUserId } },
           state: 'INVITED',
+          goalsToWin,
+          powerups: {
+            connect: [],
+          },
         },
         include: {
           leftUser: true,
           rightUser: true,
+          powerups: true,
         },
       });
 

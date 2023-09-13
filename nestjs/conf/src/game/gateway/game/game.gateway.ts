@@ -132,6 +132,12 @@ export class EventsGateway {
     //first user that connects to the gateway creates the entry in the rooms array
     if (!this.rooms.has(queryMatchId)) {
       this.rooms.set(queryMatchId, new Room(queryMatchId));
+      const powerupNames: string[] = await this.matchService.getPowerupNames(
+        queryMatchId,
+      );
+      console.log('game socket');
+      console.log(socket.data.match);
+      console.log(powerupNames);
     }
 
     const room = this.rooms.get(queryMatchId);

@@ -71,7 +71,7 @@ export class ChatGateway
     private matchService: MatchService,
     private channelInvitationService: ChannelInvitationsService,
     private matchmakingService: MatchmakingService,
-    private powerupService: PowerupService
+    private powerupService: PowerupService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -675,15 +675,15 @@ export class ChatGateway
       return;
     }
 
-    const powerups: Powerup[] = await this.powerupService.findByNames(sendGameInviteDto.powerupNames);
-    console.log(powerups);
+    const powerups: Powerup[] = await this.powerupService.findByNames(
+      sendGameInviteDto.powerupNames,
+    );
     const updatedMatch: Match = await this.matchService.invite(
       sendGameInviteDto.matchId,
       sendGameInviteDto.invitedUserId,
       sendGameInviteDto.goalsToWin,
-      powerups
+      powerups,
     );
-    console.log(updatedMatch);
     socket.emit('matchInviteSent', updatedMatch);
     socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
   }

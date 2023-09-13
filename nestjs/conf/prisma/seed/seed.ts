@@ -6,26 +6,32 @@ async function main() {
 
   await prisma.powerup.create({
     data: {
-      name: 'slow',
+      name: 'slowBall',
     },
   });
 
   await prisma.powerup.create({
     data: {
-      name: 'fast',
+      name: 'fastBall',
     },
   });
 
   await prisma.powerup.create({
     data: {
-      name: 'small',
+      name: 'decreasePaddleHeight',
     },
   });
 
   await prisma.powerup.create({
     data: {
-      name: 'big',
-    },
+      name: 'increasePaddleHeight'
+    }
+  });
+
+  await prisma.powerup.create({
+    data: {
+      name: 'magnet'
+    }
   });
 
   await prisma.$disconnect();

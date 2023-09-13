@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateMatchDto } from '../dto/create-match.dto';
 import { Match } from '@prisma/client';
 import { HttpStatus } from '@nestjs/common';
+import { PowerupService } from '../../powerup/service/powerup.service';
 
 describe('MatchController', () => {
   let controller: MatchController;
@@ -15,6 +16,7 @@ describe('MatchController', () => {
       controllers: [MatchController],
       providers: [
         MatchService,
+        PowerupService,
         {
           provide: PrismaService,
           useValue: PrismaService.getInstance(),

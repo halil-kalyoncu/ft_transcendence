@@ -28,29 +28,24 @@ describe('PowerupService', () => {
 
   describe('findByNames', () => {
     it('should return powerup array that have matching names', async () => {
-      const powerupNames: string[] = [
-        'big',
-        'small',
-        'fast',
-        'slow'
-      ];
+      const powerupNames: string[] = ['big', 'small', 'fast', 'slow'];
       const powerups: Powerup[] = [
         {
           id: 1,
-          name: 'slow'
+          name: 'slow',
         },
         {
           id: 2,
-          name: 'fast'
+          name: 'fast',
         },
         {
           id: 3,
-          name: 'small'
+          name: 'small',
         },
         {
           id: 4,
-          name: 'big'
-        }
+          name: 'big',
+        },
       ];
 
       const findManySpy = jest
@@ -63,17 +58,14 @@ describe('PowerupService', () => {
       expect(findManySpy).toBeCalledWith({
         where: {
           name: { in: powerupNames },
-        },   
-      })
+        },
+      });
 
       findManySpy.mockRestore();
     });
 
     it("should return empty array when names don't match", async () => {
-      const powerupNames: string[] = [
-        'non',
-        'nonexisting',
-      ];
+      const powerupNames: string[] = ['non', 'nonexisting'];
       const powerups: Powerup[] = [];
 
       const findManySpy = jest
@@ -86,27 +78,22 @@ describe('PowerupService', () => {
       expect(findManySpy).toBeCalledWith({
         where: {
           name: { in: powerupNames },
-        },   
-      })
+        },
+      });
 
       findManySpy.mockRestore();
     });
 
     it("should return powerup array that have matching names, ignore names that don't match", async () => {
-      const powerupNames: string[] = [
-        'non',
-        'slow',
-        'nonexisting',
-        'small'
-      ];
+      const powerupNames: string[] = ['non', 'slow', 'nonexisting', 'small'];
       const powerups: Powerup[] = [
         {
           id: 1,
-          name: 'slow'
+          name: 'slow',
         },
         {
           id: 3,
-          name: 'small'
+          name: 'small',
         },
       ];
 
@@ -120,8 +107,8 @@ describe('PowerupService', () => {
       expect(findManySpy).toBeCalledWith({
         where: {
           name: { in: powerupNames },
-        },   
-      })
+        },
+      });
 
       findManySpy.mockRestore();
     });

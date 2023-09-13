@@ -29,7 +29,7 @@ import { PowerupModule } from '../powerup/powerup.module';
     forwardRef(() => UserModule),
     forwardRef(() => MatchModule),
     forwardRef(() => MatchmakingModule),
-    PowerupModule
+    PowerupModule,
   ],
   providers: [
     ChatGateway,

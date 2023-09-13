@@ -275,7 +275,7 @@ ALTER TABLE "Match" ADD CONSTRAINT "Match_leftUserId_fkey" FOREIGN KEY ("leftUse
 ALTER TABLE "Match" ADD CONSTRAINT "Match_rightUserId_fkey" FOREIGN KEY ("rightUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MatchPowerup" ADD CONSTRAINT "MatchPowerup_matchId_fkey" FOREIGN KEY ("matchId") REFERENCES "Match"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "MatchPowerup" ADD CONSTRAINT "MatchPowerup_matchId_fkey" FOREIGN KEY ("matchId") REFERENCES "Match"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "MatchPowerup" ADD CONSTRAINT "MatchPowerup_powerupId_fkey" FOREIGN KEY ("powerupId") REFERENCES "Powerup"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
