@@ -1,12 +1,115 @@
 <script setup lang="ts">
+import { ref, defineProps, onMounted } from 'vue'
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 
+let userId = ref<number>(0)
+
 const props = defineProps({
   username: String
 })
+
+const achievements = ref([
+  { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
+  { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
+  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+]);
+
+// const matchHistory = ref([
+//   { score: '5 : 3', victory: true, opponentName: 'Opponent 1', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-2.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   { score: '1 : 5', victory: false, opponentName: 'Opponent 2', dateTime: '2023/07/16 11:11', playerAvatar: '../src/assets/avatar-1.png', opponentAvatar: '../src/assets/avatar-3.png' },
+//   // ... (more match history items)
+// ]);
+
+const matchHistory = ref([]);
+
+// async function getUserId(): Promise<void> {
+// 	try {
+//     const response = await fetch(`http://localhost:3000/api/users/find-by-username?username=${props.username}`, {
+//       method: 'GET',
+//       headers: {
+//         'Content-Type': 'application/json'
+//       }
+//     })
+
+//     if (response.ok) {
+//       const matchData = await response.json()
+	
+// 	  userId.value = matchData[0].id;
+// 	//   console.log("matchData:", matchData)
+//     }
+// 	// console.log("ID Val:", userId.value)
+//   }
+//   catch (error) {
+//     console.error("Failed to fetch match history:", error);
+//   }
+// }
+
+function getUserId() {
+  fetch(`http://localhost:3000/api/users/find-by-username?username=${props.username}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error('Failed to fetch data');
+    }
+  })
+  .then(matchData => {
+    userId.value = Number(matchData[0].id);
+    // console.log("matchData:", matchData);
+  })
+  .catch(error => {
+    console.error("Failed to fetch match history:", error);
+  });
+}
+
+
+async function getMatchHistory(): Promise<void> {
+	getUserId();
+  try {
+    const response = await fetch(`http://localhost:3000/api/matches/find-matches-by-user?userid=${userId.value}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+	console.log("RESPONSE:", userId.value)
+    if (response.ok) {
+		const matchData = await response.json()
+		
+		matchHistory.value = matchData;
+		
+	  console.log("RESPONSE:", matchData);
+
+    }
+  }
+  catch (error) {
+    console.error("Failed to fetch match history:", error);
+  }
+}
+
+onMounted(() => {
+  getMatchHistory();
+});
+
 </script>
 
 <template>
@@ -16,69 +119,36 @@ const props = defineProps({
       <div class="achievements">
         <h2 class="profile-title">achievements</h2>
         <ScrollViewer :maxHeight="'50vh'">
-          <!-- todo: replace with foreach -->
-          <ProfileAchievementItem
-            :achievementType="1"
-            :achievementTitle="'First Achievement'"
-            :achievementDescription="'This is the first achievement'"
-          />
-          <ProfileAchievementItem
-            :achievementType="6"
-            :achievementTitle="'Last Achievement'"
-            :achievementDescription="'This is the last achievement'"
-          />
-          <ProfileAchievementItem
-            :achievementType="2"
-            :achievementTitle="'Second Achievement'"
-            :achievementDescription="'This is the second achievement'"
-          />
+			<ProfileAchievementItem
+			v-for="achievement in achievements"
+			:achievementType="achievement.type"
+			:achievementTitle="achievement.title"
+			:achievementDescription="achievement.description"
+			/>
         </ScrollViewer>
       </div>
       <div class="match-history">
         <h2 class="profile-title">match history</h2>
         <ScrollViewer :maxHeight="'50vh'">
-          <!-- todo: replace with foreach -->
-          <ProfileMatchHistoryItem
-            :score="'5 : 3'"
-            :victory="true"
-            :playerName="'username'"
-            :opponentName="'Opponent 1'"
-            :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'../src/assets/avatar-1.png'"
-            :opponentAvatar="'../src/assets/avatar-2.png'"
-          />
-          <ProfileMatchHistoryItem
-            :score="'1 : 5'"
-            :victory="false"
-            :playerName="'username'"
-            :opponentName="'Opponent 2'"
-            :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'../src/assets/avatar-1.png'"
-            :opponentAvatar="'../src/assets/avatar-3.png'"
-          />
-          <ProfileMatchHistoryItem
-            :score="'5 : 4'"
-            :victory="true"
-            :playerName="'username'"
-            :opponentName="'Opponent 2'"
-            :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'../src/assets/avatar-1.png'"
-            :opponentAvatar="'../src/assets/avatar-3.png'"
-          />
-          <ProfileMatchHistoryItem
-            :score="'5 : 0'"
-            :victory="true"
-            :playerName="'username'"
-            :opponentName="'Opponent 1'"
-            :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'../src/assets/avatar-1.png'"
-            :opponentAvatar="'../src/assets/avatar-2.png'"
-          />
+			<ProfileMatchHistoryItem
+				v-for="match in matchHistory"
+				:key="match.dateTime"
+				:score="match.score"
+				:victory="match.victory"
+				:playerName="username"
+				:opponentName="match.opponentName"
+				:dateTime="match.dateTime"
+				:playerAvatar="match.playerAvatar"
+				:opponentAvatar="match.opponentAvatar"
+			/>
         </ScrollViewer>
       </div>
     </section>
   </article>
 </template>
+
+
+
 
 <style>
 .profile {

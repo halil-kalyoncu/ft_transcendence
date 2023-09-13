@@ -14,6 +14,7 @@ import { CreateMatchDto } from '../dto/create-match.dto';
 import { Match, Prisma } from '@prisma/client';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PrismaModel } from '../../_gen/prisma-class/index';
+import { User } from '@prisma/client';
 
 @ApiTags('Match module')
 @Controller('matches')
@@ -56,12 +57,25 @@ export class MatchController {
     return await this.matchService.findById(id);
   }
 
+
+  @Get('find-matches-by-user')
+  async findMatchByUser(@Query('userid', ParseIntPipe) userid: number): Promise<Match[] | null> {
+	return await this.matchService.findMatchByUser(userid);
+	// return await this.matchService.findMatchByUser();
+  }
+
+//   @Get('find-user-by-name')
+//   async findUserByName(@Query('username') username: string): Promise<User>{
+// 	return await this.matchService.findUserByName(username);
+//   }
+
   //not used
   // @Delete('delete-by-id')
   // async deleteById(@Query('id', ParseIntPipe) id: number): Promise<Match> {
   //     return await this.matchService.deleteById(id);
   // }
 
+  
   @ApiOperation({
     summary:
       'Get the match objectes with the state INVITED and matching rightUserIds',

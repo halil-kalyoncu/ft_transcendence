@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Match, MatchState, Prisma } from '@prisma/client';
 import { Room } from '../../game/service/room.service';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class MatchService {
@@ -15,6 +16,45 @@ export class MatchService {
         rightUser: true,
       },
     });
+  }
+
+//   async findUserByName(username: string): Promise<Match> {
+// 	return await this.prisma.match.findUnique({
+// 	  where: {
+// 		username: username,
+// 	  },
+// 	});
+//   }
+	// async findUserByName(username: string): Promise<User | null> {
+	// 	return await this.prisma.user.findUnique({
+	// 	where: {
+	// 		username: username,
+	// 	},
+	// 	});
+	// }  
+
+  async findMatchByUser(userid: number): Promise<Match[]> {
+	return await this.prisma.match.findMany({
+		where: {
+			OR: [
+				{leftUserId: userid},
+				{rightUserId: userid}
+			]
+		},
+		include: {
+		  leftUser: true,
+		  rightUser: true,
+		},
+	  });
+  }
+
+  async findAll(): Promise<Match[]> {
+	return await this.prisma.match.findMany({
+	  include: {
+		leftUser: true,
+		rightUser: true,
+	  },
+	});
   }
 
   async findById(id: number): Promise<Match | null> {
