@@ -19,15 +19,16 @@ const userStore = useUserStore()
 const username = computed(() => userStore.username)
 const areRadioButtonsDisabled = computed(() => activePanel.value === 'DefaultGame')
 const activePanel = ref('DefaultGame')
-const selectedGoals = ref('five')
+const selectedGoals = ref('5')
 const selectedPowerups = ref([
-  { name: 'slow', value: false },
-  { name: 'fast', value: false },
-  { name: 'small', value: false },
-  { name: 'big', value: false }
+  { name: 'slowBall', value: false },
+  { name: 'fastBall', value: false },
+  { name: 'decreasePaddleHeight', value: false },
+  { name: 'increasePaddleHeight', value: false },
+  { name: 'magnet', value: false }
 ])
 const selectedPowerupNames = computed(() => {
-  return selectedPowerups.value.filter(p => p.value).map(p => p.name)
+  return selectedPowerups.value.filter((p) => p.value).map((p) => p.name)
 })
 
 const numericMatchId = parseInt(props.matchId, 10)
@@ -106,6 +107,7 @@ const sendInvite = async () => {
     socket.emit('sendMatchInvite', {
       matchId: numericMatchId,
       invitedUserId: invitedUser.value?.id,
+      goalsToWin: parseInt(selectedGoals.value, 10),
       powerupNames: selectedPowerupNames.value
     })
 
@@ -120,17 +122,16 @@ const sendInvite = async () => {
 const setActivePanel = (value: string) => {
   activePanel.value = value
   if (value === 'DefaultGame') {
-    selectedGoals.value = "5"
+    selectedGoals.value = '5'
   }
 }
 
 const togglePowerup = (powerupName: string) => {
-  const powerup = selectedPowerups.value.find(p => p.name === powerupName)
+  const powerup = selectedPowerups.value.find((p) => p.name === powerupName)
   if (powerup) {
     powerup.value = !powerup.value
   }
 }
-
 </script>
 
 <template>
@@ -196,12 +197,12 @@ const togglePowerup = (powerupName: string) => {
         <input
           type="radio"
           name="radio"
-          id="ten"
+          id="eleven"
           v-model="selectedGoals"
-          value="10"
+          value="11"
           :disabled="areRadioButtonsDisabled"
         />
-        <label for="ten" class="goals-label">10 goals</label>
+        <label for="eleven" class="goals-label">11 goals</label>
         <input
           type="radio"
           name="radio"
@@ -215,14 +216,14 @@ const togglePowerup = (powerupName: string) => {
       <div>Ball Speed</div>
       <div class="button_container">
         <button
-          :class="{ selected: selectedPowerups.find(p => p.name === 'slow')?.value }"
-          @click="togglePowerup('slow')"
+          :class="{ selected: selectedPowerups.find((p) => p.name === 'slowBall')?.value }"
+          @click="togglePowerup('slowBall')"
         >
           slow
         </button>
         <button
-          :class="{ selected: selectedPowerups.find(p => p.name === 'fast')?.value }"
-          @click="togglePowerup('fast')"
+          :class="{ selected: selectedPowerups.find((p) => p.name === 'fastBall')?.value }"
+          @click="togglePowerup('fastBall')"
         >
           fast
         </button>
@@ -230,16 +231,28 @@ const togglePowerup = (powerupName: string) => {
       <div>Paddle Size</div>
       <div class="button_container">
         <button
-          :class="{ selected: selectedPowerups.find(p => p.name === 'small')?.value }"
-          @click="togglePowerup('small')"
+          :class="{
+            selected: selectedPowerups.find((p) => p.name === 'decreasePaddleHeight')?.value
+          }"
+          @click="togglePowerup('decreasePaddleHeight')"
         >
-          small
+          decrease
         </button>
         <button
-          :class="{ selected: selectedPowerups.find(p => p.name === 'big')?.value }"
-          @click="togglePowerup('big')"
+          :class="{
+            selected: selectedPowerups.find((p) => p.name === 'increasePaddleHeight')?.value
+          }"
+          @click="togglePowerup('increasePaddleHeight')"
         >
-          big
+          increase
+        </button>
+      </div>
+      <div class="button_container">
+        <button
+          :class="{ selected: selectedPowerups.find((p) => p.name === 'magnet')?.value }"
+          @click="togglePowerup('magnet')"
+        >
+          magnet
         </button>
       </div>
     </div>
@@ -410,7 +423,7 @@ const togglePowerup = (powerupName: string) => {
 
 .friend-invite .button_container button:disabled {
   opacity: 0.5;
-  cursor: not-allowed;  
+  cursor: not-allowed;
 }
 
 .invite-controls-container {

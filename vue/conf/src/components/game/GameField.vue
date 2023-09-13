@@ -84,7 +84,6 @@ const chatSocket = ref<Socket | null>(null)
 
 const countdown = ref<number>(-1)
 
-
 const getUserFromAccessToken = () => {
   const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
   return decodedToken.user as UserI
