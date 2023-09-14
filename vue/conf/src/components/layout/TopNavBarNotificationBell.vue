@@ -82,7 +82,7 @@ const setMatchInviteData = async () => {
     if (data && data.length > 0) {
       hasNotification.value = true
     }
-    matchRequestsStore.addMatchRequest(matchInvites.value)
+    matchRequestsStore.setMatchRequests(matchInvites.value)
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
   }

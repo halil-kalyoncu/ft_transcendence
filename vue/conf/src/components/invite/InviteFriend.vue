@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import type { UserI } from '../../model/user.interface'
-import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
 import { connectChatSocket } from '../../websocket'
 import ScrollViewer from '../utils/ScrollViewer.vue'
-import { useUserStore } from '../../stores/userInfo'
+import type { SendGameInviteDto } from '../../model/match/sendGameInvite.dto'
+import type { MatchI } from '../../model/match/match.interface'
+import type { ErrorI } from '../../model/error.interface'
 
 const props = defineProps({
   matchId: {
@@ -14,9 +14,6 @@ const props = defineProps({
     required: true
   }
 })
-const router = useRouter()
-const userStore = useUserStore()
-const username = computed(() => userStore.username)
 const areRadioButtonsDisabled = computed(() => activePanel.value === 'DefaultGame')
 const activePanel = ref('DefaultGame')
 const selectedGoals = ref('5')
@@ -36,7 +33,6 @@ const numericMatchId = parseInt(props.matchId, 10)
 const notificationStore = useNotificationStore()
 
 const invitedUsername = ref('')
-const invitedUser = ref<UserI | null>(null)
 const userSuggestions = ref<UserI[]>([])
 const showSuggestionList = ref(false)
 
@@ -82,36 +78,29 @@ watch(invitedUsername, (newValue) => {
 
 const sendInvite = async () => {
   try {
-    if (invitedUsername.value.trim() === '' || invitedUsername.value == username.value) {
-      notificationStore.showNotification('Error: Invalid username', false)
+    if (invitedUsername.value.trim() === '') {
+      notificationStore.showNotification('Invalid username', false)
       return
     }
 
-    const response = await fetch(
-      `http://localhost:3000/api/users/find?username=${invitedUsername.value}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    if (response.ok) {
-      const userData = await response.json()
-      invitedUser.value = userData
-    } else {
-      notificationStore.showNotification('User not found', false)
-      return
-    }
-
-    socket.emit('sendMatchInvite', {
+    const sendGameInviteDto: SendGameInviteDto = {
       matchId: numericMatchId,
-      invitedUserId: invitedUser.value?.id,
+      invitedUsername: invitedUsername.value,
       goalsToWin: parseInt(selectedGoals.value, 10),
       powerupNames: selectedPowerupNames.value
-    })
+    }
 
-    emit('send-match-invite', invitedUser.value)
+    socket.emit('sendMatchInvite', sendGameInviteDto, (response: MatchI | ErrorI) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error, false)
+      } else {
+        notificationStore.showNotification(
+          `Successfully send a match invite to ${response.leftUser?.username}`,
+          true
+        )
+        emit('send-match-invite', response.rightUser)
+      }
+    })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.toString() : 'An error occurred'
     notificationStore.showNotification(errorMessage, false)

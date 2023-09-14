@@ -120,6 +120,15 @@ const handleLeaveMatch = () => {
   chatSocket.value.emit('leaveMatch', parseInt(matchId, 10))
 }
 
+const handleCancelWaiting = () => {
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  chatSocket.value.emit('cancelMatchInvite', parseInt(matchId, 10))
+}
+
 const handleStartMatch = () => {
   if (!userIsHost) {
     return
@@ -161,6 +170,10 @@ onMounted(async () => {
   })
 
   chatSocket.value.on('matchInviteRejected', (updatedMatch: MatchI) => {
+    notificationStore.showNotification(
+      `${match.value.rightUser?.username} rejected your invite`,
+      false
+    )
     match.value = updatedMatch
     isWaitingForResponse.value = false
   })
@@ -193,13 +206,17 @@ onMounted(async () => {
   })
 })
 
-const handleSendMatchInvite = (userI: UserI) => {
-  isWaitingForResponse.value = true
-  invitedUser.value = userI
+const handleSendMatchInvite = (user: UserI | null) => {
+  console.log(user)
+  if (user) {
+    isWaitingForResponse.value = true
+    invitedUser.value = user
+  }
 }
 
 const cancelWaiting = () => {
   isWaitingForResponse.value = false
+  handleCancelWaiting()
 }
 
 onBeforeUnmount(() => {
