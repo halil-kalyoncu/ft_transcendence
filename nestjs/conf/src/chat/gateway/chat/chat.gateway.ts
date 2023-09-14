@@ -798,11 +798,6 @@ export class ChatGateway
         socket.data.user.id,
       );
       if (findOpponent) {
-        const ladderGameData: Prisma.MatchCreateInput = {
-          type: 'LADDER',
-          leftUser: { connect: { id: findOpponent.userId } },
-          rightUser: { connect: { id: socket.data.user.id } },
-        };
         connectedUser = await this.connectedUserService.findByUserId(
           findOpponent.userId,
         );
@@ -810,8 +805,9 @@ export class ChatGateway
           await this.matchmakingService.deleteByUserId(socket.data.user.id);
           return { error: 'Opponent is not online' };
         }
-        socket.to(connectedUser.socketId).emit('readyLadderGame', findOpponent);
-        socket.emit('readyLadderGame', findOpponent);
+        const debug: Matchmaking = await this.matchmakingService.getByUserId(
+          socket.data.user.id,
+        );
         return findOpponent;
       }
 
@@ -825,18 +821,52 @@ export class ChatGateway
     }
   }
 
+  @SubscribeMessage('setReady')
+  async setReady(
+    socket: Socket,
+    matchmakingId: number,
+  ): Promise<Matchmaking | ErrorDto> {
+    let matchmaking: Matchmaking;
+    let connectedUser: ConnectedUser;
+
+    try {
+      matchmaking = await this.matchmakingService.find(matchmakingId);
+      if (!matchmaking) {
+        return { error: 'Something went wrong while redirecting to the queue' };
+      }
+
+      matchmaking = await this.matchmakingService.setUserReady(
+        socket.data.user.id,
+      );
+
+      if (matchmaking.opponentUserId && matchmaking.opponentReady) {
+        connectedUser = await this.connectedUserService.findByUserId(
+          matchmaking.userId,
+        );
+        if (!connectedUser) {
+          await this.matchmakingService.deleteByUserId(socket.data.user.id);
+          return { error: 'Opponent is not online' };
+        }
+        socket.to(connectedUser.socketId).emit('readyLadderGame', matchmaking);
+      }
+      return matchmaking;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
   @SubscribeMessage('startLadderGame')
   async startLadderMatch(
     socket: Socket,
     matchmakingId: number,
-  ): Promise<Match | ErrorDto> {
+  ): Promise<Matchmaking | ErrorDto> {
     let matchmaking: Matchmaking;
     let ladderMatch: Match;
     let connectedUser: ConnectedUser;
 
     try {
       matchmaking = await this.matchmakingService.find(matchmakingId);
-      if (!matchmaking || matchmaking.userId !== socket.data.user.id) {
+      if (!matchmaking) {
         return { error: 'Something went wrong starting the ladder game' };
       }
 
@@ -846,18 +876,19 @@ export class ChatGateway
         rightUser: { connect: { id: matchmaking.opponentUserId } },
       };
       ladderMatch = await this.matchService.create(ladderGameData);
+
       connectedUser = await this.connectedUserService.findByUserId(
         matchmaking.opponentUserId,
       );
       if (!connectedUser) {
         await this.matchService.deleteById(ladderMatch.id);
-        await this.matchmakingService.deleteByUserId(matchmaking.userId);
+        await this.matchmakingService.deleteByUserId(socket.data.user.id);
         return { error: 'Opponent is not online' };
       }
       await this.matchmakingService.deleteByUserId(matchmaking.userId);
       socket.to(connectedUser.socketId).emit('goToLadderGame', ladderMatch);
       socket.emit('goToLadderGame', ladderMatch);
-      return ladderMatch;
+      return matchmaking;
     } catch (error) {
       return { error: error.message as string };
     }

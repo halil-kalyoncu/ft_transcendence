@@ -177,6 +177,8 @@ CREATE TABLE "Matchmaking" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "opponentUserId" INTEGER,
+    "userReady" BOOLEAN NOT NULL DEFAULT false,
+    "opponentReady" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Matchmaking_pkey" PRIMARY KEY ("id")
 );

@@ -251,6 +251,8 @@ model Matchmaking {
     id             Int  @id @default(autoincrement())
     userId         Int  @unique
     opponentUserId Int? @unique
+    userReady Boolean @default(false)
+    opponentReady Boolean @default(false)
 
     user     User  @relation("WaitingLadderGame", fields: [userId], references: [id])
     opponent User? @relation("OpponentLadderGame", fields: [opponentUserId], references: [id])

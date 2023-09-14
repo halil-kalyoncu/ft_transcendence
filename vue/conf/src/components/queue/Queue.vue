@@ -81,21 +81,36 @@ const checkAuthorized = async () => {
   }
 }
 
+const handleSetReady = () => {
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  chatSocket.value.emit(
+    'setReady',
+    parseInt(matchmakingId, 10),
+    (response: MatchmakingI | ErrorI) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error, false)
+        router.push('/home')
+      }
+    }
+  )
+}
+
 const handleStartLadderGame = (matchmaking: MatchmakingI) => {
   if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
-  const loggedUser: UserI = getUserFromAccessToken()
-  if (matchmaking.userId === loggedUser.id) {
-    chatSocket.value.emit('startLadderGame', matchmaking.id, (response: MatchmakingI | ErrorI) => {
-      if ('error' in response) {
-        notificationStore.showNotification(response.error, false)
-        router.push('/home')
-      }
-    })
-  }
+  chatSocket.value.emit('startLadderGame', matchmaking.id, (response: MatchmakingI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+      router.push('/home')
+    }
+  })
 }
 
 const handleDeleteMatchmakingEntry = async () => {
@@ -154,8 +169,9 @@ onMounted(async () => {
 
   startTimer()
 
+  handleSetReady()
+
   chatSocket.value.on('readyLadderGame', (matchmaking: MatchmakingI) => {
-    waitingForGame.value = false
     handleStartLadderGame(matchmaking)
   })
 
