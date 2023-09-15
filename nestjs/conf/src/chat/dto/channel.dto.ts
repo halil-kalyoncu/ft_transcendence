@@ -64,6 +64,7 @@ export class ChannelMessageDto {
   message: Message;
   sender: User;
   createdAt: Date;
+  blockGroupMessage: boolean;
   //ChannelMessageReadStatus: ChannelMessageReadStatus;
 }
 

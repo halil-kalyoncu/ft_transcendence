@@ -220,6 +220,9 @@ CREATE UNIQUE INDEX "Powerup_name_key" ON "Powerup"("name");
 CREATE UNIQUE INDEX "MatchPowerup_matchId_powerupId_key" ON "MatchPowerup"("matchId", "powerupId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "BlockedUser_userId_targetUserId_key" ON "BlockedUser"("userId", "targetUserId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Matchmaking_userId_key" ON "Matchmaking"("userId");
 
 -- CreateIndex

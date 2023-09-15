@@ -245,6 +245,8 @@ model BlockedUser {
 
     user       User @relation("BlockedBy", fields: [userId], references: [id])
     targetUser User @relation("Blocked", fields: [targetUserId], references: [id])
+
+    @@unique([userId, targetUserId])
 }
 
 model Matchmaking {

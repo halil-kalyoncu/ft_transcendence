@@ -10,9 +10,11 @@ import {
   Channel,
   ChannelMember,
   ChannelMessageReadStatus,
+  BlockedUser,
 } from '@prisma/client';
 import { ChannelService } from '../channel/channel.service';
 import { ChannelMemberService } from '../channel-member/channel-member.service';
+import { BlockedUserService } from '../blocked-user/blocked-user.service';
 
 @Injectable()
 export class ChannelMessageService {
@@ -21,6 +23,7 @@ export class ChannelMessageService {
     private channelService: ChannelService,
     private messageService: MessageService,
     private channelMemberService: ChannelMemberService,
+    private blockedUserService: BlockedUserService
   ) {}
 
   async create(
@@ -98,6 +101,7 @@ export class ChannelMessageService {
       message: createdChannelMessage.message,
       sender: createdChannelMessage.sender.user,
       createdAt: createdChannelMessage.message.createdAt,
+      blockGroupMessage: false
     };
 
     // Create a ChannelMessageReadStatus for each member of the channel
@@ -116,7 +120,7 @@ export class ChannelMessageService {
   }
 
   async getChannelMessagesforChannel(
-    channelId: number,
+    channelId: number, userId: number
   ): Promise<ChannelMessageDto[]> {
     try {
       const channelMessages: any[] = await this.prisma.channelMessage.findMany({
@@ -142,14 +146,25 @@ export class ChannelMessageService {
         },
       });
 
-      const channelMessageDtos: ChannelMessageDto[] = channelMessages.map(
-        (channelMessage) => ({
-          id: channelMessage.id,
-          message: channelMessage.message,
-          sender: channelMessage.sender.user,
-          createdAt: channelMessage.message.createdAt,
-        }),
-      );
+      const channelMessageDtos: ChannelMessageDto[] = await Promise.all(channelMessages.map(
+        async (channelMessage) => {
+          let blockGroupMessage: boolean = false;
+
+          if (channelMessage.senderId !== userId) {
+            const blockedUser: BlockedUser = await this.blockedUserService.find(userId, channelMessage.senderId);
+            if (blockedUser) {
+              blockGroupMessage = true;
+            }
+          }
+
+          return {
+            id: channelMessage.id,
+            message: channelMessage.message,
+            sender: channelMessage.sender.user,
+            createdAt: channelMessage.message.createdAt,
+            blockGroupMessage
+        }}
+      ));
       return channelMessageDtos;
     } catch (error: any) {
       console.error('Error fetching channel messages:', error);
@@ -177,7 +192,7 @@ export class ChannelMessageService {
           isRead: true,
         },
       });
-      return await this.getChannelMessagesforChannel(channelId);
+      return await this.getChannelMessagesforChannel(channelId, userId);
     } catch (error: any) {
       console.error('Error marking messages as read:', error);
       throw error;

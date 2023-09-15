@@ -19,12 +19,19 @@ const props = defineProps({
   message: {
     type: String,
     required: true
+  },
+  blockedGroupMessage: {
+    type: Boolean,
+    required: true
   }
 })
 </script>
 
 <template>
-  <div class="message" :class="{ 'own-message': isOwnMessage }">
+  <div v-if="blockedGroupMessage" class="message">
+    <p class="message-content"> Blocked message from {{ sender }}</p>
+  </div>
+  <div v-else class="message" :class="{ 'own-message': isOwnMessage }">
     <span class="message-sender">{{ sender }}</span>
     <small class="message-date">{{ createdAt }}</small>
     <p class="message-content">{{ message }}</p>

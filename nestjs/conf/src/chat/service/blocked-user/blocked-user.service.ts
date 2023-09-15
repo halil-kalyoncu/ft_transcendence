@@ -65,13 +65,15 @@ export class BlockedUserService {
     });
   }
 
-  async find(userId: number, targetUserId: number): Promise<any> {
+  async find(userId: number, targetUserId: number): Promise<BlockedUser> {
     await this.checkIds(userId, targetUserId);
 
-    return this.prisma.blockedUser.findFirst({
+    return this.prisma.blockedUser.findUnique({
       where: {
-        userId,
-        targetUserId,
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
       },
       include: {
         user: true,
@@ -91,12 +93,12 @@ export class BlockedUserService {
   private async checkIds(userId: number, targetUserId: number): Promise<void> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new Error('User not found');
     }
 
     const targetUser = await this.userService.findById(targetUserId);
     if (!targetUser) {
-      throw new NotFoundException('Target user not found');
+      throw new Error('Target user not found');
     }
 
     if (userId === targetUserId) {

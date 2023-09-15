@@ -19,7 +19,6 @@ import type { MatchI } from '../../model/match/match.interface'
 import type { ErrorI } from '../../model/error.interface'
 import type { UnreadMessageI } from '../../model/message/unreadMessage.interface'
 import type { DirectConverstationDto } from '../../model/message/directConversation.dto'
-import type { BlockUserDto } from '../../model/block-user.dto'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
@@ -204,28 +203,27 @@ const handleBlock = async ({ username }: ModalResult) => {
     return
   }
 
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
   try {
     const blockUser: UserI = await fetchUser(username)
     if (!blockUser) {
       throw new Error("Couldn't find user " + username)
     }
 
-    const blockUserDto: BlockUserDto = {
-      userId: userId.value as number,
-      targetUserId: blockUser.id as number
+    socket.value.emit('blockUser', blockUser.id as number, (response: any) => {
+    if ('error' in response) {
+      notificationStore.showNotification(
+        `Error: ${response.error}`, false
+      )
     }
-    const response = await fetch('http://localhost:3000/api/blockedUsers', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(blockUserDto)
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    else {
+      notificationStore.showNotification(`User ${username} was successfully blocked`, true)
     }
-    notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+  })
   } catch (error: any) {
     notificationStore.showNotification('Error: ' + error.message, false)
   }
@@ -239,28 +237,27 @@ const handleUnblock = async ({ username }: ModalResult) => {
     return
   }
 
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
   try {
     const unblockUser: UserI = await fetchUser(username)
     if (!unblockUser) {
       throw new Error("Couldn't find user " + username)
     }
 
-    const blockUserDto: BlockUserDto = {
-      userId: userId.value as number,
-      targetUserId: unblockUser.id as number
+    socket.value.emit('unblockUser', unblockUser.id as number, (response: any) => {
+    if ('error' in response) {
+      notificationStore.showNotification(
+        `Error: ${response.error}`, false
+      )
     }
-    const response = await fetch('http://localhost:3000/api/blockedUsers', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(blockUserDto)
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    else {
+      notificationStore.showNotification(`User ${username} was successfully unblocked`, true)
     }
-    notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
+  })
   } catch (error: any) {
     notificationStore.showNotification('Error: ' + error.message, false)
   }
@@ -285,6 +282,7 @@ const handleUnfriendUser = (username: String, friendshipId: Number) => {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
+
   if (username !== '') {
     socket.value.emit('removeFriend', friendshipId, (response: FriendshipI | ErrorI) => {
       if ('error' in response) {
@@ -300,6 +298,11 @@ const handleUnfriendUser = (username: String, friendshipId: Number) => {
 }
 
 const handleBlockUser = async (username: string, blockUserId: number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
   if (username !== '') {
     try {
       const blockUser: UserI = await fetchUser(username)
@@ -307,22 +310,16 @@ const handleBlockUser = async (username: string, blockUserId: number) => {
         throw new Error("Couldn't find user " + username)
       }
 
-      const blockUserDto: BlockUserDto = {
-        userId: userId.value as number,
-        targetUserId: blockUser.id as number
+      socket.value.emit('blockUser', blockUser.id as number, (response: any) => {
+      if ('error' in response) {
+        notificationStore.showNotification(
+          `Error: ${response.error}`, false
+        )
       }
-      const response = await fetch('http://localhost:3000/api/blockedUsers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(blockUserDto)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+      else {
+        notificationStore.showNotification(`User ${username} was successfully blocked`, true)
       }
-      notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+    })
     } catch (error: any) {
       notificationStore.showNotification('Error: ' + error.message, false)
     }

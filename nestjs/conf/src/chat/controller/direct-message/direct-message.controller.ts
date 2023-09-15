@@ -7,15 +7,19 @@ import {
   Query,
 } from '@nestjs/common';
 import { DirectMessageService } from '../../service/direct-message/direct-message.service';
-import { DirectMessage, User } from '@prisma/client';
+import { BlockedUser, DirectMessage, User } from '@prisma/client';
 import { DirectConverstationDto } from '../../dto/direct-conversation.dto';
 import { UnreadMessagesDto } from '../../dto/unread-messages.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
 
 @ApiTags('Direct message (Chat module)')
 @Controller('directMessages')
 export class DirectMessageController {
-  constructor(private directMessageService: DirectMessageService) {}
+  constructor(
+    private directMessageService: DirectMessageService,
+    private blockedUserService: BlockedUserService
+  ) {}
 
   //Get all the directMessages between two users with the messages and the participants (receiver and sender) from the message table
   // Needs the readerUserId and the withUserId as a URL from the frontend, may be changed in the future
@@ -23,8 +27,12 @@ export class DirectMessageController {
   async getDirectMessages(
     @Query('readerUserId', ParseIntPipe) readerUserId: number,
     @Query('withUserId', ParseIntPipe) withUserId: number,
-  ): Promise<DirectMessage[]> {
-    return this.directMessageService.getConversation(readerUserId, withUserId);
+  ): Promise<DirectMessage[] | { blocked: string }> {
+    const blockedUser: BlockedUser = await this.blockedUserService.find(readerUserId, withUserId);
+    if (blockedUser) {
+      return { blocked: 'this conversation is blocked' }
+    }
+    return await this.directMessageService.getConversation(readerUserId, withUserId);
   }
 
   // @Get('allUnreadByUserId')
@@ -45,10 +53,14 @@ export class DirectMessageController {
 
     for (const message of unreadMessages) {
       const senderId = message.senderId;
-      if (!groupMessagesBySender[senderId]) {
+      const blockedUser: BlockedUser = await this.blockedUserService.find(userId, senderId);
+      if (!blockedUser && !groupMessagesBySender[senderId]) {
         groupMessagesBySender[senderId] = [];
       }
-      groupMessagesBySender[senderId].push(message);
+
+      if (!blockedUser) {
+        groupMessagesBySender[senderId].push(message);
+      }
     }
 
     for (const senderId in groupMessagesBySender) {
@@ -67,7 +79,11 @@ export class DirectMessageController {
   async markMessagesAsRead(
     @Body() directConversationDto: DirectConverstationDto,
   ): Promise<DirectMessage[]> {
-    return this.directMessageService.markConversationAsRead(
+    const blockedUser: BlockedUser = await this.blockedUserService.find(directConversationDto.readerUserId, directConversationDto.withUserId);
+    if (blockedUser) {
+      return []
+    }
+    return await this.directMessageService.markConversationAsRead(
       directConversationDto.readerUserId,
       directConversationDto.withUserId,
     );

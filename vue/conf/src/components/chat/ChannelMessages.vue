@@ -11,6 +11,7 @@
           :message="channelmessage.message?.message ?? ''"
           :sender="channelmessage.sender?.username ?? ''"
           :isOwnMessage="isOwnMessage(channelmessage.sender.id)"
+          :blockedGroupMessage="channelmessage.blockedGroupMessage"
         />
       </div>
     </ScrollViewer>
@@ -92,7 +93,7 @@ const setNewChannelMessageListener = () => {
   }
   socket.value.on('newChannelMessage', (newChannelMessageData: ChannelMessageI) => {
     console.log('newChannelMessage fired')
-    channelMessages.value.unshift(newChannelMessageData)
+    setNewChannelMessages()
   })
   socket.value.on('UserSignedOut', (channelId: Number) => {
     console.log('UserSignedOut from ChannelMessages fired')
@@ -104,7 +105,7 @@ const setNewChannelMessageListener = () => {
 const setNewChannelMessages = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}`
+      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId}`
     )
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`)

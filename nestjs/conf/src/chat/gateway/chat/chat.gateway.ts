@@ -35,6 +35,7 @@ import {
   Matchmaking,
   Prisma,
   Powerup,
+  BlockedUser,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
@@ -47,6 +48,7 @@ import { MatchService } from '../../../match/service/match.service';
 import { ErrorDto } from '../../../chat/dto/error.dto';
 import { MatchmakingService } from '../../../matchmaking/service/matchmaking.service';
 import { PowerupService } from '../../../powerup/service/powerup.service';
+import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
 
 @WebSocketGateway({
   cors: {
@@ -72,6 +74,7 @@ export class ChatGateway
     private channelInvitationService: ChannelInvitationsService,
     private matchmakingService: MatchmakingService,
     private powerupService: PowerupService,
+    private blockedUserService: BlockedUserService
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -558,13 +561,6 @@ export class ChatGateway
    *** ChannelMessages ***
    ***********************/
 
-  @SubscribeMessage('groupMessages')
-  async handlegetGroupMessages(socket: Socket, channelId: number) {
-    return await this.channelMessageService.getChannelMessagesforChannel(
-      channelId,
-    );
-  }
-
   @SubscribeMessage('sendChannelMessage')
   async handleSendChannelMessage(
     socket: Socket,
@@ -947,6 +943,36 @@ export class ChatGateway
       return matchmaking;
     } catch (error) {
       return { error: error.message as string };
+    }
+  }
+
+  /******************
+  *** Block users ***
+  ******************/
+
+  @SubscribeMessage('blockUser')
+  async blockUser(socket: Socket, blockUserId: number): Promise<BlockedUser | ErrorDto > {
+    try {
+      const blockedUser: BlockedUser = await this.blockedUserService.block(socket.data.user.id, blockUserId);
+      socket.emit('blockedUsers', blockedUser);
+      socket.emit('newChannelMessage');
+      socket.emit('newDirectMessage');
+    }
+    catch(error) {
+      return { error: error.message as string }
+    }
+  }
+
+  @SubscribeMessage('blockUser')
+  async unblockUser(socket: Socket, blockUserId: number): Promise<BlockedUser | ErrorDto > {
+    try {
+      const unblockedUser: BlockedUser = await this.blockedUserService.unblock(socket.data.user.id, blockUserId);
+      socket.emit('blockedUsers', unblockedUser);
+      socket.emit('newChannelMessage');
+      socket.emit('newDirectMessage');
+    }
+    catch(error) {
+      return { error: error.message as string }
     }
   }
 
