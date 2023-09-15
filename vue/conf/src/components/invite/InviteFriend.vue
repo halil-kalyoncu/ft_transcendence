@@ -7,6 +7,7 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
 import type { SendGameInviteDto } from '../../model/match/sendGameInvite.dto'
 import type { MatchI } from '../../model/match/match.interface'
 import type { ErrorI } from '../../model/error.interface'
+import jwtDecode from 'jwt-decode'
 
 const props = defineProps({
   matchId: {
@@ -14,7 +15,7 @@ const props = defineProps({
     required: true
   }
 })
-const areRadioButtonsDisabled = computed(() => activePanel.value === 'DefaultGame')
+const areOptionsDisabled = computed(() => activePanel.value === 'DefaultGame')
 const activePanel = ref('DefaultGame')
 const selectedGoals = ref('5')
 const selectedPowerups = ref([
@@ -39,14 +40,22 @@ const showSuggestionList = ref(false)
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const socket = connectChatSocket(accessToken)
 
-const findUserSuggestions = async (usernameSuggestion: string) => {
+const getUserFromAccessToken = (): UserI => {
+  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+  return decodedToken.user as UserI
+}
+
+const findFriendSuggestions = async (usernameSuggestion: string) => {
   if (usernameSuggestion.trim() === '') {
     userSuggestions.value = []
     return
   }
 
+  const loggedUser: UserI = getUserFromAccessToken()
+  const userId: string = loggedUser.id?.toString(10)
+  console.log(userId)
   const response = await fetch(
-    `http://localhost:3000/api/users/find-by-username?username=${usernameSuggestion}`,
+    `http://localhost:3000/api/friendships/get-like-username?userId=${userId}&username=${usernameSuggestion}`,
     {
       method: 'GET',
       headers: {
@@ -73,7 +82,7 @@ const hideSuggestions = () => {
 }
 
 watch(invitedUsername, (newValue) => {
-  findUserSuggestions(newValue)
+  findFriendSuggestions(newValue)
 })
 
 const sendInvite = async () => {
@@ -170,7 +179,7 @@ const togglePowerup = (powerupName: string) => {
           id="three"
           v-model="selectedGoals"
           value="3"
-          :disabled="areRadioButtonsDisabled"
+          :disabled="areOptionsDisabled"
         />
         <label for="three" class="goals-label">3 goals</label>
         <input
@@ -179,7 +188,7 @@ const togglePowerup = (powerupName: string) => {
           id="five"
           v-model="selectedGoals"
           value="5"
-          :disabled="areRadioButtonsDisabled"
+          :disabled="areOptionsDisabled"
           checked
         />
         <label for="five" class="goals-label">5 goals</label>
@@ -189,7 +198,7 @@ const togglePowerup = (powerupName: string) => {
           id="eleven"
           v-model="selectedGoals"
           value="11"
-          :disabled="areRadioButtonsDisabled"
+          :disabled="areOptionsDisabled"
         />
         <label for="eleven" class="goals-label">11 goals</label>
         <input
@@ -198,7 +207,7 @@ const togglePowerup = (powerupName: string) => {
           id="twentyone"
           v-model="selectedGoals"
           value="21"
-          :disabled="areRadioButtonsDisabled"
+          :disabled="areOptionsDisabled"
         />
         <label for="twentyone" class="goals-label">21 goals</label>
       </div>
@@ -207,12 +216,14 @@ const togglePowerup = (powerupName: string) => {
         <button
           :class="{ selected: selectedPowerups.find((p) => p.name === 'slowBall')?.value }"
           @click="togglePowerup('slowBall')"
+          :disabled="areOptionsDisabled"
         >
           slow
         </button>
         <button
           :class="{ selected: selectedPowerups.find((p) => p.name === 'fastBall')?.value }"
           @click="togglePowerup('fastBall')"
+          :disabled="areOptionsDisabled"
         >
           fast
         </button>
@@ -224,6 +235,7 @@ const togglePowerup = (powerupName: string) => {
             selected: selectedPowerups.find((p) => p.name === 'decreasePaddleHeight')?.value
           }"
           @click="togglePowerup('decreasePaddleHeight')"
+          :disabled="areOptionsDisabled"
         >
           decrease
         </button>
@@ -232,6 +244,7 @@ const togglePowerup = (powerupName: string) => {
             selected: selectedPowerups.find((p) => p.name === 'increasePaddleHeight')?.value
           }"
           @click="togglePowerup('increasePaddleHeight')"
+          :disabled="areOptionsDisabled"
         >
           increase
         </button>
@@ -240,6 +253,7 @@ const togglePowerup = (powerupName: string) => {
         <button
           :class="{ selected: selectedPowerups.find((p) => p.name === 'magnet')?.value }"
           @click="togglePowerup('magnet')"
+          :disabled="areOptionsDisabled"
         >
           magnet
         </button>

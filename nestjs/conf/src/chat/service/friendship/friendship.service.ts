@@ -190,4 +190,44 @@ export class FriendshipService {
       include: { sender: true, receiver: true },
     });
   }
+
+  async listFriendsLikeUsername(
+    userId: number,
+    searchTerm: string,
+  ): Promise<User[]> {
+    const searchTermLower: string = searchTerm.toLowerCase();
+
+    const friends = await this.prisma.friendship.findMany({
+      where: {
+        AND: [
+          { status: FriendshipStatus.ACCEPTED },
+          {
+            OR: [{ senderId: userId }, { receiverId: userId }],
+          },
+        ],
+      },
+      include: { sender: true, receiver: true },
+    });
+
+    const users: User[] = await Promise.all(
+      friends.map(async (friendship) => {
+        const friend =
+          friendship.senderId === userId
+            ? friendship.receiver
+            : friendship.sender;
+
+        if (searchTermLower) {
+          if (friend.username.toLowerCase().includes(searchTermLower)) {
+            return friend;
+          } else {
+            return null;
+          }
+        }
+
+        return friend;
+      }),
+    );
+
+    return users.filter((user) => user !== null) as User[];
+  }
 }
