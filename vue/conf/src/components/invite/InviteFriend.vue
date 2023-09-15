@@ -121,6 +121,9 @@ const setActivePanel = (value: string) => {
   activePanel.value = value
   if (value === 'DefaultGame') {
     selectedGoals.value = '5'
+    selectedPowerups.value.forEach((powerup) => {
+      powerup.value = false
+    })
   }
 }
 
