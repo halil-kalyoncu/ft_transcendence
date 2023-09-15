@@ -52,8 +52,7 @@ const findFriendSuggestions = async (usernameSuggestion: string) => {
   }
 
   const loggedUser: UserI = getUserFromAccessToken()
-  const userId: string = loggedUser.id?.toString(10)
-  console.log(userId)
+  const userId: string = loggedUser.id?.toString(10) ?? ''
   const response = await fetch(
     `http://localhost:3000/api/friendships/get-like-username?userId=${userId}&username=${usernameSuggestion}`,
     {
