@@ -201,9 +201,12 @@ const setDestroyChannelListener = async () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('ChannelDestroy', (channelId: number) => {
-    notificationStore.showNotification(ChannelName.value + ' has been destroyed', false)
-    emit('channel-force-leave')
+  socket.value.on('ChannelDestroy', (destroyedChannelId: number) => {
+	if (destroyedChannelId === channelId)
+	{
+		notificationStore.showNotification(ChannelName.value + ' has been destroyed', false)
+		emit('channel-force-leave')
+	}
   })
 }
 // TODO: CHECK FOR NOTIFICATIONS HERE! 
@@ -214,13 +217,17 @@ const setUserSignedListener = () => {
   }
   socket.value.on('UserSignedOut', (userSignedOutName: string, channelIdSignOut: number) => {
     console.log('UserSignedOut from ChannelManager fired')
+	setMembers().then(() => {
+		setCurrentUserRole()
+    })
 	if (channelIdSignOut === channelId){
 		notificationStore.showNotification(userSignedOutName + ' signed out Channel', true)
+		if (userSignedOutName === username.value) {
+			emit('channel-signedout')
+		}
 	}
-     setMembers().then(() => {
-      setCurrentUserRole()
-    })
   })
+  
   socket.value.on('UserSignedIn', (userSignedInName: string, channelSignIn: number) => {
     console.log('UserSignedIn fired')
 	if (channelSignIn === channelId){
@@ -361,7 +368,7 @@ const DestroyChannel = async() => {
   
 }
 
-const removeUserFromChannel = async () => {
+/* const removeUserFromChannel = async () => {
   try {
 	console.log("USERID JOINED")
     console.log(joinedChannelId.value)
@@ -384,7 +391,7 @@ const removeUserFromChannel = async () => {
     notificationStore.showNotification(`Error` + error.message, true)
   }
 }
-
+ */
 const SignOutChannel = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
@@ -394,8 +401,6 @@ const SignOutChannel = async () => {
 	channelId: channelId,
 	userId: userId.value
   })
-  
-  emit('channel-signedout')
 }
 
 const setPassword = async () => {

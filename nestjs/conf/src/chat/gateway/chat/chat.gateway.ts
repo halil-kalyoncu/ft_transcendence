@@ -638,15 +638,16 @@ export class ChatGateway
 		try {
 			const { senderId, channelId } = destroyChannelDto;
 			const members: User[] = await this.channelService.getMembers(channelId);
-			socket.emit('ChannelDestroy');
+			socket.emit('ChannelDestroy', channelId);
 			for (const member of members) {
 				const memberOnline: ConnectedUser =
 					await this.connectedUserService.findByUserId(member.id);
 				if (memberOnline) {
-					socket.to(memberOnline.socketId).emit('ChannelDestroy');
+					socket.to(memberOnline.socketId).emit('ChannelDestroy',channelId);
 				}
 			}
 			this.channelService.destroyChannel(channelId);
+			return channelId;
 		} catch (error: any) {
 			return { error: error.message };
 		}
@@ -657,23 +658,24 @@ export class ChatGateway
 	async handleSignOutChannel(
 		socket: Socket,
 		ChannelMembershipDto: ChannelMembershipDto,
-	): Promise<ChannelMember> {
-		const { userId, channelId } = ChannelMembershipDto;
-		const members: User[] = await this.channelService.getMembers(channelId);
-		const sender = await this.userService.findById(userId);
-		socket.emit('UserSignedOut', sender.username, channelId);
-		const channelMember = await this.channelService.removeUserFromChannel(ChannelMembershipDto);
-		socket.emit('UserSignedOut', sender.username, channelId);
-		for (const member of members) {
-			const memberOnline: ConnectedUser =
-				await this.connectedUserService.findByUserId(member.id);
-			if (memberOnline) {
-				console.log('UserSignedOut')
-				console.log(memberOnline)
-				socket.to(memberOnline.socketId).emit('UserSignedOut', sender.username, channelId);
+	): Promise<ChannelMember | ErrorDto> {
+		try{
+			const { userId, channelId } = ChannelMembershipDto;
+			const members: User[] = await this.channelService.getMembers(channelId);
+			const sender = await this.userService.findById(userId);
+			const channelMember = await this.channelService.removeUserFromChannel(ChannelMembershipDto);
+			socket.emit('UserSignedOut', sender.username, channelId);
+			for (const member of members) {
+				const memberOnline: ConnectedUser =
+					await this.connectedUserService.findByUserId(member.id);
+				if (memberOnline) {
+					socket.to(memberOnline.socketId).emit('UserSignedOut', sender.username, channelId);
+				}
 			}
+			return channelMember
+		} catch (error: any) {
+			return { error: error.message };
 		}
-		return channelMember
 	}
 
 	@SubscribeMessage('SignInChannel')

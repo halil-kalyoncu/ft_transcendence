@@ -94,8 +94,19 @@ const setNewChannelMessageListener = () => {
   })
   socket.value.on('UserSignedOut', (userName: string) => {
     console.log('UserSignedOut from ChannelMessages fired')
-    notificationStore.showNotification(' Signed out Channel', true)
     setNewChannelMessages()
+  })
+}
+
+const setUserChangesListener = () => {
+  if (!socket || !socket.value) {
+	notificationStore.showNotification('Error: Connection problems', true)
+	return
+  }
+  socket.value.on('UserSignedOut', (userSignedoutname: string, leftChannelId:number) => {
+	if (leftChannelId === channelId)
+	console.log('UserSignedOut from ChannelMessages fired')
+	setNewChannelMessages()
   })
 }
 
@@ -120,6 +131,7 @@ onMounted(() => {
   initSocket()
   setNewChannelMessages()
   setNewChannelMessageListener()
+  setUserChangesListener()
 })
 
 //Todo Check for selectedChannel after implementaiton
