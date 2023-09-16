@@ -27,7 +27,6 @@ const selectedUser: UserI | null = props.selectedFriendEntry?.friend ?? null
 const messages = ref<directMessageI[]>([])
 const newMessage = ref('')
 const loading = ref(true)
-const blockedConversation = ref(false)
 
 type User = {
   id: number
@@ -69,15 +68,17 @@ const setDirectMessages = async () => {
     const data = await response.json()
     if (Array.isArray(data)) {
       messages.value = data
-    }
-    else if ('blocked' in data) {
-      blockedConversation.value = true
-    }
-    else {
-      console.error('Expected an array from the API but received:', data)
+    } else {
+      notificationStore.showNotification(
+        'Expected an array from the API but received: ' + data,
+        false
+      )
     }
   } catch (error: any) {
-    console.error('Expected an array from the API but received:', error)
+    notificationStore.showNotification(
+      'Expected an array from the API but received: ' + error.message,
+      false
+    )
   } finally {
     loading.value = false
   }
@@ -130,9 +131,7 @@ const formatDate = (createdAt: string) => {
 </script>
 
 <template>
-  <div v-if="blockedConversation">
-    You blocked {{ selectedUser?.username! }}
-  </div>
+  <div v-if="props.selectedFriendEntry?.blocked!">You blocked {{ selectedUser?.username! }}</div>
   <div v-else class="chat">
     <div></div>
     <ScrollViewer :maxHeight="'60vh'">

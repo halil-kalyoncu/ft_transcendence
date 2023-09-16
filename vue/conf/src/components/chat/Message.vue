@@ -29,7 +29,7 @@ const props = defineProps({
 
 <template>
   <div v-if="blockedGroupMessage" class="message">
-    <p class="message-content"> Blocked message from {{ sender }}</p>
+    <p class="message-content">Blocked message from {{ sender }}</p>
   </div>
   <div v-else class="message" :class="{ 'own-message': isOwnMessage }">
     <span class="message-sender">{{ sender }}</span>

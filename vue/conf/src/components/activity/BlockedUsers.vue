@@ -84,11 +84,8 @@ const handleUnblockUser = async (unblockUserId: number, username: string) => {
 
   socket.value.emit('unblockUser', unblockUserId as number, (response: any) => {
     if ('error' in response) {
-      notificationStore.showNotification(
-        `Error: ${response.error}`, false
-      )
-    }
-    else {
+      notificationStore.showNotification(`Error: ${response.error}`, false)
+    } else {
       notificationStore.showNotification(`User ${username} was successfully unblocked`, true)
     }
   })

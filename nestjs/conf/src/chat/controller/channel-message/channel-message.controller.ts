@@ -11,10 +11,11 @@ export class ChannelMessageController {
   @Get('getChannelMessagesforChannel')
   async getChannelMessagesforChannel(
     @Query('channelId', ParseIntPipe) channelId: number,
-    @Query('userId', ParseIntPipe) userId: number
+    @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelMessageDto[]> {
     return await this.ChannelMessageService.getChannelMessagesforChannel(
-      channelId, userId
+      channelId,
+      userId,
     );
   }
 

@@ -7,7 +7,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { DirectMessageService } from '../../service/direct-message/direct-message.service';
-import { BlockedUser, DirectMessage, User } from '@prisma/client';
+import { BlockedUser, DirectMessage } from '@prisma/client';
 import { DirectConverstationDto } from '../../dto/direct-conversation.dto';
 import { UnreadMessagesDto } from '../../dto/unread-messages.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -27,12 +27,11 @@ export class DirectMessageController {
   async getDirectMessages(
     @Query('readerUserId', ParseIntPipe) readerUserId: number,
     @Query('withUserId', ParseIntPipe) withUserId: number,
-  ): Promise<DirectMessage[] | { blocked: string }> {
-    const blockedUser: BlockedUser = await this.blockedUserService.find(readerUserId, withUserId);
-    if (blockedUser) {
-      return { blocked: 'this conversation is blocked' }
-    }
-    return await this.directMessageService.getConversation(readerUserId, withUserId);
+  ): Promise<DirectMessage[]> {
+    return await this.directMessageService.getConversation(
+      readerUserId,
+      withUserId,
+    );
   }
 
   // @Get('allUnreadByUserId')

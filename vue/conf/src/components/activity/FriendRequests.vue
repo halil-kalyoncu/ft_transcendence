@@ -100,15 +100,12 @@ const handleBlockUser = async (blockedUserId: number, username: string) => {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
-  
+
   if (username !== '') {
     socket.value.emit('blockUser', blockedUserId as number, (response: any) => {
       if ('error' in response) {
-        notificationStore.showNotification(
-          `Error: ${response.error}`, false
-        )
-      }
-      else {
+        notificationStore.showNotification(`Error: ${response.error}`, false)
+      } else {
         notificationStore.showNotification(`You banned ${username}`, true)
       }
     })

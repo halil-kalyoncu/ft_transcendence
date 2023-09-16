@@ -45,9 +45,7 @@ const initSocket = () => {
 
 const updateSelectedFriend = () => {
   if (!selectedFriend.value) return
-
   const updatedFriend = friends.value.find((f) => f.friend.id === selectedFriend.value?.friend.id)
-
   if (updatedFriend) {
     selectedFriend.value = updatedFriend
   } else {
@@ -77,6 +75,7 @@ const setFriendData = async () => {
 
     const data = await response.json()
     friends.value = data
+
     updateSelectedFriend()
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
@@ -95,6 +94,7 @@ const setDirectMessageData = async () => {
 
     const data = await response.json()
     unreadMessages.value = data
+    console.log(unreadMessages.value)
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
   }
@@ -117,6 +117,7 @@ const setDirectMessageListener = () => {
     return
   }
   socket.value.on('newDirectMessage', () => {
+    console.log('triggered')
     setDirectMessageData()
   })
 }
@@ -215,15 +216,12 @@ const handleBlock = async ({ username }: ModalResult) => {
     }
 
     socket.value.emit('blockUser', blockUser.id as number, (response: any) => {
-    if ('error' in response) {
-      notificationStore.showNotification(
-        `Error: ${response.error}`, false
-      )
-    }
-    else {
-      notificationStore.showNotification(`User ${username} was successfully blocked`, true)
-    }
-  })
+      if ('error' in response) {
+        notificationStore.showNotification(`Error: ${response.error}`, false)
+      } else {
+        notificationStore.showNotification(`User ${username} was successfully blocked`, true)
+      }
+    })
   } catch (error: any) {
     notificationStore.showNotification('Error: ' + error.message, false)
   }
@@ -249,15 +247,12 @@ const handleUnblock = async ({ username }: ModalResult) => {
     }
 
     socket.value.emit('unblockUser', unblockUser.id as number, (response: any) => {
-    if ('error' in response) {
-      notificationStore.showNotification(
-        `Error: ${response.error}`, false
-      )
-    }
-    else {
-      notificationStore.showNotification(`User ${username} was successfully unblocked`, true)
-    }
-  })
+      if ('error' in response) {
+        notificationStore.showNotification(`Error: ${response.error}`, false)
+      } else {
+        notificationStore.showNotification(`User ${username} was successfully unblocked`, true)
+      }
+    })
   } catch (error: any) {
     notificationStore.showNotification('Error: ' + error.message, false)
   }
@@ -311,15 +306,38 @@ const handleBlockUser = async (username: string, blockUserId: number) => {
       }
 
       socket.value.emit('blockUser', blockUser.id as number, (response: any) => {
-      if ('error' in response) {
-        notificationStore.showNotification(
-          `Error: ${response.error}`, false
-        )
+        if ('error' in response) {
+          notificationStore.showNotification(`Error: ${response.error}`, false)
+        } else {
+          notificationStore.showNotification(`User ${username} was successfully blocked`, true)
+        }
+      })
+    } catch (error: any) {
+      notificationStore.showNotification('Error: ' + error.message, false)
+    }
+  }
+}
+
+const handleUnblockUser = async (username: string, unblockUserId: number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  if (username !== '') {
+    try {
+      const unblockUser: UserI = await fetchUser(username)
+      if (!unblockUser) {
+        throw new Error("Couldn't find user " + username)
       }
-      else {
-        notificationStore.showNotification(`User ${username} was successfully blocked`, true)
-      }
-    })
+
+      socket.value.emit('unblockUser', unblockUser.id as number, (response: any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(`Error: ${response.error}`, false)
+        } else {
+          notificationStore.showNotification(`User ${username} was successfully blocked`, true)
+        }
+      })
     } catch (error: any) {
       notificationStore.showNotification('Error: ' + error.message, false)
     }
@@ -386,6 +404,7 @@ const goBack = () => {
             <FriendsListItem
               @click="handleFriendManagerOpened(entry)"
               :status="entry.status!"
+              :blocked="entry.blocked!"
               :username="entry.friend.username"
               :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
               :showActions="false"
@@ -412,6 +431,7 @@ const goBack = () => {
       <FriendManager
         @unfriend-user="handleUnfriendUser"
         @block-user="handleBlockUser"
+        @unblock-user="handleUnblockUser"
         @invite-user-to-game="handleInviteToGame"
         :selectedFriendEntry="selectedFriend"
       />

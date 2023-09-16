@@ -74,7 +74,7 @@ export class ChatGateway
     private channelInvitationService: ChannelInvitationsService,
     private matchmakingService: MatchmakingService,
     private powerupService: PowerupService,
-    private blockedUserService: BlockedUserService
+    private blockedUserService: BlockedUserService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -947,32 +947,45 @@ export class ChatGateway
   }
 
   /******************
-  *** Block users ***
-  ******************/
+   *** Block users ***
+   ******************/
 
   @SubscribeMessage('blockUser')
-  async blockUser(socket: Socket, blockUserId: number): Promise<BlockedUser | ErrorDto > {
+  async blockUser(
+    socket: Socket,
+    blockUserId: number,
+  ): Promise<BlockedUser | ErrorDto> {
     try {
-      const blockedUser: BlockedUser = await this.blockedUserService.block(socket.data.user.id, blockUserId);
+      const blockedUser: BlockedUser = await this.blockedUserService.block(
+        socket.data.user.id,
+        blockUserId,
+      );
       socket.emit('blockedUsers', blockedUser);
       socket.emit('newChannelMessage');
-      socket.emit('newDirectMessage');
-    }
-    catch(error) {
-      return { error: error.message as string }
+      socket.emit('friends');
+      return blockedUser;
+    } catch (error) {
+      return { error: error.message as string };
     }
   }
 
-  @SubscribeMessage('blockUser')
-  async unblockUser(socket: Socket, blockUserId: number): Promise<BlockedUser | ErrorDto > {
+  @SubscribeMessage('unblockUser')
+  async unblockUser(
+    socket: Socket,
+    blockUserId: number,
+  ): Promise<BlockedUser | ErrorDto> {
     try {
-      const unblockedUser: BlockedUser = await this.blockedUserService.unblock(socket.data.user.id, blockUserId);
+      const unblockedUser: BlockedUser = await this.blockedUserService.unblock(
+        socket.data.user.id,
+        blockUserId,
+      );
       socket.emit('blockedUsers', unblockedUser);
       socket.emit('newChannelMessage');
+      socket.emit('friends');
       socket.emit('newDirectMessage');
-    }
-    catch(error) {
-      return { error: error.message as string }
+      return unblockedUser;
+    } catch (error) {
+      return { error: error.message as string };
     }
   }
 
