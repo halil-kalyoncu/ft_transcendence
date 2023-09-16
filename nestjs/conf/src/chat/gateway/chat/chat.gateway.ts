@@ -366,7 +366,7 @@ export class ChatGateway
 	): Promise<Channel | ErrorDto> {
 		try {
 			const channel = await this.channelService.setPassword(setPasswordDto);
-			
+
 			const members: User[] = await this.channelService.getMembers(
 				setPasswordDto.channelId,
 			);
@@ -465,7 +465,7 @@ export class ChatGateway
 	): Promise<string | ErrorDto> {
 		try {
 
-			
+
 			const targetUser = await this.userService.findById(adminActionDto.targetUserId);
 
 			const members: User[] = await this.channelService.getMembers(
@@ -552,7 +552,7 @@ export class ChatGateway
 		adminActionDto: AdminActionDto,
 	): Promise<void> {
 		try {
-			 await this.channelService.muteChannelMember(
+			await this.channelService.muteChannelMember(
 				adminActionDto
 			);
 			const target = await this.userService.findById(adminActionDto.targetUserId);
@@ -656,20 +656,24 @@ export class ChatGateway
 	@SubscribeMessage('SignOutChannel')
 	async handleSignOutChannel(
 		socket: Socket,
-		destroyChannelDto: DestroyChannelDto,
-	): Promise<void> {
-		const { senderId, channelId } = destroyChannelDto;
+		ChannelMembershipDto: ChannelMembershipDto,
+	): Promise<ChannelMember> {
+		const { userId, channelId } = ChannelMembershipDto;
 		const members: User[] = await this.channelService.getMembers(channelId);
-		const user = await this.userService.findById(senderId);
+		const sender = await this.userService.findById(userId);
+		socket.emit('UserSignedOut', sender.username, channelId);
+		const channelMember = await this.channelService.removeUserFromChannel(ChannelMembershipDto);
+		socket.emit('UserSignedOut', sender.username, channelId);
 		for (const member of members) {
 			const memberOnline: ConnectedUser =
 				await this.connectedUserService.findByUserId(member.id);
 			if (memberOnline) {
 				console.log('UserSignedOut')
 				console.log(memberOnline)
-				await socket.to(memberOnline.socketId).emit('UserSignedOut', user.username, channelId);
+				socket.to(memberOnline.socketId).emit('UserSignedOut', sender.username, channelId);
 			}
 		}
+		return channelMember
 	}
 
 	@SubscribeMessage('SignInChannel')
@@ -786,7 +790,7 @@ export class ChatGateway
 		socket: Socket,
 		inviteeUsername: string,
 	): Promise<User | ErrorDto> {
-		try{
+		try {
 			const invitee = await this.userService.findByUsername(inviteeUsername);
 			if (!invitee) {
 				throw new Error('User not found');
@@ -796,7 +800,7 @@ export class ChatGateway
 			if (inviteeOnline) {
 				socket.to(inviteeOnline.socketId).emit('NewChannelInvitation');
 			}
-		return invitee
+			return invitee
 		} catch (error: any) {
 			return { error: error.message as string };
 		}

@@ -188,28 +188,7 @@ const addUsertoChannel = async () => {
     notificationStore.showNotification(`Error` + error.message)
   }
 }
-const removeUserFromChannel = async () => {
-  try {
-    console.log(joinedChannelId.value)
-    const response = await fetch('http://localhost:3000/api/channel/removeUserFromChannel', {
-      method: 'Delete',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: userId.value,
-        channelId: joinedChannelId.value
-      })
-    })
-	console.log("RESPONSE FROM DESTROY")
-	console.log(await response.json())
-	if (!response.ok) {
-	  notificationStore.showNotification('Error: Failed to remove user from channel', false)
-	}
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
-  }
-}
+
 
 const MarkMessagesAsRead = async () => {
   if (joinedChannelId.value !== 0) {
@@ -285,13 +264,7 @@ const hanndleChannelforceLeave = async () => {
 }
 
 const hanndleChannelSignedout = async () => {
-  await MarkMessagesAsRead()
-  await removeUserFromChannel()
-  socket.value?.emit('SignOutChannel', {
-    channelId: joinedChannelId.value,
-    senderId: userId.value
-  })
-  closeChannelManagerAndChat()
+ await closeChannelManagerAndChat()
 }
 
 const updateChannelManager = async () => {

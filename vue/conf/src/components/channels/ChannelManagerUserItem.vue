@@ -287,7 +287,6 @@ const initSocket = async () => {
 //CHECK FOR NOTIFICTAIONS HERE
 onMounted( async () => {
   await initSocket()
-  socket.value.off('UserSignedOut')
 })
 
 </script>

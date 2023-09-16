@@ -172,22 +172,6 @@ const initSocket = () => {
   socket.value = connectChatSocket( accessToken)
 }
 
-const fetchDebug = async () => {
-	try {
-    const response = await fetch(
-      `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`
-    )
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
-    }
-    const data = await response.json()
-	console.log("Response from fetchDebug")
-	console.log(data)
-  } catch (error: any) {
-    console.error('Error: ', error)
-  }
-}
-
 const setMembers = async () => {
   try {
     const response = await fetch(
@@ -228,12 +212,12 @@ const setUserSignedListener = () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('UserSignedOut', async (userSignedOutName: string, channelIdSignOut: number) => {
+  socket.value.on('UserSignedOut', (userSignedOutName: string, channelIdSignOut: number) => {
     console.log('UserSignedOut from ChannelManager fired')
 	if (channelIdSignOut === channelId){
 		notificationStore.showNotification(userSignedOutName + ' signed out Channel', true)
 	}
-    await setMembers().then(() => {
+     setMembers().then(() => {
       setCurrentUserRole()
     })
   })
@@ -377,12 +361,40 @@ const DestroyChannel = async() => {
   
 }
 
+const removeUserFromChannel = async () => {
+  try {
+	console.log("USERID JOINED")
+    console.log(joinedChannelId.value)
+    const response = await fetch('http://localhost:3000/api/channel/removeUserFromChannel', {
+      method: 'Delete',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: userId.value,
+        channelId: joinedChannelId.value
+      })
+    })
+	console.log("RESPONSE FROM DESTROY")
+	console.log(await response.json())
+	if (!response.ok) {
+	  notificationStore.showNotification('Error: Failed to remove user from channel', false)
+	}
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
 const SignOutChannel = async () => {
-  notificationStore.showNotification('You have signed out the channel: ' + ChannelName.value, true)
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
+  await socket.value.emit('SignOutChannel', {
+	channelId: channelId,
+	userId: userId.value
+  })
+  
   emit('channel-signedout')
 }
 
