@@ -12,11 +12,7 @@ export const useFriendRequestStore = defineStore('friendRequest', {
 
   actions: {
     addFriendRequest(newFriendRequests: FriendshipEntryI[]) {
-      const uniqueRequests = newFriendRequests.filter(
-        (request) =>
-          !this.friendRequests.some((existingRequest) => existingRequest.id === request.id)
-      )
-      this.friendRequests.push(...uniqueRequests)
+      this.friendRequests = newFriendRequests
     },
 
     removeFriendRequestById(requestId: number) {
