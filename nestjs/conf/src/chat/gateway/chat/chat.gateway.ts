@@ -558,7 +558,8 @@ export class ChatGateway
 				adminActionDto
 			);
 			const target = await this.userService.findById(adminActionDto.targetUserId);
-			socket.emit('memberMuted', target.username, adminActionDto.minutesToMute);
+			const channel = await this.channelService.find(adminActionDto.channelId);
+			socket.emit('memberMuted', target.username, channel.id, channel.name, adminActionDto.minutesToMute);
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
@@ -569,7 +570,7 @@ export class ChatGateway
 					memberOnline &&
 					memberOnline.userId !== adminActionDto.requesterId
 				) {
-					socket.to(memberOnline.socketId).emit('memberMuted', target.username, adminActionDto.minutesToMute);
+					socket.to(memberOnline.socketId).emit('memberMuted', target.username, channel.id, channel.name, adminActionDto.minutesToMute);
 				}
 			}
 		} catch (error: any) {
@@ -587,7 +588,8 @@ export class ChatGateway
 				adminActionDto,
 			);
 			const target = await this.userService.findById(adminActionDto.targetUserId);
-			socket.emit('memberUnMuted', target.username);
+			const channel = await this.channelService.find(adminActionDto.channelId);
+			socket.emit('memberUnMuted', target.username, channel.id, channel.name);
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
@@ -598,7 +600,7 @@ export class ChatGateway
 					memberOnline &&
 					memberOnline.userId !== adminActionDto.requesterId
 				) {
-					socket.to(memberOnline.socketId).emit('memberUnMuted', target.username);
+					socket.to(memberOnline.socketId).emit('memberUnMuted', target.username, channel.id, channel.name);
 				}
 			}
 		} catch (error: any) {

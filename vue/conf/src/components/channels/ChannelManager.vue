@@ -295,29 +295,23 @@ socket.value.on('memberUnBanned', (unBannedUserName: string, unBanChannelId:numb
 		setCurrentUserRole()
 	})
 })
-socket.value.on('memberUnBanned', (membership: any) => {
-  console.log('memberUnBanned fired')
-  //await notificationStore.showNotification('User UnBanned', true)
-  setMembers().then(() => {
-	setCurrentUserRole()
-  })
-})
-socket.value.on('memberMuted', (user: string, timeMuted: number) => {
+socket.value.on('memberMuted', (user: string, channelUnmuteId:number, channelName: string, timeMuted: number) => {
     console.log('memberMuted fired')
 	if (user === username.value) {
-		notificationStore.showNotification('You have been muted for ' + timeMuted.toString() + ' min.', true)
-	} else {
+		notificationStore.showNotification('You have been muted for ' + timeMuted.toString() + ' min. in Channel ' + channelName, true)
+	}
+	else if (channelUnmuteId === channelId){
 		notificationStore.showNotification(user + ' muted for ' + timeMuted.toString() + ' min.', true)
 	}
 	setMembers().then(() => {
 		setCurrentUserRole()
 	})
 })
-socket.value.on('memberUnMuted', (user: string) => {
+socket.value.on('memberUnMuted', (user: string, channelMuteId:number, channelName: string) => {
   console.log('memberUnMuted fired')
   if (user === username.value) {
-	notificationStore.showNotification('You have been unmuted', true)
-  } else {
+	notificationStore.showNotification('You have been unmuted in Channel: ' + channelName, true)
+  } else if (channelMuteId === channelId) {
 	notificationStore.showNotification(user + ' unmuted', true)
   }
   setMembers().then(() => {
