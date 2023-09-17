@@ -464,12 +464,11 @@ export class ChatGateway
 		adminActionDto: AdminActionDto,
 	): Promise<string | ErrorDto> {
 		try {
-
-
-			const targetUser = await this.userService.findById(adminActionDto.targetUserId);
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
+			const membership = await this.channelService.kickChannelMember(adminActionDto);
+			const targetUser = await this.userService.findById(adminActionDto.targetUserId);
 			const channel = await this.channelService.find(adminActionDto.channelId);
 			for (const member of members) {
 				const memberOnline: ConnectedUser =
@@ -478,9 +477,7 @@ export class ChatGateway
 					socket.to(memberOnline.socketId).emit('memberKicked', targetUser.username, adminActionDto.channelId, channel.name);
 				}
 			}
-			const membership = await this.channelService.kickChannelMember(
-				adminActionDto,
-			);
+	
 			socket.emit('memberKicked', targetUser.username, adminActionDto.channelId, channel.name);
 			return targetUser.username;
 		} catch (error: any) {

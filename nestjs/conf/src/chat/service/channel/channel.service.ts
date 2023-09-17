@@ -305,7 +305,7 @@ export class ChannelService {
       throw new Error('Target user is not a member of the channel.');
     }
 
-    return this.prisma.channelMember.delete({
+    return await this.prisma.channelMember.delete({
       where: {
         userId_channelId: {
           userId: adminActionDto.targetUserId,

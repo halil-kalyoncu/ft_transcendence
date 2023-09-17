@@ -182,7 +182,8 @@ const setMembers = async () => {
     }
     const data = await response.json()
     Members.value = await data
-  } catch (error: any) {
+
+} catch (error: any) {
     console.error('Error: ', error)
   }
 }
@@ -250,7 +251,7 @@ const setUserSignedListener = () => {
       setCurrentUserRole()
     })
   })
-  socket.value.on('memberKicked', (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
+  socket.value.on('memberKicked', async (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
 	console.log('memberKicked fired')
     if (kickedMemberName === username.value) {	
 		notificationStore.showNotification('You got kicked from Channel: ' + kickChannelName, true)	
@@ -262,10 +263,13 @@ const setUserSignedListener = () => {
 			notificationStore.showNotification(kickedMemberName + ' kicked from Channel', true)
 		}
 	}
-    setMembers().then(() => {
+     await setMembers().then(() => {
       setCurrentUserRole()
     })
-  })
+	console.log('MEMNER')
+console.log(Members.value)
+})
+
 
   socket.value.on('memberBanned', (bannedUserName: string, banChannelId:number) => {
     console.log('memberBanned fired')
