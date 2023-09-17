@@ -132,10 +132,13 @@ const sendSubmitEvent = (inviteeUsername: string) => {
 
 const submit = async () => {
    const userSelected = selectedUsers.value.length
+   let error_occured = false
   for (const inviteeUsername of selectedUsers.value) {
-    await inviteUser(channelId, inviteeUsername, userId.value)
+    error_occured = await inviteUser(channelId, inviteeUsername, userId.value)
     sendSubmitEvent(inviteeUsername)
   }
+  if (!error_occured)
+  {
   if (userSelected === 1)
   {
 	notificationStore.showNotification(`Invitation sent`, true)
@@ -144,6 +147,7 @@ const submit = async () => {
   {
 	notificationStore.showNotification(`Invitations sent`, true)
   }
+}
   findUserSuggestions('')
   emit('submit')
 }
@@ -159,11 +163,14 @@ const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId:
         }
       }
     )
-    if (!response.ok) {
-		console.log(response)
-    }
-  } catch (error: any) {
-    throw new Error()
+	if (!response.ok) {
+      const responseData = await response.json();
+	  await notificationStore.showNotification(responseData.message, false)
+	  return true
+	}
+	return false
+  } catch (error) {
+	console.error('Error occurred during login:', error)
   }
 }
 

@@ -58,17 +58,20 @@ export class ChannelInvitationsService {
     inviteeId: number,
     inviterId: number,
   ): Promise<ChannelInvitation> {
-    await this.ErrorCheckInvite(channelId, inviteeId, inviterId);
+		const error_string = await this.ErrorCheckInvite(channelId, inviteeId, inviterId);
+		if (error_string){
+			throw new Error(error_string);
+		}
 
-    const invitation = await this.prisma.channelInvitation.create({
-      data: {
-        channelId: channelId,
-        inviteeId: inviteeId,
-        inviterId: inviterId,
-        createdAt: new Date(),
-      },
-    });
-    return invitation;
+		const invitation = await this.prisma.channelInvitation.create({
+		  data: {
+			channelId: channelId,
+			inviteeId: inviteeId,
+			inviterId: inviterId,
+			createdAt: new Date(),
+		  },
+		});
+		return invitation;
   }
 
   async acceptInvitation(
@@ -152,40 +155,51 @@ export class ChannelInvitationsService {
         members: true,
       },
     });
-
     if (!channel) {
-      throw new Error(`Channel with id ${channelId} not found`);
+		return`Channel to invite to not found`;
     }
+	const channelName = channel.name;
 
-    const invitee = await this.prisma.user.findUnique({
-      where: { id: inviteeId },
-    });
+    const invitee =  await this.prisma.user.findUnique({
+		where: {
+			id: inviteeId
+		}
+	});
     if (!invitee) {
-      throw new Error(`User with id ${inviteeId} not found`);
+		return`Invitee-User not found`;
     }
+	const inviter = await this.prisma.user.findUnique({
+		where: {
+			id: inviterId
+		}
+	});
+    if (!inviter) {
+		return`Inviter-User not found`;
+    }
+	const inviteeName = invitee.username;
+	const inviterName = inviter.username;
 
-    const inviter = await this.prisma.channelMember.findUnique({
+    const inviterMember = await this.prisma.channelMember.findUnique({
       where: {
         userId_channelId: { channelId: channelId, userId: inviterId },
       },
+	  include: {
+		  user: true
+	  }
     });
-    if (!inviter) {
-      throw new Error(`User with id ${inviterId} not found`);
-    }
 
+	if (!inviterMember) {
+		return `User: ${inviterName} is not a member of channel: ${channelName}`;
+	}
     if (
-      inviter.role !== ChannelMemberRole.OWNER &&
-      inviter.role !== ChannelMemberRole.ADMIN
+      inviterMember.role !== ChannelMemberRole.OWNER &&
+      inviterMember.role !== ChannelMemberRole.ADMIN
     ) {
-      throw new Error(
-        `User with id ${inviterId} is not allowed to invite users`,
-      );
+      return `User: ${inviterName} is not allowed to invite users`;
     }
 
     if (channel.members.find((member) => member.userId === inviteeId)) {
-      throw new Error(
-        `User with id ${inviteeId} is already a member of channel with id ${channelId}`,
-      );
+      return `User: ${inviteeName} is already a member of channel: ${channelName}`;
     }
 
     const existingInvitation = await this.prisma.channelInvitation.findUnique({
@@ -204,14 +218,12 @@ export class ChannelInvitationsService {
             channelId_inviteeId: { channelId: channelId, inviteeId: inviteeId },
           },
         });
-        return;
       }
       if (existingInvitation.status === ChannelInvitationStatus.PENDING) {
-        throw new Error(
-          `User with id ${inviteeId} is already invited to channel with id ${channelId}`,
-        );
+		  console.log('User already invited to channel');
+        return `User: ${inviteeName} is already invited to channel: ${channelName}`;
       }
     }
-    return;
+	return null;
   }
 }
