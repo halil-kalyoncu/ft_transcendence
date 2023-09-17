@@ -467,21 +467,21 @@ export class ChatGateway
 
 
 			const targetUser = await this.userService.findById(adminActionDto.targetUserId);
-
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
+			const channel = await this.channelService.find(adminActionDto.channelId);
 			for (const member of members) {
 				const memberOnline: ConnectedUser =
 					await this.connectedUserService.findByUserId(member.id);
 				if (memberOnline) {
-					socket.to(memberOnline.socketId).emit('memberKicked', targetUser.username);
+					socket.to(memberOnline.socketId).emit('memberKicked', targetUser.username, adminActionDto.channelId, channel.name);
 				}
 			}
 			const membership = await this.channelService.kickChannelMember(
 				adminActionDto,
 			);
-			socket.emit('memberKicked', targetUser.username);
+			socket.emit('memberKicked', targetUser.username, adminActionDto.channelId, channel.name);
 			return targetUser.username;
 		} catch (error: any) {
 			return { error: error.message as string };
@@ -494,10 +494,11 @@ export class ChatGateway
 		adminActionDto: AdminActionDto,
 	): Promise<void> {
 		try {
-			const membership = await this.channelService.banChannelMember(
+			await this.channelService.banChannelMember(
 				adminActionDto,
 			);
-			socket.emit('memberBanned', membership);
+			const bannedUser = await this.userService.findById(adminActionDto.targetUserId);
+			socket.emit('memberBanned', bannedUser.username, adminActionDto.channelId);
 
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
@@ -509,7 +510,7 @@ export class ChatGateway
 					memberOnline &&
 					memberOnline.userId !== adminActionDto.requesterId
 				) {
-					socket.to(memberOnline.socketId).emit('memberBanned', membership);
+					socket.to(memberOnline.socketId).emit('memberBanned', bannedUser.username, adminActionDto.channelId);
 				}
 			}
 		} catch (error: any) {
@@ -526,8 +527,9 @@ export class ChatGateway
 			const membership = await this.channelService.unBanChannelMember(
 				adminActionDto,
 			);
-
-			socket.emit('memberUnBanned', membership);
+			const unBannedUser = await this.userService.findById(adminActionDto.targetUserId);
+			const channel = await this.channelService.find(adminActionDto.channelId);
+			socket.emit('memberUnBanned', unBannedUser.username, channel.id, channel.name);
 			const members: User[] = await this.channelService.getMembers(
 				adminActionDto.channelId,
 			);
@@ -538,7 +540,7 @@ export class ChatGateway
 					memberOnline &&
 					memberOnline.userId !== adminActionDto.requesterId
 				) {
-					socket.to(memberOnline.socketId).emit('memberUnBanned', membership);
+					socket.to(memberOnline.socketId).emit('memberUnBanned', unBannedUser.username, channel.id, channel.name);
 				}
 			}
 		} catch (error: any) {

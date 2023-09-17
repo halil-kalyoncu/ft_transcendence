@@ -50,13 +50,14 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
+import { useUserStore } from '../../stores/userInfo'
 
 library.add(fas)
 
@@ -68,7 +69,6 @@ const props = defineProps({
   joinChannelButtonNameProps: String,
   channelId: Number,
   unreadMessageCount: Number,
-  userId: Number
 })
 // const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
@@ -78,6 +78,9 @@ const password = ref('')
 const userBanned = ref(false)
 const socket = ref<Socket | null>(null)
 const notificationStore = useNotificationStore()
+const userStore = useUserStore()
+const userId = computed<number>(() => userStore.userId)
+const username = computed(() => userStore.username)
 const isPasswordProtected = props.isPasswordProtected
 let joinChannelButtonName = ref(props.joinChannelButtonNameProps)
 
@@ -159,7 +162,7 @@ const comparePassword = async () : Promise<boolean> =>{
 const setUserBanned = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${props.userId}`
+      `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${userId.value}`
     )
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`)
@@ -190,8 +193,11 @@ const setBannedFromChannelListener = () => {
     setUserBanned()
     return
   })
-  socket.value.on('memberUnBanned', () => {
+  socket.value.on('memberUnBanned', (unBannedUserName:string, unBanChannelId: number, unBanChannelName:string) => {
 	console.log('memberUnBanned fired from JoinedChannelsList.vue')
+	if (unBannedUserName === username.value) {
+			notificationStore.showNotification('You got unbanned from Channel: ' + unBanChannelName, true)
+		}
 	setUserBanned()
 	return
   })

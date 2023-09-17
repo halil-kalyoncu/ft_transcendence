@@ -160,11 +160,10 @@ const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId:
       }
     )
     if (!response.ok) {
-      throw new Error('Could not fetch channel manager members')
+		console.log(response)
     }
-
   } catch (error: any) {
-    console.error('Error: ', error)
+    throw new Error()
   }
 }
 

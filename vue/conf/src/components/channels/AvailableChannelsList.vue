@@ -9,7 +9,6 @@
           :ownerName="channel.owner.username"
           :joinChannelButtonNameProps="'Join'"
           :channelId="channel.channel.id"
-          :userId="userId"
           @channelEntered="handleChannelEntered(channel.channel.id)"
         />
       </div>

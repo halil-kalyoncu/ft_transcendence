@@ -250,20 +250,46 @@ const setUserSignedListener = () => {
       setCurrentUserRole()
     })
   })
-  socket.value.on('memberKicked', (response: String | ErrorI) => {
+  socket.value.on('memberKicked', (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
 	console.log('memberKicked fired')
-    if (response === username.value) {
+    if (kickedMemberName === username.value) {	
+		notificationStore.showNotification('You got kicked from Channel: ' + kickChannelName, true)	
+		if (kickChannelId === channelId) {
       emit('channel-force-leave')
     }
+}else {
+		if (kickChannelId === channelId) {
+			notificationStore.showNotification(kickedMemberName + ' kicked from Channel', true)
+		}
+	}
     setMembers().then(() => {
       setCurrentUserRole()
     })
   })
-  socket.value.on('memberBanned', (membership: any) => {
+
+  socket.value.on('memberBanned', (bannedUserName: string, banChannelId:number) => {
     console.log('memberBanned fired')
-    //await notificationStore.showNotification('User Banned', true)
-	if (membership.userId === userId.value) {
-		emit('channel-force-leave')
+    
+	if (banChannelId === channelId)
+	{
+		if (bannedUserName === username.value) {
+			notificationStore.showNotification('You got banned from Channel', true)
+			emit('channel-force-leave')
+		}
+		else {
+			notificationStore.showNotification(bannedUserName + ' banned from Channl', true)
+		}
+	}
+	setMembers().then(() => {
+		setCurrentUserRole()
+	})
+})
+
+socket.value.on('memberUnBanned', (unBannedUserName: string, unBanChannelId:number, unBanChannelName: string) => {
+	console.log('memberUnBanned fired')
+	if (unBanChannelId === channelId)
+	{
+			notificationStore.showNotification(unBannedUserName + ' unBanned from Channel', true)
 	}
 	setMembers().then(() => {
 		setCurrentUserRole()
