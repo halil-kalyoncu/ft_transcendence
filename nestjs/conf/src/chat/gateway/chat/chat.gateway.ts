@@ -892,9 +892,6 @@ export class ChatGateway
           await this.matchmakingService.deleteByUserId(socket.data.user.id);
           return { error: 'Opponent is not online' };
         }
-        const debug: Matchmaking = await this.matchmakingService.getByUserId(
-          socket.data.user.id,
-        );
         return findOpponent;
       }
 

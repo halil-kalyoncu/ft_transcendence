@@ -1,5 +1,5 @@
 <template>
-  <div class="field" ref="gameField">
+  <div v-if="!matchResult" class="field" ref="gameField">
     <div class="left-border"></div>
     <div class="right-border"></div>
     <PlayerView
@@ -12,8 +12,8 @@
     <GameBall ref="ball" />
     <GamePaddle ref="paddleA" />
     <GamePaddle ref="paddleB" />
-    <div v-if="countdown === -1" class="waiting"><p>Waiting for opponent...</p></div>
-    <div v-else-if="countdown > 0" class="countdown">
+    <div v-if="countdown === -1" class="waiting"><p>Waiting for opponent... {{ formattedTimer }}</p></div>
+    <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
       <p>{{ countdown }}</p>
     </div>
     <PowerUp
@@ -26,6 +26,10 @@
       :index="powerup.index"
     />
   </div>
+  <div v-else>
+    <p>{{ matchResult.goalsLeftPlayer }}:{{ matchResult.goalsLeftPlayer }}</p>
+    <button @click="goHome">Leave Match</button>
+  </div>
   <!-- <div class="ball-coordinates" v-if="ballCoordinates">
 			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
 		</div> -->
@@ -36,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent, ref, onMounted, watch, onBeforeUnmount } from 'vue'
+import { defineComponent, ref, onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import type { GamePaddleSetup } from './GamePaddle.vue'
 import PlayerView from './PlayerView.vue'
 import GamePaddle from './GamePaddle.vue'
@@ -83,6 +87,12 @@ let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 const chatSocket = ref<Socket | null>(null)
 
 const countdown = ref<number>(-1)
+
+let timerId: NodeJS.Timer | null = null
+const waitingTime = ref<number>(0)
+const maxWaitingTime = 1 * 60
+
+const matchResult = ref<MatchI | null>(null)
 
 const getUserFromAccessToken = () => {
   const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
@@ -177,6 +187,35 @@ const initGameField = async () => {
   }
 }
 
+const formattedTimer = computed(() => {
+  const minutes = Math.floor(waitingTime.value / 60)
+  const seconds = waitingTime.value % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+})
+
+const startTimer = () => {
+  if (!socket || !socket.value) {
+      notificationStore.showNotification(`Error: Connection problems`, true)
+      return
+    }
+
+  timerId = setInterval(() => {
+    waitingTime.value++
+    if (waitingTime.value >= maxWaitingTime) {
+      socket.value.emit('maxWaitingTimeReached')
+      notificationStore.showNotification("Opponent couldn't connect to match, match is concluded and you are the winner", false)
+      cancelTimer()
+    }
+  }, 1000)
+}
+
+const cancelTimer = () => {
+  if (timerId) {
+    clearInterval(timerId)
+    timerId = null
+  }
+}
+
 onMounted(() => {
   initGameSocket()
   initChatSocket()
@@ -184,6 +223,8 @@ onMounted(() => {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
+
+  startTimer()
 
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
     if (playerId === 'left') {
@@ -241,16 +282,14 @@ onMounted(() => {
 
   socket.value.on('gameFinished', (match: MatchI) => {
     //show post game screen
-    router.push('/home')
-  })
-
-  socket.value.on('opponentDisconnect', (payload: any) => {
-    //show post game screen
-    router.push('/home')
+    matchResult.value = match;
   })
 
   socket.value.on('countdown', (payload: number) => {
     countdown.value = payload
+    if(timerId) {
+      cancelTimer()
+    }
   })
 
   socket.value.on('startGame', () => {
@@ -396,6 +435,10 @@ async function getUserNames(): Promise<void> {
     notificationStore.showNotification('Something went wrong while fetching the match data', false)
     router.push('/home')
   }
+}
+
+const goHome = () => {
+  router.push('/home')
 }
 </script>
 
