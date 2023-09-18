@@ -147,16 +147,19 @@ export class ChannelMessageService {
         },
       });
 
+      const blockedUsers: User[] = await this.blockedUserService.getUsers(
+        userId,
+      );
       const channelMessageDtos: ChannelMessageDto[] = await Promise.all(
         channelMessages.map(async (channelMessage) => {
           let blockGroupMessage: boolean = false;
 
-          if (channelMessage.senderId !== userId) {
-            const blockedUser: BlockedUser = await this.blockedUserService.find(
-              userId,
-              channelMessage.sender.id,
+          if (channelMessage.sender.userId !== userId) {
+            const isSenderBlocked = blockedUsers.some(
+              (blockedUser) => blockedUser.id === channelMessage.sender.userId,
             );
-            if (blockedUser) {
+
+            if (isSenderBlocked) {
               blockGroupMessage = true;
             }
           }
@@ -209,9 +212,20 @@ export class ChannelMessageService {
     userId: number,
   ): Promise<ChannelMessageReadStatus[]> {
     try {
+      const blockedUsers: User[] =
+        await this.blockedUserService.getBlockedUsers(userId);
+      const blockedUserIds: number[] = blockedUsers.map((user) => user.id);
+
       const unreadMessages =
         await this.prisma.channelMessageReadStatus.findMany({
           where: {
+            NOT: {
+              message: {
+                senderId: {
+                  in: blockedUserIds,
+                },
+              },
+            },
             reader: {
               channelId: channelId,
               userId: userId,

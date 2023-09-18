@@ -12,6 +12,7 @@ import {
 import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
 import { BlockUserDto } from '../../dto/block-user.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { BlockedUser } from '@prisma/client';
 
 @ApiTags('Blocked Users (Chat module)')
 @Controller('blockedUsers')
@@ -33,7 +34,7 @@ export class BlockedUserController {
   @Get()
   async getBlockedUsers(
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<any[]> {
+  ): Promise<BlockedUser[]> {
     try {
       return await this.blockedUserService.getBlockedUsers(userId);
     } catch (error) {
