@@ -26,9 +26,28 @@
     </div>
 
     <div class="input-group">
-      <button class="secondary-btn">Enable 2FA</button>
+      <button @click="enable2FA" class="secondary-btn">
+		{{ twoFAEnabled? 'Disable 2FA' : 'Enable 2FA'  }} </button>
     </div>
-
+	<div v-if="showEnable2FA && !twoFAEnabled" >
+		<div class="qr-code-container" >
+			<img :src="qrCodeImage" alt="QR Code" class="qrcode" />
+		</div>
+		<div class="input-group">
+			<div class="input-group-item">
+			<input type="text" id="2fa" placeholder="Enter 2FA code" class=" two-FA-input" v-model="twoFAcode"/>
+			<button @click="confirm2FA" class="secondary-btn confirm-button">Confirm 2FA</button>
+		</div>
+		</div>
+	</div>
+	<div v-if="showEnable2FA && twoFAEnabled">
+	<div class="input-group">
+		<div class="input-group-item">
+		<input type="text" id="2fa" placeholder="Enter 'OK' to disable" class=" two-FA-input" v-model="confirmation"/>
+		<button @click="confirmDisable2FA" class="secondary-btn confirm-button">Confirm</button>
+</div>		
+		</div>
+	</div>
     <div class="button-group">
       <button @click="deleteAccount" class="delete-button secondary-btn">Delete Account</button>
     </div>
@@ -36,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted} from 'vue'
 import type { Ref } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
@@ -48,7 +67,10 @@ const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
 
 const username = ref('')
-const enable2FA = ref(false)
+const twoFAcode = ref('')
+const confirmation = ref('')
+const showEnable2FA = ref(false)
+const twoFAEnabled = ref(true)
 const avatarInput: Ref<HTMLInputElement | null> = ref(null)
 const uploadedAvatarFile: Ref<File | null> = ref(null)
 const selectedFileName = ref('')
@@ -58,7 +80,7 @@ const images = ref([
   'src/assets/avatar-3.png',
   'src/assets/avatar-2.png'
 ])
-
+const qrCodeImage = ref<string | null>(null);
 const displayedCount = 3
 const startIndex = ref(0)
 const selectedImg = ref('src/assets/avatar-1.png')
@@ -134,6 +156,114 @@ const deleteAccount = () => {
   if (confirmDelete) {
   }
 }
+
+
+const generateQRCode = async () => {
+	try{
+		const response = await fetch(`http://localhost:3000/api/2fa/generate?userId=${userId.value}`, {
+			method: 'POST'
+		})
+		if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    // Convert the response to a blob (binary data)
+    const blob = await response.blob();
+
+    // Create a URL for the blob data
+    const imageUrl = URL.createObjectURL(blob);
+	qrCodeImage.value = imageUrl
+	} catch (error: any) {
+		notificationStore.showNotification(`Error` + error.message, false)
+	}
+}
+
+const enable2FA = () => {
+	if(showEnable2FA.value) {
+		showEnable2FA.value = false
+		return
+	}
+	generateQRCode()
+	showEnable2FA.value = true
+}
+
+const check2FAcode = async () => {
+	try{
+		const response = await fetch ('http://localhost:3000/api/2fa/enable',{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				userId: userId.value,
+				code: twoFAcode.value
+			})
+		})
+		if (!response.ok) {
+      	const responseData = await response.json();
+	 	notificationStore.showNotification(responseData.message, false)
+		} else {
+			notificationStore.showNotification('2FA enabled', true)
+			showEnable2FA.value = false
+			twoFAcode.value = ''
+			twoFAEnabled.value = true
+		}
+
+	} catch (error: any) {
+		notificationStore.showNotification(`Error` + error.message, false)
+	}
+}
+
+const confirm2FA = () => {
+	check2FAcode()
+}
+
+const disable2FA = async () => {
+	try{
+		const response = await fetch(`http://localhost:3000/api/2fa/disable?userId=${userId.value}`, {
+				method: 'POST'
+			})
+			if (!response.ok) {
+		  throw new Error('Network response was not ok');}
+		  else {
+			notificationStore.showNotification('2FA disabled', true)
+			showEnable2FA.value = false
+			confirmation.value = ''
+			twoFAEnabled.value = false
+		}
+} catch (error: any) {
+	notificationStore.showNotification(`Error` + error.message, false)
+}
+}
+
+const confirmDisable2FA = () => {
+	if(confirmation.value === 'OK') {
+		disable2FA()
+	} else {
+		notificationStore.showNotification('Wrong Confirmation', false)
+	}
+}
+
+const set2FAStatus = async () => {
+	try{
+		const response = await fetch(`http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`, {
+				method: 'GET'
+			})
+			if (!response.ok) {
+		  throw new Error('Network response was not ok');}
+		  else {
+			const responseData = await response.json();
+			twoFAEnabled.value = responseData.twoFAEnabled
+		}
+} catch (error: any) {
+	notificationStore.showNotification(`Error` + error.message, false)
+}
+}
+
+onMounted(() => {
+  set2FAStatus()
+})
+
 </script>
 
 <style scoped>
@@ -226,6 +356,7 @@ input[type='text']:focus {
 
 .input[type='text']:hover,
 .secondary-btn:hover,
+.secondary-btn.confirm-button:hover,
 .secondary-btn.upload-btn:hover {
   color: aliceblue;
   border: 1px solid #ea9f42;
@@ -247,6 +378,13 @@ input[type='text']:focus {
   min-height: 40px;
   transition: all 0.25s ease;
 }
+
+.secondary-btn:active {
+  background-color: #ea9f42; /* Change the background color when the button is clicked */
+  border: none; /* Remove the border when the button is clicked */
+  color: #ffffff; /* Change the text color when the button is clicked */
+}
+
 
 .file-input {
   position: absolute;
@@ -302,6 +440,42 @@ input[type='text']:focus {
 .delete-button:disabled {
   background-color: #4c4c4c;
   cursor: not-allowed;
+}
+
+.input-group .two-FA-input {
+  padding: 0.5rem 1rem;
+  /* min-width: 200px;  */
+  min-height: 35px;
+  min-width: 200px;
+  border: 1px solid #ba4646;
+  border-radius: 4px;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.input-group .confirm-button {
+	padding: 0.5rem 1rem;
+  min-width: 30px; 
+  min-height: 35px;
+  border: 1px solid aliceblue;
+  border-radius: 4px;
+  font-size: 15px;
+  color: #ffffff;
+}
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+  max-width: 100%;
+}
+/* TODO: Make this responsive  */
+.qr-code-container .qrcode {
+	flex-grow: 1;
+	  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .margin-top {

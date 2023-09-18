@@ -4,6 +4,7 @@ import ErrorLayout from '../components/layout/ErrorLayout.vue'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
+import TwoFAAuthView from '../views/TwoFAAuthView.vue'
 import jwtDecode from 'jwt-decode'
 
 const redirectToHomeIfLoggedIn = (
@@ -75,6 +76,16 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => redirectToHomeIfLoggedIn(to, from, next)
     },
+	{
+	  path: '/',
+	  name: 'twoFAAuth',
+	  component: TwoFAAuthView,
+	  beforeEnter: (
+		to: RouteLocationNormalized,
+		from: RouteLocationNormalized,
+		next: NavigationGuardNext
+	  ): void => redirectToHomeIfLoggedIn(to, from, next)
+	},
     {
       path: '/home',
       component: MainLayout,

@@ -171,6 +171,7 @@ const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId:
 	return false
   } catch (error) {
 	console.error('Error occurred during login:', error)
+	return true
   }
 }
 

@@ -1,7 +1,7 @@
 <template>
   <div class="login">
     <form @submit.prevent="submitForm" class="login-form">
-      <label for="username" class="font-color">Username:</label>
+      <label for="username" class="font-color">Code:</label>
       <input type="text" id="username" v-model="username" required />
       <button type="submit" role="link" class="dynamic-button">42 Login</button>
     </form>
@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed} from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
@@ -19,30 +19,9 @@ import jwtDecode from 'jwt-decode'
 import { fetchAndSaveAvatar } from '../utils/fetchAndSaveAvatar'
 
 const username = ref('')
-const userId = ref(0)
 const router = useRouter()
 const userStore = useUserStore()
 const notificationStore = useNotificationStore()
-
-const get2FAStatus = async () => {
-	try{
-			const response = await fetch(`http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`, {
-					method: 'GET'
-				})
-				if (!response.ok) {
-			  throw new Error('Network response was not ok');}
-			  else {
-				const responseData = await response.json();
-				return responseData
-			}
-		} catch (error) {
-			console.error('Error occurred during 2FA status check:', error)
-			notificationStore.showNotification('Error occurred during 2FA status check:' + error, false)
-		}
-}
-
-
-
 
 const submitForm = async () => {
   try {
@@ -66,20 +45,13 @@ const submitForm = async () => {
         if (loggedUser.avatarId) {
           fetchAndSaveAvatar()
         }
-		userId.value = loggedUser.id as number
       } catch (error: any) {
         console.error('Invalid token:', error)
         notificationStore.showNotification('Invalid Token', false)
       }
       userStore.setUsername(username.value)
       connectChatSocket(access_token)
-	  const is2FAenabled = await get2FAStatus()
-	  
-	  if (is2FAenabled) {
-		router.push('/twoFAAuth')
-	  }else {
       router.push('/home')
-	  }
     } else {
       console.error('Login failed!! ' + response.status + ': ' + response.statusText)
       notificationStore.showNotification(response.status + ': ' + response.statusText, false)
