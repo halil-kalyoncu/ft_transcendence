@@ -1,48 +1,58 @@
 <template>
   <div class="match-history-item">
-    <section class="player-section">
-      <img class="profile-image" :src="playerAvatar" alt="Player Profile" />
-      <h2 class="profile-username">{{ playerName }}</h2>
+    <section class="left-player-section">
+      <!-- <img class="profile-image" :src="playerAvatar" alt="Player Profile" /> -->
+      <h2 class="profile-username">{{ leftPlayerName }}</h2>
     </section>
 
     <section class="result-section">
-      <p :class="victory ? 'stat-wins' : 'stat-losses'">{{ victory ? 'Victory' : 'Defeat' }}</p>
-      <p class="score">{{ score }}</p>
-      <p class="date-time">{{ dateTime }}</p>
+      <p class="score">{{ scoreMessage }}</p>
+      <p class="goals">{{ combinedScore }}</p>
+      <p class="date-time" v-if="time">{{ time }}</p>
     </section>
 
-    <section class="opponent-section">
-      <img class="profile-image" :src="opponentAvatar" alt="Opponent Profile" />
-      <h2 class="profile-username">{{ opponentName }}</h2>
+    <section class="right-player-section">
+      <!-- <img class="profile-image" :src="opponentAvatar" alt="Opponent Profile" /> -->
+      <h2 class="profile-username">{{ rightPlayerName }}</h2>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue'
+import type { MatchI } from '../../model/match/match.interface'
 
-type Props = {
-  score: string
-  victory: boolean
-  playerName: string
-  opponentName: string
-  playerAvatar: string
-  opponentAvatar: string
-  dateTime: string
-  myUserId: string
-}
+const props = defineProps({
+  match: {
+    type: Object as () => MatchI | null,
+    required: true
+  },
 
-// const victory = computed(() => {
-//   if (props.match.state === "WINNERLEFT") {
-//     return props.match.leftUserId === props.myUserId;
-//   }
-//   if (props.match.state === "WINNERRIGHT") {
-//     return props.match.rightUserId === props.myUserId;
-//   }
-//   return false;
-// });
+  userId: String
+})
 
-const props = defineProps<Props>()
+const time: Date | null = props.match?.finishedAt ?? null
+const leftPlayerName: String | null = props.match?.leftUser?.username ?? null
+const rightPlayerName: String | null = props.match?.rightUser?.username ?? null
+
+const scoreMessage = computed(() => {
+  if (
+    (props.match?.state == 'WINNERLEFT' && props.match?.leftUser?.id == parseInt(props.userId)) ||
+    (props.match?.state == 'DISCONNECTRIGHT' &&
+      props.match?.leftUser?.id == parseInt(props.userId)) ||
+    (props.match?.state == 'WINNERRIGHT' && props.match?.rightUser?.id == parseInt(props.userId)) ||
+    (props.match?.state == 'DISCONNECTLEFT' && props.match?.rightUser?.id == parseInt(props.userId))
+  )
+    return 'Win'
+  return 'Defeat'
+})
+
+const combinedScore = computed(() => {
+  const leftScore = props.match?.goalsLeftPlayer ?? 0
+  const rightScore = props.match?.goalsRightPlayer ?? 0
+
+  return `${leftScore} : ${rightScore}`
+})
 </script>
 
 <style scoped>
