@@ -1,13 +1,18 @@
 <template>
   <div class="friend-requests">
     <ScrollViewer :maxHeight="'75vh'" :paddingRight="'.5rem'">
-      <div v-for="invitation in channelInvitations" :key="invitation.invitationId">
-        <ChannelInvitationsItem
-          :username="invitation.inviterName"
-          :channelName="invitation.channelName"
-          :isPasswordProtected="invitation.isPasswordProtected"
-          :invitationId="invitation.invitationId"
-        />
+      <div v-if="channelInvitations && channelInvitations.length">
+        <div v-for="invitation in channelInvitations" :key="invitation.invitationId">
+          <ChannelInvitationsItem
+            :username="invitation.inviterName"
+            :channelName="invitation.channelName"
+            :isPasswordProtected="invitation.isPasswordProtected"
+            :invitationId="invitation.invitationId"
+          />
+        </div>
+      </div>
+      <div v-else>
+        <p class="empty-list-info">No Pending Channel Invitations</p>
       </div>
     </ScrollViewer>
   </div>

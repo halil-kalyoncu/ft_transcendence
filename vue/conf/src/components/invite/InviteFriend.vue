@@ -301,6 +301,7 @@ const togglePowerup = (powerupName: string) => {
   min-width: 540px;
   background: rgba(0, 0, 0, 0.8);
   max-height: 500px;
+  z-index: 100;
 }
 
 ::placeholder {
