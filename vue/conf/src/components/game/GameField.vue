@@ -12,7 +12,9 @@
     <GameBall ref="ball" />
     <GamePaddle ref="paddleA" />
     <GamePaddle ref="paddleB" />
-    <div v-if="countdown === -1" class="waiting"><p>Waiting for opponent... {{ formattedTimer }}</p></div>
+    <div v-if="countdown === -1" class="waiting">
+      <p>Waiting for opponent... {{ formattedTimer }}</p>
+    </div>
     <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
       <p>{{ countdown }}</p>
     </div>
@@ -194,16 +196,14 @@ const formattedTimer = computed(() => {
 })
 
 const startTimer = () => {
-  if (!socket || !socket.value) {
-      notificationStore.showNotification(`Error: Connection problems`, true)
-      return
-    }
-
   timerId = setInterval(() => {
     waitingTime.value++
     if (waitingTime.value >= maxWaitingTime) {
-      socket.value.emit('maxWaitingTimeReached')
-      notificationStore.showNotification("Opponent couldn't connect to match, match is concluded and you are the winner", false)
+      socket.value?.emit('maxWaitingTimeReached')
+      notificationStore.showNotification(
+        "Opponent couldn't connect to match, match is concluded and you are the winner",
+        false
+      )
       cancelTimer()
     }
   }, 1000)
@@ -282,12 +282,12 @@ onMounted(() => {
 
   socket.value.on('gameFinished', (match: MatchI) => {
     //show post game screen
-    matchResult.value = match;
+    matchResult.value = match
   })
 
   socket.value.on('countdown', (payload: number) => {
     countdown.value = payload
-    if(timerId) {
+    if (timerId) {
       cancelTimer()
     }
   })
