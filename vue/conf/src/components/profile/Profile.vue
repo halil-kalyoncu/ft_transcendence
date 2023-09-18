@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { ref, defineProps, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+import { useRoute } from 'vue-router'
 
-let userId = ref<number>(0)
+const route = useRoute()
+const userId = route.params.userId as string
+const username = route.params.username as string
 
-const props = defineProps({
-  username: String
-})
+// let userId = ref<number>(0)
+
+// const props = defineProps<{
+//   username: string;
+// }>();
 
 const achievements = ref([
   { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
@@ -34,7 +39,19 @@ const achievements = ref([
 //   // ... (more match history items)
 // ]);
 
-const matchHistory = ref([]);
+interface MatchHistoryItem {
+  score: string;
+  victory: boolean;
+  opponentName: string;
+  dateTime: string;
+  playerAvatar: string;
+  opponentAvatar: string;
+  state?: string;
+  leftUserId?: number;
+  rightUserId?: number;
+}
+
+const matchHistory = ref<MatchHistoryItem[]>([]);
 
 // async function getUserId(): Promise<void> {
 // 	try {
@@ -58,47 +75,43 @@ const matchHistory = ref([]);
 //   }
 // }
 
-function getUserId() {
-  fetch(`http://localhost:3000/api/users/find-by-username?username=${props.username}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      return response.json();
-    } else {
-      throw new Error('Failed to fetch data');
-    }
-  })
-  .then(matchData => {
-    userId.value = Number(matchData[0].id);
-    // console.log("matchData:", matchData);
-  })
-  .catch(error => {
-    console.error("Failed to fetch match history:", error);
-  });
-}
+// function getUserId() {
+//   fetch(`http://localhost:3000/api/users/find-by-username?username=${props.username}`, {
+//     method: 'GET',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     }
+//   })
+//   .then(response => {
+//     if (response.ok) {
+//       return response.json();
+//     } else {
+//       throw new Error('Failed to fetch data');
+//     }
+//   })
+//   .then(matchData => {
+//     userId.value = Number(matchData[0].id);
+//     // console.log("matchData:", matchData);
+//   })
+//   .catch(error => {
+//     console.error("Failed to fetch match history:", error);
+//   });
+// }
 
 
 async function getMatchHistory(): Promise<void> {
-	getUserId();
   try {
-    const response = await fetch(`http://localhost:3000/api/matches/find-matches-by-user?userid=${userId.value}`, {
+    const response = await fetch(`http://localhost:3000/api/matches/find-matches-by-user?userid=${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
       }
     })
-	console.log("RESPONSE:", userId.value)
+	// console.log("RESPONSE:", userId.value)
     if (response.ok) {
 		const matchData = await response.json()
 		
 		matchHistory.value = matchData;
-		
-	  console.log("RESPONSE:", matchData);
-
     }
   }
   catch (error) {
@@ -140,6 +153,7 @@ onMounted(() => {
 				:dateTime="match.dateTime"
 				:playerAvatar="match.playerAvatar"
 				:opponentAvatar="match.opponentAvatar"
+				:myUserId="userId"
 			/>
         </ScrollViewer>
       </div>

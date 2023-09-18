@@ -19,6 +19,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 type Props = {
   score: string
   victory: boolean
@@ -27,9 +29,20 @@ type Props = {
   playerAvatar: string
   opponentAvatar: string
   dateTime: string
+  myUserId: string
 }
 
-defineProps<Props>()
+// const victory = computed(() => {
+//   if (props.match.state === "WINNERLEFT") {
+//     return props.match.leftUserId === props.myUserId;
+//   }
+//   if (props.match.state === "WINNERRIGHT") {
+//     return props.match.rightUserId === props.myUserId;
+//   }
+//   return false;
+// });
+
+const props = defineProps<Props>()
 </script>
 
 <style scoped>
