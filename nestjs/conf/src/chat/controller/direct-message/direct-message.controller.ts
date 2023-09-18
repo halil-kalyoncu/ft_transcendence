@@ -18,7 +18,7 @@ import { BlockedUserService } from '../../service/blocked-user/blocked-user.serv
 export class DirectMessageController {
   constructor(
     private directMessageService: DirectMessageService,
-    private blockedUserService: BlockedUserService
+    private blockedUserService: BlockedUserService,
   ) {}
 
   //Get all the directMessages between two users with the messages and the participants (receiver and sender) from the message table
@@ -52,7 +52,10 @@ export class DirectMessageController {
 
     for (const message of unreadMessages) {
       const senderId = message.senderId;
-      const blockedUser: BlockedUser = await this.blockedUserService.find(userId, senderId);
+      const blockedUser: BlockedUser = await this.blockedUserService.find(
+        userId,
+        senderId,
+      );
       if (!blockedUser && !groupMessagesBySender[senderId]) {
         groupMessagesBySender[senderId] = [];
       }
@@ -78,9 +81,12 @@ export class DirectMessageController {
   async markMessagesAsRead(
     @Body() directConversationDto: DirectConverstationDto,
   ): Promise<DirectMessage[]> {
-    const blockedUser: BlockedUser = await this.blockedUserService.find(directConversationDto.readerUserId, directConversationDto.withUserId);
+    const blockedUser: BlockedUser = await this.blockedUserService.find(
+      directConversationDto.readerUserId,
+      directConversationDto.withUserId,
+    );
     if (blockedUser) {
-      return []
+      return [];
     }
     return await this.directMessageService.markConversationAsRead(
       directConversationDto.readerUserId,

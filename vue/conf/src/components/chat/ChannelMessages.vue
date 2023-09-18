@@ -11,7 +11,7 @@
           :message="channelmessage.message?.message ?? ''"
           :sender="channelmessage.sender?.username ?? ''"
           :isOwnMessage="isOwnMessage(channelmessage.sender.id)"
-          :blockedGroupMessage="channelmessage.blockedGroupMessage"
+          :blockedGroupMessage="channelmessage.blockGroupMessage!"
         />
       </div>
     </ScrollViewer>
@@ -105,7 +105,7 @@ const setNewChannelMessageListener = () => {
 const setNewChannelMessages = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId}`
+      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId.value}`
     )
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`)

@@ -154,7 +154,7 @@ export class ChannelMessageService {
           if (channelMessage.senderId !== userId) {
             const blockedUser: BlockedUser = await this.blockedUserService.find(
               userId,
-              channelMessage.senderId,
+              channelMessage.sender.id,
             );
             if (blockedUser) {
               blockGroupMessage = true;
