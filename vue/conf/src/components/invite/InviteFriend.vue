@@ -103,7 +103,7 @@ const sendInvite = async () => {
         notificationStore.showNotification(response.error, false)
       } else {
         notificationStore.showNotification(
-          `Successfully send a match invite to ${response.leftUser?.username}`,
+          `Successfully send a match invite to ${response.rightUser?.username}`,
           true
         )
         emit('send-match-invite', response.rightUser)

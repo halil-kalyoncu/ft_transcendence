@@ -771,6 +771,41 @@ export class ChatGateway
     socket.emit('matchInviteRejected', updatedMatch);
   }
 
+  @SubscribeMessage('sendMatchInviteViaChat')
+  async sendMatchInviteViaChat(
+    socket: Socket,
+    againstUserId: number,
+  ): Promise<Match | ErrorDto> {
+    let match: Match;
+
+    try {
+      const againstUser: User = await this.userService.findById(againstUserId);
+
+      if (!againstUser) {
+        throw new Error("Cannot invite user because user doesn't exists");
+      }
+
+      const receiverOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(againstUserId);
+      if (!receiverOnline) {
+        throw new Error(`Opponent ${againstUser.username} is not online`);
+      }
+
+      const matchEntity: Prisma.MatchCreateInput = {
+        leftUser: { connect: { id: socket.data.user.id } },
+        type: 'CUSTOM',
+      };
+
+      match = await this.matchService.create(matchEntity);
+      match = await this.matchService.invite(match.id, againstUserId, 5, []);
+
+      socket.to(receiverOnline.socketId).emit('matchInvites', match);
+      return match;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
   /************
    *** Match ***
    *************/

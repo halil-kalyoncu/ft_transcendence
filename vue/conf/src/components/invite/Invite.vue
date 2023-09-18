@@ -35,8 +35,6 @@ const isWaitingForResponse = ref(false)
 
 const lobbyIsFinished = ref(false)
 
-const invitedUser = ref<UserI | null>(null)
-
 const authorized = ref<boolean>(true)
 
 const initChatSocket = () => {
@@ -71,6 +69,9 @@ async function fetchMatchData(): Promise<void> {
       match.value = matchData
       leftPlayer.value = matchData.leftUser
       rightPlayer.value = matchData.rightUser
+      if (match.value.rightUser && match.value.state === 'INVITED') {
+        isWaitingForResponse.value = true
+      }
     } else {
       notificationStore.showNotification(
         'Something went wrong while fetching the match data',
@@ -207,10 +208,9 @@ onMounted(async () => {
 })
 
 const handleSendMatchInvite = (user: UserI | null) => {
-  console.log(user)
   if (user) {
     isWaitingForResponse.value = true
-    invitedUser.value = user
+    rightPlayer.value = user
   }
 }
 
@@ -244,26 +244,24 @@ onBeforeUnmount(() => {
 
 <template>
   <article class="createCustomGame">
-    <div>
-      <InviteFriend
-        v-if="!rightPlayer && !isWaitingForResponse"
-        :matchId="matchId"
-        @send-match-invite="handleSendMatchInvite"
-      />
-      <div v-if="isWaitingForResponse" class="waiting-container">
-        <Spinner />
-        <span
-          >waiting for <span class="orange-font">{{ invitedUser?.username }}</span
-          >...</span
-        >
-        <button class="icon-button-reject" title="Cancel request" @click="cancelWaiting">
-          <font-awesome-icon :icon="['fas', 'times']" />
-        </button>
-      </div>
+    <InviteFriend
+      v-if="!rightPlayer"
+      :matchId="matchId"
+      @send-match-invite="handleSendMatchInvite"
+    />
+    <div v-else-if="isWaitingForResponse" class="waiting-container">
+      <Spinner />
+      <span
+        >waiting for <span class="orange-font">{{ rightPlayer?.username }}</span
+        >...</span
+      >
+      <button class="icon-button-reject" title="Cancel request" @click="cancelWaiting">
+        <font-awesome-icon :icon="['fas', 'times']" />
+      </button>
     </div>
-    <div v-if="rightPlayer" class="flex-row">
-      <p v-if="invitedUser && invitedUser.username">
-        '<span class="orange-font">{{ invitedUser.username }}</span
+    <div v-else class="flex-row">
+      <p v-if="userIsHost">
+        '<span class="orange-font">{{ rightPlayer.username }}</span
         >' is ready to play
       </p>
 
@@ -271,12 +269,7 @@ onBeforeUnmount(() => {
         <Spinner />
         waiting for '<span class="orange-font">{{ leftPlayer.username }} </span> ' to launch game...
       </p>
-      <button
-        v-if="invitedUser != null && invitedUser?.username != ''"
-        class="dynamic-button"
-        @click="handleStartMatch"
-        :class="{ disabledButton: !userIsHost || !rightPlayer }"
-      >
+      <button v-if="userIsHost" class="dynamic-button" @click="handleStartMatch">
         Launch Game
       </button>
     </div>
@@ -333,19 +326,6 @@ onBeforeUnmount(() => {
 
 .suggestionList li {
   margin-bottom: 10px;
-}
-
-.disabledButton {
-  background-color: transparent;
-  cursor: not-allowed;
-  animation: none;
-  border: 0.25px solid aliceblue;
-}
-
-.disabledButton:hover {
-  background-color: transparent;
-  transform: none;
-  box-shadow: none;
 }
 
 .waiting-container {

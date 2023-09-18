@@ -19,6 +19,7 @@ import type { MatchI } from '../../model/match/match.interface'
 import type { ErrorI } from '../../model/error.interface'
 import type { UnreadMessageI } from '../../model/message/unreadMessage.interface'
 import type { DirectConverstationDto } from '../../model/message/directConversation.dto'
+import router from '../../router'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
@@ -345,8 +346,22 @@ const handleUnblockUser = async (username: string, unblockUserId: number) => {
 }
 
 const handleInviteToGame = (username: String, id: Number) => {
-  if (username !== '') {
-    notificationStore.showNotification('User ' + username + ' was invited to play', true)
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  try {
+    socket.value.emit('sendMatchInviteViaChat', id, (response: MatchI | ErrorI) => {
+      if ('error' in response) {
+        notificationStore.showNotification(`Error: ${response.error}`, false)
+      } else {
+        notificationStore.showNotification(`Send a game invitation to ${username}`, true)
+        router.push(`/invite/${response.id!}`)
+      }
+    })
+  } catch (error: any) {
+    notificationStore.showNotification('Error: ' + error.message, false)
   }
 }
 

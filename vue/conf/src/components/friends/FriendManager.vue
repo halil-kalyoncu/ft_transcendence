@@ -46,7 +46,7 @@ const handleUnfriendUser = () => {
 
 const handleInvite = () => {
   let username = props.selectedFriendEntry?.friend?.username ?? ''
-  let id = props.selectedFriendEntry?.id
+  let id = props.selectedFriendEntry?.friend?.id ?? 0
   emit('invite-user-to-game', username, id)
 }
 </script>
