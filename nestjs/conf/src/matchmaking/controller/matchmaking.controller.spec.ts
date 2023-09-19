@@ -46,6 +46,8 @@ describe('MatchmakingController', () => {
         id: 1,
         userId: 1,
         opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
       };
 
       const getByUserIdSpy = jest
@@ -66,6 +68,8 @@ describe('MatchmakingController', () => {
         id: 1,
         userId: 1,
         opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
       };
 
       const getByUserIdSpy = jest
@@ -103,6 +107,8 @@ describe('MatchmakingController', () => {
         id: 1,
         userId: 1,
         opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
       };
 
       const deleteSpy = jest
@@ -123,6 +129,8 @@ describe('MatchmakingController', () => {
         id: 1,
         userId: 1,
         opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
       };
 
       const deleteSpy = jest

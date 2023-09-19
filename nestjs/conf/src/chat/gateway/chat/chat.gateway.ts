@@ -36,6 +36,8 @@ import {
   Matchmaking,
   Prisma,
   Channel,
+  Powerup,
+  BlockedUser,
 } from '@prisma/client';
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ChannelMessageService } from '../../../chat/service/channel-message/channel-message.service';
@@ -47,6 +49,8 @@ import { SendGameInviteDto } from '../../../chat/dto/send-game-invite.dto';
 import { MatchService } from '../../../match/service/match.service';
 import { ErrorDto } from '../../../chat/dto/error.dto';
 import { MatchmakingService } from '../../../matchmaking/service/matchmaking.service';
+import { PowerupService } from '../../../powerup/service/powerup.service';
+import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
 
 @WebSocketGateway({
   cors: {
@@ -71,6 +75,8 @@ export class ChatGateway
     private matchService: MatchService,
     private channelInvitationService: ChannelInvitationsService,
     private matchmakingService: MatchmakingService,
+    private powerupService: PowerupService,
+    private blockedUserService: BlockedUserService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -765,13 +771,6 @@ export class ChatGateway
    *** ChannelMessages ***
    ***********************/
 
-  @SubscribeMessage('groupMessages')
-  async handlegetGroupMessages(socket: Socket, channelId: number) {
-    return await this.channelMessageService.getChannelMessagesforChannel(
-      channelId,
-    );
-  }
-
   @SubscribeMessage('sendChannelMessage')
   async sendChannelMessage(
     socket: Socket,
@@ -882,73 +881,174 @@ export class ChatGateway
   async sendGameInvite(
     socket: Socket,
     sendGameInviteDto: SendGameInviteDto,
-  ): Promise<void> {
-    if (sendGameInviteDto.invitedUserId === socket.data.user.id) {
-      socket.emit('Error', "Can't invite yourself to a game");
-      return;
-    }
-    const receiverOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(
-        sendGameInviteDto.invitedUserId,
+  ): Promise<Match | ErrorDto> {
+    try {
+      if (sendGameInviteDto.invitedUsername === socket.data.user.username) {
+        throw new Error("Can't invite yourself to a game");
+      }
+
+      const invitedUser: User | null = await this.userService.findByUsername(
+        sendGameInviteDto.invitedUsername,
       );
+      if (!invitedUser) {
+        throw new Error("User doesn't exists");
+      }
 
-    if (!receiverOnline) {
-      socket.emit('Error', 'User is not online');
-      return;
+      const friendship: Friendship | null = await this.friendshipService.find(
+        socket.data.user.id,
+        invitedUser.id,
+      );
+      if (!friendship) {
+        throw new Error(invitedUser.username + ' is not your friend');
+      }
+
+      const receiverOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(invitedUser.id);
+
+      if (!receiverOnline) {
+        throw new Error('User is not online');
+      }
+
+      const powerups: Powerup[] = await this.powerupService.findByNames(
+        sendGameInviteDto.powerupNames,
+      );
+      const updatedMatch: Match = await this.matchService.invite(
+        sendGameInviteDto.matchId,
+        invitedUser.id,
+        sendGameInviteDto.goalsToWin,
+        powerups,
+      );
+      socket.emit('matchInviteSent', updatedMatch);
+      socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
+      return updatedMatch;
+    } catch (error) {
+      return { error: error.message as string };
     }
-
-    const updatedMatch: Match = await this.matchService.invite(
-      sendGameInviteDto.matchId,
-      sendGameInviteDto.invitedUserId,
-    );
-    socket.emit('matchInviteSent', updatedMatch);
-    socket.to(receiverOnline.socketId).emit('matchInvites', updatedMatch);
   }
 
   @SubscribeMessage('acceptMatchInvite')
-  async acceptGameInvite(socket: Socket, matchId: number): Promise<void> {
-    const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(match.leftUserId);
+  async acceptGameInvite(
+    socket: Socket,
+    matchId: number,
+  ): Promise<Match | ErrorDto> {
+    try {
+      const match: Match | null = await this.matchService.findById(matchId);
+      if (!match) {
+        throw new Error('Match not found');
+      }
 
-    if (!receiverOnline) {
-      socket.emit('Error', 'Match creator is not online');
-      return;
+      const receiverOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(match.leftUserId);
+      if (!receiverOnline) {
+        throw new Error('Match creator is not online');
+      }
+
+      const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
+      socket.emit('matchInvites');
+      socket
+        .to(receiverOnline.socketId)
+        .emit('matchInviteAccepted', updatedMatch);
+      return updatedMatch;
+    } catch (error) {
+      return { error: error.message as string };
     }
-
-    const updatedMatch: Match = await this.matchService.acceptInvite(matchId);
-    socket.emit('matchInvites');
-    socket
-      .to(receiverOnline.socketId)
-      .emit('matchInviteAccepted', updatedMatch);
   }
 
   @SubscribeMessage('rejectMatchInvite')
-  async rejectGameInvite(socket: Socket, matchId: number): Promise<void> {
-    const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
-    const receiverOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
+  async rejectGameInvite(
+    socket: Socket,
+    matchId: number,
+  ): Promise<Match | ErrorDto> {
+    try {
+      const updatedMatch: Match | null = await this.matchService.rejectInvite(
+        matchId,
+      );
+      if (!updatedMatch) {
+        throw new Error('Match not found');
+      }
 
-    socket.emit('matchInvites');
-    if (receiverOnline) {
+      const receiverOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
+      if (!receiverOnline) {
+        throw new Error('Match creator is not online');
+      }
+
+      socket.emit('matchInvites');
       socket
         .to(receiverOnline.socketId)
         .emit('matchInviteRejected', updatedMatch);
+      return updatedMatch;
+    } catch (error) {
+      return { error: error.message as string };
     }
   }
+
+  @SubscribeMessage('cancelMatchInvite')
+  async cancelMatchInvite(socket: Socket, matchId: number): Promise<void> {
+    const match: Match = await this.matchService.findById(matchId);
+    const receiverOnline: ConnectedUser =
+      await this.connectedUserService.findByUserId(match.rightUserId);
+    const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
+
+    if (receiverOnline) {
+      socket.to(receiverOnline.socketId).emit('matchInvites');
+    }
+    socket.emit('matchInviteRejected', updatedMatch);
+  }
+
+  @SubscribeMessage('sendMatchInviteViaChat')
+  async sendMatchInviteViaChat(
+    socket: Socket,
+    againstUserId: number,
+  ): Promise<Match | ErrorDto> {
+    let match: Match;
+
+    try {
+      const againstUser: User = await this.userService.findById(againstUserId);
+
+      if (!againstUser) {
+        throw new Error("Cannot invite user because user doesn't exists");
+      }
+
+      const receiverOnline: ConnectedUser =
+        await this.connectedUserService.findByUserId(againstUserId);
+      if (!receiverOnline) {
+        throw new Error(`Opponent ${againstUser.username} is not online`);
+      }
+
+      const matchEntity: Prisma.MatchCreateInput = {
+        leftUser: { connect: { id: socket.data.user.id } },
+        type: 'CUSTOM',
+      };
+
+      match = await this.matchService.create(matchEntity);
+      match = await this.matchService.invite(match.id, againstUserId, 5, []);
+
+      socket.to(receiverOnline.socketId).emit('matchInvites', match);
+      return match;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
   /************
    *** Match ***
    *************/
   @SubscribeMessage('hostLeaveMatch')
   async hostLeaveMatch(socket: Socket, matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
-    const receiverOnline: ConnectedUser =
-      await this.connectedUserService.findByUserId(match.rightUserId);
+    let receiverOnline: ConnectedUser = null;
+    if (match.rightUserId) {
+      receiverOnline = await this.connectedUserService.findByUserId(
+        match.rightUserId,
+      );
+    }
 
+    await this.matchService.deleteById(match.id);
     if (receiverOnline) {
       socket.to(receiverOnline.socketId).emit('hostLeftMatch');
+      socket.to(receiverOnline.socketId).emit('matchInvites');
     }
-    this.matchService.deleteById(match.id);
   }
 
   @SubscribeMessage('leaveMatch')
@@ -1010,19 +1110,13 @@ export class ChatGateway
         socket.data.user.id,
       );
       if (findOpponent) {
-        const ladderGameData: Prisma.MatchCreateInput = {
-          type: 'LADDER',
-          leftUser: { connect: { id: findOpponent.userId } },
-          rightUser: { connect: { id: socket.data.user.id } },
-        };
         connectedUser = await this.connectedUserService.findByUserId(
           findOpponent.userId,
         );
         if (!connectedUser) {
+          await this.matchmakingService.deleteByUserId(socket.data.user.id);
           return { error: 'Opponent is not online' };
         }
-        socket.to(connectedUser.socketId).emit('readyLadderGame', findOpponent);
-        socket.emit('readyLadderGame', findOpponent);
         return findOpponent;
       }
 
@@ -1036,18 +1130,52 @@ export class ChatGateway
     }
   }
 
+  @SubscribeMessage('setReady')
+  async setReady(
+    socket: Socket,
+    matchmakingId: number,
+  ): Promise<Matchmaking | ErrorDto> {
+    let matchmaking: Matchmaking;
+    let connectedUser: ConnectedUser;
+
+    try {
+      matchmaking = await this.matchmakingService.find(matchmakingId);
+      if (!matchmaking) {
+        return { error: 'Something went wrong while redirecting to the queue' };
+      }
+
+      matchmaking = await this.matchmakingService.setUserReady(
+        socket.data.user.id,
+      );
+
+      if (matchmaking.opponentUserId && matchmaking.opponentReady) {
+        connectedUser = await this.connectedUserService.findByUserId(
+          matchmaking.userId,
+        );
+        if (!connectedUser) {
+          await this.matchmakingService.deleteByUserId(socket.data.user.id);
+          return { error: 'Opponent is not online' };
+        }
+        socket.to(connectedUser.socketId).emit('readyLadderGame', matchmaking);
+      }
+      return matchmaking;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
   @SubscribeMessage('startLadderGame')
   async startLadderMatch(
     socket: Socket,
     matchmakingId: number,
-  ): Promise<Match | ErrorDto> {
+  ): Promise<Matchmaking | ErrorDto> {
     let matchmaking: Matchmaking;
     let ladderMatch: Match;
     let connectedUser: ConnectedUser;
 
     try {
       matchmaking = await this.matchmakingService.find(matchmakingId);
-      if (!matchmaking || matchmaking.userId !== socket.data.user.id) {
+      if (!matchmaking) {
         return { error: 'Something went wrong starting the ladder game' };
       }
 
@@ -1057,17 +1185,62 @@ export class ChatGateway
         rightUser: { connect: { id: matchmaking.opponentUserId } },
       };
       ladderMatch = await this.matchService.create(ladderGameData);
+
       connectedUser = await this.connectedUserService.findByUserId(
         matchmaking.opponentUserId,
       );
       if (!connectedUser) {
         await this.matchService.deleteById(ladderMatch.id);
-        await this.matchmakingService.deleteByUserId(matchmaking.userId);
+        await this.matchmakingService.deleteByUserId(socket.data.user.id);
         return { error: 'Opponent is not online' };
       }
       await this.matchmakingService.deleteByUserId(matchmaking.userId);
       socket.to(connectedUser.socketId).emit('goToLadderGame', ladderMatch);
       socket.emit('goToLadderGame', ladderMatch);
+      return matchmaking;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
+  /******************
+   *** Block users ***
+   ******************/
+
+  @SubscribeMessage('blockUser')
+  async blockUser(
+    socket: Socket,
+    blockUserId: number,
+  ): Promise<BlockedUser | ErrorDto> {
+    try {
+      const blockedUser: BlockedUser = await this.blockedUserService.block(
+        socket.data.user.id,
+        blockUserId,
+      );
+      socket.emit('blockedUsers', blockedUser);
+      socket.emit('newChannelMessage');
+      socket.emit('friends');
+      return blockedUser;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
+  @SubscribeMessage('unblockUser')
+  async unblockUser(
+    socket: Socket,
+    blockUserId: number,
+  ): Promise<BlockedUser | ErrorDto> {
+    try {
+      const unblockedUser: BlockedUser = await this.blockedUserService.unblock(
+        socket.data.user.id,
+        blockUserId,
+      );
+      socket.emit('blockedUsers', unblockedUser);
+      socket.emit('newChannelMessage');
+      socket.emit('friends');
+      socket.emit('newDirectMessage');
+      return unblockedUser;
     } catch (error) {
       return { error: error.message as string };
     }

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BlockedUser, Prisma, User } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UserService } from '../../../user/service/user-service/user.service';
+import { PrismaModel } from '../../../_gen/prisma-class/index';
 
 @Injectable()
 export class BlockedUserService {
@@ -10,14 +11,14 @@ export class BlockedUserService {
     private userService: UserService,
   ) {}
 
-  async block(userId: number, targetUserId: number): Promise<any> {
+  async block(userId: number, targetUserId: number): Promise<BlockedUser> {
     const isAlreadyBlocked = await this.find(userId, targetUserId);
     if (isAlreadyBlocked) {
       //or return error if already blocked?
       return isAlreadyBlocked;
     }
 
-    return this.prisma.blockedUser.create({
+    return await this.prisma.blockedUser.create({
       data: {
         userId,
         targetUserId,
@@ -29,14 +30,14 @@ export class BlockedUserService {
     });
   }
 
-  async unblock(userId: number, targetUserId: number): Promise<any> {
+  async unblock(userId: number, targetUserId: number): Promise<BlockedUser> {
     const block = await this.find(userId, targetUserId);
     if (!block) {
       //return error?
       return;
     }
 
-    return this.prisma.blockedUser.delete({
+    return await this.prisma.blockedUser.delete({
       where: {
         id: block.id,
       },
@@ -47,7 +48,7 @@ export class BlockedUserService {
     });
   }
 
-  async getBlockedUsers(userId: number): Promise<any[]> {
+  async getBlockedUsers(userId: number): Promise<any> {
     const user = await this.userService.findById(userId);
 
     if (!user) {
@@ -65,13 +66,21 @@ export class BlockedUserService {
     });
   }
 
-  async find(userId: number, targetUserId: number): Promise<any> {
+  async getUsers(userId: number): Promise<User[]> {
+    const blockedUsers = await this.getBlockedUsers(userId);
+
+    return blockedUsers.map((blockedUser) => blockedUser.targetUser);
+  }
+
+  async find(userId: number, targetUserId: number): Promise<BlockedUser> {
     await this.checkIds(userId, targetUserId);
 
-    return this.prisma.blockedUser.findFirst({
+    return await this.prisma.blockedUser.findUnique({
       where: {
-        userId,
-        targetUserId,
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
       },
       include: {
         user: true,
@@ -80,8 +89,8 @@ export class BlockedUserService {
     });
   }
 
-  async remove(blockedUserId: number): Promise<any> {
-    return this.prisma.blockedUser.delete({
+  async remove(blockedUserId: number): Promise<BlockedUser> {
+    return await this.prisma.blockedUser.delete({
       where: {
         id: blockedUserId,
       },
@@ -91,12 +100,12 @@ export class BlockedUserService {
   private async checkIds(userId: number, targetUserId: number): Promise<void> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new Error('User not found');
     }
 
     const targetUser = await this.userService.findById(targetUserId);
     if (!targetUser) {
-      throw new NotFoundException('Target user not found');
+      throw new Error('Target user not found');
     }
 
     if (userId === targetUserId) {

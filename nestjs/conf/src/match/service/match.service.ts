@@ -1,10 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Match, Prisma } from '@prisma/client';
+import {
+  Match,
+  MatchPowerup,
+  MatchState,
+  Powerup,
+  Prisma,
+} from '@prisma/client';
+import { Room } from '../../game/service/room.service';
+import { PowerupService } from '../../powerup/service/powerup.service';
 
 @Injectable()
 export class MatchService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private powerupService: PowerupService,
+  ) {}
 
   async create(newMatch: Prisma.MatchCreateInput): Promise<Match> {
     return await this.prisma.match.create({
@@ -22,6 +33,7 @@ export class MatchService {
       include: {
         leftUser: true,
         rightUser: true,
+        powerups: true,
       },
     });
   }
@@ -36,7 +48,12 @@ export class MatchService {
     });
   }
 
-  async invite(id: number, invitedUserId: number): Promise<Match | null> {
+  async invite(
+    id: number,
+    invitedUserId: number,
+    goalsToWin: number,
+    powerups: Powerup[],
+  ): Promise<Match | null> {
     const match = await this.findById(id);
 
     if (!match) {
@@ -45,15 +62,33 @@ export class MatchService {
       throw new Error("Can't invite yourself to a match");
     }
 
+    const matchPowerups = await Promise.all(
+      powerups.map(async (powerup) => {
+        return await this.prisma.matchPowerup.create({
+          data: {
+            matchId: id,
+            powerupId: powerup.id,
+          },
+        });
+      }),
+    );
+
     return await this.prisma.match.update({
       where: { id },
       data: {
         rightUser: { connect: { id: invitedUserId } },
         state: 'INVITED',
+        goalsToWin,
+        powerups: {
+          connect: matchPowerups.map((matchPowerup) => ({
+            id: matchPowerup.id,
+          })),
+        },
       },
       include: {
         leftUser: true,
         rightUser: true,
+        powerups: true,
       },
     });
   }
@@ -125,12 +160,23 @@ export class MatchService {
     });
   }
 
-  //TODO: finish this with the object of the game gateway
-  async finishMatch(id: number): Promise<Match | null> {
+  async finishMatch(room: Room): Promise<Match | null> {
+    let gameState: MatchState;
+
+    if (room.leftPlayerGoals === 5) {
+      gameState = 'WINNERLEFT';
+    } else if (room.rightPlayerGoals === 5) {
+      gameState = 'WINNERRIGHT';
+    } else if (room.leftPlayerDisconnect) {
+      gameState = 'DISCONNECTLEFT';
+    } else {
+      gameState = 'DISCONNECTRIGHT';
+    }
+
     return await this.prisma.match.update({
-      where: { id },
+      where: { id: room.id },
       data: {
-        state: 'WINNERLEFT',
+        state: gameState,
         finishedAt: new Date(),
       },
       include: {
@@ -138,5 +184,32 @@ export class MatchService {
         rightUser: true,
       },
     });
+  }
+
+  async getPowerupNames(id: number): Promise<string[]> {
+    const powerupNames: string[] = [];
+    const match: Match = await this.findById(id);
+
+    if (!match) {
+      throw new Error("Can't find match");
+    }
+
+    const matchPowerups: MatchPowerup[] =
+      await this.prisma.matchPowerup.findMany({
+        where: {
+          matchId: match.id,
+        },
+      });
+
+    for (const matchPowerup of matchPowerups) {
+      const powerup = await this.powerupService.findById(
+        matchPowerup.powerupId,
+      );
+      if (powerup) {
+        powerupNames.push(powerup.name);
+      }
+    }
+
+    return powerupNames;
   }
 }

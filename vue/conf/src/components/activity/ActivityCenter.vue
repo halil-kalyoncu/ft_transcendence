@@ -3,7 +3,7 @@ import GameInvites from './GameInvites.vue'
 import FriendRequests from './FriendRequests.vue'
 import ChannelInvitations from './ChannelInvitations.vue'
 import BlockedUsers from './BlockedUsers.vue'
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
 const activePanel = ref('GameInvites')
 

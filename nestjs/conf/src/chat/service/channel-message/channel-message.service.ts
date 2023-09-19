@@ -10,9 +10,11 @@ import {
   Channel,
   ChannelMember,
   ChannelMessageReadStatus,
+  BlockedUser,
 } from '@prisma/client';
 import { ChannelService } from '../channel/channel.service';
 import { ChannelMemberService } from '../channel-member/channel-member.service';
+import { BlockedUserService } from '../blocked-user/blocked-user.service';
 
 @Injectable()
 export class ChannelMessageService {
@@ -21,6 +23,7 @@ export class ChannelMessageService {
     private channelService: ChannelService,
     private messageService: MessageService,
     private channelMemberService: ChannelMemberService,
+    private blockedUserService: BlockedUserService,
   ) {}
 
   async create(
@@ -99,6 +102,7 @@ export class ChannelMessageService {
       message: createdChannelMessage.message,
       sender: createdChannelMessage.sender.user,
       createdAt: createdChannelMessage.message.createdAt,
+      blockGroupMessage: false,
     };
     // Create a ChannelMessageReadStatus for each member of the channel
     const channelMembers = await this.channelService.findMembers(channelId);
@@ -118,6 +122,7 @@ export class ChannelMessageService {
 
   async getChannelMessagesforChannel(
     channelId: number,
+    userId: number,
   ): Promise<ChannelMessageDto[]> {
     try {
       const channelMessages: any[] = await this.prisma.channelMessage.findMany({
@@ -142,28 +147,30 @@ export class ChannelMessageService {
           },
         },
       });
-      /* TODO: DELTE IF NOT NEEDED 
-	  const filteredChannelMessages = channelMessages.map((message) =>{
-		const {sender} = message;
+      const blockedUsers: User[] = await this.blockedUserService.getUsers(
+        userId,
+      );
+      const channelMessageDtos: ChannelMessageDto[] = await Promise.all(
+        channelMessages.map(async (channelMessage) => {
+          let blockGroupMessage: boolean = false;
 
-		if (sender.status === 'MUTED') {
-			return null;
-		}
+          if (channelMessage.sender.userId !== userId) {
+            const isSenderBlocked = blockedUsers.some(
+              (blockedUser) => blockedUser.id === channelMessage.sender.userId,
+            );
 
-		const roleSinceDate = new Date(sender.roleSince);
-		const createdAtDate = new Date(message.message.createdAt);
-		if (roleSinceDate > createdAtDate) {
-			return null;
-		}
-		return message;
-	  }).filter(Boolean)
- */
-      const channelMessageDtos: ChannelMessageDto[] = channelMessages.map(
-        (channelMessage) => ({
-          id: channelMessage.id,
-          message: channelMessage.message,
-          sender: channelMessage.sender.user,
-          createdAt: channelMessage.message.createdAt,
+            if (isSenderBlocked) {
+              blockGroupMessage = true;
+            }
+          }
+
+          return {
+            id: channelMessage.id,
+            message: channelMessage.message,
+            sender: channelMessage.sender.user,
+            createdAt: channelMessage.message.createdAt,
+            blockGroupMessage,
+          };
         }),
       );
       return channelMessageDtos;
@@ -193,7 +200,7 @@ export class ChannelMessageService {
           isRead: true,
         },
       });
-      return await this.getChannelMessagesforChannel(channelId);
+      return await this.getChannelMessagesforChannel(channelId, userId);
     } catch (error: any) {
       console.error('Error marking messages as read:', error);
       throw error;
@@ -205,9 +212,20 @@ export class ChannelMessageService {
     userId: number,
   ): Promise<ChannelMessageReadStatus[]> {
     try {
+      const blockedUsers: User[] =
+        await this.blockedUserService.getBlockedUsers(userId);
+      const blockedUserIds: number[] = blockedUsers.map((user) => user.id);
+
       const unreadMessages =
         await this.prisma.channelMessageReadStatus.findMany({
           where: {
+            NOT: {
+              message: {
+                senderId: {
+                  in: blockedUserIds,
+                },
+              },
+            },
             reader: {
               channelId: channelId,
               userId: userId,

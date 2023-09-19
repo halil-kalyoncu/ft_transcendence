@@ -91,6 +91,17 @@ export class UserController {
     return await this.userService.findAll();
   }
 
+  @ApiOperation({ summary: 'Find user by id' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of user by id',
+    type: PrismaModel.User,
+  })
+  @Get('find-by-id')
+  async findById(@Query('id', ParseIntPipe) id: number): Promise<User> {
+    return await this.userService.findById(id);
+  }
+
   @ApiOperation({ summary: 'Find user by username' })
   @ApiResponse({
     status: 200,
@@ -130,7 +141,7 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './files',
+        destination: process.env.AVATARPATH,
         filename: (req, file, callback) => {
           const id = uuidv4();
           const ext = extname(file.originalname);
@@ -180,32 +191,45 @@ export class UserController {
     try {
       const user: User = await this.userService.findById(userId);
 
+      if (!user) {
+        return res.status(404).send('User not found.');
+      }
       if (!user.avatarId) {
         return res.status(404).send('User does not have an avatar.');
       }
 
-      const avatarStream = fs.createReadStream(user.avatarId);
+      const avatarStream = fs.createReadStream(
+        process.env.AVATARPATH + '/' + user.avatarId,
+      );
       avatarStream.pipe(res);
     } catch (error) {
       res.status(500).send(error.message);
     }
   }
 
-  //TODO: return
   @ApiOperation({ summary: 'Delete user avatar' })
   @ApiResponse({
     status: 200,
     description: 'Successful deletion of user avatar',
   })
+  @ApiResponse({
+    status: 500,
+    description:
+      'Internal server error, when user not found or user has no avatar',
+  })
   @Patch('avatar/:userId')
   async deleteAvatar(@Param('userId', ParseIntPipe) userId: number) {
-    const user: User = await this.userService.findById(userId);
-    if (!user) {
-      return { error: 'Failed to find user' };
+    try {
+      const user: User = await this.userService.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      if (!user.avatarId) {
+        throw new Error('User has no avatar');
+      }
+      return await this.userService.deleteAvatar(userId);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    if (!user.avatarId) {
-      return { error: 'User has no uploaded avatar' };
-    }
-    return await this.userService.deleteAvatar(userId);
   }
 }

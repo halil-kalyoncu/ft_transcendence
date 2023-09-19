@@ -2,9 +2,11 @@
   <div>
     <FriendsListItem
       @handle-block="handleBlockUser"
+      @handle-unblock="handleUnblockUser"
       @handle-unfriend="handleUnfriendUser"
       :username="selectedFriendEntry?.friend?.username ?? ''"
       :status="selectedFriendEntry?.status!"
+      :blocked="selectedFriendEntry?.blocked!"
       :showActions="true"
     />
     <button class="game-invite-button" @click="handleInvite">Invite to Game</button>
@@ -13,10 +15,7 @@
 
 <script setup lang="ts">
 import FriendsListItem from './FriendsListItem.vue'
-import { useNotificationStore } from '../../stores/notification'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
-
-const notificationStore = useNotificationStore()
 
 const props = defineProps({
   selectedFriendEntry: {
@@ -25,12 +24,18 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['unfriend-user', 'block-user', 'invite-user-to-game'])
+const emit = defineEmits(['unfriend-user', 'block-user', 'unblock-user', 'invite-user-to-game'])
 
 const handleBlockUser = () => {
   let username = props.selectedFriendEntry?.friend?.username ?? ''
   let blockUserId = props.selectedFriendEntry?.friend?.id
   emit('block-user', username, blockUserId)
+}
+
+const handleUnblockUser = () => {
+  let username = props.selectedFriendEntry?.friend?.username ?? ''
+  let unblockUserId = props.selectedFriendEntry?.friend?.id
+  emit('unblock-user', username, unblockUserId)
 }
 
 const handleUnfriendUser = () => {
@@ -41,7 +46,7 @@ const handleUnfriendUser = () => {
 
 const handleInvite = () => {
   let username = props.selectedFriendEntry?.friend?.username ?? ''
-  let id = props.selectedFriendEntry?.id
+  let id = props.selectedFriendEntry?.friend?.id ?? 0
   emit('invite-user-to-game', username, id)
 }
 </script>

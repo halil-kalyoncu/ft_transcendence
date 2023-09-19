@@ -15,9 +15,11 @@ export class ChannelMessageController {
   @Get('getChannelMessagesforChannel')
   async getChannelMessagesforChannel(
     @Query('channelId', ParseIntPipe) channelId: number,
-  ): Promise<{}> {
+    @Query('userId', ParseIntPipe) userId: number,
+  ): Promise<ChannelMessageDto[]> {
     return await this.ChannelMessageService.getChannelMessagesforChannel(
       channelId,
+      userId,
     );
   }
 

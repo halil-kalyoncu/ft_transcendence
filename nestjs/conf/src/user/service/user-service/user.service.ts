@@ -119,7 +119,7 @@ export class UserService {
     }
 
     if (user.avatarId) {
-      fs.unlinkSync(user.avatarId);
+      fs.unlinkSync(this.generateAvatarPath(user.avatarId));
     }
 
     return await this.prisma.user.update({
@@ -127,7 +127,7 @@ export class UserService {
         id: user.id,
       },
       data: {
-        avatarId: file.path,
+        avatarId: file.filename,
       },
     });
   }
@@ -140,7 +140,7 @@ export class UserService {
     }
 
     if (user.avatarId) {
-      fs.unlinkSync(user.avatarId);
+      fs.unlinkSync(this.generateAvatarPath(user.avatarId));
     }
     return await this.prisma.user.update({
       where: {
@@ -196,5 +196,9 @@ export class UserService {
       throw new Error('user not found');
     }
     return user.enabled2FA;
+  }
+
+  private generateAvatarPath(avatarId: string): string {
+    return process.env.AVATARPATH + '/' + avatarId;
   }
 }

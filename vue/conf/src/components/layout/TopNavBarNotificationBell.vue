@@ -55,7 +55,17 @@ const initSocket = () => {
   socket.value = connectChatSocket(accessToken)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   initSocket()
 
   setFriendRequestListener()
@@ -92,7 +102,7 @@ const setMatchInviteData = async () => {
     if (data && data.length > 0) {
       hasNotification.value = true
     }
-    matchRequestsStore.addMatchRequest(matchInvites.value)
+    matchRequestsStore.setMatchRequests(matchInvites.value)
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
   }

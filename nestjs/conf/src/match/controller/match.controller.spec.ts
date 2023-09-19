@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateMatchDto } from '../dto/create-match.dto';
 import { Match } from '@prisma/client';
 import { HttpStatus } from '@nestjs/common';
+import { PowerupService } from '../../powerup/service/powerup.service';
 
 describe('MatchController', () => {
   let controller: MatchController;
@@ -15,6 +16,7 @@ describe('MatchController', () => {
       controllers: [MatchController],
       providers: [
         MatchService,
+        PowerupService,
         {
           provide: PrismaService,
           useValue: PrismaService.getInstance(),
@@ -44,6 +46,7 @@ describe('MatchController', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: new Date(),
         startedAt: null,
         finishedAt: null,
@@ -94,6 +97,7 @@ describe('MatchController', () => {
         state: 'CREATED',
         goalsLeftPlayer: 0,
         goalsRightPlayer: 0,
+        goalsToWin: 5,
         createdAt: new Date(),
         startedAt: null,
         finishedAt: null,
@@ -139,6 +143,7 @@ describe('MatchController', () => {
           state: 'INVITED',
           goalsLeftPlayer: 0,
           goalsRightPlayer: 0,
+          goalsToWin: 5,
           createdAt: new Date(),
           startedAt: null,
           finishedAt: null,
@@ -151,6 +156,7 @@ describe('MatchController', () => {
           state: 'INVITED',
           goalsLeftPlayer: 0,
           goalsRightPlayer: 0,
+          goalsToWin: 5,
           createdAt: new Date(),
           startedAt: null,
           finishedAt: null,
@@ -180,6 +186,7 @@ describe('MatchController', () => {
           state: 'INVITED',
           goalsLeftPlayer: 0,
           goalsRightPlayer: 0,
+          goalsToWin: 5,
           createdAt: new Date(),
           startedAt: null,
           finishedAt: null,

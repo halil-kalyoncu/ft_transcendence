@@ -21,4 +21,8 @@ export class FriendshipDto {
   @IsOptional()
   @IsEnum(FriendshipEntryStatus)
   status: FriendshipEntryStatus;
+
+  @ApiProperty()
+  @IsOptional()
+  blocked: boolean;
 }

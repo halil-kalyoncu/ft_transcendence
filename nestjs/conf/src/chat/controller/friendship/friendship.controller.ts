@@ -9,7 +9,7 @@ import {
 import { FriendshipDto } from '../../dto/friendship.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FriendshipService } from '../../service/friendship/friendship.service';
-import { Friendship } from '@prisma/client';
+import { Friendship, User } from '@prisma/client';
 import { BlockUserDto } from '../../dto/block-user.dto';
 import { ErrorDto } from '../../dto/error.dto';
 
@@ -23,14 +23,26 @@ export class FriendshipController {
   async getAcceptedFriends(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<FriendshipDto[]> {
-    return this.friendshipService.getFriends(userId);
+    return await this.friendshipService.getFriends(userId);
   }
+
   //GET friends from the db where the status is pending based o the userId given as a URL from the frontend
   @Get('get-friend-requests')
   async getFriendRequests(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<FriendshipDto[]> {
-    return this.friendshipService.getFriendRequests(userId);
+    return await this.friendshipService.getFriendRequests(userId);
+  }
+
+  @Get('get-like-username')
+  async getFriendsLikeUsername(
+    @Query('userId', ParseIntPipe) userId: number,
+    @Query('username') searchTerm: string,
+  ): Promise<User[]> {
+    return await this.friendshipService.listFriendsLikeUsername(
+      userId,
+      searchTerm,
+    );
   }
 
   // @Get('blocked-users')

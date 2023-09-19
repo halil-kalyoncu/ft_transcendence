@@ -1,6 +1,8 @@
 <template>
-  <div class="messages-container">
-    <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'" class="messages-scrollviewer">
+  <div class="chat">
+    <div></div>
+
+    <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'">
       <div class="messages">
         <Message
           v-for="channelmessage in channelMessages"
@@ -9,11 +11,13 @@
           :message="channelmessage.message?.message ?? ''"
           :sender="channelmessage.sender?.username ?? ''"
           :isOwnMessage="isOwnMessage(channelmessage.sender.id)"
+          :blockedGroupMessage="channelmessage.blockGroupMessage!"
         />
       </div>
     </ScrollViewer>
     <div class="chat-input">
       <textarea
+        @keyup.enter.prevent="handleEnterKey($event)"
         v-model="newchannelMessages"
         placeholder="Type your message here..."
         rows="1"
@@ -112,7 +116,7 @@ const setUserChangesListener = () => {
 const setNewChannelMessages = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}`
+      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId.value}`
     )
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`)
@@ -126,7 +130,24 @@ const setNewChannelMessages = async () => {
   }
 }
 
-onMounted(() => {
+const handleEnterKey = (event: KeyboardEvent) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    sendMessage()
+    event.preventDefault()
+  }
+}
+
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   initSocket()
   setNewChannelMessages()
   setNewChannelMessageListener()
@@ -205,60 +226,3 @@ const sendMessage = async () => {
   await sendChannelMessage()
 }
 </script>
-
-<style scoped>
-.messages-container {
-  display: flex;
-  flex-direction: column;
-  height: 40vh;
-}
-
-.messages-scrollviewer {
-  flex-grow: 1;
-}
-
-.messages {
-  background-color: #1a1a1a;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0.5rem;
-}
-
-.chat-input {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  position: relative;
-}
-
-.chat-input textarea {
-  width: 100%;
-  padding: 0.5rem 0.25rem;
-  background-color: lightgray;
-  resize: none;
-}
-
-.chat-input textarea:focus {
-  outline: none;
-}
-
-.chat-input button {
-  height: 100%;
-  background-color: #32a852;
-  border: none;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.chat-input button:hover {
-  background-color: #ea9f42;
-}
-</style>

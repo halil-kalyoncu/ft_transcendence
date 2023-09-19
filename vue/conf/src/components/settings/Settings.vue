@@ -8,9 +8,7 @@
 
     <div class="input-group">
       <div class="file-upload-wrapper">
-        <label for="avatar" class="secondary-btn upload-btn">
-          {{ selectedFileName || 'Choose Avatar' }}
-        </label>
+        <label for="avatar" class="secondary-btn upload-btn"> Choose Avatar </label>
         <input
           class="file-input"
           type="file"
@@ -61,9 +59,6 @@
         </div>
       </div>
     </div>
-    <div class="button-group">
-      <button @click="deleteAccount" class="delete-button secondary-btn">Delete Account</button>
-    </div>
   </div>
 </template>
 
@@ -72,7 +67,6 @@ import { ref, computed, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
-import { fetchAndSaveAvatar } from '../../utils/fetchAndSaveAvatar'
 
 const notificationStore = useNotificationStore()
 
@@ -102,24 +96,8 @@ const setSelectedImage = (img: string) => {
   selectedImg.value = img
 }
 
-const displayedImages = computed(() => {
-  return images.value.slice(startIndex.value, startIndex.value + displayedCount)
-})
-
-const nextImages = () => {
-  if (startIndex.value < images.value.length - displayedCount) {
-    startIndex.value += displayedCount
-  }
-}
-
-const previousImages = () => {
-  if (startIndex.value >= displayedCount) {
-    startIndex.value -= displayedCount
-  }
-}
 const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {
-    selectedFileName.value = avatarInput.value.files[0].name
     uploadedAvatarFile.value = avatarInput.value.files[0]
 
     try {
@@ -136,37 +114,31 @@ const handleAvatarUpload = async () => {
 
       if (response.ok) {
         notificationStore.showNotification('Success upload image', true)
-        fetchAndSaveAvatar()
+        await userStore.fetchUser()
+        await userStore.fetchAvatar()
       } else {
         notificationStore.showNotification('Failed to upload image', false)
       }
     } catch (error: any) {
-      notificationStore.showNotification(`Error` + error.message, false)
+      notificationStore.showNotification('Error' + error.message, false)
     }
   }
 }
 
 const deleteAvatar = async () => {
-  avatarInput.value = null
   try {
-    const response = await fetch(`http://localhost:3000/api/users/avatar?userId=${userId.value}`, {
+    const response = await fetch(`http://localhost:3000/api/users/avatar/${userId.value}`, {
       method: 'PATCH'
     })
 
     if (response.ok) {
       notificationStore.showNotification('Success delete avatar', true)
-      userStore.clearAvatarImageData()
+      userStore.clearAvatar()
     } else {
-      notificationStore.showNotification('Failed to delete avatar', false)
+      notificationStore.showNotification('User has no avatar', false)
     }
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
-  }
-}
-
-const deleteAccount = () => {
-  const confirmDelete = window.confirm('Are you sure you want to delete your account?')
-  if (confirmDelete) {
+    notificationStore.showNotification('Error' + error.message, false)
   }
 }
 
@@ -273,7 +245,17 @@ const set2FAStatus = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   set2FAStatus()
 })
 </script>
@@ -319,10 +301,6 @@ input[type='text']::placeholder {
   font-size: 15px;
 }
 
-input[type='text']:focus {
-  outline: solid 1px #ea9f42;
-  border: none;
-}
 .page-title {
   text-align: left;
   margin: 0 0 1.25rem 0;
@@ -348,10 +326,6 @@ input[type='text']:focus {
   justify-content: flex-start;
 }
 
-.secondary-btn:focus {
-  outline: solid 0.25px #ea9f42;
-}
-
 .file-upload-wrapper {
   position: relative;
   display: inline-block;
@@ -373,6 +347,13 @@ input[type='text']:focus {
   color: aliceblue;
   border: 1px solid #ea9f42;
   font-weight: bold;
+}
+
+input[type='text']:focus,
+input[type='file']:focus,
+.secondary-btn:focus {
+  outline: solid 1px #ea9f42;
+  border: none;
 }
 
 .secondary-btn {

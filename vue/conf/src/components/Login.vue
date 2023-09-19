@@ -9,19 +9,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
 import { connectChatSocket } from '../websocket'
-import type { UserI } from '../model/user.interface'
-import jwtDecode from 'jwt-decode'
-import { fetchAndSaveAvatar } from '../utils/fetchAndSaveAvatar'
 
 const username = ref('')
-const userId = ref(0)
+const userId = computed(() => userStore.userId)
 const router = useRouter()
-const userStore = useUserStore()
 const notificationStore = useNotificationStore()
 
 const get2FAStatus = async () => {
@@ -42,6 +38,7 @@ const get2FAStatus = async () => {
     notificationStore.showNotification('Error occurred during 2FA status check:' + error, false)
   }
 }
+const userStore = useUserStore()
 
 const submitForm = async () => {
   try {
@@ -58,37 +55,21 @@ const submitForm = async () => {
       const { access_token } = await response.json()
       //save jwt into local storage
       localStorage.setItem('ponggame', access_token)
-      try {
-        const decodedToken: Record<string, unknown> = jwtDecode(access_token)
-        const loggedUser: UserI = decodedToken.user as UserI
-        userStore.setUserId(loggedUser.id as number)
-        if (loggedUser.avatarId) {
-          fetchAndSaveAvatar()
-        }
-        userId.value = loggedUser.id as number
-      } catch (error: any) {
-        console.error('Invalid token:', error)
-        notificationStore.showNotification('Invalid Token', false)
-      }
-      userStore.setUsername(username.value)
+      await userStore.initStore()
       connectChatSocket(access_token)
       const is2FAenabled = await get2FAStatus()
 
-      console.log(is2FAenabled)
       if (is2FAenabled) {
-        console.log('two')
         router.push('/twoFAAuth')
       } else {
-        console.log('home')
         router.push('/home')
       }
     } else {
       console.error('Login failed!! ' + response.status + ': ' + response.statusText)
       notificationStore.showNotification(response.status + ': ' + response.statusText, false)
     }
-  } catch (error) {
-    console.error('Error occurred during login:', error)
-    notificationStore.showNotification('Error occurred during login:' + error, false)
+  } catch (error: any) {
+    notificationStore.showNotification('Error occurred during login: ' + error.message, false)
   }
 }
 </script>
@@ -99,7 +80,7 @@ const submitForm = async () => {
   width: 100vw;
   height: 100vh;
   position: relative;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .login-form {

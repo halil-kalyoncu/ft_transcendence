@@ -13,4 +13,5 @@ export interface FriendshipEntryI {
   id: number
   friend: UserI
   status?: FriendshipEntryStatusType
+  blocked?: boolean
 }

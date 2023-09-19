@@ -1,29 +1,36 @@
 <template>
-  <div class="field" ref="gameField">
+  <div v-if="!matchResult" class="field" ref="gameField">
     <div class="left-border"></div>
     <div class="right-border"></div>
+    <PlayerView
+      ref="playerview"
+      :playerA="playerAName"
+      :playerB="playerBName"
+      :playerAScore="playerAScore"
+      :playerBScore="playerBScore"
+    />
     <GameBall ref="ball" />
     <GamePaddle ref="paddleA" />
     <GamePaddle ref="paddleB" />
-    <!-- <PowerUp
-		v-for="powerup in PowerUps"
-		:id="powerup.id" 
-		:x="powerup.x"
-		:y="powerup.y"
-		:type="powerup.type"
-		:color="powerup.color"
-		:index="powerup.index"
-		/> -->
-  </div>
-  <div v-if="countdown === -1">
-    <div class="waiting">
-      <p>Waiting for opponent...</p>
+    <div v-if="countdown === -1" class="waiting">
+      <p>Waiting for opponent... {{ formattedTimer }}</p>
     </div>
-  </div>
-  <div v-else-if="countdown > 0">
-    <div class="countdown">
-      <p>Starting in {{ countdown }}</p>
+    <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
+      <p>{{ countdown }}</p>
     </div>
+    <PowerUp
+      v-for="powerup in PowerUps"
+      :id="powerup.id"
+      :x="powerup.x"
+      :y="powerup.y"
+      :type="powerup.type"
+      :color="powerup.color"
+      :index="powerup.index"
+    />
+  </div>
+  <div v-else>
+    <p>{{ matchResult.goalsLeftPlayer }}:{{ matchResult.goalsLeftPlayer }}</p>
+    <button @click="goHome">Leave Match</button>
   </div>
   <!-- <div class="ball-coordinates" v-if="ballCoordinates">
 			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
@@ -35,8 +42,9 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent, ref, onMounted, watch, onBeforeUnmount } from 'vue'
+import { defineComponent, ref, onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import type { GamePaddleSetup } from './GamePaddle.vue'
+import PlayerView from './PlayerView.vue'
 import GamePaddle from './GamePaddle.vue'
 import GameBall from './GameBall.vue'
 import PowerUp from './PowerUp.vue'
@@ -46,6 +54,7 @@ import type { UserI } from '../../model/user.interface'
 import { connectChatSocket, connectGameSocket, disconnectGameSocket } from '../../websocket'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notification'
+import type { MatchI } from '../../model/match/match.interface'
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const notificationStore = useNotificationStore()
@@ -70,12 +79,22 @@ const PowerUps = ref<any[]>([])
 const paddleA = ref<GamePaddleSetup | null>(null)
 const paddleB = ref<GamePaddleSetup | null>(null)
 const ball = ref<typeof GameBall | null>(null)
+let playerAName = ref<string>('')
+let playerBName = ref<string>('')
+let playerAScore = ref<number>(0)
+let playerBScore = ref<number>(0)
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
 const chatSocket = ref<Socket | null>(null)
 
 const countdown = ref<number>(-1)
+
+let timerId: NodeJS.Timer | null = null
+const waitingTime = ref<number>(0)
+const maxWaitingTime = 1 * 60
+
+const matchResult = ref<MatchI | null>(null)
 
 const getUserFromAccessToken = () => {
   const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
@@ -102,16 +121,22 @@ const keyHookUp = (e: KeyboardEvent) => {
     return
   }
 
-  switch (e.key) {
+  switch (e.code) {
     case 'ArrowUp':
       isMovingUp.value = false
       break
     case 'ArrowDown':
       isMovingDown.value = false
       break
-    case 'n':
-      spawnPowerUp()
-      socket.value.emit('activatePowerUp', { type: 'increasePaddle', player: 'left' })
+    case 'KeyB':
+      playerAScore.value++
+      break
+      // spawnPowerUp();
+      //   socket.value.emit('activatePowerUp', { type: 'magnet', player: 'right' })
+      // socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
+      break
+    case 'Space':
+      socket.value.emit('fire')
       break
   }
 }
@@ -131,7 +156,7 @@ const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
 }
 
-const initGameField = () => {
+const initGameField = async () => {
   if (!gameField.value) {
     //error handling
     console.log('gameField value is not set')
@@ -141,18 +166,54 @@ const initGameField = () => {
   fieldWidth.value = gameField.value?.clientWidth || 0
   fieldHeight.value = gameField.value?.clientHeight || 0
   // console.log(fieldWidth.value);
+  await getUserNames()
+  if (!playerAName || playerAName.value === '' || !playerBName || playerBName.value === '') {
+    //TODO what to do if the usernames are not set
+    console.log('something went wrong fetching the usernames')
+    return
+  }
   setTimeout(() => {
     update()
   }, 200)
 
   paddleA.value?.setX(1)
   if (fieldWidth.value && paddleB.value) {
-    console.log('setting paddle B')
     paddleB.value.setX(fieldWidth.value - paddleB.value.getPaddleWidth() - 1)
   }
 
-  // console.log("paddleA X: " + paddleA.value?.getPaddleX());
-  // console.log("paddleB X: " + paddleA.value?.getPaddleX());
+  const loggedUser: UserI = getUserFromAccessToken()
+  if (playerAName.value == loggedUser.username) {
+    side.value = 'left'
+  } else {
+    side.value = 'right'
+  }
+}
+
+const formattedTimer = computed(() => {
+  const minutes = Math.floor(waitingTime.value / 60)
+  const seconds = waitingTime.value % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+})
+
+const startTimer = () => {
+  timerId = setInterval(() => {
+    waitingTime.value++
+    if (waitingTime.value >= maxWaitingTime) {
+      socket.value?.emit('maxWaitingTimeReached')
+      notificationStore.showNotification(
+        "Opponent couldn't connect to match, match is concluded and you are the winner",
+        false
+      )
+      cancelTimer()
+    }
+  }, 1000)
+}
+
+const cancelTimer = () => {
+  if (timerId) {
+    clearInterval(timerId)
+    timerId = null
+  }
 }
 
 onMounted(() => {
@@ -163,18 +224,15 @@ onMounted(() => {
     return
   }
 
-  socket.value.on('direction', (data: any) => {
-    side.value = data
-    console.log('side: ', data)
-  })
+  startTimer()
 
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
     if (playerId === 'left') {
       paddleA.value?.setY(newPos)
-      console.log(playerId, ': ', newPos)
+      // console.log(playerId, ": ", newPos);
     } else {
       paddleB.value?.setY(newPos)
-      console.log(playerId, ': ', newPos)
+      // console.log(playerId, ": ", newPos);
     }
   })
 
@@ -199,8 +257,9 @@ onMounted(() => {
       // console.log("ID: ", powerUp.id, "Y:", y);
     }
   })
-  // socket?.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
-  // 	return ;
+
+  // socket.value.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
+  // 	// return ;
   // 	if (paddleA.value && player == "left")
   // 		paddleA.value?.setHgt(hgt);
   // 	else if (paddleB.value && player == "right")
@@ -221,21 +280,39 @@ onMounted(() => {
     }
   })
 
-  socket.value.on('gameFinished', (payload: any) => {
+  socket.value.on('gameFinished', (match: MatchI) => {
     //show post game screen
-  })
-
-  socket.value.on('opponentDisconnect', (payload: any) => {
-    //show post game screen
-    router.push('/home')
+    matchResult.value = match
   })
 
   socket.value.on('countdown', (payload: number) => {
     countdown.value = payload
+    if (timerId) {
+      cancelTimer()
+    }
   })
 
   socket.value.on('startGame', () => {
     countdown.value = 0
+  })
+
+  socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
+    let target
+    console.log(player)
+    if (player == 'left') target = paddleA.value
+    else target = paddleB.value
+
+    if (type == 'increasePaddleHeight') {
+      target?.setHgt(400)
+      socket.value?.emit('activatePowerUp', { type: type, player: player })
+    }
+
+    // console.log(player, type);
+  })
+
+  socket.value.on('scoreGoal', (payload: string) => {
+    if (payload == 'playerA') playerAScore.value++
+    else playerBScore.value++
   })
 
   initGameField()
@@ -306,7 +383,63 @@ function update() {
   requestAnimationFrame(update)
 }
 
-function spawnPowerUp() {}
+function spawnPowerUp() {
+  const newPowerUp = {
+    id: Math.floor(Date.now()),
+    x: Math.floor(Math.random() * fieldWidth.value!),
+    y: -30,
+    index: 0,
+    type: Math.floor(Math.random() * 4),
+    color: 'white',
+    wid: 30,
+    hgt: 30
+  }
+  if (newPowerUp.type == 0) {
+    newPowerUp.color = 'red'
+    newPowerUp.index = 0
+  } else if (newPowerUp.type == 1) {
+    newPowerUp.color = 'green'
+    newPowerUp.index = 3
+  } else if (newPowerUp.type == 2) {
+    newPowerUp.color = 'blue'
+    newPowerUp.index = 2
+  } else if (newPowerUp.type == 3) {
+    newPowerUp.color = 'white'
+    newPowerUp.index = 1
+  }
+  socket.value?.emit('spawnPowerUp', newPowerUp)
+  console.log('PU spawn local')
+}
+
+async function getUserNames(): Promise<void> {
+  try {
+    const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (response.ok) {
+      const matchData = await response.json()
+      playerAName = matchData.leftUser.username
+      playerBName = matchData.rightUser.username
+    } else {
+      notificationStore.showNotification(
+        'Something went wrong while fetching the match data',
+        false
+      )
+      router.push('/home')
+    }
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while fetching the match data', false)
+    router.push('/home')
+  }
+}
+
+const goHome = () => {
+  router.push('/home')
+}
 </script>
 
 <style scoped>
@@ -359,5 +492,25 @@ function spawnPowerUp() {}
 
 .right-border {
   right: 0;
+}
+
+.waiting {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  text-align: center;
+}
+
+.countdown {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 100px;
+  text-align: center;
 }
 </style>

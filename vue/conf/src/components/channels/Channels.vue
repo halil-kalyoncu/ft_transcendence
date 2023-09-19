@@ -27,7 +27,7 @@
         :username="username"
         @channel-entered="handleChannelEntered"
       />
-      <div v-if="showChannelManagerAndChat">
+      <div v-if="showChannelManagerAndChat" class="channel-outer-container">
         <ChannelManager
           :channelId="joinedChannelId"
           @channel-left="handleChannelLeft"
@@ -66,7 +66,17 @@ import type { ErrorI } from '../../model/error.interface'
 const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
 
@@ -291,7 +301,7 @@ const updateChannelManager = async () => {
 <style>
 .channels {
   height: calc(100% - 50px);
-  padding: 1rem 0.5rem 0.5rem 0.5rem;
+  padding: 1rem 0.5rem 0 0.5rem;
   position: relative;
 }
 
@@ -346,5 +356,11 @@ const updateChannelManager = async () => {
   color: aliceblue;
   border: 0.5px solid #ea9f42;
   text-shadow: 0px 0px 1px aliceblue;
+}
+
+.channel-outer-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 50px);
 }
 </style>
