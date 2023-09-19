@@ -9,7 +9,10 @@
       @submit="handleSubmit"
       @close="handleClose"
     />
-    <div v-for="memberItem in memberItems" :key="`${memberItem.isUserBannedProp}-${memberItem.isUserMutedProp}`">
+    <div
+      v-for="memberItem in memberItems"
+      :key="`${memberItem.isUserBannedProp}-${memberItem.isUserMutedProp}`"
+    >
       <ChannelManagerUserItem
         :username="memberItem.username"
         :date="memberItem.date"
@@ -19,7 +22,7 @@
         :targetUserId="memberItem.targetUserId"
         :channelId="memberItem.channelId"
         :isUserBannedProp="memberItem.isUserBannedProp"
-		:isUserMutedProp="memberItem.isUserMutedProp"
+        :isUserMutedProp="memberItem.isUserMutedProp"
       />
     </div>
   </ScrollViewer>
@@ -30,7 +33,7 @@
         class="join-channel-button"
         @click="changePassword"
       >
-	  {{ showPasswordField ? 'Confirm' : 'Change Password' }}
+        {{ showPasswordField ? 'Confirm' : 'Change Password' }}
       </button>
       <input
         v-if="showPasswordField"
@@ -44,17 +47,17 @@
     <button :class="['join-channel-button', 'leave-channel-button']" @click="handleLeaveChannel">
       Leave
     </button>
-	<div class = "destroy-container">
-    <button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
-      {{ getSignOutButtonText() }}
-    </button>
-	<input
+    <div class="destroy-container">
+      <button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
+        {{ getSignOutButtonText() }}
+      </button>
+      <input
         v-if="showConfirmDestroyField"
         v-model="confirmDestroy"
         placeholder="Confirm with 'OK'"
         class="password-input"
       />
-	</div>
+    </div>
     <button
       v-show="
         currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN
@@ -107,30 +110,29 @@ const confirmDestroy = ref('')
 const modalTitle = ref('')
 const isModalOpened = ref(false)
 
-
 const memberItems = computed(() => {
   return Members.value.map((member) => {
     return {
-    username: member.username,
-    date: member.statusSince,
-    roleProp: member.role.toLowerCase(),
-	currentUserRole: currentUserRole.value.toLowerCase(),
-    requesterId: userId.value,
-    targetUserId: member.userId,
-	channelId: channelId,
-    isUserBannedProp: member.banned,
-	isUserMutedProp: isUserMuted(member.unmuteAt)
-    };
-  });
-});
+      username: member.username,
+      date: member.statusSince,
+      roleProp: member.role.toLowerCase(),
+      currentUserRole: currentUserRole.value.toLowerCase(),
+      requesterId: userId.value,
+      targetUserId: member.userId,
+      channelId: channelId,
+      isUserBannedProp: member.banned,
+      isUserMutedProp: isUserMuted(member.unmuteAt)
+    }
+  })
+})
 
 const isUserMuted = (memberUnmuteAt: string | null) => {
-	if (memberUnmuteAt == null) {
-		return false;
-	}
-	const unmuteAt = new Date(memberUnmuteAt);
-	const now = new Date();
-	return unmuteAt > now;
+  if (memberUnmuteAt == null) {
+    return false
+  }
+  const unmuteAt = new Date(memberUnmuteAt)
+  const now = new Date()
+  return unmuteAt > now
 }
 
 const getMembers = async () => {
@@ -151,8 +153,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (!socket || !socket.value) {
-	notificationStore.showNotification('Error: Connection problems', false)
-	return
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
   }
   socket.value.off('ChannelDestroy')
   socket.value.off('UserSignedOut')
@@ -165,11 +167,10 @@ onBeforeUnmount(() => {
   socket.value.off('memberMuted')
   socket.value.off('memberUnMuted')
   socket.value.off('passwordSet')
-
 })
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectChatSocket( accessToken)
+  socket.value = connectChatSocket(accessToken)
 }
 
 const setMembers = async () => {
@@ -182,8 +183,7 @@ const setMembers = async () => {
     }
     const data = await response.json()
     Members.value = await data
-
-} catch (error: any) {
+  } catch (error: any) {
     console.error('Error: ', error)
   }
 }
@@ -203,14 +203,13 @@ const setDestroyChannelListener = async () => {
     return
   }
   socket.value.on('ChannelDestroy', (destroyedChannelId: number) => {
-	if (destroyedChannelId === channelId)
-	{
-		notificationStore.showNotification(ChannelName.value + ' has been destroyed', false)
-		emit('channel-force-leave')
-	}
+    if (destroyedChannelId === channelId) {
+      notificationStore.showNotification(ChannelName.value + ' has been destroyed', false)
+      emit('channel-force-leave')
+    }
   })
 }
-// TODO: CHECK FOR NOTIFICATIONS HERE! 
+// TODO: CHECK FOR NOTIFICATIONS HERE!
 const setUserSignedListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
@@ -218,23 +217,23 @@ const setUserSignedListener = () => {
   }
   socket.value.on('UserSignedOut', (userSignedOutName: string, channelIdSignOut: number) => {
     console.log('UserSignedOut from ChannelManager fired')
-	setMembers().then(() => {
-		setCurrentUserRole()
+    setMembers().then(() => {
+      setCurrentUserRole()
     })
-	if (channelIdSignOut === channelId){
-		notificationStore.showNotification(userSignedOutName + ' signed out Channel', true)
-		if (userSignedOutName === username.value) {
-			emit('channel-signedout')
-		}
-	}
+    if (channelIdSignOut === channelId) {
+      notificationStore.showNotification(userSignedOutName + ' signed out Channel', true)
+      if (userSignedOutName === username.value) {
+        emit('channel-signedout')
+      }
+    }
   })
-  
+
   socket.value.on('UserSignedIn', (userSignedInName: string, channelSignIn: number) => {
     console.log('UserSignedIn fired')
-	if (channelSignIn === channelId){
-		notificationStore.showNotification(userSignedInName + ' signed in Channel', true)
-	}
-	setMembers().then(() => {
+    if (channelSignIn === channelId) {
+      notificationStore.showNotification(userSignedInName + ' signed in Channel', true)
+    }
+    setMembers().then(() => {
       setCurrentUserRole()
     })
   })
@@ -251,90 +250,99 @@ const setUserSignedListener = () => {
       setCurrentUserRole()
     })
   })
-  socket.value.on('memberKicked', async (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
-	console.log('memberKicked fired')
-    if (kickedMemberName === username.value) {	
-		notificationStore.showNotification('You got kicked from Channel: ' + kickChannelName, true)	
-		if (kickChannelId === channelId) {
-      emit('channel-force-leave')
+  socket.value.on(
+    'memberKicked',
+    async (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
+      console.log('memberKicked fired')
+      if (kickedMemberName === username.value) {
+        notificationStore.showNotification('You got kicked from Channel: ' + kickChannelName, true)
+        if (kickChannelId === channelId) {
+          emit('channel-force-leave')
+        }
+      } else {
+        if (kickChannelId === channelId) {
+          notificationStore.showNotification(kickedMemberName + ' kicked from Channel', true)
+        }
+      }
+      await setMembers().then(() => {
+        setCurrentUserRole()
+      })
+      console.log('MEMNER')
+      console.log(Members.value)
     }
-}else {
-		if (kickChannelId === channelId) {
-			notificationStore.showNotification(kickedMemberName + ' kicked from Channel', true)
-		}
-	}
-     await setMembers().then(() => {
+  )
+
+  socket.value.on('memberBanned', (bannedUserName: string, banChannelId: number) => {
+    console.log('memberBanned fired')
+
+    if (banChannelId === channelId) {
+      if (bannedUserName === username.value) {
+        notificationStore.showNotification('You got banned from Channel', true)
+        emit('channel-force-leave')
+      } else {
+        notificationStore.showNotification(bannedUserName + ' banned from Channl', true)
+      }
+    }
+    setMembers().then(() => {
       setCurrentUserRole()
     })
-	console.log('MEMNER')
-console.log(Members.value)
-})
-
-
-  socket.value.on('memberBanned', (bannedUserName: string, banChannelId:number) => {
-    console.log('memberBanned fired')
-    
-	if (banChannelId === channelId)
-	{
-		if (bannedUserName === username.value) {
-			notificationStore.showNotification('You got banned from Channel', true)
-			emit('channel-force-leave')
-		}
-		else {
-			notificationStore.showNotification(bannedUserName + ' banned from Channl', true)
-		}
-	}
-	setMembers().then(() => {
-		setCurrentUserRole()
-	})
-})
-
-socket.value.on('memberUnBanned', (unBannedUserName: string, unBanChannelId:number, unBanChannelName: string) => {
-	console.log('memberUnBanned fired')
-	if (unBanChannelId === channelId)
-	{
-			notificationStore.showNotification(unBannedUserName + ' unBanned from Channel', true)
-	}
-	setMembers().then(() => {
-		setCurrentUserRole()
-	})
-})
-socket.value.on('memberMuted', (user: string, channelUnmuteId:number, channelName: string, timeMuted: number) => {
-    console.log('memberMuted fired')
-	if (user === username.value) {
-		notificationStore.showNotification('You have been muted for ' + timeMuted.toString() + ' min. in Channel ' + channelName, true)
-	}
-	else if (channelUnmuteId === channelId){
-		notificationStore.showNotification(user + ' muted for ' + timeMuted.toString() + ' min.', true)
-	}
-	setMembers().then(() => {
-		setCurrentUserRole()
-	})
-})
-socket.value.on('memberUnMuted', (user: string, channelMuteId:number, channelName: string) => {
-  console.log('memberUnMuted fired')
-  if (user === username.value) {
-	notificationStore.showNotification('You have been unmuted in Channel: ' + channelName, true)
-  } else if (channelMuteId === channelId) {
-	notificationStore.showNotification(user + ' unmuted', true)
-  }
-  setMembers().then(() => {
-	setCurrentUserRole()
   })
-})
-socket.value.on('passwordSet', (channelName: string) => {
-  console.log('passwordSet fired')
-  notificationStore.showNotification(channelName + ' has new password')
-  setMembers().then(() => {
-	setCurrentUserRole()
+
+  socket.value.on(
+    'memberUnBanned',
+    (unBannedUserName: string, unBanChannelId: number, unBanChannelName: string) => {
+      console.log('memberUnBanned fired')
+      if (unBanChannelId === channelId) {
+        notificationStore.showNotification(unBannedUserName + ' unBanned from Channel', true)
+      }
+      setMembers().then(() => {
+        setCurrentUserRole()
+      })
+    }
+  )
+  socket.value.on(
+    'memberMuted',
+    (user: string, channelUnmuteId: number, channelName: string, timeMuted: number) => {
+      console.log('memberMuted fired')
+      if (user === username.value) {
+        notificationStore.showNotification(
+          'You have been muted for ' + timeMuted.toString() + ' min. in Channel ' + channelName,
+          true
+        )
+      } else if (channelUnmuteId === channelId) {
+        notificationStore.showNotification(
+          user + ' muted for ' + timeMuted.toString() + ' min.',
+          true
+        )
+      }
+      setMembers().then(() => {
+        setCurrentUserRole()
+      })
+    }
+  )
+  socket.value.on('memberUnMuted', (user: string, channelMuteId: number, channelName: string) => {
+    console.log('memberUnMuted fired')
+    if (user === username.value) {
+      notificationStore.showNotification('You have been unmuted in Channel: ' + channelName, true)
+    } else if (channelMuteId === channelId) {
+      notificationStore.showNotification(user + ' unmuted', true)
+    }
+    setMembers().then(() => {
+      setCurrentUserRole()
+    })
   })
-})
+  socket.value.on('passwordSet', (channelName: string) => {
+    console.log('passwordSet fired')
+    notificationStore.showNotification(channelName + ' has new password')
+    setMembers().then(() => {
+      setCurrentUserRole()
+    })
+  })
 }
 
 const getSignOutButtonText = () => {
   if (currentUserRole.value === ChannelMemberRole.OWNER) {
-	if (showConfirmDestroyField.value)
-		return 'Confirm'
+    if (showConfirmDestroyField.value) return 'Confirm'
     return 'Destroy'
   } else {
     return 'Sign Out'
@@ -368,28 +376,27 @@ const handleLeaveChannel = () => {
 
 const destroyChannel = async () => {
   if (!socket || !socket.value) {
-	notificationStore.showNotification(`Error: Connection problems`, true)
-	return
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
   }
   await socket.value.emit('DestroyChannel', {
-	channelId: channelId,
-	senderId: userId.value
+    channelId: channelId,
+    senderId: userId.value
   })
 }
 
-const DestroyChannel = async() => {
+const DestroyChannel = async () => {
   if (!showConfirmDestroyField.value) {
-	showConfirmDestroyField.value = true
+    showConfirmDestroyField.value = true
   } else {
-	if (confirmDestroy.value === 'OK') {
-	  await destroyChannel()
-	} else {
-	  notificationStore.showNotification('Wrong confirmation')
-	}
-	confirmDestroy.value = ''
-	showConfirmDestroyField.value = false
+    if (confirmDestroy.value === 'OK') {
+      await destroyChannel()
+    } else {
+      notificationStore.showNotification('Wrong confirmation')
+    }
+    confirmDestroy.value = ''
+    showConfirmDestroyField.value = false
   }
-  
 }
 
 /* const removeUserFromChannel = async () => {
@@ -422,35 +429,38 @@ const SignOutChannel = async () => {
     return
   }
   await socket.value.emit('SignOutChannel', {
-	channelId: channelId,
-	userId: userId.value
+    channelId: channelId,
+    userId: userId.value
   })
 }
 
 const setPassword = async () => {
-	if (!socket || !socket.value) {
+  if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  
-  await socket.value.emit('setChannelPassword', {
-    channelId: channelId,
-    userId: userId.value,
-	password: password.value
-  }, async (response: any | ErrorI) => {
-	if ('error' in response) {
-		await notificationStore.showNotification(response.error)
-		return
-	}
-	else {
-		await notificationStore.showNotification('Password changed', true)
-		return
-	}
-  })
+
+  await socket.value.emit(
+    'setChannelPassword',
+    {
+      channelId: channelId,
+      userId: userId.value,
+      password: password.value
+    },
+    async (response: any | ErrorI) => {
+      if ('error' in response) {
+        await notificationStore.showNotification(response.error)
+        return
+      } else {
+        await notificationStore.showNotification('Password changed', true)
+        return
+      }
+    }
+  )
 }
 const resetPasswordField = async () => {
-	password.value = ''
-	showPasswordField.value = false
+  password.value = ''
+  showPasswordField.value = false
 }
 
 const changePassword = async () => {
@@ -458,12 +468,11 @@ const changePassword = async () => {
     showPasswordField.value = true
   } else {
     if (password.value === '') {
-	  notificationStore.showNotification('No new Password set.', true)
-	}
-	else {
-		await setPassword()
-	}
-	await resetPasswordField()
+      notificationStore.showNotification('No new Password set.', true)
+    } else {
+      await setPassword()
+    }
+    await resetPasswordField()
   }
 }
 
@@ -537,6 +546,5 @@ const changePassword = async () => {
   display: flex;
   flex-direction: column; /* Stack elements vertically */
   align-items: flex-start; /* Align items to the start (left) */
- 
 }
 </style>

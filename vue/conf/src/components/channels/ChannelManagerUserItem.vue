@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { computed, ref, watch, watchEffect, onMounted, onUnmounted} from 'vue'
+import { computed, ref, watch, watchEffect, onMounted, onUnmounted } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -69,7 +69,6 @@ const socket = ref<Socket | null>(null)
 const minutesMuted = ref(0)
 const maxValue = ref(100)
 const muteTitle = ref('Mute')
-
 
 //get the props from parent
 const props = defineProps({
@@ -126,7 +125,7 @@ const kickUser = async () => {
 
 const banUnbanUser = async () => {
   if (isUserBanned.value) {
-	unBanUser()
+    unBanUser()
   } else {
     banUser()
   }
@@ -180,20 +179,21 @@ const makeAdmin = async () => {
   }
 }
 
-const muteUser = async() => {
+const muteUser = async () => {
   if (!socket || !socket.value) {
-	notificationStore.showNotification('Error: Connection problems', true)
-	return
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
   }
   try {
-	console.log(minutesMuted.value)
-	  socket.value.emit('muteChannelMember', {
-	  requesterId: props.requesterId,
-	  targetUserId: props.targetUserId,
-	  channelId: props.channelId,
-	  minutesToMute: minutesMuted.value})
+    console.log(minutesMuted.value)
+    socket.value.emit('muteChannelMember', {
+      requesterId: props.requesterId,
+      targetUserId: props.targetUserId,
+      channelId: props.channelId,
+      minutesToMute: minutesMuted.value
+    })
   } catch (error: any) {
-	notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message, true)
   }
 }
 
@@ -205,35 +205,34 @@ const muteAUser = () => {
 
   let muted = true
 
-try{
-	if (muted) {
-	  muteUser()
-	  notificationStore.showNotification(
-		props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
-		true
-	  )
-	}
-	minutesMuted.value = 0
-
-}
-catch (error: any) {
-	notificationStore.showNotification(`Error` + error.message, true)
+  try {
+    if (muted) {
+      muteUser()
+      notificationStore.showNotification(
+        props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
+        true
+      )
+    }
+    minutesMuted.value = 0
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
   }
 }
 
-const unMuteUser = async() => {
+const unMuteUser = async () => {
   if (!socket || !socket.value) {
-	notificationStore.showNotification('Error: Connection problems', true)
-	return
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
   }
   try {
-	  socket.value.emit('unMuteChannelMember', {
-	  requesterId: props.requesterId,
-	  targetUserId: props.targetUserId,
-	  channelId: props.channelId})
-	  muteTitle.value = 'Mute'
+    socket.value.emit('unMuteChannelMember', {
+      requesterId: props.requesterId,
+      targetUserId: props.targetUserId,
+      channelId: props.channelId
+    })
+    muteTitle.value = 'Mute'
   } catch (error: any) {
-	notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message, true)
   }
 }
 
@@ -280,15 +279,13 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
 const initSocket = async () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
-  return 
+  return
 }
 
-
 //CHECK FOR NOTIFICTAIONS HERE
-onMounted( async () => {
+onMounted(async () => {
   await initSocket()
 })
-
 </script>
 
 <style>

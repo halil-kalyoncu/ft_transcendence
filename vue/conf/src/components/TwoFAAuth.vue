@@ -1,63 +1,56 @@
 <template>
   <div class="login">
     <form @submit.prevent="submitForm" class="login-form">
-      <label for="username" class="font-color">Code:</label>
-      <input type="text" id="username" v-model="username" required />
+      <label for="twoFACode" class="font-color">Code:</label>
+      <input type="text" id="twoFACode" v-model="twoFACode" required />
       <button type="submit" role="link" class="dynamic-button">42 Login</button>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
-import { connectChatSocket } from '../websocket'
-import type { UserI } from '../model/user.interface'
-import jwtDecode from 'jwt-decode'
-import { fetchAndSaveAvatar } from '../utils/fetchAndSaveAvatar'
 
 const username = ref('')
 const router = useRouter()
 const userStore = useUserStore()
+const userId = computed(() => userStore.userId)
 const notificationStore = useNotificationStore()
+const twoFACode = ref('')
+
+const check2FAcode = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/2fa/checkFAcode?userId=${userId.value}&code=${twoFACode.value}`
+    )
+    if (!response.ok) {
+      const responseData = await response.json()
+      notificationStore.showNotification(responseData.message, false)
+      return false
+    } else {
+      return await response.json()
+    }
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+    return false
+  }
+}
 
 const submitForm = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/users/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ username: username.value })
-    })
-
-    if (response.ok) {
-      console.log('Login successful')
-      const { access_token } = await response.json()
-      //save jwt into local storage
-      localStorage.setItem('ponggame', access_token)
-      try {
-        const decodedToken: Record<string, unknown> = jwtDecode(access_token)
-        const loggedUser: UserI = decodedToken.user as UserI
-        userStore.setUserId(loggedUser.id as number)
-        if (loggedUser.avatarId) {
-          fetchAndSaveAvatar()
-        }
-      } catch (error: any) {
-        console.error('Invalid token:', error)
-        notificationStore.showNotification('Invalid Token', false)
-      }
-      userStore.setUsername(username.value)
-      connectChatSocket(access_token)
+    const codeCorrect = await check2FAcode()
+    if (codeCorrect) {
       router.push('/home')
+      notificationStore.showNotification('Login successful', true)
     } else {
-      console.error('Login failed!! ' + response.status + ': ' + response.statusText)
-      notificationStore.showNotification(response.status + ': ' + response.statusText, false)
+      notificationStore.showNotification('Login failed', false)
+      twoFACode.value = ''
     }
   } catch (error) {
-    console.error('Error occurred during login:', error)
+    console.error('Error occurred during authentication:', error)
     notificationStore.showNotification('Error occurred during login:' + error, false)
   }
 }

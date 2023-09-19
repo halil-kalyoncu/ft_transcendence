@@ -6,7 +6,7 @@ export const useNotificationStore = defineStore('notification', () => {
   const success = ref<boolean>(false)
   const message = ref<string>('')
 
-  function showNotification(newMessage: string, newSuccess: boolean=false) {
+  function showNotification(newMessage: string, newSuccess: boolean = false) {
     show.value = true
     message.value = newMessage
     success.value = newSuccess

@@ -24,17 +24,29 @@ export class TwoFactorAuthController {
     private readonly userService: UserService,
   ) {}
 
-
   @Get('twoFAstatus')
   async twoFAstatus(
-	@Query('userId', ParseIntPipe) userId: number,
+    @Query('userId', ParseIntPipe) userId: number,
   ): Promise<boolean> {
-	try{
-		return await this.userService.twoFAstatus(userId);
-	} catch (error: any)
-	{
-		throw new HttpException(error.message, HttpStatus.BAD_REQUEST)}
-	}
+    try {
+      return await this.userService.twoFAstatus(userId);
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get('checkFAcode')
+  async checkFAcode(
+    @Query('userId', ParseIntPipe) userId: number,
+    @Query('code') code: string,
+  ): Promise<boolean> {
+    try {
+      return await this.twoFactorAuthService.checkCodeValid(userId, code);
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @Post('generate')
   async generate(
     @Query('userId', ParseIntPipe) userId: number,
@@ -50,29 +62,28 @@ export class TwoFactorAuthController {
   async enable(
     @Body() twoFactorAuthCodeDto: TwoFactorAuthCodeDto,
   ): Promise<User> {
-	try{
-		const codeValid: boolean = await this.twoFactorAuthService.checkCodeValid(
-		  twoFactorAuthCodeDto.userId,
-		  twoFactorAuthCodeDto.code,
-		);
-		if (!codeValid) {
-		  throw new UnauthorizedException('Wrong authentication code');
-		}
-		return this.userService.turnOnTwoFactorAuth(twoFactorAuthCodeDto.userId);
-	} catch (error: any)
-	{
-		throw new HttpException(error.message, HttpStatus.BAD_REQUEST)};
-	}
+    try {
+      const codeValid: boolean = await this.twoFactorAuthService.checkCodeValid(
+        twoFactorAuthCodeDto.userId,
+        twoFactorAuthCodeDto.code,
+      );
+      if (!codeValid) {
+        throw new UnauthorizedException('Wrong authentication code');
+      }
+      return await this.userService.turnOnTwoFactorAuth(
+        twoFactorAuthCodeDto.userId,
+      );
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 
   @Post('disable')
-  async disable(
-	@Query('userId', ParseIntPipe) userId: number,
-	  ): Promise<User> {
-	try{
-		return this.userService.turnOffTwoFactorAuth(userId);
-	} catch (error: any)
-	{
-		throw new HttpException(error.message, HttpStatus.BAD_REQUEST)}
-	}
-
+  async disable(@Query('userId', ParseIntPipe) userId: number): Promise<User> {
+    try {
+      return this.userService.turnOffTwoFactorAuth(userId);
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TwoFAAuth from '../components/TwoFAAuthView.vue'
+import TwoFAAuth from '../components/TwoFAAuth.vue'
 </script>
 
 <template>

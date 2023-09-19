@@ -48,11 +48,7 @@
       <div class="checkbox-container" v-if="!isNumberSelection">
         <label for="check-box">
           Password
-          <input
-            type="checkbox"
-            id="check-box"
-            v-model="checkPassword"
-          />
+          <input type="checkbox" id="check-box" v-model="checkPassword" />
         </label>
       </div>
 
@@ -101,9 +97,9 @@ const submit = () => {
     notificationStore.showNotification('Set Channel-Name')
     return
   }
-  if ( inputName.value.length > 15){
-	notificationStore.showNotification('Channel-Name too long')
-	return
+  if (inputName.value.length > 15) {
+    notificationStore.showNotification('Channel-Name too long')
+    return
   }
   if (checkPassword.value && inputPassword.value.trim() === '') {
     notificationStore.showNotification('Set Password')

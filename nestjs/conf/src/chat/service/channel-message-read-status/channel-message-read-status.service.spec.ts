@@ -4,18 +4,18 @@ import { ChannelMessageReadStatusService } from './channel-message-read-status.s
 describe('ChannelMessageReadStatusService', () => {
   let service: ChannelMessageReadStatusService;
 
-//   beforeEach(async () => {
-//     const module: TestingModule = await Test.createTestingModule({
-//       providers: [ChannelMessageReadStatusService],
-//     }).compile();
+  //   beforeEach(async () => {
+  //     const module: TestingModule = await Test.createTestingModule({
+  //       providers: [ChannelMessageReadStatusService],
+  //     }).compile();
 
-//     service = module.get<ChannelMessageReadStatusService>(
-//       ChannelMessageReadStatusService,
-//     );
-//   });
+  //     service = module.get<ChannelMessageReadStatusService>(
+  //       ChannelMessageReadStatusService,
+  //     );
+  //   });
 
-//   it('should be defined', () => {
-//     expect(service).toBeDefined();
-//   });
-it.skip('Not writing tests is a bad practice', () => {});
+  //   it('should be defined', () => {
+  //     expect(service).toBeDefined();
+  //   });
+  it.skip('Not writing tests is a bad practice', () => {});
 });

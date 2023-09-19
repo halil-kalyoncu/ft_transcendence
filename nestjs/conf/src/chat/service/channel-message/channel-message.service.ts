@@ -73,9 +73,9 @@ export class ChannelMessageService {
       throw new Error('Member is not part of the channel');
     }
 
-	if (member.unmuteAt) {
-		throw new Error('You are muted');
-		}
+    if (member.unmuteAt) {
+      throw new Error('You are muted');
+    }
 
     const createdMessage = await this.messageService.createOne({ message });
     const createdChannelMessage = await this.prisma.channelMessage.create({
@@ -142,7 +142,7 @@ export class ChannelMessageService {
           },
         },
       });
-	  /* TODO: DELTE IF NOT NEEDED 
+      /* TODO: DELTE IF NOT NEEDED 
 	  const filteredChannelMessages = channelMessages.map((message) =>{
 		const {sender} = message;
 
@@ -221,6 +221,4 @@ export class ChannelMessageService {
       throw new Error('Error fetching unread messages: ' + error.message);
     }
   }
-
-  
 }

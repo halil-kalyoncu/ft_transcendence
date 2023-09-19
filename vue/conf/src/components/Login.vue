@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed} from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
@@ -25,24 +25,23 @@ const userStore = useUserStore()
 const notificationStore = useNotificationStore()
 
 const get2FAStatus = async () => {
-	try{
-			const response = await fetch(`http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`, {
-					method: 'GET'
-				})
-				if (!response.ok) {
-			  throw new Error('Network response was not ok');}
-			  else {
-				const responseData = await response.json();
-				return responseData
-			}
-		} catch (error) {
-			console.error('Error occurred during 2FA status check:', error)
-			notificationStore.showNotification('Error occurred during 2FA status check:' + error, false)
-		}
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      {
+        method: 'GET'
+      }
+    )
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    } else {
+      return await response.json()
+    }
+  } catch (error) {
+    console.error('Error occurred during 2FA status check:', error)
+    notificationStore.showNotification('Error occurred during 2FA status check:' + error, false)
+  }
 }
-
-
-
 
 const submitForm = async () => {
   try {
@@ -66,20 +65,23 @@ const submitForm = async () => {
         if (loggedUser.avatarId) {
           fetchAndSaveAvatar()
         }
-		userId.value = loggedUser.id as number
+        userId.value = loggedUser.id as number
       } catch (error: any) {
         console.error('Invalid token:', error)
         notificationStore.showNotification('Invalid Token', false)
       }
       userStore.setUsername(username.value)
       connectChatSocket(access_token)
-	  const is2FAenabled = await get2FAStatus()
-	  
-	  if (is2FAenabled) {
-		router.push('/twoFAAuth')
-	  }else {
-      router.push('/home')
-	  }
+      const is2FAenabled = await get2FAStatus()
+
+      console.log(is2FAenabled)
+      if (is2FAenabled) {
+        console.log('two')
+        router.push('/twoFAAuth')
+      } else {
+        console.log('home')
+        router.push('/home')
+      }
     } else {
       console.error('Login failed!! ' + response.status + ': ' + response.statusText)
       notificationStore.showNotification(response.status + ': ' + response.statusText, false)

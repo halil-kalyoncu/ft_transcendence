@@ -127,27 +127,25 @@ const sendSubmitEvent = (inviteeUsername: string) => {
   socket.value.emit('gotChannelInvitation', inviteeUsername, (response: any | ErrorI) => {
     if ('error' in response) {
       notificationStore.showNotification(response.error, false)
-	}})
+    }
+  })
 }
 
 const submit = async () => {
-   const userSelected = selectedUsers.value.length
-   let error_occured = false
+  const userSelected = selectedUsers.value.length
+  let error_occured = false
   for (const inviteeUsername of selectedUsers.value) {
     error_occured = await inviteUser(channelId, inviteeUsername, userId.value)
     sendSubmitEvent(inviteeUsername)
   }
-  if (!error_occured)
-  {
-  if (userSelected === 1)
-  {
-	notificationStore.showNotification(`Invitation sent`, true)
+  if (!error_occured) {
+    if (userSelected === 1) {
+      notificationStore.showNotification(`Invitation sent`, true)
+    }
+    if (userSelected > 1) {
+      notificationStore.showNotification(`Invitations sent`, true)
+    }
   }
-  if (userSelected > 1)
-  {
-	notificationStore.showNotification(`Invitations sent`, true)
-  }
-}
   findUserSuggestions('')
   emit('submit')
 }
@@ -163,15 +161,15 @@ const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId:
         }
       }
     )
-	if (!response.ok) {
-      const responseData = await response.json();
-	  await notificationStore.showNotification(responseData.message, false)
-	  return true
-	}
-	return false
+    if (!response.ok) {
+      const responseData = await response.json()
+      await notificationStore.showNotification(responseData.message, false)
+      return true
+    }
+    return false
   } catch (error) {
-	console.error('Error occurred during login:', error)
-	return true
+    console.error('Error occurred during login:', error)
+    return true
   }
 }
 
@@ -191,9 +189,9 @@ const findUserSuggestions = async (input: string) => {
   const data = await response.json()
   if (input.trim() === '') {
     userSuggestions.value = data
-	for (const user of userSuggestions.value) {
-		console.log(user.status)
-	}
+    for (const user of userSuggestions.value) {
+      console.log(user.status)
+    }
     return
   }
   // Filter user suggestions based on the provided letters in the right order
@@ -236,7 +234,6 @@ const goToProfile = (username: String | undefined) => {
   router.push(`/profile/${username}`)
 }
 
-
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
@@ -254,7 +251,7 @@ const setInvitationUpdateListener = () => {
     findUserSuggestions(inputName.value)
   })
   socket.value.on('NewChannelInvitation', (channelName, UserName) => {
-	notificationStore.showNotification('New invitation', true)
+    notificationStore.showNotification('New invitation', true)
     findUserSuggestions(inputName.value)
   })
 }

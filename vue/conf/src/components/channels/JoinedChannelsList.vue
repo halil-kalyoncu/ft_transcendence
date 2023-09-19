@@ -4,7 +4,7 @@
       <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
           :isPasswordProtected="channel.channel.protected"
-		  :isPrivate=" channel.channel.visibility === 'PRIVATE' ? true : false"
+          :isPrivate="channel.channel.visibility === 'PRIVATE' ? true : false"
           :channelName="channel.channel.name"
           :ownerName="channel.owner.username"
           :joinChannelButtonNameProps="'Enter'"

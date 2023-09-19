@@ -3,14 +3,14 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
 <template>
   <div class="channel-list-item">
     <div class="channel-info">
-		<div class="channel-name-container">
-			<p class="channel-name">{{ channelName }}</p>
-			<font-awesome-icon 
-			v-if="isPrivate" 
-			class="icon" 
-			:icon="['fas', 'user-secret']"
-			title="Private Channel" 
-			></font-awesome-icon>
+      <div class="channel-name-container">
+        <p class="channel-name">{{ channelName }}</p>
+        <font-awesome-icon
+          v-if="isPrivate"
+          class="icon"
+          :icon="['fas', 'user-secret']"
+          title="Private Channel"
+        ></font-awesome-icon>
       </div>
       <div class="channel-owner-container">
         <font-awesome-icon class="icon" :icon="['fas', 'star']" />
@@ -43,7 +43,7 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
         :class="{ 'disabled-button': userBanned }"
         :title="tooltipText()"
       >
-		{{ joinChannelButtonName }}
+        {{ joinChannelButtonName }}
       </button>
     </div>
   </div>
@@ -68,7 +68,7 @@ const props = defineProps({
   ownerName: String,
   joinChannelButtonNameProps: String,
   channelId: Number,
-  unreadMessageCount: Number,
+  unreadMessageCount: Number
 })
 // const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
@@ -85,39 +85,34 @@ const isPasswordProtected = props.isPasswordProtected
 let joinChannelButtonName = ref(props.joinChannelButtonNameProps)
 
 const handleJoin = async () => {
-if (isPasswordProtected){
-	if (!showPasswordField.value)
-	{
-		showPasswordField.value = true
-		joinChannelButtonName.value = 'Confirm'
-		return
-	}
-	else
-	{
-		if (password.value === '') {
-			notificationStore.showNotification('Error: Password is required')
-			return}
-		else {
-			const correct: boolean = await comparePassword()
-			if (!correct) {
-				notificationStore.showNotification('Error: Wrong password')
-				showPasswordField.value = false
-				joinChannelButtonName.value = 'Enter'
-				password.value = ''
-				return
-			}
-			else {
-				showPasswordField.value = false
-				joinChannelButtonName.value = 'Enter'
-				password.value = ''
-				emit('channel-entered', props.channelId)
-			}
-		}
-	}
-} 
-else {
-  emit('channel-entered', props.channelId)
-}
+  if (isPasswordProtected) {
+    if (!showPasswordField.value) {
+      showPasswordField.value = true
+      joinChannelButtonName.value = 'Confirm'
+      return
+    } else {
+      if (password.value === '') {
+        notificationStore.showNotification('Error: Password is required')
+        return
+      } else {
+        const correct: boolean = await comparePassword()
+        if (!correct) {
+          notificationStore.showNotification('Error: Wrong password')
+          showPasswordField.value = false
+          joinChannelButtonName.value = 'Enter'
+          password.value = ''
+          return
+        } else {
+          showPasswordField.value = false
+          joinChannelButtonName.value = 'Enter'
+          password.value = ''
+          emit('channel-entered', props.channelId)
+        }
+      }
+    }
+  } else {
+    emit('channel-entered', props.channelId)
+  }
 }
 
 const tooltipText = () => {
@@ -142,20 +137,20 @@ const initSocket = () => {
   socket.value = connectChatSocket(accessToken)
 }
 
-const comparePassword = async () : Promise<boolean> =>{
+const comparePassword = async (): Promise<boolean> => {
   try {
-	const response = await fetch(
-	  `http://localhost:3000/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`
-	)
-	if (!response.ok) {
-	  throw new Error(`HTTP error! Status: ${response.status}`)
-	}
-	const data = response.json()
-	const correct = await data
-	return correct
+    const response = await fetch(
+      `http://localhost:3000/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    const data = response.json()
+    const correct = await data
+    return correct
   } catch (error: any) {
-	console.error('Error: ', error)
-	return false
+    console.error('Error: ', error)
+    return false
   }
 }
 
@@ -177,9 +172,9 @@ const setUserBanned = async () => {
 
 const getJoinChannelButtonName = async () => {
   if (showPasswordField.value) {
-	return 'Confirm'
+    return 'Confirm'
   } else {
-	return 'Enter'
+    return 'Enter'
   }
 }
 
@@ -193,17 +188,21 @@ const setBannedFromChannelListener = () => {
     setUserBanned()
     return
   })
-  socket.value.on('memberUnBanned', (unBannedUserName:string, unBanChannelId: number, unBanChannelName:string) => {
-	console.log('memberUnBanned fired from JoinedChannelsList.vue')
-	if (unBannedUserName === username.value) {
-			notificationStore.showNotification('You got unbanned from Channel: ' + unBanChannelName, true)
-		}
-	setUserBanned()
-	return
-  })
+  socket.value.on(
+    'memberUnBanned',
+    (unBannedUserName: string, unBanChannelId: number, unBanChannelName: string) => {
+      console.log('memberUnBanned fired from JoinedChannelsList.vue')
+      if (unBannedUserName === username.value) {
+        notificationStore.showNotification(
+          'You got unbanned from Channel: ' + unBanChannelName,
+          true
+        )
+      }
+      setUserBanned()
+      return
+    }
+  )
 }
-
-
 
 onMounted(() => {
   initSocket()
@@ -213,7 +212,7 @@ onMounted(() => {
 })
 </script>
 
-<style >
+<style>
 .channel-list-item {
   display: flex;
   justify-content: space-between;
@@ -243,14 +242,14 @@ onMounted(() => {
 
 .channel-name-container {
   display: flex;
-  align-items: center; 
+  align-items: center;
 }
 
 .channel-name-container .icon {
   margin: 0 0.5rem 0.25rem 0;
   margin-left: 0.25rem;
   color: #fff9f9;
-  font-size: 0.75rem; 
+  font-size: 0.75rem;
   cursor: pointer;
 }
 .channel-name {
@@ -330,7 +329,6 @@ onMounted(() => {
   font-size: 0.75rem;
   margin: 0.5rem 0 0 0.5rem;
 }
-
 
 .badge-number {
   position: absolute;

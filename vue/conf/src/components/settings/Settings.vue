@@ -27,27 +27,40 @@
 
     <div class="input-group">
       <button @click="enable2FA" class="secondary-btn">
-		{{ twoFAEnabled? 'Disable 2FA' : 'Enable 2FA'  }} </button>
+        {{ twoFAEnabled ? 'Disable 2FA' : 'Enable 2FA' }}
+      </button>
     </div>
-	<div v-if="showEnable2FA && !twoFAEnabled" >
-		<div class="qr-code-container" >
-			<img :src="qrCodeImage" alt="QR Code" class="qrcode" />
-		</div>
-		<div class="input-group">
-			<div class="input-group-item">
-			<input type="text" id="2fa" placeholder="Enter 2FA code" class=" two-FA-input" v-model="twoFAcode"/>
-			<button @click="confirm2FA" class="secondary-btn confirm-button">Confirm 2FA</button>
-		</div>
-		</div>
-	</div>
-	<div v-if="showEnable2FA && twoFAEnabled">
-	<div class="input-group">
-		<div class="input-group-item">
-		<input type="text" id="2fa" placeholder="Enter 'OK' to disable" class=" two-FA-input" v-model="confirmation"/>
-		<button @click="confirmDisable2FA" class="secondary-btn confirm-button">Confirm</button>
-</div>		
-		</div>
-	</div>
+    <div v-if="showEnable2FA && !twoFAEnabled">
+      <div class="qr-code-container">
+        <img :src="qrCodeImage" alt="QR Code" class="qrcode" />
+      </div>
+      <div class="input-group">
+        <div class="input-group-item">
+          <input
+            type="text"
+            id="2fa"
+            placeholder="Enter 2FA code"
+            class="two-FA-input"
+            v-model="twoFAcode"
+          />
+          <button @click="confirm2FA" class="secondary-btn confirm-button">Confirm 2FA</button>
+        </div>
+      </div>
+    </div>
+    <div v-if="showEnable2FA && twoFAEnabled">
+      <div class="input-group">
+        <div class="input-group-item">
+          <input
+            type="text"
+            id="2fa"
+            placeholder="Enter 'OK' to disable"
+            class="two-FA-input"
+            v-model="confirmation"
+          />
+          <button @click="confirmDisable2FA" class="secondary-btn confirm-button">Confirm</button>
+        </div>
+      </div>
+    </div>
     <div class="button-group">
       <button @click="deleteAccount" class="delete-button secondary-btn">Delete Account</button>
     </div>
@@ -55,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted} from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
@@ -80,7 +93,7 @@ const images = ref([
   'src/assets/avatar-3.png',
   'src/assets/avatar-2.png'
 ])
-const qrCodeImage = ref<string | null>(null);
+const qrCodeImage = ref('')
 const displayedCount = 3
 const startIndex = ref(0)
 const selectedImg = ref('src/assets/avatar-1.png')
@@ -157,113 +170,112 @@ const deleteAccount = () => {
   }
 }
 
-
 const generateQRCode = async () => {
-	try{
-		const response = await fetch(`http://localhost:3000/api/2fa/generate?userId=${userId.value}`, {
-			method: 'POST'
-		})
-		if (!response.ok) {
-      throw new Error('Network response was not ok');
+  try {
+    const response = await fetch(`http://localhost:3000/api/2fa/generate?userId=${userId.value}`, {
+      method: 'POST'
+    })
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
     }
 
     // Convert the response to a blob (binary data)
-    const blob = await response.blob();
+    const blob = await response.blob()
 
     // Create a URL for the blob data
-    const imageUrl = URL.createObjectURL(blob);
-	qrCodeImage.value = imageUrl
-	} catch (error: any) {
-		notificationStore.showNotification(`Error` + error.message, false)
-	}
+    const imageUrl = URL.createObjectURL(blob)
+    qrCodeImage.value = imageUrl
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
 }
 
 const enable2FA = () => {
-	if(showEnable2FA.value) {
-		showEnable2FA.value = false
-		return
-	}
-	generateQRCode()
-	showEnable2FA.value = true
+  if (showEnable2FA.value) {
+    showEnable2FA.value = false
+    return
+  }
+  generateQRCode()
+  showEnable2FA.value = true
 }
 
 const check2FAcode = async () => {
-	try{
-		const response = await fetch ('http://localhost:3000/api/2fa/enable',{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				userId: userId.value,
-				code: twoFAcode.value
-			})
-		})
-		if (!response.ok) {
-      	const responseData = await response.json();
-	 	notificationStore.showNotification(responseData.message, false)
-		} else {
-			notificationStore.showNotification('2FA enabled', true)
-			showEnable2FA.value = false
-			twoFAcode.value = ''
-			twoFAEnabled.value = true
-		}
-
-	} catch (error: any) {
-		notificationStore.showNotification(`Error` + error.message, false)
-	}
+  try {
+    const response = await fetch('http://localhost:3000/api/2fa/enable', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: userId.value,
+        code: twoFAcode.value
+      })
+    })
+    if (!response.ok) {
+      const responseData = await response.json()
+      notificationStore.showNotification(responseData.message, false)
+    } else {
+      notificationStore.showNotification('2FA enabled', true)
+      showEnable2FA.value = false
+      twoFAcode.value = ''
+      twoFAEnabled.value = true
+    }
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
 }
 
 const confirm2FA = () => {
-	check2FAcode()
+  check2FAcode()
 }
 
 const disable2FA = async () => {
-	try{
-		const response = await fetch(`http://localhost:3000/api/2fa/disable?userId=${userId.value}`, {
-				method: 'POST'
-			})
-			if (!response.ok) {
-		  throw new Error('Network response was not ok');}
-		  else {
-			notificationStore.showNotification('2FA disabled', true)
-			showEnable2FA.value = false
-			confirmation.value = ''
-			twoFAEnabled.value = false
-		}
-} catch (error: any) {
-	notificationStore.showNotification(`Error` + error.message, false)
-}
+  try {
+    const response = await fetch(`http://localhost:3000/api/2fa/disable?userId=${userId.value}`, {
+      method: 'POST'
+    })
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    } else {
+      notificationStore.showNotification('2FA disabled', true)
+      showEnable2FA.value = false
+      confirmation.value = ''
+      twoFAEnabled.value = false
+    }
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
 }
 
 const confirmDisable2FA = () => {
-	if(confirmation.value === 'OK') {
-		disable2FA()
-	} else {
-		notificationStore.showNotification('Wrong Confirmation', false)
-	}
+  if (confirmation.value === 'OK') {
+    disable2FA()
+  } else {
+    notificationStore.showNotification('Wrong Confirmation', false)
+  }
 }
 
 const set2FAStatus = async () => {
-	try{
-		const response = await fetch(`http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`, {
-				method: 'GET'
-			})
-			if (!response.ok) {
-		  throw new Error('Network response was not ok');}
-		  else {
-			const responseData = await response.json();
-			twoFAEnabled.value = responseData.twoFAEnabled
-		}
-} catch (error: any) {
-	notificationStore.showNotification(`Error` + error.message, false)
-}
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      {
+        method: 'GET'
+      }
+    )
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    } else {
+      twoFAEnabled.value = await response.json()
+    }
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
 }
 
 onMounted(() => {
   set2FAStatus()
 })
-
 </script>
 
 <style scoped>
@@ -385,7 +397,6 @@ input[type='text']:focus {
   color: #ffffff; /* Change the text color when the button is clicked */
 }
 
-
 .file-input {
   position: absolute;
   top: 0;
@@ -454,8 +465,8 @@ input[type='text']:focus {
 }
 
 .input-group .confirm-button {
-	padding: 0.5rem 1rem;
-  min-width: 30px; 
+  padding: 0.5rem 1rem;
+  min-width: 30px;
   min-height: 35px;
   border: 1px solid aliceblue;
   border-radius: 4px;
@@ -472,8 +483,8 @@ input[type='text']:focus {
 }
 /* TODO: Make this responsive  */
 .qr-code-container .qrcode {
-	flex-grow: 1;
-	  max-width: 100%;
+  flex-grow: 1;
+  max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }

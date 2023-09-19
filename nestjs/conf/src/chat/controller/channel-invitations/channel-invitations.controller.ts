@@ -52,25 +52,23 @@ export class ChannelInvitationsController {
     @Query('inviteeName') inviteeName: string,
     @Query('inviterId', ParseIntPipe) inviterId: number,
   ): Promise<ChannelInvitation> {
-	try{
-		const user = await this.userService.findByUsername(inviteeName);
-		if (!user) {
-			throw new Error('User not found');
-		}
+    try {
+      const user = await this.userService.findByUsername(inviteeName);
+      if (!user) {
+        throw new Error('User not found');
+      }
 
-		const inviteeId = user.id;
+      const inviteeId = user.id;
 
-		return await this.channelInvitationsService.inviteUserToChannel(
-		  channelId,
-		  inviteeId,
-		  inviterId,
-		);
-
-	}catch (error: any)
-	{
-		throw new HttpException(error.message, HttpStatus.CONFLICT)};
+      return await this.channelInvitationsService.inviteUserToChannel(
+        channelId,
+        inviteeId,
+        inviterId,
+      );
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.CONFLICT);
+    }
   }
-
 
   @Patch('RejectInvitation')
   async RejectInvitation(

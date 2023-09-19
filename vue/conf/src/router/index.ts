@@ -76,16 +76,16 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => redirectToHomeIfLoggedIn(to, from, next)
     },
-	{
-	  path: '/',
-	  name: 'twoFAAuth',
-	  component: TwoFAAuthView,
-	  beforeEnter: (
-		to: RouteLocationNormalized,
-		from: RouteLocationNormalized,
-		next: NavigationGuardNext
-	  ): void => redirectToHomeIfLoggedIn(to, from, next)
-	},
+    {
+      path: '/twoFAAuth',
+      name: 'twoFAAuth',
+      component: TwoFAAuthView,
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => jwtGuard(to, from, next)
+    },
     {
       path: '/home',
       component: MainLayout,

@@ -4,16 +4,16 @@ import { ChannelController } from './channel.controller';
 describe('ChannelController', () => {
   let controller: ChannelController;
 
-//   beforeEach(async () => {
-//     const module: TestingModule = await Test.createTestingModule({
-//       controllers: [ChannelController],
-//     }).compile();
+  //   beforeEach(async () => {
+  //     const module: TestingModule = await Test.createTestingModule({
+  //       controllers: [ChannelController],
+  //     }).compile();
 
-//     controller = module.get<ChannelController>(ChannelController);
-//   });
+  //     controller = module.get<ChannelController>(ChannelController);
+  //   });
 
-//   it('should be defined', () => {
-//     expect(controller).toBeDefined();
-//   });
-it.skip('Not writing tests is a bad practice', () => {});
+  //   it('should be defined', () => {
+  //     expect(controller).toBeDefined();
+  //   });
+  it.skip('Not writing tests is a bad practice', () => {});
 });

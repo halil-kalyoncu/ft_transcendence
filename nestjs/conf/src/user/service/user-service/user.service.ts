@@ -7,7 +7,6 @@ import { ChannelInviteeUserDto } from '../../../chat/dto/channelInvitation.dto';
 import * as fs from 'fs';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
 
-
 @Injectable()
 export class UserService {
   constructor(
@@ -91,12 +90,12 @@ export class UserService {
         inviteeforChannels: true,
       },
     });
-	
+
     for (const user of usersNotInChannel) {
       const status = await this.prisma.channelInvitation.findMany({
         where: {
           inviteeId: user.id,
-		  channelId: channelId,
+          channelId: channelId,
         },
         select: {
           status: true,
@@ -176,28 +175,26 @@ export class UserService {
   }
 
   async turnOffTwoFactorAuth(userId: number): Promise<User> {
-	
-	const user = await this.findById(userId);
-	if (!user) {
-		throw new Error('user not found');
-	}
-	return await this.prisma.user.update({
-	  where: {
-		id: userId,
-	  },
-	  data: {
-		enabled2FA: false,
-		secret2FA: null,
-	  },
-	});
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('user not found');
+    }
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        enabled2FA: false,
+        secret2FA: null,
+      },
+    });
   }
 
   async twoFAstatus(userId: number): Promise<boolean> {
-	const user = await this.findById(userId);
-	if (!user) {
-		throw new Error('user not found');
-	}
-	return user.enabled2FA;
-	}
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('user not found');
+    }
+    return user.enabled2FA;
+  }
 }
-

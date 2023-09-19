@@ -4,7 +4,7 @@
       <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
           :isPasswordProtected="channel.channel.protected"
-		  :isPrivate="false"
+          :isPrivate="false"
           :channelName="channel.channel.name"
           :ownerName="channel.owner.username"
           :joinChannelButtonNameProps="'Join'"
@@ -27,7 +27,7 @@ import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 
 const socket = ref<Socket | null>(null)
-	const notificationStore = useNotificationStore()
+const notificationStore = useNotificationStore()
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -77,7 +77,7 @@ const setChannelListener = () => {
 }
 
 onMounted(async () => {
-	initSocket()
+  initSocket()
   await setPublicChannels()
   setChannelListener()
 })

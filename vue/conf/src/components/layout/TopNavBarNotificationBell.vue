@@ -4,9 +4,11 @@
       <button class="settings-button" :class="'icon-wrapper'">
         <font-awesome-icon class="icon" icon="bell" title="Activity Center" />
         <span
-          v-if="friendRequests?.length > 0 || matchInvites?.length > 0 || channelInvitations?.length > 0"
+          v-if="
+            friendRequests?.length > 0 || matchInvites?.length > 0 || channelInvitations?.length > 0
+          "
           class="notification-badge"
-          >{{ channelInvitations?.length + friendRequests?.length +  matchInvites?.length }}</span
+          >{{ channelInvitations?.length + friendRequests?.length + matchInvites?.length }}</span
         >
       </button>
     </RouterLink>
@@ -31,7 +33,6 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
-
 library.add(fas)
 const friendRequestsStore = useFriendRequestStore()
 const friendRequests = computed(() => friendRequestsStore.friendRequests)
@@ -47,7 +48,7 @@ const notificationStore = useNotificationStore()
 const username = computed(() => userStore.username)
 const userId = computed(() => userStore.userId)
 const hasNotification = ref(false)
-const channelInvitations= ref <ChannelInvitationI[]>([])
+const channelInvitations = ref<ChannelInvitationI[]>([])
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -64,7 +65,6 @@ onMounted(() => {
   setFriendRequestData()
   setMatchInviteData()
   setChannelInvitationData()
-
 })
 
 const setMatchInviteListener = () => {
@@ -131,7 +131,7 @@ const setFriendRequestListener = () => {
 }
 
 const setChannelInvitationData = async () => {
-	try {
+  try {
     const response = await fetch(
       `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`
     )

@@ -123,7 +123,6 @@ export class UserController {
     return this.userService.findUsersNotInChannel(channelId);
   }
 
-
   @ApiOperation({ summary: 'Upload user avatar' })
   @ApiResponse({ status: 200, description: 'Successful upload of user avatar' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
