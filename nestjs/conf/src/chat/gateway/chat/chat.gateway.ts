@@ -441,10 +441,11 @@ export class ChatGateway
   ): Promise<void> {
     try {
       const membership = await this.channelService.makeAdmin(adminActionDto);
+	  const channel = await this.channelService.find(adminActionDto.channelId);
       const target = await this.userService.findById(
         adminActionDto.targetUserId,
       );
-      socket.emit('madeAdmin', target.username);
+      socket.emit('madeAdmin', target.usernamem, channel.name );
       const members: User[] = await this.channelService.getMembers(
         adminActionDto.channelId,
       );
@@ -455,7 +456,7 @@ export class ChatGateway
           memberOnline &&
           memberOnline.userId !== adminActionDto.requesterId
         ) {
-          socket.to(memberOnline.socketId).emit('madeAdmin', target.username);
+          socket.to(memberOnline.socketId).emit('madeAdmin', target.username, channel.name);
         }
       }
     } catch (error: any) {

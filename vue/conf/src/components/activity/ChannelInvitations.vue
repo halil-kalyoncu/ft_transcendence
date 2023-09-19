@@ -83,17 +83,12 @@ const setInvitationListener = () => {
     console.log('newChannelInvitation fired from ChannelsInvitations.vue')
     setChannelInvitations()
   })
-  socket.value.on('ChannelInvitationAccepted', (channelName, UserName) => {
+  socket.value.on('ChannelInvitationAccepted', (channelName: string, UserName: string) => {
     console.log('User Accepted ChannelInvitaion fired')
-    notificationStore.showNotification('Channel Invitaion accepted', true)
     setChannelInvitations()
   })
-  socket.value.on('ChannelInvitationRejected', (channelName, UserName) => {
+  socket.value.on('ChannelInvitationRejected', (channelName: string, UserName: string) => {
     console.log('User Rejected ChannelInvitaion fired')
-    notificationStore.showNotification(
-      'Channel Invitaion for ' + channelName + ' from ' + UserName + 'rejected',
-      true
-    )
     setChannelInvitations()
   })
 }

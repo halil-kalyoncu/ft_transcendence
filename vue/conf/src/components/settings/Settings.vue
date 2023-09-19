@@ -51,7 +51,7 @@
           <input
             type="text"
             id="2fa"
-            placeholder="Enter 'OK' to disable"
+            placeholder="'OK' to disable"
             class="two-FA-input"
             v-model="confirmation"
           />
