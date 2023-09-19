@@ -33,8 +33,9 @@ const channelData = ref<ChannelEntryI[]>([])
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
 
+const notificationStore = useNotificationStore()
+
 const setPublicChannels = async () => {
-  const notificationStore = useNotificationStore()
   try {
     const response = await fetch(
       `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`
@@ -50,6 +51,16 @@ const setPublicChannels = async () => {
 }
 
 onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   await setPublicChannels()
   //listener
 })

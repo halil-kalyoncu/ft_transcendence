@@ -44,7 +44,6 @@ const router = useRouter()
 
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
-const username = computed(() => userStore.username)
 const socket = ref<Socket | null>(null)
 const props = defineProps({
   channelId: Number

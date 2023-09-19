@@ -36,7 +36,6 @@ import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
-import { fetchAndSaveAvatar } from '../../utils/fetchAndSaveAvatar'
 
 const notificationStore = useNotificationStore()
 
@@ -44,41 +43,10 @@ const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
 
 const username = ref('')
-const enable2FA = ref(false)
 const is2FAEnabled = ref(true)
 const avatarInput: Ref<HTMLInputElement | null> = ref(null)
 const uploadedAvatarFile: Ref<File | null> = ref(null)
-const selectedFileName = ref('')
-const images = ref([
-  'src/assets/avatar-1.png',
-  'src/assets/avatar-2.png',
-  'src/assets/avatar-3.png',
-  'src/assets/avatar-2.png'
-])
 
-const displayedCount = 3
-const startIndex = ref(0)
-const selectedImg = ref('src/assets/avatar-1.png')
-
-const setSelectedImage = (img: string) => {
-  selectedImg.value = img
-}
-
-const displayedImages = computed(() => {
-  return images.value.slice(startIndex.value, startIndex.value + displayedCount)
-})
-
-const nextImages = () => {
-  if (startIndex.value < images.value.length - displayedCount) {
-    startIndex.value += displayedCount
-  }
-}
-
-const previousImages = () => {
-  if (startIndex.value >= displayedCount) {
-    startIndex.value -= displayedCount
-  }
-}
 const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {
     uploadedAvatarFile.value = avatarInput.value.files[0]
@@ -97,12 +65,13 @@ const handleAvatarUpload = async () => {
 
       if (response.ok) {
         notificationStore.showNotification('Success upload image', true)
-        fetchAndSaveAvatar()
+        await userStore.fetchUser()
+        await userStore.fetchAvatar()
       } else {
         notificationStore.showNotification('Failed to upload image', false)
       }
     } catch (error: any) {
-      notificationStore.showNotification(`Error` + error.message, false)
+      notificationStore.showNotification('Error' + error.message, false)
     }
   }
 }
@@ -115,12 +84,12 @@ const deleteAvatar = async () => {
 
     if (response.ok) {
       notificationStore.showNotification('Success delete avatar', true)
-      userStore.clearAvatarImageData()
+      userStore.clearAvatar()
     } else {
       notificationStore.showNotification('User has no avatar', false)
     }
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+    notificationStore.showNotification('Error' + error.message, false)
   }
 }
 

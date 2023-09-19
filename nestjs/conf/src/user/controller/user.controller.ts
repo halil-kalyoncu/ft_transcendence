@@ -91,6 +91,17 @@ export class UserController {
     return await this.userService.findAll();
   }
 
+  @ApiOperation({ summary: 'Find user by id' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of user by id',
+    type: PrismaModel.User,
+  })
+  @Get('find-by-id')
+  async findById(@Query('id', ParseIntPipe) id: number): Promise<User> {
+    return await this.userService.findById(id);
+  }
+
   @ApiOperation({ summary: 'Find user by username' })
   @ApiResponse({
     status: 200,
