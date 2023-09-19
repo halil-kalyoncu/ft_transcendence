@@ -860,17 +860,25 @@ export class ChatGateway
   @SubscribeMessage('gotChannelInvitation')
   async handlGotChannelInvitation(
     socket: Socket,
-    inviteeUsername: string,
+	data: {
+		channelId: number;
+		inviteeUsername: string;
+	  },
   ): Promise<User | ErrorDto> {
     try {
+	  const { channelId, inviteeUsername } = data;
       const invitee = await this.userService.findByUsername(inviteeUsername);
       if (!invitee) {
         throw new Error('User not found');
       }
-      const inviteeOnline: ConnectedUser =
-        await this.connectedUserService.findByUserId(invitee.id);
-      if (inviteeOnline) {
-        socket.to(inviteeOnline.socketId).emit('NewChannelInvitation');
+	  socket.emit('NewChannelInvitation');
+		const ChannelMembers = await this.channelService.getMembers(channelId);
+		for (const member of ChannelMembers) {
+			const memberOnline: ConnectedUser =
+			  await this.connectedUserService.findByUserId(member.id);
+			if (memberOnline && memberOnline.userId !== invitee.id) {
+				socket.to(memberOnline.socketId).emit('NewChannelInvitation');
+        }
       }
       return invitee;
     } catch (error: any) {

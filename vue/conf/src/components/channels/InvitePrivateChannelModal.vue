@@ -124,11 +124,14 @@ const sendSubmitEvent = (inviteeUsername: string) => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.emit('gotChannelInvitation', inviteeUsername, (response: any | ErrorI) => {
-    if ('error' in response) {
-      notificationStore.showNotification(response.error, false)
-    }
-  })
+  try{
+	  socket.value.emit('gotChannelInvitation', {
+		channelId: channelId,
+		inviteeUsername: inviteeUsername
+		})
+  } catch (error: any) {
+	console.error('Error: ', error.message)
+  }
 }
 
 const submit = async () => {
@@ -244,14 +247,13 @@ const setInvitationUpdateListener = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.on('ChannelInvitationAccepted', (channelName, UserName) => {
+  socket.value.on('ChannelInvitationAccepted', (channelName:string, UserName:string) => {
     findUserSuggestions(inputName.value)
   })
-  socket.value.on('ChannelInvitationRejected', (channelName, UserName) => {
+  socket.value.on('ChannelInvitationRejected', (channelName:string, UserName:string) => {
     findUserSuggestions(inputName.value)
   })
-  socket.value.on('NewChannelInvitation', (channelName, UserName) => {
-    notificationStore.showNotification('New invitation', true)
+  socket.value.on('NewChannelInvitation', () => {
     findUserSuggestions(inputName.value)
   })
 }

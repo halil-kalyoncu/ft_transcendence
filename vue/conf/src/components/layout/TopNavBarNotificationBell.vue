@@ -166,7 +166,8 @@ const setchannelInvitationListener = () => {
     return
   }
   socket.value.on('NewChannelInvitation', () => {
-    setChannelInvitationData()
+	notificationStore.showNotification('New invitation', true)
+	setChannelInvitationData()
   })
   socket.value.on('ChannelInvitationRejected', (channelName:string, inviteeName:string) => {
 	notificationStore.showNotification(

@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 import type { ChannelInvitationI } from '../../model/channels/channelInvitation.interface'
@@ -54,6 +54,18 @@ onMounted(async () => {
   setInvitationListener()
 })
 
+// TODO: Set the Listenes off makes probelems even if I am listine in the notiicfation bell
+/* onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+  socket.value.off('NewChannelInvitation')
+  socket.value.off('ChannelInvitationAccepted')
+  socket.value.off('ChannelInvitationRejected')
+
+}) */
+
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
@@ -80,6 +92,7 @@ const setInvitationListener = () => {
     return
   }
   socket.value.on('NewChannelInvitation', () => {
+	notificationStore.showNotification('New Channel Invitation', true)
     console.log('newChannelInvitation fired from ChannelsInvitations.vue')
     setChannelInvitations()
   })

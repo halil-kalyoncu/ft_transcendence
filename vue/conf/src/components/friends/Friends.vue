@@ -95,7 +95,6 @@ const setDirectMessageData = async () => {
 
     const data = await response.json()
     unreadMessages.value = data
-    console.log(unreadMessages.value)
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
   }
