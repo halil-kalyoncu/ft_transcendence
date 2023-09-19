@@ -63,7 +63,7 @@ const setChannelListener = () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('ChannelDestroy', () => {
+  socket.value.on('ChannelDestroy', (channelName: string) => {
     console.log('ChannelDestroy fired from AvaibleChannelsList.vue')
     setPublicChannels()
     return

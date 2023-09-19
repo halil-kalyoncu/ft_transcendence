@@ -703,20 +703,23 @@ export class ChatGateway
     try {
       const { senderId, channelId } = destroyChannelDto;
       const members: User[] = await this.channelService.getMembers(channelId);
-      socket.emit('ChannelDestroy', channelId);
-      for (const member of members) {
-        const memberOnline: ConnectedUser =
-          await this.connectedUserService.findByUserId(member.id);
-        if (memberOnline) {
-          socket.to(memberOnline.socketId).emit('ChannelDestroy', channelId);
+	  const channel = await this.channelService.find(channelId);
+
+      await this.channelService.destroyChannel(channelId); 
+	  await socket.emit('ChannelDestroy', channel.name);
+      const onlineMembers: ConnectedUser[] =
+        await this.connectedUserService.getAll();
+      for (const onlineMember of onlineMembers) {
+        if (onlineMember) {
+          socket.to(onlineMember.socketId).emit('ChannelDestroy', channel.name);
         }
       }
-      this.channelService.destroyChannel(channelId);
       return channelId;
     } catch (error: any) {
       return { error: error.message };
     }
   }
+
 
   @SubscribeMessage('SignOutChannel')
   async handleSignOutChannel(

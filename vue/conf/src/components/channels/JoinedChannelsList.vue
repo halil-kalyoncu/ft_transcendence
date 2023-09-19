@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import ChannelListItem from './ChannelListItem.vue'
-import { onMounted, computed, ref } from 'vue'
+import { onMounted, onBeforeUnmount, computed, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
@@ -76,7 +76,6 @@ const setChannels = async () => {
     }
     const data = await response.json()
     channelData.value = data
-    console.log(channelData.value)
     return
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, true)
@@ -108,7 +107,7 @@ const setNewChannelMessageListener = () => {
     setUnreadMessages()
     return
   })
-  socket.value.on('ChannelDestroy', () => {
+  socket.value.on('ChannelDestroy', (channelName: string) => {
     console.log('ChannelDestroy fired from JoinedChannelsList.vue')
     setChannels()
     return
@@ -130,6 +129,15 @@ onMounted(async () => {
   await setUnreadMessages()
   initSocket()
   setNewChannelMessageListener()
+})
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+  socket.value.off('newChannelMessage')
+  socket.value.off('ChannelDestroy')
 })
 </script>
 
