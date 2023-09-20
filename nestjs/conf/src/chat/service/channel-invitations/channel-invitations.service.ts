@@ -18,17 +18,40 @@ export class ChannelInvitationsService {
 
   async getPendingInvitations(userId: number): Promise<ChannelInvitationDto[]> {
     try {
+	  const finalInvitations: any[] = [];
       const invitations: any[] = await this.prisma.channelInvitation.findMany({
         where: { inviteeId: userId, status: ChannelInvitationStatus.PENDING },
         include: { channel: true, inviter: true },
       });
+	  for (const invitation of invitations) {
+	  const userInChannel = await this.prisma.channelMember.findUnique({
+		where: {
+			userId_channelId : { userId: userId, channelId: invitation.channelId },
+		},
+	  });
+	  console.log("userInChannel");
+	  console.log(userInChannel);
+	  if (userInChannel) {
+		const deleted = await this.prisma.channelInvitation.delete({
+			where: {
+			  channelId_inviteeId: { channelId: invitation.channelId, inviteeId: userId },
+			}, 
+		  });
+		  console.log("deleted");
+		  console.log(deleted); 
+	  }
+	  else {
+		finalInvitations.push(invitation);
+	  }
+	}
 
-      const ChannelInvitationsDtos: ChannelInvitationDto[] = invitations.map(
+      const ChannelInvitationsDtos: ChannelInvitationDto[] = finalInvitations.map(
         (invitation) => ({
           invitationId: invitation.id,
           inviterName: invitation.inviter.username,
           channelName: invitation.channel.name,
           isPasswordProtected: invitation.channel.protected,
+		  ChannelVisibility: invitation.channel.visibility, 
         }),
       );
       return ChannelInvitationsDtos;
@@ -82,7 +105,6 @@ export class ChannelInvitationsService {
     channelId: number,
     userId: number,
   ): Promise<ChannelInvitation> {
-    //TODO ERROR HANDLING
     const invitation = await this.prisma.channelInvitation.findUnique({
       where: {
         channelId_inviteeId: { channelId: channelId, inviteeId: userId },
@@ -101,19 +123,11 @@ export class ChannelInvitationsService {
     };
     this.ChannelService.addUserToChannel(ChannelMembershipDto);
 
-    //delete invitation
     await this.prisma.channelInvitation.delete({
       where: {
         channelId_inviteeId: { channelId: channelId, inviteeId: userId },
       },
     });
-
-    // await this.prisma.channelInvitation.update({
-    // 	where: { channelId_inviteeId: {channelId:channelId, inviteeId:userId}},
-    // 	data: {
-    // 		status: ChannelInvitationStatus.ACCEPTED,
-    // 	},
-    // });
 
     return invitation;
   }

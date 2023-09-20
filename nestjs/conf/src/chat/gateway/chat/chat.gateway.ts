@@ -767,6 +767,7 @@ export class ChatGateway
         socket
           .to(memberOnline.socketId)
           .emit('UserSignedIn', username, channelId);
+		  socket.to(memberOnline.socketId).emit('InvitationObsolete', username, channelId);
       }
     }
     return username;
@@ -871,12 +872,13 @@ export class ChatGateway
       if (!invitee) {
         throw new Error('User not found');
       }
-	  socket.emit('NewChannelInvitation');
+	  const inviteeOnline = await this.connectedUserService.findByUserId(invitee.id);
+	  socket.to(inviteeOnline.socketId).emit('NewChannelInvitation');
 		const ChannelMembers = await this.channelService.getMembers(channelId);
 		for (const member of ChannelMembers) {
 			const memberOnline: ConnectedUser =
 			  await this.connectedUserService.findByUserId(member.id);
-			if (memberOnline && memberOnline.userId !== invitee.id) {
+			if (memberOnline) {
 				socket.to(memberOnline.socketId).emit('NewChannelInvitation');
         }
       }

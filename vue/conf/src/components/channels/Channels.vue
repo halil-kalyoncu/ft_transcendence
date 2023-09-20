@@ -114,7 +114,6 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-//Todo check with halil why there is a difference in the noticitaions
 const handleConfirm = async ({
   name,
   password,

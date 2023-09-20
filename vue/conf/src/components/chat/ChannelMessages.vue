@@ -154,8 +154,6 @@ onMounted(async () => {
   setUserChangesListener()
 })
 
-//Todo Check for selectedChannel after implementaiton
-
 const sendChannelMessage = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)

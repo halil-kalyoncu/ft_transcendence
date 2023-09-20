@@ -80,6 +80,8 @@ const rejectRequest = () => {
   socket.value.emit('rejectChannelInvitation', props.invitationId)
   notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
 }
+
+
 </script>
 
 <style>

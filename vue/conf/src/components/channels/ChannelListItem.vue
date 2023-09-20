@@ -1,5 +1,3 @@
-<!-- TODO:
-Make badge number visibale. At the moment hidden. Delete big umber next to enter -->
 <template>
   <div class="channel-list-item">
     <div class="channel-info">

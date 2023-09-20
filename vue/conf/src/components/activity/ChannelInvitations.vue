@@ -104,6 +104,13 @@ const setInvitationListener = () => {
     console.log('User Rejected ChannelInvitaion fired')
     setChannelInvitations()
   })
+
+  // TODO: Halil When User Signs In by himself update the channel invitations (invitation deleted in Service function)
+  socket.value.on('InvitationObsolete', (username:string, channelId: number) => {
+	console.log('InvitationObsolete from ChannelInvitations.vue fired')
+	notificationStore.showNotification('User Signed In', true)
+	setChannelInvitations()
+  })
 }
 </script>
 

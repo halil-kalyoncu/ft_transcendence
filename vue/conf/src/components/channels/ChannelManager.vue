@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-//TODO: Need joined at or do we just say the role time
+
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import ChannelManagerUserItem from './ChannelManagerUserItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
@@ -209,7 +209,6 @@ const setDestroyChannelListener = async () => {
     }
   })
 }
-// TODO: CHECK FOR NOTIFICATIONS HERE!
 const setUserSignedListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
@@ -477,20 +476,9 @@ const changePassword = async () => {
   }
 }
 
-/* const showSignOutConfirmation = () => {
-  modalTitle.value = 'Confirmation';
-  modalMessage.value = currentUserRolelower === 'owner'
-    ? 'Are you sure you want to destroy the channel?'
-    : 'Are you sure you want to sign out from the channel?';
-
-  modalVisible.value = true;
-};
- */
-//TODO: 1 Define on mounte, init Socket, Define the people int he channel etc, setChannellistener for channel destoyed (later for member left etc.)
 </script>
 
 <style>
-/* TODO: distribution of buttons */
 
 .current-channel-name {
   text-align: center;
