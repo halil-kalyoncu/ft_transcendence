@@ -206,37 +206,4 @@ export class ChannelMessageService {
       throw error;
     }
   }
-
-  async getUnreadStatus(
-    channelId: number,
-    userId: number,
-  ): Promise<ChannelMessageReadStatus[]> {
-    try {
-      const blockedUsers: User[] =
-        await this.blockedUserService.getBlockedUsers(userId);
-      const blockedUserIds: number[] = blockedUsers.map((user) => user.id);
-
-      const unreadMessages =
-        await this.prisma.channelMessageReadStatus.findMany({
-          where: {
-            NOT: {
-              message: {
-                senderId: {
-                  in: blockedUserIds,
-                },
-              },
-            },
-            reader: {
-              channelId: channelId,
-              userId: userId,
-            },
-            isRead: false,
-          },
-        });
-      return unreadMessages;
-    } catch (error) {
-      // Handle errors appropriately
-      throw new Error('Error fetching unread messages: ' + error.message);
-    }
-  }
 }

@@ -12,10 +12,14 @@ export class BlockedUserService {
   ) {}
 
   async block(userId: number, targetUserId: number): Promise<BlockedUser> {
+    const user = await this.userService.findById(targetUserId);
+    if (!user) {
+      throw new Error("User doesn't exists");
+    }
+
     const isAlreadyBlocked = await this.find(userId, targetUserId);
     if (isAlreadyBlocked) {
-      //or return error if already blocked?
-      return isAlreadyBlocked;
+      throw new Error(`${user.username} is already blocked`);
     }
 
     return await this.prisma.blockedUser.create({
@@ -31,10 +35,14 @@ export class BlockedUserService {
   }
 
   async unblock(userId: number, targetUserId: number): Promise<BlockedUser> {
+    const user = await this.userService.findById(targetUserId);
+    if (!user) {
+      throw new Error("User doesn't exists");
+    }
+
     const block = await this.find(userId, targetUserId);
     if (!block) {
-      //return error?
-      return;
+      throw new Error(`${user.username} is not blocked`);
     }
 
     return await this.prisma.blockedUser.delete({

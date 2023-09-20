@@ -1220,6 +1220,7 @@ export class ChatGateway
       socket.emit('blockedUsers', blockedUser);
       socket.emit('newChannelMessage');
       socket.emit('friends');
+      socket.emit('newDirectMessage');
       return blockedUser;
     } catch (error) {
       return { error: error.message as string };

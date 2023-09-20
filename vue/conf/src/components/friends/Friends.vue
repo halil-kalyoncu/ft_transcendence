@@ -54,14 +54,18 @@ const updateSelectedFriend = () => {
   }
 }
 
-const fetchUser = async (username: string): Promise<UserI> => {
-  const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`)
+const fetchUser = async (username: string): Promise<UserI | null> => {
+  try {
+    const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`)
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    }
+
+    return await response.json()
+  } catch (error: any) {
+    return null
   }
-
-  return await response.json()
 }
 
 const setFriendData = async () => {
@@ -76,7 +80,8 @@ const setFriendData = async () => {
 
     const data = await response.json()
     friends.value = data
-
+    console.log('friends')
+    console.log(friends.value)
     updateSelectedFriend()
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
@@ -221,7 +226,7 @@ const handleBlock = async ({ username }: ModalResult) => {
   }
 
   try {
-    const blockUser: UserI = await fetchUser(username)
+    const blockUser: UserI | null = await fetchUser(username)
     if (!blockUser) {
       throw new Error("Couldn't find user " + username)
     }
@@ -252,7 +257,7 @@ const handleUnblock = async ({ username }: ModalResult) => {
   }
 
   try {
-    const unblockUser: UserI = await fetchUser(username)
+    const unblockUser: UserI | null = await fetchUser(username)
     if (!unblockUser) {
       throw new Error("Couldn't find user " + username)
     }
@@ -311,7 +316,7 @@ const handleBlockUser = async (username: string, blockUserId: number) => {
 
   if (username !== '') {
     try {
-      const blockUser: UserI = await fetchUser(username)
+      const blockUser: UserI | null = await fetchUser(username)
       if (!blockUser) {
         throw new Error("Couldn't find user " + username)
       }
@@ -337,7 +342,7 @@ const handleUnblockUser = async (username: string, unblockUserId: number) => {
 
   if (username !== '') {
     try {
-      const unblockUser: UserI = await fetchUser(username)
+      const unblockUser: UserI | null = await fetchUser(username)
       if (!unblockUser) {
         throw new Error("Couldn't find user " + username)
       }
