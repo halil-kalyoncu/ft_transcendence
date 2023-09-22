@@ -14,6 +14,7 @@ import {
   Query,
   Res,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from '../service/user-service/user.service';
@@ -21,7 +22,7 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { Prisma, User } from '@prisma/client';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -30,6 +31,7 @@ import * as fs from 'fs';
 import { Response } from 'express';
 import { PrismaModel } from '../../_gen/prisma-class/index';
 import { ChannelInviteeUserDto } from '../../chat/dto/channelInvitation.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 
 @ApiTags('User module')
 @Controller('users')
@@ -113,6 +115,7 @@ export class UserController {
     return await this.userService.findByUsername(username);
   }
 
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Find users by username' })
   @ApiResponse({
     status: 200,
@@ -120,6 +123,8 @@ export class UserController {
     type: PrismaModel.User,
     isArray: true,
   })
+  @ApiResponse({status: 401, description: 'Unauthorized, access token is invalid'})
+  @ApiBearerAuth('access-token')
   @Get('find-by-username')
   async findAllByUsername(
     @Query('username') username: string,

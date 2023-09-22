@@ -53,15 +53,15 @@ const handleInviteClick = async () => {
       body: JSON.stringify(createMatchDto)
     })
 
+	const responseData = await response.json()
     if (response.ok) {
-      const responseData = await response.json()
       const matchId = String(responseData.id)
       router.push(`/invite/${matchId}`)
     } else {
-      notificationStore.showNotification('Failed to create a game', false)
+      notificationStore.showNotification('Failed to create a game: ' + responseData.message, false)
     }
-  } catch (error) {
-    notificationStore.showNotification('Failed to create a game', false)
+  } catch (error: any) {
+    notificationStore.showNotification('Failed to create a game: ' + error, false)
   }
 }
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { BlockedUser, Prisma, User } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UserService } from '../../../user/service/user-service/user.service';
@@ -60,7 +60,7 @@ export class BlockedUserService {
     const user = await this.userService.findById(userId);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(`User with the id ${userId} couldn't be found`);
     }
 
     return this.prisma.blockedUser.findMany({
@@ -108,16 +108,16 @@ export class BlockedUserService {
   private async checkIds(userId: number, targetUserId: number): Promise<void> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException(`User with the id ${userId} couldn't be found`);
     }
 
     const targetUser = await this.userService.findById(targetUserId);
     if (!targetUser) {
-      throw new Error('Target user not found');
+      throw new NotFoundException(`User with the id ${targetUserId} couldn't be found`);
     }
 
     if (userId === targetUserId) {
-      throw new Error("Can't block yourself");
+      throw new BadRequestException("Can't block yourself");
     }
     return;
   }

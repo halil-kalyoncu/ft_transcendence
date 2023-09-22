@@ -50,6 +50,7 @@ import type { UserI } from '../../model/user.interface'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
+import { useNotificationStore } from '../../stores/notification'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(fas)
@@ -76,6 +77,8 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'close'])
 
+const notificationStore = useNotificationStore()
+
 const submit = () => {
   const result: ModalResult = {
     username: inputName.value
@@ -97,17 +100,30 @@ const findUserSuggestions = async (username: string) => {
     return
   }
 
-  const response = await fetch(
-    `http://localhost:3000/api/users/find-by-username?username=${username}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
-  )
-  const data = await response.json()
-  userSuggestions.value = data
+  try {
+	const accessToken = localStorage.getItem('ponggame') ?? ''
+	const response = await fetch(
+  	  `http://localhost:3000/api/users/find-by-username?username=${username}`,
+  	  {
+  	    method: 'GET',
+  	    headers: {
+  	      'Content-Type': 'application/json',
+			'Authorization': `Bearer ${accessToken}`
+  	    }
+  	  }
+  	)
+
+	const responseData = await response.json();
+	if (response.ok) {
+		userSuggestions.value = responseData
+	}
+	else {
+		notificationStore.showNotification("User suggestions couldn't be loaded: " + responseData.message, false)
+	}
+  }
+  catch (error: any) {
+	notificationStore.showNotification("User suggestions couldn't be loaded: " + error, false)
+  }
 }
 
 const selectSuggestion = (suggestion: UserI) => {
