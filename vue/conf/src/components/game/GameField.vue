@@ -25,6 +25,7 @@
       :y="powerup.y"
       :color="powerup.color"
       :index="powerup.index"
+	  :type="powerup.type"
     />
   </div>
   <div v-else>
@@ -131,14 +132,6 @@ const keyHookUp = (e: KeyboardEvent) => {
     case 'ArrowDown':
 		isMovingDown.value = false
 		break
-	case 'n':
-		console.log("halloooo");
-		// spawnPowerUp();
-			//   playerAScore.value++
-    //   break
-      //   socket.value.emit('activatePowerUp', { type: 'magnet', player: 'right' })
-      // socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
-      break
     case 'Space':
       socket.value.emit('fire')
       break
@@ -248,35 +241,42 @@ onMounted(() => {
   })
 
   // socket.on("newPowerUp", ({ id, x, y, type }) => {
-  socket.value.on('newPowerUp', (PowerUp: { powerUp: string }) => {
+  socket.value.on('newPowerUp', (PowerUp: { powerUp: string, x: number, y: number}) => {
 	const newPowerUp = {
     id: Math.floor(Date.now()),
-    x: Math.floor(Math.random() * fieldWidth.value!),
-    y: -30,
+    x: PowerUp.x,
+    y: PowerUp.y, //Math.floor(Math.random() * ((fieldHeight.value! - 70) - 70 + 1)) + 70,
+	type: 'null',
     index: 0,
     color: 'white',
-    wid: 30,
-    hgt: 30
+    wid: 70,
+    hgt: 70
   }
-  let powerUpName = PowerUp.powerUp
-  console.log('poweruppppp: ',powerUpName)
-  if (PowerUp.powerUp === 'slowBall') {
-	console.log("rot <____")
+  console.log("power name")
+  console.log(PowerUp.powerUp)
+  if (PowerUp.powerUp == 'slowBall') {
     newPowerUp.color = 'red'
     newPowerUp.index = 0
+	newPowerUp.type = PowerUp.powerUp
   } else if (PowerUp.powerUp == 'fastBall') {
+	console.log("WORKED")
     newPowerUp.color = 'green'
     newPowerUp.index = 3
+	newPowerUp.type = PowerUp.powerUp
   } else if (PowerUp.powerUp == 'decreasePaddleHeight') {
     newPowerUp.color = 'blue'
     newPowerUp.index = 2
+	newPowerUp.type = PowerUp.powerUp
   } else if (PowerUp.powerUp == 'increasePaddleHeight') {
     newPowerUp.color = 'white'
     newPowerUp.index = 1
+	newPowerUp.type = PowerUp.powerUp
   } else if (PowerUp.powerUp == 'magnet') {
 	newPowerUp.color = 'yellow'
 	newPowerUp.index = 4
+	newPowerUp.type = PowerUp.powerUp
   }
+  
   socket.value?.emit('spawnPowerUp', newPowerUp)
   console.log('PU spawn local')
     PowerUps.value?.push(newPowerUp)
@@ -332,14 +332,28 @@ onMounted(() => {
 
   socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
     let target
-    console.log(player)
+    // console.log(player)
+	console.log("ACTIVATE POWER BEFORE")
+	console.log(ball.value.speed)
+	console.log(type)
     if (player == 'left') target = paddleA.value
     else target = paddleB.value
 
     if (type == 'increasePaddleHeight') {
       target?.setHgt(400)
-      socket.value?.emit('activatePowerUp', { type: type, player: player })
     }
+	if (type == 'decreasePaddleHeight'){
+		target?.setHgt(80)
+	}
+	if (type == 'slowBall') {
+		ball.value.speed = 2
+	}
+	if (type == 'fastBall') {
+		ball.value.speed = 9
+	}
+	console.log("ACTIVATE POWER AFTER")
+	console.log(ball.value.speed)
+	socket.value?.emit('executePowerUp', { type: type, player: player })
 
     // console.log(player, type);
   })

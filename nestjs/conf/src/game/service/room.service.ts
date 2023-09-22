@@ -13,14 +13,16 @@ export class Room {
   powerups: PowerUp[];
   gameIsRunning: boolean;
 
+  goalsToWin: number;
   socketIds: string[];
   leftPlayerGoals: number;
   rightPlayerGoals: number;
   leftPlayerDisconnect: boolean;
   rightPlayerDisconnect: boolean;
 
-  constructor(id: number) {
+  constructor(id: number, goalsToWin: number) {
     this.id = id;
+	this.goalsToWin = goalsToWin;
     this.ball = new Ball(500, 200, 15, 15, 5, 4, 3, 800, 600);
     this.paddleA = new Paddle(1, 100, 15, 100, 7, 800, 600);
     this.paddleB = new Paddle(785, 100, 15, 100, 7, 800, 600);
@@ -34,8 +36,8 @@ export class Room {
   }
 
   checkGameFinished(): void {
-    if (this.leftPlayerGoals === 5 || this.rightPlayerGoals === 5) {
-      this.gameIsRunning = false;
-    }
+    // if (this.leftPlayerGoals === this.goalsToWin || this.rightPlayerGoals === this.goalsToWin) {
+    //   this.gameIsRunning = false;
+    // }
   }
 }

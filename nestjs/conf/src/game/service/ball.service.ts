@@ -35,7 +35,7 @@ export class Ball {
     this.dx = 5;
     this.dy = 3;
     this.speed = 4;
-    this.magnet = 0;
+    // this.magnet = 0;
   }
 
   moveBallDir(paddleBY: number, paddleHeight: number, paddle: string): void {
@@ -53,7 +53,24 @@ export class Ball {
     this.dy = this.speed * Math.sin(bounceAngle);
     this.dx = -this.dx;
   }
+  updateSpeed(newSpeed: number): void{
+    // Speichern Sie die aktuelle Richtung der Bewegung
+    const currentDirectionX = this.dx >= 0 ? 1 : -1;
+    const currentDirectionY = this.dy >= 0 ? 1 : -1;
 
+    // Aktualisieren Sie die Geschwindigkeit
+    this.speed = newSpeed;
+
+    // Beibehalten der aktuellen Richtung
+	if (this.dx < 0)
+   		this.dx = -currentDirectionX * this.speed * Math.cos(Math.atan2(this.dy, this.dx));
+	else
+		this.dx = currentDirectionX * this.speed * Math.cos(Math.atan2(this.dy, this.dx));
+	if (this.dy < 0)
+		this.dy = -currentDirectionY * this.speed * Math.sin(Math.atan2(this.dy, this.dx));
+	else 
+    	this.dy = currentDirectionY * this.speed * Math.sin(Math.atan2(this.dy, this.dx));
+  }
   handleBallCollision(
     nextBallX: number,
     nextBallY: number,
@@ -154,10 +171,11 @@ export class Ball {
         let target;
         if (this.dx > 0) target = 'left';
         else target = 'right';
-
+		console.log("POWERUP FROM SERVICE")
+		console.log(powerup)
         server.emit('activatePowerUp', {
           player: target,
-          type: 'increasePaddleHeight',
+          type: powerup.type,
         });
         server.emit('destroyPowerUp', { id: powerup.id });
       }
@@ -167,10 +185,11 @@ export class Ball {
       ) {
         console.log('powerupid: ', powerup.id);
         server.emit('destroyPowerUp', { id: powerup.id });
-      } else {
-        powerup.moveDown();
-        server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
-      }
+    } 
+	// else {
+    //     powerup.moveDown();
+    //     server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
+    //   }
     }
     return {
       x: this.x,

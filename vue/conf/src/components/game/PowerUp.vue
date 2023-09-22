@@ -40,6 +40,11 @@ const props = defineProps({
     required: true,
     default: 'white'
   },
+  type: {
+	type: String,
+	required: true,
+	default: 'null'
+  }
 })
 let images = [widePaddle, magnet, image2, image1]
 </script>
@@ -48,8 +53,8 @@ let images = [widePaddle, magnet, image2, image1]
 .powerup {
   position: absolute;
   background-position: center;
-  width: 30px;
-  height: 30px;
+  width: 70px;
+  height: 70px;
   border-radius: 75%;
   background-size: cover;
 }
