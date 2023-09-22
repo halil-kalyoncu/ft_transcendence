@@ -1,4 +1,4 @@
-import { Injectable, forwardRef, Inject } from '@nestjs/common';
+import { Injectable, forwardRef, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   Channel,
@@ -42,7 +42,6 @@ export class ChannelService {
     password?: string;
     channelVisibility: ChannelVisibility;
   }): Promise<Channel | { error: string }> {
-    console.log('createProtectedChannel');
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
     });
@@ -79,7 +78,7 @@ export class ChannelService {
     userId: number;
     name: string;
     channelVisibility: ChannelVisibility;
-  }): Promise<Channel | { error: string }> {
+  }): Promise<Channel> {
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
     });
@@ -186,14 +185,14 @@ export class ChannelService {
   async comparePassword(channelId: number, password: string): Promise<boolean> {
     const channel = await this.find(channelId);
     if (!channel) {
-      throw new Error('Channel does not exist.');
+      throw new NotFoundException('Channel does not exist.');
     }
 
     if (!channel.passwordHash) {
-      throw new Error('Channel does not have a password.');
+      throw new NotFoundException('Channel does not have a password.');
     }
 
-    return bcrypt.compare(password, channel.passwordHash);
+    return await bcrypt.compare(password, channel.passwordHash);
   }
 
   async addUserToChannel(
@@ -204,8 +203,7 @@ export class ChannelService {
       channelMembershipDto.channelId,
     );
     if (existingMembership) {
-      console.log('User is already a member of this channel.');
-      return;
+      throw new BadRequestException ('User is already a member of this channel.');
     }
     return this.prisma.channelMember.create({
       data: {
@@ -247,9 +245,13 @@ export class ChannelService {
 
   async makeAdmin(adminActionDto: AdminActionDto): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
+	
+	if (!channel) {
+		throw new Error('Channel does not exist.');
+	}
     const channelOwner = await this.channelMemberService.findOwner(channel.id);
 
-    if (!channel || channelOwner.userId !== adminActionDto.requesterId) {
+    if (channelOwner! || channelOwner.userId !== adminActionDto.requesterId) {
       throw new Error(
         'Only the owner of the channel can make a user an admin.',
       );
@@ -344,6 +346,9 @@ export class ChannelService {
       throw new Error('Target user is not a member of the channel.');
     }
 
+	if (targetMembership.status === ChannelMemberStatus.BANNED) {
+		throw new Error('Target user is already banned.');
+	}
     return this.prisma.channelMember.update({
       where: {
         userId_channelId: {
@@ -358,6 +363,7 @@ export class ChannelService {
       },
     });
   }
+
   async unBanChannelMember(
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
@@ -386,6 +392,10 @@ export class ChannelService {
     if (!targetMembership) {
       throw new Error('Target user is not a member of the channel.');
     }
+
+	if (targetMembership.status !== ChannelMemberStatus.BANNED) {
+		throw new Error('Target user is not banned.');
+	}
 
     return this.prisma.channelMember.update({
       where: {
@@ -450,7 +460,7 @@ export class ChannelService {
     targetUserId: number,
     channelId: number,
   ): Promise<ChannelMember> {
-    return this.prisma.channelMember.update({
+    return await this.prisma.channelMember.update({
       where: {
         userId_channelId: {
           userId: targetUserId,
@@ -469,6 +479,9 @@ export class ChannelService {
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
+	if (!channel) {
+		throw new Error('Channel does not exist.');
+	}
     const channelOwner = await this.channelMemberService.findOwner(channel.id);
     const requesterMembership = await this.findMember(
       adminActionDto.requesterId,
@@ -476,7 +489,7 @@ export class ChannelService {
     );
 
     if (
-      !channel ||
+      !channelOwner ||
       (channelOwner.userId !== adminActionDto.requesterId &&
         requesterMembership?.role! === ChannelMemberRole.MEMBER)
     ) {
@@ -494,7 +507,7 @@ export class ChannelService {
       throw new Error('Target user is not a member of the channel.');
     }
 
-    return this.unMuteMember(
+    return await this.unMuteMember(
       adminActionDto.targetUserId,
       adminActionDto.channelId,
     );
@@ -731,7 +744,6 @@ export class ChannelService {
   }
 
   async updateMutedUsers(channelId: number): Promise<ChannelMember[]> {
-    try {
       const channelMembers: ChannelMember[] = await this.findMembers(channelId);
       const membersToUnmute: ChannelMember[] = [];
       for (const channelMember of channelMembers) {
@@ -744,9 +756,5 @@ export class ChannelService {
         }
       }
       return membersToUnmute;
-    } catch (error: any) {
-      console.error('Error updating muted users:', error);
-      throw error;
-    }
   }
 }

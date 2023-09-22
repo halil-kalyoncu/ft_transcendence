@@ -128,9 +128,16 @@ const sendSubmitEvent = (inviteeUsername: string) => {
 	  socket.value.emit('gotChannelInvitation', {
 		channelId: channelId,
 		inviteeUsername: inviteeUsername
-		})
-  } catch (error: any) {
-	console.error('Error: ', error.message)
+		},(response : ErrorI | any) => {
+	  if ('error' in response) {
+		notificationStore.showNotification(response.error, false)
+		return
+	  } else {
+		return
+	  }
+	})
+  } catch (error) {
+	notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -152,7 +159,7 @@ const submit = async () => {
   findUserSuggestions('')
   emit('submit')
 }
-
+// ERROR HANDLING API FRONTEND
 const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId: Number) => {
   try {
     const response = await fetch(
@@ -160,18 +167,19 @@ const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId:
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
         }
       }
     )
+	const responseData = await response.json()
     if (!response.ok) {
-      const responseData = await response.json()
-      await notificationStore.showNotification(responseData.message, false)
+      notificationStore.showNotification(responseData.message, false)
       return true
     }
     return false
   } catch (error) {
-    console.error('Error occurred during login:', error)
+	notificationStore.showNotification("Something went Wrong", false)
     return true
   }
 }
@@ -182,23 +190,27 @@ const handleClickOutside = () => {
 }
 
 const findUserSuggestions = async (input: string) => {
-  const response = await fetch(
-    `http://localhost:3000/api/users/findUsersNotInChannel?channelId=${channelId}`
-  )
+	try{
+		const response = await fetch(
+		`http://localhost:3000/api/users/findUsersNotInChannel?channelId=${channelId}`,
+		{
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+			}
+		})
+	const responseData = await response.json()
+	  if (!response.ok) {
+		notificationStore.showNotification(responseData.message, false)
+	  }
+	  if (input.trim() === '') {
+		userSuggestions.value = responseData
+		return
+	  }
 
-  if (!response.ok) {
-    throw new Error('Could not fetch user suggestions')
-  }
-  const data = await response.json()
-  if (input.trim() === '') {
-    userSuggestions.value = data
-    for (const user of userSuggestions.value) {
-      console.log(user.status)
-    }
-    return
-  }
   // Filter user suggestions based on the provided letters in the right order
-  const filteredSuggestions = data.filter((user: any) => {
+  const filteredSuggestions = responseData.filter((user: any) => {
     const username = user.username.toLowerCase()
     const lettersLower = input.toLowerCase()
 
@@ -214,6 +226,9 @@ const findUserSuggestions = async (input: string) => {
     return false
   })
   userSuggestions.value = filteredSuggestions
+} catch (error) {
+	notificationStore.showNotification("Something went Wrong", false)
+}
 }
 
 const showSuggestions = () => {

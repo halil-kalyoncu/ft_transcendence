@@ -55,7 +55,7 @@ onMounted(async () => {
 })
 
 // TODO: Set the Listenes off makes probelems even if I am listine in the notiicfation bell
-/* onBeforeUnmount(() => {
+onBeforeUnmount(() => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', false)
     return
@@ -63,8 +63,9 @@ onMounted(async () => {
   socket.value.off('NewChannelInvitation')
   socket.value.off('ChannelInvitationAccepted')
   socket.value.off('ChannelInvitationRejected')
+  socket.value.off('InvitationObsolete')
 
-}) */
+})
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -74,15 +75,22 @@ const initSocket = () => {
 const setChannelInvitations = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`
+      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
+	  {
+		method: 'GET',
+		headers: {
+		  'Content-Type': 'application/json',
+		  Authorization: `Bearer ${localStorage.getItem('ponggame')}`,
+		},
+	}
     )
+    const responseData = await response.json()
     if (!response.ok) {
-      throw new Error('Could not fetch channel manager members')
-    }
-    const data = response.json()
-    channelInvitations.value = await data
-  } catch (error: any) {
-    console.error('Error: ', error)
+      notificationStore.showNotification(responseData.message, false)
+	}
+    channelInvitations.value = await responseData
+  } catch (error) {
+    notificationStore.showNotification("Something went wrong", false)
   }
 }
 

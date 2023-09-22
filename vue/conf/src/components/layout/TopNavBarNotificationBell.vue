@@ -169,6 +169,7 @@ const setchannelInvitationListener = () => {
 	notificationStore.showNotification('New invitation', true)
 	setChannelInvitationData()
   })
+  //TODO Check this functions accept and reject with the add user to channel
   socket.value.on('ChannelInvitationRejected', (channelName:string, inviteeName:string) => {
 	notificationStore.showNotification(
       'Channel Invitaion for ' + channelName + ' from ' + inviteeName + 'rejected',

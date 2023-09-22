@@ -35,6 +35,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
+import type { ErrorI } from '../../model/error.interface'
 
 library.add(fas)
 const router = useRouter()
@@ -66,9 +67,19 @@ const acceptRequest = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-
-  socket.value.emit('acceptChannelInvitation', props.invitationId)
-  notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
+  try{
+	  socket.value.emit('acceptChannelInvitation', props.invitationId, (response : ErrorI | any) => {
+	  if ('error' in response) {
+		notificationStore.showNotification(response.error)
+		return
+	  } else {
+		notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
+		return
+	  }
+	})
+  } catch (error) {
+	notificationStore.showNotification(`Something went wrong`, false)
+  }
 }
 
 const rejectRequest = () => {
@@ -76,9 +87,19 @@ const rejectRequest = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
+try {
+	socket.value.emit('rejectChannelInvitation', props.invitationId, (response : ErrorI | any) => {
+		if ('error' in response) {
+			notificationStore.showNotification(response.error)
+			return
+		}
+	})
+	notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
+	return
+} catch (error) {
+	notificationStore.showNotification(`Something went wrong`, false)
+}
 
-  socket.value.emit('rejectChannelInvitation', props.invitationId)
-  notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
 }
 
 

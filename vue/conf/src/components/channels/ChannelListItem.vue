@@ -138,16 +138,24 @@ const initSocket = () => {
 const comparePassword = async (): Promise<boolean> => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`
-    )
+      `http://localhost:3000/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`,
+	  {
+		method: 'GET',
+		headers: {
+          'Content-Type': 'application/json',
+		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+	  }
+	}
+	  )
+	  const responseData = await response.json()
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
+		notificationStore.showNotification(responseData.message, false)
+		return false
     }
-    const data = response.json()
-    const correct = await data
+    const correct = await responseData
     return correct
-  } catch (error: any) {
-    console.error('Error: ', error)
+  } catch (error) {
+	notificationStore.showNotification("Something went Wrong", false)
     return false
   }
 }
@@ -155,16 +163,25 @@ const comparePassword = async (): Promise<boolean> => {
 const setUserBanned = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${userId.value}`
+      `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${userId.value}`,
+	  {
+		method: 'GET',
+		headers: {
+          'Content-Type': 'application/json',
+		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+	  }
+	}
     )
+	const responseData = await response.json()
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
+		notificationStore.showNotification(responseData.message, false)
+		return
     }
-    const data = response.json()
-    userBanned.value = await data
+    userBanned.value = await responseData
     return
-  } catch (error: any) {
-    console.error('Error: ', error)
+  } catch (error) {
+	notificationStore.showNotification("Something went Wrong", false)
+    return
   }
 }
 
@@ -202,7 +219,16 @@ const setBannedFromChannelListener = () => {
   )
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
   initSocket()
   getJoinChannelButtonName()
   setUserBanned()

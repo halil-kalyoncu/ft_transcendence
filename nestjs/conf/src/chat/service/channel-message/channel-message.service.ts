@@ -124,7 +124,6 @@ export class ChannelMessageService {
     channelId: number,
     userId: number,
   ): Promise<ChannelMessageDto[]> {
-    try {
       const channelMessages: any[] = await this.prisma.channelMessage.findMany({
         where: {
           sender: {
@@ -174,17 +173,12 @@ export class ChannelMessageService {
         }),
       );
       return channelMessageDtos;
-    } catch (error: any) {
-      console.error('Error fetching channel messages:', error);
-      throw error;
-    }
   }
 
   async markChannelMessagesAsRead(
     channelId: number,
     userId: number,
   ): Promise<ChannelMessageDto[]> {
-    try {
       const channelMember = await this.channelMemberService.find(
         channelId,
         userId,
@@ -201,11 +195,7 @@ export class ChannelMessageService {
         },
       });
       return await this.getChannelMessagesforChannel(channelId, userId);
-    } catch (error: any) {
-      console.error('Error marking messages as read:', error);
-      throw error;
-    }
-  }
+}
 
   async getUnreadStatus(
     channelId: number,

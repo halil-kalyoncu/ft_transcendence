@@ -9,7 +9,6 @@ export class ChannelMessageReadStatusService {
     channelId: number,
     userId: number,
   ): Promise<ChannelMessageReadStatus[]> {
-    try {
       const unreadMessages =
         await this.prisma.channelMessageReadStatus.findMany({
           where: {
@@ -21,8 +20,5 @@ export class ChannelMessageReadStatusService {
           },
         });
       return unreadMessages;
-    } catch (error) {
-      throw new Error('Error fetching unread messages: ' + error.message);
-    }
   }
 }

@@ -66,6 +66,11 @@ import type { ErrorI } from '../../model/error.interface'
 const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 
+const initSocket = async () => {
+const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
+
 onMounted(async () => {
   try {
     await userStore.mountStore()
@@ -77,18 +82,13 @@ onMounted(async () => {
     return
   }
 
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectChatSocket(accessToken)
-
+  initSocket()
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
-    return
   }
 
-  socket.value.on('error', (error: string) => {
-    notificationStore.showNotification('Error: ' + error, false)
-  })
 })
+
 onBeforeUnmount(() => {
   disconnectChatSocket()
 })
@@ -189,18 +189,21 @@ const addUsertoChannel = async () => {
     const response = await fetch('http://localhost:3000/api/channel/addUserToChannel', {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+		'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
       },
       body: JSON.stringify({
         userId: userId.value,
         channelId: joinedChannelId.value
       })
     })
-    if (!response.ok) {
-      throw new Error('Failed to add user to channel')
+	const responseData = await response.json()
+	if (!response.ok) {
+      notificationStore.showNotification(responseData.message, false)
+      return
     }
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message)
+  } catch (error) {
+	notificationStore.showNotification("Something went Wrong", false)
   }
 }
 
@@ -213,17 +216,18 @@ const MarkMessagesAsRead = async () => {
         {
           method: 'PATCH',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+			'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
           }
         }
       )
-
-      if (!response.ok) {
-        throw new Error('Failed to mark messages as read')
-      }
+	  const responseData = await response.json()
+	  if (!response.ok) {
+      notificationStore.showNotification(responseData.message, false)
       return
-    } catch (error: any) {
-      notificationStore.showNotification(`Error` + error.message, false)
+    }
+  } catch (error) {
+	notificationStore.showNotification("Something went Wrong", false)
     }
   }
 }
@@ -281,6 +285,7 @@ const hanndleChannelSignedout = async () => {
   await closeChannelManagerAndChat()
 }
 
+// ERROR HANDLING GATEWAY FRONTEND
 const updateChannelManager = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems')
@@ -290,9 +295,14 @@ const updateChannelManager = async () => {
     socket.value.emit('SignInChannel', {
       channelId: joinedChannelId.value,
       username: username.value
-    })
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message)
+    },(response : ErrorI | any) => {
+	  if ('error' in response) {
+		notificationStore.showNotification(response.error, false)
+		return
+	  }
+	})
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 </script>

@@ -53,15 +53,22 @@ const calculateUnreadMessages = async (channelId: number) => {
   try {
     const response = await fetch(
       `http://localhost:3000/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${userId.value}`
-    )
+    , {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+		}
+	})
+	const responseData = await response.json()
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+		notificationStore.showNotification(responseData.message, false)
+		return 0
     }
-    const data = await response.json()
-    unreadMessages.value = data
+    unreadMessages.value = responseData
     return unreadMessages.value.length
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+  } catch (error) {
+    notificationStore.showNotification("Something went Wrong", false)
     return 0
   }
 }
@@ -70,15 +77,22 @@ const setChannels = async () => {
   try {
     const response = await fetch(
       `http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`
-    )
+    ,{
+		method: 'GET',
+		headers: {
+		'Content-Type': 'application/json',
+		'Auhorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+  }
+})
+	const responseData = await response.json()
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+		notificationStore.showNotification(responseData.message, false)
+		return
     }
-    const data = await response.json()
-    channelData.value = data
+    channelData.value = responseData
     return
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+  } catch (error) {
+    notificationStore.showNotification("Something went Wrong", false)
     return
   }
 }
@@ -92,11 +106,11 @@ const setUnreadMessages = async () => {
     }
     return
   } catch (error: any) {
-    console.log('error: ' + error.message)
     notificationStore.showNotification(`Error` + error.message, true)
     return
   }
 }
+
 const setNewChannelMessageListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)

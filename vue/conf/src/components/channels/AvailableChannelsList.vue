@@ -46,15 +46,23 @@ const userId = computed(() => userStore.userId)
 const setPublicChannels = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`
+      `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
+	  {
+		method: 'GET',
+		headers: {
+		  'Content-Type': 'application/json',
+		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+		}
+	  }
     )
+	const responseData = await response.json()
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+		notificationStore.showNotification(responseData.message, false)
     }
-    const data = await response.json()
-    channelData.value = await data
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    channelData.value = await responseData
+  } catch (error) {
+    notificationStore.showNotification("Something went Wrong", false)
+	return
   }
 }
 

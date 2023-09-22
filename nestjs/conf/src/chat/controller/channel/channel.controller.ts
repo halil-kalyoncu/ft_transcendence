@@ -7,8 +7,12 @@ import {
   Post,
   Query,
   Patch,
+  UseGuards,
+  HttpException, 
+  HttpStatus,
+  BadRequestException
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Channel, ChannelMember, ChannelMessage } from '@prisma/client';
 import { ChannelService } from '../../service/channel/channel.service';
@@ -21,7 +25,7 @@ import {
 } from '../../dto/channel.dto';
 import { ChannelMemberService } from '../../service/channel-member/channel-member.service';
 import { ErrorDto } from 'src/chat/dto/error.dto';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
 
 @ApiTags('Channel module')
 @Controller('channel')
@@ -77,31 +81,45 @@ export class ChannelController {
     return await this.ChannelService.getAllAvailableChannels(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token') 
   @Get('getAllChannelManagerMembers')
   async getAllUsersChannelMembers(
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<ChannelMemberDto[]> {
-    return await this.ChannelService.getAllChannelManagerMembers(channelId);
+	try{
+		return await this.ChannelService.getAllChannelManagerMembers(channelId);
+	} catch(error) {
+		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
   }
+}
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Get('isUserBanned')
   async isUserBanned(
     @Query('userId', ParseIntPipe) userId: number,
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<boolean> {
-    return await this.ChannelMemberService.isUserBanned(userId, channelId);
+	try{
+		return await this.ChannelMemberService.isUserBanned(userId, channelId);
+	} catch(error) {
+		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+	}
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Get('comparePassword')
   async comparePassword(
     @Query('channelId', ParseIntPipe) channelId: number,
     @Query('password') password: string,
-  ): Promise<boolean | ErrorDto> {
+  ): Promise<boolean> {
     try {
       return await this.ChannelService.comparePassword(channelId, password);
-    } catch (error: any) {
-      return { error: error.message as string };
-    }
+    } catch (error) {
+		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    } 
   }
 
   //Post Functions to create Channels
@@ -134,7 +152,14 @@ export class ChannelController {
   async addUserToChannel(
     @Body() ChannelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
-    return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
+	try{
+		return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
+	} catch(error) {
+		if (error instanceof BadRequestException) {
+			throw error;
+		}
+		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+	}
   }
 
   @Patch('MakeUserAdmin')
@@ -151,7 +176,11 @@ export class ChannelController {
   async updateMutedUsers(
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<ChannelMember[]> {
-    return await this.ChannelService.updateMutedUsers(channelId);
+	try{
+		return await this.ChannelService.updateMutedUsers(channelId);
+	} catch (error) {
+		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+	}
   }
 
   @Delete('removeUserFromChannel')

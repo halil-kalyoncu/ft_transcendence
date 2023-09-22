@@ -143,8 +143,22 @@ const getMembers = async () => {
   return
 }
 
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
+
 onMounted(async () => {
-  initSocket()
+	try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+initSocket()
   await getMembers()
   getSignOutButtonText()
   await setDestroyChannelListener()
@@ -168,23 +182,30 @@ onBeforeUnmount(() => {
   socket.value.off('memberUnMuted')
   socket.value.off('passwordSet')
 })
-const initSocket = () => {
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectChatSocket(accessToken)
-}
+
+
 
 const setMembers = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`
+      `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`,
+	  {
+		method: 'GET',
+		headers: {
+          'Content-Type': 'application/json',
+		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+        }
+	  }
     )
+	const responseData = await response.json()
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
+		notificationStore.showNotification(responseData.message, false)
+		return
     }
-    const data = await response.json()
-    Members.value = await data
-  } catch (error: any) {
-    console.error('Error: ', error)
+    Members.value = await responseData
+  } catch (error) {
+    notificationStore.showNotification("Something went Wrong", false)
+    return true
   }
 }
 
@@ -267,8 +288,6 @@ const setUserSignedListener = () => {
       await setMembers().then(() => {
         setCurrentUserRole()
       })
-      console.log('MEMNER')
-      console.log(Members.value)
     }
   )
 
@@ -382,6 +401,13 @@ const destroyChannel = async () => {
   await socket.value.emit('DestroyChannel', {
     channelId: channelId,
     senderId: userId.value
+  }, async (response: any | ErrorI) => {
+	if ('error' in response) {
+	  await notificationStore.showNotification(response.error)
+	  return
+	} else {
+	  return
+	}
   })
 }
 
@@ -399,30 +425,6 @@ const DestroyChannel = async () => {
   }
 }
 
-/* const removeUserFromChannel = async () => {
-  try {
-	console.log("USERID JOINED")
-    console.log(joinedChannelId.value)
-    const response = await fetch('http://localhost:3000/api/channel/removeUserFromChannel', {
-      method: 'Delete',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: userId.value,
-        channelId: joinedChannelId.value
-      })
-    })
-	console.log("RESPONSE FROM DESTROY")
-	console.log(await response.json())
-	if (!response.ok) {
-	  notificationStore.showNotification('Error: Failed to remove user from channel', false)
-	}
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
-  }
-}
- */
 const SignOutChannel = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
@@ -431,7 +433,14 @@ const SignOutChannel = async () => {
   await socket.value.emit('SignOutChannel', {
     channelId: channelId,
     userId: userId.value
-  })
+  }, async (response: any | ErrorI) => {
+	if ('error' in response) {
+	  await notificationStore.showNotification(response.error)
+	  return
+	} else {
+	return
+	}
+})
 }
 
 const setPassword = async () => {
