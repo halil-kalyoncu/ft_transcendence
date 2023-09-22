@@ -15,8 +15,7 @@ import { Match } from '@prisma/client';
 
 let ballPos = { x: 0, y: 0 };
 let diffPadBall = 0;
-let end;
-// let end = new(Number);
+let intervalId;
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost:4200', 'http://localhost:3000'],
@@ -135,9 +134,14 @@ export class EventsGateway {
       const powerupNames: string[] = await this.matchService.getPowerupNames(
         queryMatchId,
       );
-      console.log('game socket');
-      console.log(socket.data.match);
-      console.log(powerupNames);
+	  intervalId = setInterval(async () => {
+		let powerUpIndex = Math.floor(Math.random() * powerupNames.length);
+		console.log(powerUpIndex)
+		this.server.emit("newPowerUp", { powerUp: powerupNames[powerUpIndex] })
+	}, 5000);
+    //   console.log('game socket');
+    //   console.log(socket.data.match);
+    //   console.log(powerupNames);
     }
 
     const room = this.rooms.get(queryMatchId);
@@ -162,19 +166,20 @@ export class EventsGateway {
     if (room.gameIsRunning) {
       room.gameIsRunning = false;
       if (socket.data.isLeftPlayer) {
-        room.leftPlayerDisconnect = true;
-      } else {
-        room.rightPlayerDisconnect = true;
-      }
-
-      const match = await this.matchService.finishMatch(room);
-
-      if (socket.data.isLeftPlayer) {
-        socket.to(room.socketIds[1]).emit('gameFinished', match);
-      } else {
-        socket.to(room.socketIds[0]).emit('gameFinished', match);
-      }
+		  room.leftPlayerDisconnect = true;
+		} else {
+			room.rightPlayerDisconnect = true;
+		}
+		
+		const match = await this.matchService.finishMatch(room);
+		
+		if (socket.data.isLeftPlayer) {
+			socket.to(room.socketIds[1]).emit('gameFinished', match);
+		} else {
+			socket.to(room.socketIds[0]).emit('gameFinished', match);
+		}
     }
+	clearInterval(intervalId);
     socket.disconnect();
   }
 
@@ -217,6 +222,8 @@ export class EventsGateway {
         'paddleMove',
         { playerId: 'left', newPos: paddleAPos.y },
       );
+
+
       //this.server.emit('paddleMove', { playerId: 'left', newPos: paddleAPos.y }); ->	this would send to all clients currently on the server,
       //																					we only want to send to the two users that are playing the match
     } else {
@@ -292,8 +299,8 @@ export class EventsGateway {
       data.color,
     );
     room.powerups.push(newPowerUp);
-    socket.emit('newPowerUp', data);
-    this.sendToOpponent(socket, room.socketIds, 'newPowerUp', data);
+    // socket.emit('newPowerUp', data);
+    // this.sendToOpponent(socket, room.socketIds, 'newPowerUp', data);
     //this.server.emit('newPowerUp', data);
     // console.log("powerup spawned at x: ", data.x)
   }
@@ -316,6 +323,7 @@ export class EventsGateway {
       target = room.paddleB;
       // console.log("PU::: right");
     }
+
 
     if (data.type == 'increasePaddleHeight') {
       target.setHeight(400);
@@ -368,6 +376,7 @@ export class EventsGateway {
 
     socket.emit('gameFinished', match);
   }
+
 
   //Helperfunctions
   private sendToOpponent(

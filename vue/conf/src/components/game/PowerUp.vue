@@ -33,17 +33,13 @@ const props = defineProps({
   index: {
     type: Number,
     required: true,
-    default: 0
+    default: 2
   },
   color: {
     type: String,
     required: true,
     default: 'white'
   },
-  type: {
-    type: Number,
-    required: true
-  }
 })
 let images = [widePaddle, magnet, image2, image1]
 </script>
