@@ -56,14 +56,24 @@ const updateSelectedFriend = () => {
 
 const fetchUser = async (username: string): Promise<UserI | null> => {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`)
+    const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`,
+	  {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
+	)
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-
-    return await response.json()
-  } catch (error: any) {
+	const responseData = await response.json();
+	if (response.ok) {
+		return responseData;
+	}
+	else {
+		return null
+	}
+  } catch (error) {
     return null
   }
 }
@@ -71,38 +81,51 @@ const fetchUser = async (username: string): Promise<UserI | null> => {
 const setFriendData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/friendships/get-accepted-friends?userId=${userId.value}`
+      `http://localhost:3000/api/friendships/get-accepted-friends?userId=${userId.value}`,
+	  {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    friends.value = data
-    console.log('friends')
-    console.log(friends.value)
-    updateSelectedFriend()
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+    const responseData = await response.json()
+	if (response.ok) {
+		friends.value = responseData
+		updateSelectedFriend()
+	}
+	else {
+		notificationStore.showNotification("Error while fetching friends", false)
+	}
+  } catch (error) {
+    notificationStore.showNotification("Something went wrong while fetching friends", false)
   }
 }
 
 const setDirectMessageData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/directMessages/allUnreadByUserId?userId=${userId.value}`
+      `http://localhost:3000/api/directMessages/allUnreadByUserId?userId=${userId.value}`,
+	  {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    unreadMessages.value = data
-    console.log(unreadMessages.value)
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+	const responseData = await response.json()
+	if (response.ok) {
+    	unreadMessages.value = responseData
+  	}
+	else {
+		notificationStore.showNotification("Error while fetching unread messages: " + responseData.message, false)
+	}
+  } catch (error) {
+    notificationStore.showNotification("Something went wrong while fetching unread messages", false)
   }
 }
 

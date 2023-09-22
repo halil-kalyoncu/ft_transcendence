@@ -594,7 +594,7 @@ describe('UserService', () => {
         await service.uploadAvatar(file, userId);
       } catch (e) {
         expect(e).toBeInstanceOf(Error);
-        expect(e.message).toBe('user not found');
+        expect(e.message).toBe('User not found');
       }
 
       findByIdSpy.mockRestore();
@@ -683,7 +683,7 @@ describe('UserService', () => {
         await service.deleteAvatar(userId);
       } catch (e) {
         expect(e).toBeInstanceOf(Error);
-        expect(e.message).toBe('user not found');
+        expect(e.message).toBe('User not found');
       }
 
       findByIdSpy.mockRestore();

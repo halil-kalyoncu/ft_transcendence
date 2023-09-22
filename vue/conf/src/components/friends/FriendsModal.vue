@@ -101,28 +101,29 @@ const findUserSuggestions = async (username: string) => {
   }
 
   try {
-	const accessToken = localStorage.getItem('ponggame') ?? ''
-	const response = await fetch(
-  	  `http://localhost:3000/api/users/find-by-username?username=${username}`,
-  	  {
-  	    method: 'GET',
-  	    headers: {
-  	      'Content-Type': 'application/json',
-			'Authorization': `Bearer ${accessToken}`
-  	    }
-  	  }
-  	)
+    const accessToken = localStorage.getItem('ponggame') ?? ''
+    const response = await fetch(
+      `http://localhost:3000/api/users/find-by-username?username=${username}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    )
 
-	const responseData = await response.json();
-	if (response.ok) {
-		userSuggestions.value = responseData
-	}
-	else {
-		notificationStore.showNotification("User suggestions couldn't be loaded: " + responseData.message, false)
-	}
-  }
-  catch (error: any) {
-	notificationStore.showNotification("User suggestions couldn't be loaded: " + error, false)
+    const responseData = await response.json()
+    if (response.ok) {
+      userSuggestions.value = responseData
+    } else {
+      notificationStore.showNotification(
+        "User suggestions couldn't be loaded: " + responseData.message,
+        false
+      )
+    }
+  } catch (error: any) {
+    notificationStore.showNotification("User suggestions couldn't be loaded", false)
   }
 }
 

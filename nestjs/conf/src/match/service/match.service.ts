@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   Match,
@@ -59,7 +63,7 @@ export class MatchService {
     if (!match) {
       return null;
     } else if (match.leftUserId == invitedUserId) {
-      throw new Error("Can't invite yourself to a match");
+      throw new BadRequestException("Can't invite yourself to a match");
     }
 
     const matchPowerups = await Promise.all(
@@ -191,7 +195,7 @@ export class MatchService {
     const match: Match = await this.findById(id);
 
     if (!match) {
-      throw new Error("Can't find match");
+      throw new NotFoundException("Can't find match");
     }
 
     const matchPowerups: MatchPowerup[] =

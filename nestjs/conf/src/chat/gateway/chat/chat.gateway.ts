@@ -1195,6 +1195,10 @@ export class ChatGateway
         return { error: 'Opponent is not online' };
       }
       await this.matchmakingService.deleteByUserId(matchmaking.userId);
+
+      ladderMatch = await this.matchService.startMatch(ladderMatch.id);
+      this.updateFriendsOf(socket.data.user.id);
+      this.updateFriendsOf(ladderMatch.rightUserId);
       socket.to(connectedUser.socketId).emit('goToLadderGame', ladderMatch);
       socket.emit('goToLadderGame', ladderMatch);
       return matchmaking;

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Matchmaking, User } from '@prisma/client';
 import { UserService } from '../../user/service/user-service/user.service';
@@ -29,7 +29,7 @@ export class MatchmakingService {
     const user: User = await this.userService.findById(userId);
 
     if (!user) {
-      throw new Error("User doesn't exists");
+      throw new BadRequestException("User doesn't exists");
     }
 
     const lowerRange = user.ladderLevel - 50;
@@ -63,7 +63,7 @@ export class MatchmakingService {
     const user: User = await this.userService.findById(userId);
 
     if (!user) {
-      throw new Error("User doesn't exists");
+      throw new BadRequestException("User doesn't exists");
     }
     return await this.prisma.matchmaking.create({
       data: {

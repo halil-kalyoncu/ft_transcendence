@@ -50,13 +50,11 @@ const submitForm = async () => {
       body: JSON.stringify({ username: username.value })
     })
 
+	const responseData = await response.json()
     if (response.ok) {
-      console.log('Login successful')
-      const { access_token } = await response.json()
-      //save jwt into local storage
-      localStorage.setItem('ponggame', access_token)
+      localStorage.setItem('ponggame', responseData.access_token)
       await userStore.initStore()
-      connectChatSocket(access_token)
+      connectChatSocket(responseData.access_token)
       const is2FAenabled = await get2FAStatus()
 
       if (is2FAenabled) {
@@ -65,11 +63,10 @@ const submitForm = async () => {
         router.push('/home')
       }
     } else {
-      console.error('Login failed!! ' + response.status + ': ' + response.statusText)
-      notificationStore.showNotification(response.status + ': ' + response.statusText, false)
+      notificationStore.showNotification('Error occurred during login' + responseData.message, false)
     }
-  } catch (error: any) {
-    notificationStore.showNotification('Error occurred during login: ' + error.message, false)
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong during login', false)
   }
 }
 </script>

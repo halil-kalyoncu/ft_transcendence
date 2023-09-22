@@ -58,7 +58,8 @@ const checkAuthorized = async () => {
     const response = await fetch(`http://localhost:3000/api/matchmaking/${loggedUser.id}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
 
@@ -67,15 +68,25 @@ const checkAuthorized = async () => {
       const matchmaking: MatchmakingI | null = responseText ? JSON.parse(responseText) : null
 
       if (!matchmaking) {
-        throw Error('You are not authorized to visit this site')
+        notificationStore.showNotification('You are not authorized to visit this site', false)
       } else if (matchmaking.id !== parseInt(matchmakingId, 10)) {
-        throw Error('Something went wrong while directing to the queue')
+        notificationStore.showNotification(
+          'Something went wrong while directing you to the queue',
+          false
+        )
       }
     } else {
-      throw Error('Something went wrong while fetching the matchmaking data')
+      const responseData = await response.json()
+      notificationStore.showNotification(
+        'Error while fetching the matchmaking data: ' + responseData.message,
+        false
+      )
     }
   } catch (error: any) {
-    notificationStore.showNotification(error.message, false)
+    notificationStore.showNotification(
+      'Something went wrong while fetching the matchmaking data',
+      false
+    )
     authorized.value = false
     router.push('/home')
   }
@@ -120,17 +131,17 @@ const handleDeleteMatchmakingEntry = async () => {
     const response = await fetch(`http://localhost:3000/api/matchmaking/${loggedUser.id}`, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
 
-    if (response.ok) {
-      //const matchmaking: MatchmakingI = await response.json()
-    } else {
-      throw Error('Something went wrong while delete the matchmaking data')
+	const responseData = await response.json()
+    if (!response.ok) {
+      notificationStore.showNotification('Error while delete the matchmaking data: ' + responseData.message, false)
     }
   } catch (error: any) {
-    notificationStore.showNotification(error.message, false)
+    notificationStore.showNotification('Something went wrong while delete the matchmaking data', false)
   }
 }
 

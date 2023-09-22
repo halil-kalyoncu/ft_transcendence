@@ -50,20 +50,31 @@ const findFriendSuggestions = async (usernameSuggestion: string) => {
     userSuggestions.value = []
     return
   }
-
-  const loggedUser: UserI = getUserFromAccessToken()
-  const userId: string = loggedUser.id?.toString(10) ?? ''
-  const response = await fetch(
-    `http://localhost:3000/api/friendships/get-like-username?userId=${userId}&username=${usernameSuggestion}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+  try {
+    const loggedUser: UserI = getUserFromAccessToken()
+    const userId: string = loggedUser.id?.toString(10) ?? ''
+    const response = await fetch(
+      `http://localhost:3000/api/friendships/get-like-username?userId=${userId}&username=${usernameSuggestion}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
+    )
+    const responseData = await response.json()
+    if (response.ok) {
+      userSuggestions.value = responseData
+    } else {
+      notificationStore.showNotification(
+        "Friend suggestions couldn't be loaded: " + responseData.message,
+        false
+      )
     }
-  )
-  const data = await response.json()
-  userSuggestions.value = data
+  } catch (error: any) {
+    notificationStore.showNotification("Friend suggestions couldn't be loaded", false)
+  }
 }
 
 const selectSuggestion = (suggestion: UserI) => {
