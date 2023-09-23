@@ -49,7 +49,7 @@ const handleInviteClick = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       },
       body: JSON.stringify(createMatchDto)
     })

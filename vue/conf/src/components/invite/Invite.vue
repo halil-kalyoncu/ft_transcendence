@@ -176,6 +176,7 @@ onMounted(async () => {
       `${match.value.rightUser?.username} rejected your invite`,
       false
     )
+    rightPlayer.value = null
     match.value = updatedMatch
     isWaitingForResponse.value = false
   })

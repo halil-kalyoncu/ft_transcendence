@@ -132,16 +132,22 @@ const handleDeleteMatchmakingEntry = async () => {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
 
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (!response.ok) {
-      notificationStore.showNotification('Error while delete the matchmaking data: ' + responseData.message, false)
+      notificationStore.showNotification(
+        'Error while delete the matchmaking data: ' + responseData.message,
+        false
+      )
     }
   } catch (error: any) {
-    notificationStore.showNotification('Something went wrong while delete the matchmaking data', false)
+    notificationStore.showNotification(
+      'Something went wrong while delete the matchmaking data',
+      false
+    )
   }
 }
 

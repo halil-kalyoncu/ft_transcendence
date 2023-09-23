@@ -417,11 +417,11 @@ async function getUserNames(): Promise<void> {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
 
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (response.ok) {
       playerAName = responseData.leftUser.username
       playerBName = responseData.rightUser.username

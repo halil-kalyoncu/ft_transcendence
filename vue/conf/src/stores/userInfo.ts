@@ -17,11 +17,11 @@ export const useUserStore = defineStore('user', () => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
 
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (response.ok) {
       user.value = responseData
       userId.value = user.value?.id as number
@@ -41,12 +41,12 @@ export const useUserStore = defineStore('user', () => {
     const jwtUserId: number = jwtUser.id as number
 
     const response = await fetch(`http://localhost:3000/api/users/avatar/${jwtUserId}`, {
-		method: 'GET',
-		headers: {
-		  'Content-Type': 'application/json',
-		  Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-		}
-	})
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+      }
+    })
     if (response.ok) {
       avatarImageData.value = await response.blob()
     } else {

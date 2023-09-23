@@ -34,7 +34,7 @@ const check2FAcode = async () => {
       return responseData
     }
   } catch (error) {
-    notificationStore.showNotification("Something went wrong", false)
+    notificationStore.showNotification('Something went wrong', false)
     return false
   }
 }

@@ -50,7 +50,7 @@ const submitForm = async () => {
       body: JSON.stringify({ username: username.value })
     })
 
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (response.ok) {
       localStorage.setItem('ponggame', responseData.access_token)
       await userStore.initStore()
@@ -63,7 +63,10 @@ const submitForm = async () => {
         router.push('/home')
       }
     } else {
-      notificationStore.showNotification('Error occurred during login' + responseData.message, false)
+      notificationStore.showNotification(
+        'Error occurred during login' + responseData.message,
+        false
+      )
     }
   } catch (error) {
     notificationStore.showNotification('Something went wrong during login', false)
