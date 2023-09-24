@@ -117,12 +117,12 @@ const keyHookUp = (e: KeyboardEvent) => {
       isMovingDown.value = false
       break
     case 'KeyB':
-      playerAScore.value++
+    //   playerAScore.value++
+	  spawnPowerUp();
+    	// socket.value.emit('activatePowerUp', { type: 'magnet', player: 'right' })
       break
-      // spawnPowerUp();
-      //   socket.value.emit('activatePowerUp', { type: 'magnet', player: 'right' })
       // socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
-      break
+    //   break
     case 'Space':
       socket.value.emit('fire')
       break

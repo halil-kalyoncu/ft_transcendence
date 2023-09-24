@@ -36,12 +36,16 @@ const leftPlayerName: String | null = props.match?.leftUser?.username ?? null
 const rightPlayerName: String | null = props.match?.rightUser?.username ?? null
 
 const scoreMessage = computed(() => {
+  if (!props.match?.state || !props.userId) return null
+
   if (
-    (props.match?.state == 'WINNERLEFT' && props.match?.leftUser?.id == parseInt(props.userId)) ||
-    (props.match?.state == 'DISCONNECTRIGHT' &&
-      props.match?.leftUser?.id == parseInt(props.userId)) ||
-    (props.match?.state == 'WINNERRIGHT' && props.match?.rightUser?.id == parseInt(props.userId)) ||
-    (props.match?.state == 'DISCONNECTLEFT' && props.match?.rightUser?.id == parseInt(props.userId))
+    (props.match?.state === 'WINNERLEFT' && props.match?.leftUser?.id === parseInt(props.userId)) ||
+    (props.match?.state === 'DISCONNECTRIGHT' &&
+      props.match?.leftUser?.id === parseInt(props.userId)) ||
+    (props.match?.state === 'WINNERRIGHT' &&
+      props.match?.rightUser?.id === parseInt(props.userId)) ||
+    (props.match?.state === 'DISCONNECTLEFT' &&
+      props.match?.rightUser?.id === parseInt(props.userId))
   )
     return 'Win'
   return 'Defeat'

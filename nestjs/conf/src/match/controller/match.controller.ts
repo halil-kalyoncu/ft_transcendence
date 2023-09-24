@@ -57,13 +57,11 @@ export class MatchController {
     return await this.matchService.findById(id);
   }
 
-
   @Get('find-matches-by-user')
   async findMatchByUser(@Query('userid', ParseIntPipe) userid: number): Promise<Match[] | null> {
 	return await this.matchService.findMatchByUser(userid);
 	// return await this.matchService.findMatchByUser();
   }
-
 //   @Get('find-user-by-name')
 //   async findUserByName(@Query('username') username: string): Promise<User>{
 // 	return await this.matchService.findUserByName(username);

@@ -48,6 +48,7 @@ export class MatchService {
 	  });
   }
 
+
   async findAll(): Promise<Match[]> {
 	return await this.prisma.match.findMany({
 	  include: {
