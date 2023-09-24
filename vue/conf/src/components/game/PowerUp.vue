@@ -12,10 +12,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import widePaddle from '../../assets/bigger_paddle.png'
+import widePaddle from '../../assets/increasePaddle.png'
+import smallPaddle from '../../assets/decreasePaddle.png'
 import magnet from '../../assets/magnet.png'
-import image2 from '../../assets/avatar-2.png'
-import image1 from '../../assets/avatar-1.png'
+import slowBall from '../../assets/slowBall.png'
+import fastBall from '../../assets/fastBall.png'
 
 const props = defineProps({
   id: {
@@ -46,7 +47,7 @@ const props = defineProps({
 	default: 'null'
   }
 })
-let images = [widePaddle, magnet, image2, image1]
+let images = [widePaddle, smallPaddle , magnet, slowBall, fastBall]
 </script>
 
 <style>

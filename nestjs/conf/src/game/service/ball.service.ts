@@ -54,22 +54,12 @@ export class Ball {
     this.dx = -this.dx;
   }
   updateSpeed(newSpeed: number): void{
-    // Speichern Sie die aktuelle Richtung der Bewegung
-    const currentDirectionX = this.dx >= 0 ? 1 : -1;
-    const currentDirectionY = this.dy >= 0 ? 1 : -1;
+	const speedFactor = newSpeed / this.speed;
 
-    // Aktualisieren Sie die Geschwindigkeit
-    this.speed = newSpeed;
+	this.speed = newSpeed;
 
-    // Beibehalten der aktuellen Richtung
-	if (this.dx < 0)
-   		this.dx = -currentDirectionX * this.speed * Math.cos(Math.atan2(this.dy, this.dx));
-	else
-		this.dx = currentDirectionX * this.speed * Math.cos(Math.atan2(this.dy, this.dx));
-	if (this.dy < 0)
-		this.dy = -currentDirectionY * this.speed * Math.sin(Math.atan2(this.dy, this.dx));
-	else 
-    	this.dy = currentDirectionY * this.speed * Math.sin(Math.atan2(this.dy, this.dx));
+	this.dx *= speedFactor;
+	this.dy *= speedFactor;
   }
   handleBallCollision(
     nextBallX: number,
@@ -141,7 +131,12 @@ export class Ball {
     let nextBallX = this.x + this.dx;
     let nextBallY = this.y + this.dy;
 
-    if (this.scoreGoal(room, nextBallX, server)) this.resetBall();
+    if (this.scoreGoal(room, nextBallX, server)) {
+		this.resetBall();
+		room.paddleA.setHeight(100);
+		room.paddleB.setHeight(100);
+		server.emit('resetPaddle');
+	}
     else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;
@@ -166,13 +161,10 @@ export class Ball {
     }
 
     for (let powerup of room.powerups) {
-      // console.log(this.dx);
       if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)) {
         let target;
         if (this.dx > 0) target = 'left';
         else target = 'right';
-		console.log("POWERUP FROM SERVICE")
-		console.log(powerup)
         server.emit('activatePowerUp', {
           player: target,
           type: powerup.type,
@@ -183,13 +175,8 @@ export class Ball {
         powerup.y + powerup.hgt >= this.fieldHeight &&
         !this.handlePowerUpCollision(nextBallX, nextBallY, powerup)
       ) {
-        console.log('powerupid: ', powerup.id);
         server.emit('destroyPowerUp', { id: powerup.id });
-    } 
-	// else {
-    //     powerup.moveDown();
-    //     server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
-    //   }
+      } 
     }
     return {
       x: this.x,

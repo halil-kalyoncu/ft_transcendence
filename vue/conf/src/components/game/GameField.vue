@@ -254,26 +254,26 @@ onMounted(() => {
   }
   console.log("power name")
   console.log(PowerUp.powerUp)
-  if (PowerUp.powerUp == 'slowBall') {
-    newPowerUp.color = 'red'
-    newPowerUp.index = 0
+  if (PowerUp.powerUp == 'increasePaddleHeight') {
+	newPowerUp.color = 'white'
+	newPowerUp.index = 0
+	newPowerUp.type = PowerUp.powerUp
+  } else if (PowerUp.powerUp == 'decreasePaddleHeight') {
+	newPowerUp.color = 'red'
+	newPowerUp.index = 1
+	newPowerUp.type = PowerUp.powerUp
+  } else if (PowerUp.powerUp == 'magnet') {
+	newPowerUp.color = 'green'
+	newPowerUp.index = 2
+	newPowerUp.type = PowerUp.powerUp
+  } else if (PowerUp.powerUp == 'slowBall') {
+    newPowerUp.color = 'blue'
+    newPowerUp.index = 3
 	newPowerUp.type = PowerUp.powerUp
   } else if (PowerUp.powerUp == 'fastBall') {
 	console.log("WORKED")
-    newPowerUp.color = 'green'
-    newPowerUp.index = 3
-	newPowerUp.type = PowerUp.powerUp
-  } else if (PowerUp.powerUp == 'decreasePaddleHeight') {
-    newPowerUp.color = 'blue'
-    newPowerUp.index = 2
-	newPowerUp.type = PowerUp.powerUp
-  } else if (PowerUp.powerUp == 'increasePaddleHeight') {
-    newPowerUp.color = 'white'
-    newPowerUp.index = 1
-	newPowerUp.type = PowerUp.powerUp
-  } else if (PowerUp.powerUp == 'magnet') {
-	newPowerUp.color = 'yellow'
-	newPowerUp.index = 4
+    newPowerUp.color = 'yellow'
+    newPowerUp.index = 4
 	newPowerUp.type = PowerUp.powerUp
   }
   
@@ -332,10 +332,6 @@ onMounted(() => {
 
   socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
     let target
-    // console.log(player)
-	console.log("ACTIVATE POWER BEFORE")
-	console.log(ball.value.speed)
-	console.log(type)
     if (player == 'left') target = paddleA.value
     else target = paddleB.value
 
@@ -346,23 +342,23 @@ onMounted(() => {
 		target?.setHgt(80)
 	}
 	if (type == 'slowBall') {
-		ball.value.speed = 2
+		ball.value!.speed = 2
 	}
 	if (type == 'fastBall') {
-		ball.value.speed = 9
+		ball.value!.speed = 9
 	}
-	console.log("ACTIVATE POWER AFTER")
-	console.log(ball.value.speed)
 	socket.value?.emit('executePowerUp', { type: type, player: player })
-
-    // console.log(player, type);
   })
 
   socket.value.on('scoreGoal', (payload: string) => {
     if (payload == 'playerA') playerAScore.value++
     else playerBScore.value++
   })
-
+  
+  socket.value.on('resetPaddle', () => {
+	paddleA.value?.setHgt(100)
+	paddleB.value?.setHgt(100)
+  })
   initGameField()
 })
 

@@ -161,7 +161,7 @@ export class EventsGateway {
 		let x = Math.floor(Math.random() * ((room.ball.fieldWidth - 70) - 70 + 1)) + 70
 		let y = -70
 		this.server.emit("newPowerUp", { powerUp: powerupNames[powerUpIndex], x: x, y: y })
-	  }, 1000);
+	  }, 10000);
     }
 
 
@@ -339,14 +339,9 @@ export class EventsGateway {
 
     if (data.player == 'left') {
       target = room.paddleA;
-      // console.log("PU::: left");
     } else {
       target = room.paddleB;
-      // console.log("PU::: right");
     }
-	// console.log("moin")
-	console.log("the DATA in Execute PowerUP: ")
-	console.log(data)
     if (data.type == 'increasePaddleHeight') {
       target.setHeight(400);
 	}
@@ -358,16 +353,11 @@ export class EventsGateway {
       else room.ball.magnet = 2;
     }
     if (data.type == 'slowBall') {
-		console.log("IN Slow BALL")
 		room.ball.updateSpeed(2);
     }
 	if (data.type == 'fastBall') {
-		console.log("IN FAST BALL")
-		room.ball.updateSpeed(15);
+		room.ball.updateSpeed(9);
     }
-    // console.log(data.type, data.player);
-	console.log("room.ball.speed")
-	console.log(room.ball.speed)
   }
 
   @SubscribeMessage('removePowerUp')
