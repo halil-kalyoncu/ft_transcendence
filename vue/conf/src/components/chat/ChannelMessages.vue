@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { connectChatSocket } from '../../websocket'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import type { UserI } from '../../model/user.interface'
@@ -156,6 +156,17 @@ onMounted(async () => {
   setNewChannelMessages()
   setNewChannelMessageListener()
   setUserChangesListener()
+})
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+	notificationStore.showNotification('Error: Connection problems', false)
+	return
+  }
+
+  socket.value.off('newChannelMessage')
+  socket.value.off('UserSignedOut')
+
 })
 
 const sendChannelMessage = async () => {

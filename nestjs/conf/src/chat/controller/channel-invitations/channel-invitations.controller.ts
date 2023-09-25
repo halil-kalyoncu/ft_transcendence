@@ -31,16 +31,19 @@ export class ChannelInvitationsController {
     private userService: UserService,
   ) {}
 
+
   @Get('GetPendingInvitations')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async GetInvitations(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInvitationDto[]> {
     return this.channelInvitationsService.getPendingInvitations(userId);
   }
 
-  @Post('InviteUserToChannel')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
+  @Post('InviteUserToChannel')
   async InviteUserToChannel(
     @Query('channelId', ParseIntPipe) channelId: number,
     @Query('inviteeId', ParseIntPipe) inviteeId: number,
@@ -92,6 +95,8 @@ export class ChannelInvitationsController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Patch('RejectInvitation')
   async RejectInvitation(
     @Query('channelId', ParseIntPipe) channelId: number,
@@ -100,6 +105,8 @@ export class ChannelInvitationsController {
     return this.channelInvitationsService.rejectInvitation(channelId, userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Delete('AcceptInvitation')
   async AcceptInvitation(
     @Query('channelId', ParseIntPipe) channelId: number,

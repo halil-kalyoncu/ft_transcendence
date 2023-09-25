@@ -37,11 +37,15 @@ export class ChannelController {
   ) {}
   //Get Functions for getting Channels
   @Get('getAllChannels')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async getAllChannels(): Promise<Channel[]> {
     return await this.prisma.channel.findMany();
   }
 
   @Get('getAllChannelsFromUser')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async getAllChannelsFromUser(
     @Query('userId', ParseIntPipe) userId: number,
     @Query('role') role: string,
@@ -50,6 +54,8 @@ export class ChannelController {
   }
 
   @Get('getAllChannelsWhereUserAdmin')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async getAllChannelsWhereUserAdmin(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInfoDto[]> {
@@ -64,6 +70,8 @@ export class ChannelController {
   }
 
   @Get('getAllChannelsWhereUserMember')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async getAllChannelsWhereUserMember(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInfoDto[]> {
@@ -71,10 +79,14 @@ export class ChannelController {
   }
 
   @Get('getAllPublicChannels')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async getAllPublicChannels(): Promise<ChannelInfoDto[]> {
     return await this.ChannelService.getAllPublicChannels();
   }
   @Get('getAllAvaiableChannels')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async getAllAvaiableChannels(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInfoDto[]> {
@@ -176,16 +188,22 @@ export class ChannelController {
   }
 
   @Patch('MakeUserAdmin')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async MakeUserAdmin(@Body() AdminActionDto: AdminActionDto): Promise<void> {
     await this.ChannelService.makeAdmin(AdminActionDto);
   }
 
   @Patch('KickUser')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async KickUser(@Body() AdminActionDto: AdminActionDto): Promise<void> {
     await this.ChannelService.kickChannelMember(AdminActionDto);
   }
 
   @Patch('updateMutedUsers')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async updateMutedUsers(
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<ChannelMember[]> {
@@ -197,6 +215,8 @@ export class ChannelController {
   }
 
   @Delete('removeUserFromChannel')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async removeUserFromChannel(
     @Body() ChannelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
@@ -210,6 +230,8 @@ export class ChannelController {
   }
 
   @Delete('destroyChannel')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async destroyChannel(
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<void> {

@@ -24,12 +24,10 @@ export class ChannelMessageController {
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelMessageDto[]> {
 	try{
-		console.log("getChannelMessagesforChannel inside controller");
 		const channelMessages =  await this.ChannelMessageService.getChannelMessagesforChannel(
 		  channelId,
 		  userId,
 		);
-		console.log("CHANNELMESSAGE: ", channelMessages);
 		return channelMessages;
 	} catch(error) {
 		if (error instanceof NotFoundException) {

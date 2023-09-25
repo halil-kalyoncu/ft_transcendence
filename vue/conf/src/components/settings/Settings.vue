@@ -128,17 +128,24 @@ const handleAvatarUpload = async () => {
 const deleteAvatar = async () => {
   try {
     const response = await fetch(`http://localhost:3000/api/users/avatar/${userId.value}`, {
-      method: 'PATCH'
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+      }
     })
 
+    const responseData = await response.json()
     if (response.ok) {
       notificationStore.showNotification('Success delete avatar', true)
       userStore.clearAvatar()
     } else {
-      notificationStore.showNotification('User has no avatar', false)
+      notificationStore.showNotification(
+        'Error while deleting avatar ' + responseData.message,
+        false
+      )
     }
-  } catch (error: any) {
-    notificationStore.showNotification('Error' + error.message, false)
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while deleting avatar', false)
   }
 }
 

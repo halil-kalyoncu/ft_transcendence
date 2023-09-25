@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, computed, onBeforeUnmount } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -218,6 +218,16 @@ const setBannedFromChannelListener = () => {
     }
   )
 }
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('memberBanned')
+  socket.value.off('memberUnBanned')
+})
 
 onMounted(async () => {
   try {

@@ -225,7 +225,7 @@ const setDestroyChannelListener = async () => {
   }
   socket.value.on('ChannelDestroy', (destroyChannelName: string) => {
     if (destroyChannelName === ChannelName.value) {
-      notificationStore.showNotification(ChannelName.value + ' has been destroyed', false)
+      notificationStore.showNotification(ChannelName.value + ' has been destroyed', true)
       emit('channel-force-leave')
     }
   })

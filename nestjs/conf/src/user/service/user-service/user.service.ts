@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, User, ChannelInvitationStatus } from '@prisma/client';
@@ -24,7 +28,9 @@ export class UserService {
     } else {
       const connectedUser = await this.connectedUser.findByUserId(foundUser.id);
       if (connectedUser) {
-        throw new Error('User ' + foundUser.username + ' is already logged in');
+        throw new ConflictException(
+          'User ' + foundUser.username + ' is already logged in',
+        );
       }
     }
     return await this.jwtAuthService.generateJwt(foundUser);
@@ -38,7 +44,9 @@ export class UserService {
     } catch (error) {
       //P2002 is the prisma error code for the unique constraint
       if (error.code === 'P2002') {
-        throw new Error('Username is already in use');
+        throw new ConflictException(
+          `Username ${newUser.username} is already in use`,
+        );
       }
       throw error;
     }
@@ -115,7 +123,7 @@ export class UserService {
     const user: User = await this.findById(userId);
 
     if (!user) {
-      throw new Error('user not found');
+      throw new NotFoundException('User not found');
     }
 
     if (user.avatarId) {
@@ -136,7 +144,7 @@ export class UserService {
     const user: User = await this.findById(userId);
 
     if (!user) {
-      throw new Error('user not found');
+      throw new NotFoundException('User not found');
     }
 
     if (user.avatarId) {
@@ -177,7 +185,7 @@ export class UserService {
   async turnOffTwoFactorAuth(userId: number): Promise<User> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new Error('user not found');
+      throw new NotFoundException('User not found');
     }
     return await this.prisma.user.update({
       where: {
@@ -193,7 +201,7 @@ export class UserService {
   async twoFAstatus(userId: number): Promise<boolean> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new Error('user not found');
+      throw new NotFoundException('User not found');
     }
     return user.enabled2FA;
   }

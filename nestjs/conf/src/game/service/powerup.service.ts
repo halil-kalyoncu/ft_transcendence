@@ -3,7 +3,7 @@ export class PowerUp {
   x: number;
   y: number;
   speed: number;
-  type: number;
+  type: string;
   wid: number;
   hgt: number;
   color: string;
@@ -13,7 +13,7 @@ export class PowerUp {
     x: number,
     y: number,
     speed: number,
-    type: number,
+    type: string,
     wid: number,
     hgt: number,
     color: string,

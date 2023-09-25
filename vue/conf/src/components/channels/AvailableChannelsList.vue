@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import ChannelListItem from './ChannelListItem.vue'
-import { onMounted, computed, ref } from 'vue'
+import { onMounted, computed, ref, onBeforeUnmount } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
@@ -96,6 +96,16 @@ onMounted(async () => {
   initSocket()
   await setPublicChannels()
   setChannelListener()
+})
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('ChannelDestroy')
+  socket.value.off('channelCreated')
 })
 </script>
 

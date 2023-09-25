@@ -59,26 +59,34 @@ const setDirectMessages = async () => {
   }
   try {
     const response = await fetch(
-      `http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`
+      `http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
-    }
-    const data = await response.json()
-    if (Array.isArray(data)) {
-      messages.value = data
+    const responseData = await response.json()
+    if (response.ok) {
+      if (Array.isArray(responseData)) {
+        messages.value = responseData
+      } else {
+        notificationStore.showNotification(
+          'Something went wrong while fetching direct messages',
+          false
+        )
+      }
     } else {
       notificationStore.showNotification(
-        'Expected an array from the API but received: ' + data,
+        'Error while fetching direct messages: ' + responseData.message,
         false
       )
     }
   } catch (error: any) {
-    notificationStore.showNotification(
-      'Expected an array from the API but received: ' + error.message,
-      false
-    )
+    notificationStore.showNotification('Something went wrong while fetching direct messages', false)
   } finally {
     loading.value = false
   }
@@ -128,7 +136,7 @@ const isOwnMessage = (senderId: number | undefined) => {
   return senderId !== undefined && senderId === loggedUser.value.id
 }
 
-const formatDate = (createdAt: string) => {
+const formatDate = (createdAt: Date) => {
   const date = new Date(createdAt)
   const day = date.getDate()
   const month = date.getMonth() + 1
@@ -149,7 +157,7 @@ const formatDate = (createdAt: string) => {
         <Message
           v-for="message in messages"
           :key="message.id"
-          :createdAt="'one minute ago'"
+          :createdAt="formatDate(message.message?.createdAt ?? new Date())"
           :message="message.message?.message ?? ''"
           :sender="message.sender?.username ?? ''"
           :isOwnMessage="isOwnMessage(message.sender.id)"

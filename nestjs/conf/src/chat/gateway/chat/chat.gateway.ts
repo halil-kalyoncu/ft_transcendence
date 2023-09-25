@@ -888,13 +888,16 @@ export class ChatGateway
         throw new Error('User not found');
       }
 	  const inviteeOnline = await this.connectedUserService.findByUserId(invitee.id);
-	  socket.to(inviteeOnline.socketId).emit('NewChannelInvitation');
+	  if(inviteeOnline)
+	  {
+		  socket.to(inviteeOnline.socketId).emit('NewChannelInvitation', inviteeUsername);
+	  }
 		const ChannelMembers = await this.channelService.getMembers(channelId);
 		for (const member of ChannelMembers) {
 			const memberOnline: ConnectedUser =
 			  await this.connectedUserService.findByUserId(member.id);
 			if (memberOnline) {
-				socket.to(memberOnline.socketId).emit('NewChannelInvitation');
+				socket.to(memberOnline.socketId).emit('NewChannelInvitation', inviteeUsername);
         }
       }
       return invitee;
@@ -1224,6 +1227,10 @@ export class ChatGateway
         return { error: 'Opponent is not online' };
       }
       await this.matchmakingService.deleteByUserId(matchmaking.userId);
+
+      ladderMatch = await this.matchService.startMatch(ladderMatch.id);
+      this.updateFriendsOf(socket.data.user.id);
+      this.updateFriendsOf(ladderMatch.rightUserId);
       socket.to(connectedUser.socketId).emit('goToLadderGame', ladderMatch);
       socket.emit('goToLadderGame', ladderMatch);
       return matchmaking;
@@ -1249,6 +1256,7 @@ export class ChatGateway
       socket.emit('blockedUsers', blockedUser);
       socket.emit('newChannelMessage');
       socket.emit('friends');
+      socket.emit('newDirectMessage');
       return blockedUser;
     } catch (error) {
       return { error: error.message as string };

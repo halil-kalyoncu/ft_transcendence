@@ -15,6 +15,7 @@ import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.in
 
 library.add(fas)
 const userStore = useUserStore()
+const userId = computed(() => userStore.userId)
 const username = computed(() => userStore.username)
 const userAvatar = computed(() => userStore.avatarImageData)
 const route = useRoute()
@@ -58,7 +59,7 @@ onMounted(async () => {
         >
       </div>
       <div class="flex-box-center">
-        <RouterLink class="navButton header-username" :to="`/profile/${username}`">
+        <RouterLink class="navButton header-username" :to="`/profile/${userId.toString()}`">
           <div class="link-content">
             {{ username ? username : 'TBD' }}
             <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />

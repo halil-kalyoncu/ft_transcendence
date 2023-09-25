@@ -1,38 +1,29 @@
-import { PrismaClient } from '@prisma/client';
+import { Powerup, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+async function createPowerup(powerupName: string) {
+  const powerup: Powerup = await prisma.powerup.findUnique({
+    where: {
+      name: powerupName,
+    },
+  });
+
+  if (!powerup) {
+    await prisma.powerup.create({
+      data: {
+        name: powerupName,
+      },
+    });
+  }
+}
+
 async function main() {
-
-  await prisma.powerup.create({
-    data: {
-      name: 'slowBall',
-    },
-  });
-
-  await prisma.powerup.create({
-    data: {
-      name: 'fastBall',
-    },
-  });
-
-  await prisma.powerup.create({
-    data: {
-      name: 'decreasePaddleHeight',
-    },
-  });
-
-  await prisma.powerup.create({
-    data: {
-      name: 'increasePaddleHeight'
-    }
-  });
-
-  await prisma.powerup.create({
-    data: {
-      name: 'magnet'
-    }
-  });
+  createPowerup('slowBall');
+  createPowerup('fastBall');
+  createPowerup('decreasePaddleHeight');
+  createPowerup('increasePaddleHeight');
+  createPowerup('magnet');
 
   await prisma.$disconnect();
 }

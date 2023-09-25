@@ -48,20 +48,21 @@ const handleInviteClick = async () => {
     const response = await fetch('http://localhost:3000/api/matches/create', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       },
       body: JSON.stringify(createMatchDto)
     })
 
+    const responseData = await response.json()
     if (response.ok) {
-      const responseData = await response.json()
       const matchId = String(responseData.id)
       router.push(`/invite/${matchId}`)
     } else {
-      notificationStore.showNotification('Failed to create a game', false)
+      notificationStore.showNotification('Failed to create a game: ' + responseData.message, false)
     }
-  } catch (error) {
-    notificationStore.showNotification('Failed to create a game', false)
+  } catch (error: any) {
+    notificationStore.showNotification('Something went wrong when creating a game', false)
   }
 }
 

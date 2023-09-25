@@ -1,11 +1,13 @@
 import {
   Body,
+  ConflictException,
   Controller,
   FileTypeValidator,
   Get,
   HttpException,
   HttpStatus,
   MaxFileSizeValidator,
+  NotFoundException,
   Param,
   ParseFilePipe,
   ParseIntPipe,
@@ -14,6 +16,7 @@ import {
   Query,
   Res,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from '../service/user-service/user.service';
@@ -21,7 +24,12 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { Prisma, User } from '@prisma/client';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -30,6 +38,7 @@ import * as fs from 'fs';
 import { Response } from 'express';
 import { PrismaModel } from '../../_gen/prisma-class/index';
 import { ChannelInviteeUserDto } from '../../chat/dto/channelInvitation.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 
 @ApiTags('User module')
 @Controller('users')
@@ -39,7 +48,7 @@ export class UserController {
     private userHelperService: UserHelperService,
   ) {}
 
-  //remove this function, when 42 login works
+  //TODO remove this function, when 42 login works
   @ApiOperation({ summary: 'Login' })
   @ApiResponse({
     status: 201,
@@ -47,7 +56,12 @@ export class UserController {
     type: LoginResponseDto,
   })
   @ApiResponse({ status: 400, description: 'CreateUserDto has errors' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
   @ApiResponse({ status: 409, description: 'User is already logged in' })
+  @ApiResponse({ status: 500, description: 'Server error' })
   @Post('login')
   async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseDto> {
     try {
@@ -60,7 +74,13 @@ export class UserController {
         expires_in: 10000,
       };
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.CONFLICT);
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -79,6 +99,7 @@ export class UserController {
   //   }
   // }
 
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({
     status: 200,
@@ -86,57 +107,136 @@ export class UserController {
     type: PrismaModel.User,
     isArray: true,
   })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({ status: 500, description: 'Server error' })
+  @ApiBearerAuth('access-token')
   @Get()
   async findAll(): Promise<User[]> {
-    return await this.userService.findAll();
+    try {
+      return await this.userService.findAll();
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Find user by id' })
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of user by id',
     type: PrismaModel.User,
   })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({ status: 500, description: 'Server error' })
+  @ApiBearerAuth('access-token')
   @Get('find-by-id')
   async findById(@Query('id', ParseIntPipe) id: number): Promise<User> {
-    return await this.userService.findById(id);
+    try {
+      return await this.userService.findById(id);
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Find user by username' })
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of user by username',
     type: PrismaModel.User,
   })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({ status: 500, description: 'Server error' })
+  @ApiBearerAuth('access-token')
   @Get('find')
   async find(@Query('username') username: string): Promise<User> {
-    return await this.userService.findByUsername(username);
+    try {
+      return await this.userService.findByUsername(username);
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  @ApiOperation({ summary: 'Find users by username' })
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Find users that have a similar username' })
   @ApiResponse({
     status: 200,
-    description: 'Successful retrieval of users that contain the username',
+    description: 'Successful retrieval of users that have a similar username',
     type: PrismaModel.User,
     isArray: true,
   })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({ status: 500, description: 'Server error' })
+  @ApiBearerAuth('access-token')
   @Get('find-by-username')
   async findAllByUsername(
     @Query('username') username: string,
   ): Promise<User[]> {
-    return await this.userService.findAllByUsername(username);
+    try {
+      return await this.userService.findAllByUsername(username);
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary:
+      'Get users that are not in a channel, for channel invite suggestions',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of users that are not in a channel',
+    type: PrismaModel.User,
+    isArray: true,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({ status: 500, description: 'Server error' })
+  @ApiBearerAuth('access-token')
   @Get('findUsersNotInChannel')
   async findUsersNotInChannel(
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<ChannelInviteeUserDto[]> {
-    return this.userService.findUsersNotInChannel(channelId);
+    try {
+      return this.userService.findUsersNotInChannel(channelId);
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @ApiOperation({ summary: 'Upload user avatar' })
   @ApiResponse({ status: 200, description: 'Successful upload of user avatar' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiResponse({ status: 500, description: 'Server error' })
   @Post('avatar')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -176,13 +276,22 @@ export class UserController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Serve user avatar' })
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of user avatar',
   })
-  @ApiResponse({ status: 404, description: 'User does not have an avatar' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found or does not have an avatar',
+  })
   @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiBearerAuth('access-token')
   @Get('avatar/:userId')
   async serverAvatar(
     @Param('userId', ParseIntPipe) userId: number,
@@ -207,25 +316,36 @@ export class UserController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Delete user avatar' })
   @ApiResponse({
     status: 200,
     description: 'Successful deletion of user avatar',
   })
   @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({
+    status: 404,
+    description:
+      "User couldn't be indentified with the userId, User doesn't have an avatar",
+  })
+  @ApiResponse({
     status: 500,
     description:
       'Internal server error, when user not found or user has no avatar',
   })
+  @ApiBearerAuth('access-token')
   @Patch('avatar/:userId')
   async deleteAvatar(@Param('userId', ParseIntPipe) userId: number) {
     try {
       const user: User = await this.userService.findById(userId);
       if (!user) {
-        throw new Error('User not found');
+        throw new NotFoundException('User not found');
       }
       if (!user.avatarId) {
-        throw new Error('User has no avatar');
+        throw new NotFoundException('User has no avatar');
       }
       return await this.userService.deleteAvatar(userId);
     } catch (error) {

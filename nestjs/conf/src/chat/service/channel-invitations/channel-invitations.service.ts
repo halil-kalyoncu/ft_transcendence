@@ -119,7 +119,7 @@ export class ChannelInvitationsService {
       channelId: channelId,
       userId: userId,
     };
-    this.ChannelService.addUserToChannel(ChannelMembershipDto);
+    await this.ChannelService.addUserToChannel(ChannelMembershipDto);
 
     await this.prisma.channelInvitation.delete({
       where: {

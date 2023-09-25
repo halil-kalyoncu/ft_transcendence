@@ -90,43 +90,64 @@ const setMatchInviteListener = () => {
 const setMatchInviteData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/matches/invites-by-userId?userId=${userId.value}`
+      `http://localhost:3000/api/matches/invites-by-userId?userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    const responseData = await response.json()
+    if (response.ok) {
+      matchInvites.value = responseData
+      if (responseData && responseData.length > 0) {
+        hasNotification.value = true
+      }
+      matchRequestsStore.setMatchRequests(matchInvites.value)
+    } else {
+      notificationStore.showNotification(
+        'Error while fetching the match invites: ' + responseData.message,
+        false
+      )
     }
-
-    const data = await response.json()
-    matchInvites.value = data
-    if (data && data.length > 0) {
-      hasNotification.value = true
-    }
-    matchRequestsStore.setMatchRequests(matchInvites.value)
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+  } catch (error) {
+    notificationStore.showNotification(
+      'Something went wrong while fetching the match invites: ',
+      false
+    )
   }
 }
 
 const setFriendRequestData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`
+      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    const responseData = await response.json()
+    if (response.ok) {
+      if (responseData && responseData.length > 0) {
+        hasNotification.value = true
+      }
+      friendRequestsStore.addFriendRequest(responseData)
+    } else {
+      notificationStore.showNotification('Error while fetching the friend requests', false)
     }
-
-    const data = await response.json()
-
-    if (data && data.length > 0) {
-      hasNotification.value = true
-    }
-
-    friendRequestsStore.addFriendRequest(data)
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+    notificationStore.showNotification(
+      'Something went wrong while fetching the friend requests',
+      false
+    )
   }
 }
 
@@ -143,20 +164,33 @@ const setFriendRequestListener = () => {
 const setChannelInvitationData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`
+      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
 
-    const data = await response.json()
-
-    if (data && data.length > 0) {
-      hasNotification.value = true
+    const responseData = await response.json()
+    if (response.ok) {
+      if (responseData && responseData.length > 0) {
+        hasNotification.value = true
+      }
+      channelInvitations.value = responseData
+    } else {
+      notificationStore.showNotification(
+        'Error while fetching the channel invitations: ' + responseData.message,
+        false
+      )
     }
-    channelInvitations.value = data
   } catch (error: any) {
-    notificationStore.showNotification(`Error From Set Channel` + error.message, false)
+    notificationStore.showNotification(
+      'Something went wrong while fetching the channel invitations',
+      false
+    )
   }
 }
 
@@ -165,11 +199,13 @@ const setchannelInvitationListener = () => {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
-  socket.value.on('NewChannelInvitation', () => {
-	notificationStore.showNotification('New invitation', true)
+  socket.value.on('NewChannelInvitation', (inviteeName: string) => {
+	if (inviteeName === username.value) {
+		notificationStore.showNotification('New Channel Invitation', true)
+	}
 	setChannelInvitationData()
   })
-  //TODO Check this functions accept and reject with the add user to channel
+
   socket.value.on('ChannelInvitationRejected', (channelName:string, inviteeName:string) => {
 	notificationStore.showNotification(
       'Channel Invitaion for ' + channelName + ' from ' + inviteeName + 'rejected',

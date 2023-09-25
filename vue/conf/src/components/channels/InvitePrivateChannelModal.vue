@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ChannelInviteeUserI } from '../../model/user.interface'
 import ScrollViewer from '../utils/ScrollViewer.vue'
@@ -130,9 +130,7 @@ const sendSubmitEvent = (inviteeUsername: string) => {
 		inviteeUsername: inviteeUsername
 		},(response : ErrorI | any) => {
 	  if ('error' in response) {
-		notificationStore.showNotification(response.error, false)
-		return
-	  } else {
+		notificationStore.showNotification("CHANNEL INTIVATION GOT" + response.error, false)
 		return
 	  }
 	})
@@ -146,6 +144,9 @@ const submit = async () => {
   let error_occured = false
   for (const inviteeUsername of selectedUsers.value) {
     error_occured = await inviteUser(channelId, inviteeUsername, userId.value)
+	if (error_occured) {
+		continue
+	}
     sendSubmitEvent(inviteeUsername)
   }
   if (!error_occured) {
@@ -202,7 +203,7 @@ const findUserSuggestions = async (input: string) => {
 		})
 	const responseData = await response.json()
 	  if (!response.ok) {
-		notificationStore.showNotification(responseData.message, false)
+		notificationStore.showNotification("FINDSUGGESTION" + responseData.message, false)
 	  }
 	  if (input.trim() === '') {
 		userSuggestions.value = responseData
@@ -268,7 +269,7 @@ const setInvitationUpdateListener = () => {
   socket.value.on('ChannelInvitationRejected', (channelName:string, UserName:string) => {
     findUserSuggestions(inputName.value)
   })
-  socket.value.on('NewChannelInvitation', () => {
+  socket.value.on('NewChannelInvitation', (inviteeName:string) => {
     findUserSuggestions(inputName.value)
   })
 }
@@ -293,6 +294,19 @@ onMounted(async () => {
   initSocket()
   setInvitationUpdateListener()
 })
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('ChannelInvitationAccepted')
+  socket.value.off('ChannelInvitationRejected')
+  socket.value.off('NewChannelInvitation')
+
+})
+
 </script>
 <style>
 .modal {

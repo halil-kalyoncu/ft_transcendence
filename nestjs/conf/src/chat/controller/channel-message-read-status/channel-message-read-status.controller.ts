@@ -1,7 +1,8 @@
-import { Controller, Query, Get, Patch, ParseIntPipe, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Query, Get, Patch, ParseIntPipe, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
 import { ChannelMessage, ChannelMessageReadStatus } from '@prisma/client';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ChannelMessageReadStatusService } from '../../service/channel-message-read-status/channel-message-read-status.service';
+import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
 
 @ApiTags('Channel-Message-Read-Status module')
 @Controller('channel-message-read-status')
@@ -10,6 +11,8 @@ export class ChannelMessageReadStatusController {
     private ChannelMessageReadStatusService: ChannelMessageReadStatusService,
   ) {}
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Get('getUnreadStatus')
   async getUnreadStatus(
     @Query('channelId', ParseIntPipe) channelId: number,

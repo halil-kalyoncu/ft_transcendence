@@ -81,7 +81,7 @@ const setChannels = async () => {
 		method: 'GET',
 		headers: {
 		'Content-Type': 'application/json',
-		'Auhorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+		'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
   }
 })
 	const responseData = await response.json()

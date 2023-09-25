@@ -54,7 +54,7 @@ onMounted(async () => {
   setInvitationListener()
 })
 
-// TODO: Set the Listenes off makes probelems even if I am listine in the notiicfation bell
+
 onBeforeUnmount(() => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', false)
@@ -99,22 +99,34 @@ const setInvitationListener = () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('NewChannelInvitation', () => {
+  socket.value.on('NewChannelInvitation', (inviteeName: string) => {
+	if (inviteeName !== username.value) {
+		return
+	}
 	notificationStore.showNotification('New Channel Invitation', true)
     console.log('newChannelInvitation fired from ChannelsInvitations.vue')
     setChannelInvitations()
   })
   socket.value.on('ChannelInvitationAccepted', (channelName: string, UserName: string) => {
+	if (UserName !== username.value) {
+		return
+	}
     console.log('User Accepted ChannelInvitaion fired')
     setChannelInvitations()
   })
   socket.value.on('ChannelInvitationRejected', (channelName: string, UserName: string) => {
+	if (UserName !== username.value) {
+		return
+	}
     console.log('User Rejected ChannelInvitaion fired')
     setChannelInvitations()
   })
 
-  // TODO: Halil When User Signs In by himself update the channel invitations (invitation deleted in Service function)
-  socket.value.on('InvitationObsolete', (username:string, channelId: number) => {
+
+  socket.value.on('InvitationObsolete', (UserName:string, channelId: number) => {
+	if (username !== username.value) {
+		return
+	}
 	console.log('InvitationObsolete from ChannelInvitations.vue fired')
 	notificationStore.showNotification('User Signed In', true)
 	setChannelInvitations()

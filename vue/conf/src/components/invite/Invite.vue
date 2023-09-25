@@ -60,21 +60,22 @@ async function fetchMatchData(): Promise<void> {
     const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
 
+    const responseData = await response.json()
     if (response.ok) {
-      const matchData = await response.json()
-      match.value = matchData
-      leftPlayer.value = matchData.leftUser
-      rightPlayer.value = matchData.rightUser
+      match.value = responseData
+      leftPlayer.value = responseData.leftUser
+      rightPlayer.value = responseData.rightUser
       if (match.value.rightUser && match.value.state === 'INVITED') {
         isWaitingForResponse.value = true
       }
     } else {
       notificationStore.showNotification(
-        'Something went wrong while fetching the match data',
+        'Error while fetching the match data: ' + responseData.message,
         false
       )
       router.push('/home')
@@ -175,6 +176,7 @@ onMounted(async () => {
       `${match.value.rightUser?.username} rejected your invite`,
       false
     )
+    rightPlayer.value = null
     match.value = updatedMatch
     isWaitingForResponse.value = false
   })
