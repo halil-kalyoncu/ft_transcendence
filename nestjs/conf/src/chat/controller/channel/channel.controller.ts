@@ -90,8 +90,16 @@ export class ChannelController {
   async getAllAvaiableChannels(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInfoDto[]> {
-    return await this.ChannelService.getAllAvailableChannels(userId);
+	try{
+		return await this.ChannelService.getAllAvailableChannels(userId);
+	}
+	catch(error) {
+		if (error instanceof BadRequestException) {
+			throw error;
+		}
+		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
   }
+}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token') 

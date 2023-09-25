@@ -9,17 +9,17 @@ export class ConnectedUserService {
   async create(
     connectedUser: Prisma.ConnectedUserCreateInput,
   ): Promise<ConnectedUser> {
-    return this.prisma.connectedUser.create({
+    return await this.prisma.connectedUser.create({
       data: connectedUser,
     });
   }
 
   async getAll(): Promise<ConnectedUser[]> {
-    return this.prisma.connectedUser.findMany();
+    return await this.prisma.connectedUser.findMany();
   }
 
   async findByUserId(userId: number): Promise<ConnectedUser | null> {
-    return this.prisma.connectedUser.findFirst({
+    return await this.prisma.connectedUser.findFirst({
       where: {
         userId,
       },
@@ -30,7 +30,7 @@ export class ConnectedUserService {
   }
 
   async findByUser(user: User): Promise<ConnectedUser | null> {
-    return this.prisma.connectedUser.findFirst({
+    return await this.prisma.connectedUser.findFirst({
       where: {
         userId: user.id,
       },
@@ -45,7 +45,7 @@ export class ConnectedUserService {
       where: { socketId: socketId },
     });
     if (user) {
-      return this.prisma.connectedUser.delete({
+      return await this.prisma.connectedUser.delete({
         where: {
           socketId,
         },
@@ -54,6 +54,6 @@ export class ConnectedUserService {
   }
 
   async deleteAll() {
-    return this.prisma.connectedUser.deleteMany();
+    return await this.prisma.connectedUser.deleteMany();
   }
 }

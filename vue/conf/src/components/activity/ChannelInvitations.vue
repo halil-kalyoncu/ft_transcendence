@@ -80,7 +80,7 @@ const setChannelInvitations = async () => {
 		method: 'GET',
 		headers: {
 		  'Content-Type': 'application/json',
-		  Authorization: `Bearer ${localStorage.getItem('ponggame')}`,
+		  'Authorization': `Bearer ${localStorage.getItem('ponggame')}`,
 		},
 	}
     )
@@ -124,7 +124,7 @@ const setInvitationListener = () => {
 
 
   socket.value.on('InvitationObsolete', (UserName:string, channelId: number) => {
-	if (username !== username.value) {
+	if (UserName !== username.value) {
 		return
 	}
 	console.log('InvitationObsolete from ChannelInvitations.vue fired')

@@ -49,13 +49,13 @@ const props = defineProps({
   invitationId: Number
 })
 
-const initSocket = () => {
+const initSocket = async() => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectChatSocket(accessToken)
+  socket.value = await connectChatSocket(accessToken)
 }
 
-onMounted(() => {
-  initSocket()
+onMounted(async () => {
+ await initSocket()
 })
 
 const viewProfile = () => {

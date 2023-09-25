@@ -38,8 +38,17 @@ export class ChannelInvitationsController {
   async GetInvitations(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInvitationDto[]> {
-    return this.channelInvitationsService.getPendingInvitations(userId);
+	try{
+		return await this.channelInvitationsService.getPendingInvitations(userId);
+	} catch (error) {
+		if (error instanceof NotFoundException) {
+			throw error;
+		}
+		else {
+			throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+		}
   }
+}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')

@@ -17,7 +17,6 @@ export class ChannelInvitationsService {
   ) {}
 
   async getPendingInvitations(userId: number): Promise<ChannelInvitationDto[]> {
-    try {
 	  const finalInvitations: any[] = [];
       const invitations: any[] = await this.prisma.channelInvitation.findMany({
         where: { inviteeId: userId, status: ChannelInvitationStatus.PENDING },
@@ -29,22 +28,18 @@ export class ChannelInvitationsService {
 			userId_channelId : { userId: userId, channelId: invitation.channelId },
 		},
 	  });
-	  console.log("userInChannel");
-	  console.log(userInChannel);
 	  if (userInChannel) {
 		const deleted = await this.prisma.channelInvitation.delete({
 			where: {
 			  channelId_inviteeId: { channelId: invitation.channelId, inviteeId: userId },
 			}, 
 		  });
-		  console.log("deleted");
-		  console.log(deleted); 
 	  }
 	  else {
 		finalInvitations.push(invitation);
 	  }
 	}
-
+	if (finalInvitations.length !== 0) {
       const ChannelInvitationsDtos: ChannelInvitationDto[] = finalInvitations.map(
         (invitation) => ({
           invitationId: invitation.id,
@@ -55,11 +50,12 @@ export class ChannelInvitationsService {
         }),
       );
       return ChannelInvitationsDtos;
-    } catch (error: any) {
-      console.error('Error fetching channel messages: ', error);
-      throw error;
+	}
+	else {
+		return [];
     }
-  }
+	  }
+
   async getOne(invitationId: number): Promise<any> {
     const invitation = await this.prisma.channelInvitation.findUnique({
       where: { id: invitationId },

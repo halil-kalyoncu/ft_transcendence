@@ -82,11 +82,7 @@ const props = defineProps({
   isUserBannedProp: Boolean,
   isUserMutedProp: Boolean
 })
-// const emit = defineEmits(['changedProperties']);
 
-// const emitChanges = () => {
-//   emit('changedProperties')
-// }
 
 const role = ref(props.roleProp)
 const isUserBanned = ref(props.isUserBannedProp)
@@ -150,8 +146,6 @@ const unBanUser = async () => {
 	  if ('error' in response) {
 		notificationStore.showNotification(response.error, false)
 		return
-	  } else {
-		return
 	  }
 	})
   } catch (error) {
@@ -173,8 +167,6 @@ const banUser = async () => {
 		if ('error' in response) {
 			notificationStore.showNotification(response.error, false)
 			return
-		} else {
-			return
 		}
 	})
   } catch (error) {
@@ -195,8 +187,6 @@ const makeAdmin = async () => {
     }, (response : ErrorI | any) => {
 		if ('error' in response) {
 			notificationStore.showNotification(response.error, false)
-			return
-		} else {
 			return
 		}
 	})

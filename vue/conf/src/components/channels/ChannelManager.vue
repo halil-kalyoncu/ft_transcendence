@@ -111,7 +111,7 @@ const modalTitle = ref('')
 const isModalOpened = ref(false)
 
 const memberItems = computed(() => {
-  return Members.value.map((member) => {
+  return Members.value.map((member:ChannelManagerMemberI) => {
     return {
       username: member.username,
       date: member.statusSince,
@@ -158,11 +158,11 @@ onMounted(async () => {
     )
     return
   }
-initSocket()
+  initSocket()
   await getMembers()
   getSignOutButtonText()
   await setDestroyChannelListener()
-  setUserSignedListener()
+  await setUserSignedListener()
 })
 
 onBeforeUnmount(() => {
@@ -230,11 +230,12 @@ const setDestroyChannelListener = async () => {
     }
   })
 }
-const setUserSignedListener = () => {
+const setUserSignedListener = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
+
   socket.value.on('UserSignedOut', (userSignedOutName: string, channelIdSignOut: number) => {
     console.log('UserSignedOut from ChannelManager fired')
     setMembers().then(() => {
@@ -257,14 +258,19 @@ const setUserSignedListener = () => {
       setCurrentUserRole()
     })
   })
-  socket.value.on('ChannelInvitationAccepted', (channelId: Number) => {
-    console.log('ChannelInvitationAccepted fired')
+
+  socket.value.on('ChannelInvitationAccepted', (channelName:string, inviteeName:string) => {
+	console.log('ChannelInvitationAccepted fired')
     //notificationStore.showNotification(' Signed in Channel', true)
     setMembers().then(() => {
       setCurrentUserRole()
     })
   })
+
   socket.value.on('madeAdmin', (username: string, channelname: string) => {
+	if (channelname !== ChannelName.value) {
+		return
+	}
 	notificationStore.showNotification(username + ' is now Admin of Channel:' + channelname, true)
     console.log('madeAdmin fired')
     setMembers().then(() => {
@@ -273,7 +279,7 @@ const setUserSignedListener = () => {
   })
   socket.value.on(
     'memberKicked',
-    async (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
+    (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
       console.log('memberKicked fired')
       if (kickedMemberName === username.value) {
         notificationStore.showNotification('You got kicked from Channel: ' + kickChannelName, true)
@@ -285,7 +291,7 @@ const setUserSignedListener = () => {
           notificationStore.showNotification(kickedMemberName + ' kicked from Channel', true)
         }
       }
-      await setMembers().then(() => {
+      setMembers().then(() => {
         setCurrentUserRole()
       })
     }

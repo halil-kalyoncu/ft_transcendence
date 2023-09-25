@@ -819,31 +819,39 @@ export class ChatGateway
   /**********************
    *** ChannelInvitations ***
    ***********************/
+
+   //TODO CHECK THIS FUNCTION! DOESNT UPDATE THE LISTENERS
   @SubscribeMessage('acceptChannelInvitation')
   async handleAcceptChannelInvitation(
     socket: Socket,
     invitationId: number,
-  ): Promise<void> {
-    const invitation = await this.channelInvitationService.getOne(invitationId);
-    await this.channelInvitationService.acceptInvitation(
-      invitation.channelId,
-      invitation.inviteeId,
-    );
-    const channelName = invitation.channel.name;
-    const inviteeName = invitation.invitee.username;
-    socket.emit('ChannelInvitationAccepted', channelName, inviteeName);
-    const members: User[] = await this.channelService.getMembers(
-      invitation.channelId,
-    );
-    for (const member of members) {
-      const memberOnline: ConnectedUser =
-        await this.connectedUserService.findByUserId(member.id);
-      if (memberOnline) {
-        socket
-          .to(memberOnline.socketId)
-          .emit('ChannelInvitationAccepted', channelName, inviteeName);
-      }
-    }
+  ): Promise< ChannelInvitation | ErrorDto > {
+	try{
+
+		const invitation = await this.channelInvitationService.getOne(invitationId);
+		await this.channelInvitationService.acceptInvitation(
+		  invitation.channelId,
+		  invitation.inviteeId,
+		);
+		const channelName = invitation.channel.name;
+		const inviteeName = invitation.invitee.username;
+		console.log(channelName, inviteeName)
+		socket.emit('ChannelInvitationAccepted', channelName, inviteeName);
+		const members: User[] = await this.channelService.getMembers(
+		  invitation.channelId,
+		);
+		for (const member of members) {
+		  const memberOnline: ConnectedUser =
+			await this.connectedUserService.findByUserId(member.id);
+		  if (memberOnline) {
+			await socket.to(memberOnline.socketId).emit('ChannelInvitationAccepted', channelName, inviteeName);
+			socket.to(memberOnline.socketId).emit('NewChannelInvitation', inviteeName);
+		  }
+		}
+		return invitation;
+	} catch (error) {
+		return { error: error.message as string };
+	}
   }
 
   @SubscribeMessage('rejectChannelInvitation')
