@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Matchmaking, User } from '@prisma/client';
 import { UserService } from '../../user/service/user-service/user.service';
@@ -11,24 +11,25 @@ export class MatchmakingService {
   ) {}
 
   async find(id: number): Promise<Matchmaking | null> {
-    return this.prisma.matchmaking.findUnique({
+    return await this.prisma.matchmaking.findUnique({
       where: { id },
     });
   }
 
   async getByUserId(userId: number): Promise<Matchmaking | null> {
-    return this.prisma.matchmaking.findFirst({
+    const matchmaking: Matchmaking = await this.prisma.matchmaking.findFirst({
       where: {
         OR: [{ userId }, { opponentUserId: userId }],
       },
     });
+    return matchmaking;
   }
 
   async findOpponent(userId: number): Promise<Matchmaking | null> {
     const user: User = await this.userService.findById(userId);
 
     if (!user) {
-      throw new Error("User doesn't exists");
+      throw new BadRequestException("User doesn't exists");
     }
 
     const lowerRange = user.ladderLevel - 50;
@@ -48,7 +49,7 @@ export class MatchmakingService {
       return null;
     }
 
-    return this.prisma.matchmaking.update({
+    return await this.prisma.matchmaking.update({
       where: {
         id: matchmaking.id,
       },
@@ -62,7 +63,7 @@ export class MatchmakingService {
     const user: User = await this.userService.findById(userId);
 
     if (!user) {
-      throw new Error("User doesn't exists");
+      throw new BadRequestException("User doesn't exists");
     }
     return await this.prisma.matchmaking.create({
       data: {
@@ -80,6 +81,33 @@ export class MatchmakingService {
     return await this.prisma.matchmaking.delete({
       where: {
         id: matchmaking.id,
+      },
+    });
+  }
+
+  async setUserReady(userId: number) {
+    const matchmaking: Matchmaking = await this.getByUserId(userId);
+
+    if (!matchmaking) {
+      return null;
+    }
+
+    if (userId === matchmaking.userId) {
+      return await this.prisma.matchmaking.update({
+        where: {
+          id: matchmaking.id,
+        },
+        data: {
+          userReady: true,
+        },
+      });
+    }
+    return await this.prisma.matchmaking.update({
+      where: {
+        id: matchmaking.id,
+      },
+      data: {
+        opponentReady: true,
       },
     });
   }

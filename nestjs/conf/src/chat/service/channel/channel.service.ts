@@ -41,7 +41,7 @@ export class ChannelService {
     name: string;
     password?: string;
     channelVisibility: ChannelVisibility;
-  }): Promise<Channel> {
+  }): Promise<Channel | { error: string }> {
     console.log('createProtectedChannel');
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
@@ -50,7 +50,6 @@ export class ChannelService {
       throw new Error('Channel name already exists');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create the channel without the members initially
     const channel = await this.prisma.channel.create({
       data: {
@@ -69,7 +68,6 @@ export class ChannelService {
         role: ChannelMemberRole.OWNER,
       },
     });
-
     return channel;
   }
 
@@ -81,7 +79,7 @@ export class ChannelService {
     userId: number;
     name: string;
     channelVisibility: ChannelVisibility;
-  }): Promise<Channel> {
+  }): Promise<Channel | { error: string }> {
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
     });
@@ -89,7 +87,6 @@ export class ChannelService {
     if (existingChannel) {
       throw new Error('Channel name already exists');
     }
-
     const channel = await this.prisma.channel.create({
       data: {
         name: name,
@@ -114,6 +111,21 @@ export class ChannelService {
     if (!channel) {
       throw new Error('Channel does not exist.');
     }
+
+    // Find all ChannelMessage records related to the channel
+    const channelMessages = await this.prisma.channelMessage.findMany({
+      where: { sender: { channelId: channelId } },
+    });
+
+    // Extract messageIds from channelMessages
+    const messageIds = channelMessages.map(
+      (channelMessage) => channelMessage.messageId,
+    );
+
+    // Delete associated Message records
+    await this.prisma.message.deleteMany({
+      where: { id: { in: messageIds } },
+    });
 
     // Delete Associated Channel Messages
     await this.prisma.channelMessage.deleteMany({
@@ -149,6 +161,7 @@ export class ChannelService {
     return this.prisma.channel.update({
       where: { id: setPasswordDto.channelId },
       data: {
+        protected: true,
         passwordHash: hashedPassword,
       },
     });
@@ -168,6 +181,19 @@ export class ChannelService {
         passwordHash: null,
       },
     });
+  }
+
+  async comparePassword(channelId: number, password: string): Promise<boolean> {
+    const channel = await this.find(channelId);
+    if (!channel) {
+      throw new Error('Channel does not exist.');
+    }
+
+    if (!channel.passwordHash) {
+      throw new Error('Channel does not have a password.');
+    }
+
+    return bcrypt.compare(password, channel.passwordHash);
   }
 
   async addUserToChannel(
@@ -193,38 +219,30 @@ export class ChannelService {
   async removeUserFromChannel(
     channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
-    try {
-      const { userId, channelId } = channelMembershipDto;
+    const { userId, channelId } = channelMembershipDto;
 
-      const member = await this.prisma.channelMember.findFirst({
-        where: { userId: userId, channelId: channelId },
-      });
-      if (!member) {
-        throw new Error('User is not a member of the channel.');
-      }
+    const member = await this.prisma.channelMember.findFirst({
+      where: { userId: userId, channelId: channelId },
+    });
+    if (!member) {
+      throw new Error('User is not a member of the channel.');
+    }
 
-      const associatedMessages = await this.prisma.channelMessage.findMany({
+    const associatedMessages = await this.prisma.channelMessage.findMany({
+      where: { senderId: userId },
+    });
+
+    if (associatedMessages.length > 0) {
+      await this.prisma.channelMessage.deleteMany({
         where: { senderId: userId },
       });
-
-      if (associatedMessages.length > 0) {
-        await this.prisma.channelMessage.deleteMany({
-          where: { senderId: userId },
-        });
-      }
-
-      await this.prisma.channelMember.delete({
-        where: {
-          userId_channelId: {
-            userId: channelMembershipDto.userId,
-            channelId: channelMembershipDto.channelId,
-          },
-        },
-      });
-      return member;
-    } catch (error) {
-      console.error('Error deleting ChannelMember:', error);
     }
+
+    return await this.prisma.channelMember.delete({
+      where: {
+        id: member.id,
+      },
+    });
   }
 
   async makeAdmin(adminActionDto: AdminActionDto): Promise<ChannelMember> {
@@ -287,7 +305,7 @@ export class ChannelService {
       throw new Error('Target user is not a member of the channel.');
     }
 
-    return this.prisma.channelMember.delete({
+    return await this.prisma.channelMember.delete({
       where: {
         userId_channelId: {
           userId: adminActionDto.targetUserId,
@@ -340,8 +358,114 @@ export class ChannelService {
       },
     });
   }
+  async unBanChannelMember(
+    adminActionDto: AdminActionDto,
+  ): Promise<ChannelMember> {
+    const channel = await this.find(adminActionDto.channelId);
+    const channelOwner = await this.channelMemberService.findOwner(channel.id);
+    const requesterMembership = await this.findMember(
+      adminActionDto.requesterId,
+      adminActionDto.channelId,
+    );
+
+    if (
+      !channel ||
+      (channelOwner.userId !== adminActionDto.requesterId &&
+        requesterMembership?.role === ChannelMemberRole.MEMBER)
+    ) {
+      throw new Error(
+        'Only the owner or an admin can ban a user from the channel.',
+      );
+    }
+
+    const targetMembership = await this.findMember(
+      adminActionDto.targetUserId,
+      adminActionDto.channelId,
+    );
+
+    if (!targetMembership) {
+      throw new Error('Target user is not a member of the channel.');
+    }
+
+    return this.prisma.channelMember.update({
+      where: {
+        userId_channelId: {
+          userId: adminActionDto.targetUserId,
+          channelId: adminActionDto.channelId,
+        },
+      },
+      data: {
+        status: ChannelMemberStatus.NORMAL,
+        statusSince: new Date(),
+        banned: false,
+      },
+    });
+  }
 
   async muteChannelMember(
+    adminActionDto: AdminActionDto,
+  ): Promise<ChannelMember> {
+    const channel = await this.find(adminActionDto.channelId);
+    const channelOwner = await this.channelMemberService.findOwner(channel.id);
+    const requesterMembership = await this.findMember(
+      adminActionDto.requesterId,
+      adminActionDto.channelId,
+    );
+    if (
+      !channel ||
+      (channelOwner.userId !== adminActionDto.requesterId &&
+        requesterMembership?.role! === ChannelMemberRole.MEMBER)
+    ) {
+      throw new Error(
+        'Only the owner or an admin can mute a user in the channel.',
+      );
+    }
+
+    const targetMembership = await this.findMember(
+      adminActionDto.targetUserId,
+      adminActionDto.channelId,
+    );
+
+    if (!targetMembership) {
+      throw new Error('Target user is not a member of the channel.');
+    }
+
+    const unmuteAt = new Date();
+    unmuteAt.setMinutes(unmuteAt.getMinutes() + adminActionDto.minutesToMute);
+
+    return this.prisma.channelMember.update({
+      where: {
+        userId_channelId: {
+          userId: adminActionDto.targetUserId,
+          channelId: adminActionDto.channelId,
+        },
+      },
+      data: {
+        unmuteAt: unmuteAt,
+      },
+    });
+  }
+
+  async unMuteMember(
+    targetUserId: number,
+    channelId: number,
+  ): Promise<ChannelMember> {
+    return this.prisma.channelMember.update({
+      where: {
+        userId_channelId: {
+          userId: targetUserId,
+          channelId: channelId,
+        },
+      },
+      data: {
+        unmuteAt: null,
+        statusSince: new Date(),
+        status: ChannelMemberStatus.NORMAL,
+      },
+    });
+  }
+
+  async unMuteChannelMember(
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
@@ -370,20 +494,10 @@ export class ChannelService {
       throw new Error('Target user is not a member of the channel.');
     }
 
-    const unmuteAt = new Date();
-    unmuteAt.setMinutes(unmuteAt.getMinutes() + 5);
-
-    return this.prisma.channelMember.update({
-      where: {
-        userId_channelId: {
-          userId: adminActionDto.targetUserId,
-          channelId: adminActionDto.channelId,
-        },
-      },
-      data: {
-        unmuteAt: unmuteAt,
-      },
-    });
+    return this.unMuteMember(
+      adminActionDto.targetUserId,
+      adminActionDto.channelId,
+    );
   }
 
   async find(channelId: number): Promise<Channel> {
@@ -578,6 +692,9 @@ export class ChannelService {
         user: true,
         channel: true,
       },
+      orderBy: {
+        statusSince: 'asc',
+      },
     });
 
     const channelMembersEntries: ChannelMemberDto[] = await Promise.all(
@@ -611,5 +728,25 @@ export class ChannelService {
     );
 
     return channelMembersEntries;
+  }
+
+  async updateMutedUsers(channelId: number): Promise<ChannelMember[]> {
+    try {
+      const channelMembers: ChannelMember[] = await this.findMembers(channelId);
+      const membersToUnmute: ChannelMember[] = [];
+      for (const channelMember of channelMembers) {
+        if (
+          channelMember.unmuteAt &&
+          channelMember.unmuteAt.getTime() < Date.now()
+        ) {
+          membersToUnmute.push(channelMember);
+          await this.unMuteMember(channelMember.userId, channelId);
+        }
+      }
+      return membersToUnmute;
+    } catch (error: any) {
+      console.error('Error updating muted users:', error);
+      throw error;
+    }
   }
 }

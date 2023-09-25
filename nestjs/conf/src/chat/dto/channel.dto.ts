@@ -52,6 +52,9 @@ export class AdminActionDto {
 
   @IsNotEmpty()
   channelId: number;
+
+  @IsOptional()
+  minutesToMute?: number;
 }
 
 export class ChannelInfoDto {
@@ -64,6 +67,7 @@ export class ChannelMessageDto {
   message: Message;
   sender: User;
   createdAt: Date;
+  blockGroupMessage: boolean;
   //ChannelMessageReadStatus: ChannelMessageReadStatus;
 }
 

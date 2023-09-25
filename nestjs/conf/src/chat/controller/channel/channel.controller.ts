@@ -20,6 +20,8 @@ import {
   ChannelMemberDto,
 } from '../../dto/channel.dto';
 import { ChannelMemberService } from '../../service/channel-member/channel-member.service';
+import { ErrorDto } from 'src/chat/dto/error.dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @ApiTags('Channel module')
 @Controller('channel')
@@ -89,19 +91,42 @@ export class ChannelController {
   ): Promise<boolean> {
     return await this.ChannelMemberService.isUserBanned(userId, channelId);
   }
+
+  @Get('comparePassword')
+  async comparePassword(
+    @Query('channelId', ParseIntPipe) channelId: number,
+    @Query('password') password: string,
+  ): Promise<boolean | ErrorDto> {
+    try {
+      return await this.ChannelService.comparePassword(channelId, password);
+    } catch (error: any) {
+      return { error: error.message as string };
+    }
+  }
+
   //Post Functions to create Channels
   @Post('createProtectedChannel')
   async createChannel(
     @Body() CreateChannelDto: CreateChannelDto,
-  ): Promise<Channel> {
-    return await this.ChannelService.createProtectedChannel(CreateChannelDto);
+  ): Promise<Channel | ErrorDto> {
+    try {
+      return await this.ChannelService.createProtectedChannel(CreateChannelDto);
+    } catch (error) {
+      return { error: error.message as string };
+    }
   }
 
   @Post('createUnProtectedChannel')
   async createUnProtectedChannel(
     @Body() CreateChannelDto: CreateChannelDto,
-  ): Promise<void> {
-    await this.ChannelService.createUnProtectedChannel(CreateChannelDto);
+  ): Promise<Channel | ErrorDto> {
+    try {
+      return await this.ChannelService.createUnProtectedChannel(
+        CreateChannelDto,
+      );
+    } catch (error) {
+      return { error: error.message as string };
+    }
   }
 
   //Patch Functions to change existing Channel properties
@@ -122,11 +147,24 @@ export class ChannelController {
     await this.ChannelService.kickChannelMember(AdminActionDto);
   }
 
+  @Patch('updateMutedUsers')
+  async updateMutedUsers(
+    @Query('channelId', ParseIntPipe) channelId: number,
+  ): Promise<ChannelMember[]> {
+    return await this.ChannelService.updateMutedUsers(channelId);
+  }
+
   @Delete('removeUserFromChannel')
   async removeUserFromChannel(
     @Body() ChannelMembershipDto: ChannelMembershipDto,
-  ): Promise<void> {
-    await this.ChannelService.removeUserFromChannel(ChannelMembershipDto);
+  ): Promise<ChannelMember> {
+    try {
+      return await this.ChannelService.removeUserFromChannel(
+        ChannelMembershipDto,
+      );
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Delete('destroyChannel')

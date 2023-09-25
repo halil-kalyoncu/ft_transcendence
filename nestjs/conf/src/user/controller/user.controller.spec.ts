@@ -9,7 +9,7 @@ import { ConnectedUserService } from '../../chat/service/connected-user/connecte
 import { Prisma, User } from '@prisma/client';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus } from '@nestjs/common';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -88,18 +88,17 @@ describe('UserController', () => {
       const loginSpy = jest
         .spyOn(userService, 'login')
         .mockRejectedValue(
-          new HttpException(
+          new ConflictException(
             'User ${userEntity.username} is already logged in',
-            HttpStatus.CONFLICT,
           ),
         );
 
       try {
         await controller.login(createUserDto);
       } catch (e) {
-        expect(e).toBeInstanceOf(HttpException);
+        expect(e).toBeInstanceOf(ConflictException);
         expect(e.status).toBe(HttpStatus.CONFLICT);
-        expect(e.response).toEqual(
+        expect(e.response.message).toEqual(
           'User ${userEntity.username} is already logged in',
         );
       }

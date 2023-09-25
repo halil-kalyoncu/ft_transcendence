@@ -62,6 +62,7 @@ import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
+import type { ErrorI } from '../../model/error.interface'
 
 library.add(fas)
 
@@ -73,7 +74,6 @@ const userSuggestions = ref<ChannelInviteeUserI[]>([])
 const showSuggestionList = ref(false)
 const userStore = useUserStore()
 const userId = computed<number>(() => userStore.userId)
-const channelInvitees = ref<string[]>([])
 const selectedUsers = ref<string[]>([])
 
 const props = defineProps({
@@ -124,15 +124,29 @@ const sendSubmitEvent = (inviteeUsername: string) => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.emit('gotChannelInvitation', inviteeUsername)
+  socket.value.emit('gotChannelInvitation', inviteeUsername, (response: any | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    }
+  })
 }
 
 const submit = async () => {
+  const userSelected = selectedUsers.value.length
+  let error_occured = false
   for (const inviteeUsername of selectedUsers.value) {
-    await inviteUser(channelId, inviteeUsername, userId.value)
+    error_occured = await inviteUser(channelId, inviteeUsername, userId.value)
     sendSubmitEvent(inviteeUsername)
   }
-
+  if (!error_occured) {
+    if (userSelected === 1) {
+      notificationStore.showNotification(`Invitation sent`, true)
+    }
+    if (userSelected > 1) {
+      notificationStore.showNotification(`Invitations sent`, true)
+    }
+  }
+  findUserSuggestions('')
   emit('submit')
 }
 
@@ -148,11 +162,14 @@ const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId:
       }
     )
     if (!response.ok) {
-      throw new Error('Could not fetch channel manager members')
+      const responseData = await response.json()
+      await notificationStore.showNotification(responseData.message, false)
+      return true
     }
-    channelInvitees.value.push(inviteeUsername)
-  } catch (error: any) {
-    console.error('Error: ', error)
+    return false
+  } catch (error) {
+    console.error('Error occurred during login:', error)
+    return true
   }
 }
 
@@ -172,6 +189,9 @@ const findUserSuggestions = async (input: string) => {
   const data = await response.json()
   if (input.trim() === '') {
     userSuggestions.value = data
+    for (const user of userSuggestions.value) {
+      console.log(user.status)
+    }
     return
   }
   // Filter user suggestions based on the provided letters in the right order
@@ -214,12 +234,6 @@ const goToProfile = (username: String | undefined) => {
   router.push(`/profile/${username}`)
 }
 
-const updateSelection = () => {
-  for (const suggestion of userSuggestions.value) {
-    checkSelection(suggestion)
-  }
-}
-
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
@@ -236,9 +250,9 @@ const setInvitationUpdateListener = () => {
   socket.value.on('ChannelInvitationRejected', (channelName, UserName) => {
     findUserSuggestions(inputName.value)
   })
-  socket.value.on('NewChannelInvitation', () => {
+  socket.value.on('NewChannelInvitation', (channelName, UserName) => {
+    notificationStore.showNotification('New invitation', true)
     findUserSuggestions(inputName.value)
-    updateSelection()
   })
 }
 
@@ -247,11 +261,20 @@ const initSelectedUsers = () => {
 }
 
 onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   initSelectedUsers()
   await findUserSuggestions('')
   initSocket()
   setInvitationUpdateListener()
-  updateSelection()
 })
 </script>
 <style>

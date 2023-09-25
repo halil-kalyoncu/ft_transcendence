@@ -1,5 +1,9 @@
 import { Controller, Query, Get, Patch, ParseIntPipe } from '@nestjs/common';
-import { ChannelMessage, ChannelMessageReadStatus } from '@prisma/client';
+import {
+  ChannelMessage,
+  ChannelMessageReadStatus,
+  ChannelMember,
+} from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
 import { ChannelMessageDto } from '../../dto/channel.dto';
 import { ChannelMessageService } from '../../service/channel-message/channel-message.service';
@@ -11,9 +15,11 @@ export class ChannelMessageController {
   @Get('getChannelMessagesforChannel')
   async getChannelMessagesforChannel(
     @Query('channelId', ParseIntPipe) channelId: number,
-  ): Promise<{}> {
+    @Query('userId', ParseIntPipe) userId: number,
+  ): Promise<ChannelMessageDto[]> {
     return await this.ChannelMessageService.getChannelMessagesforChannel(
       channelId,
+      userId,
     );
   }
 

@@ -137,11 +137,29 @@ CREATE TABLE "Match" (
     "state" "MatchState" NOT NULL DEFAULT 'CREATED',
     "goalsLeftPlayer" INTEGER NOT NULL DEFAULT 0,
     "goalsRightPlayer" INTEGER NOT NULL DEFAULT 0,
+    "goalsToWin" INTEGER NOT NULL DEFAULT 5,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "startedAt" TIMESTAMP(3),
     "finishedAt" TIMESTAMP(3),
 
     CONSTRAINT "Match_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Powerup" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "Powerup_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "MatchPowerup" (
+    "id" SERIAL NOT NULL,
+    "matchId" INTEGER NOT NULL,
+    "powerupId" INTEGER NOT NULL,
+
+    CONSTRAINT "MatchPowerup_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -159,6 +177,8 @@ CREATE TABLE "Matchmaking" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "opponentUserId" INTEGER,
+    "userReady" BOOLEAN NOT NULL DEFAULT false,
+    "opponentReady" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Matchmaking_pkey" PRIMARY KEY ("id")
 );
@@ -185,6 +205,9 @@ CREATE UNIQUE INDEX "ChannelMessage_messageId_key" ON "ChannelMessage"("messageI
 CREATE UNIQUE INDEX "ChannelMessage_messageId_senderId_key" ON "ChannelMessage"("messageId", "senderId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ChannelMessageReadStatus_messageId_readerId_key" ON "ChannelMessageReadStatus"("messageId", "readerId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ChannelInvitation_channelId_inviteeId_key" ON "ChannelInvitation"("channelId", "inviteeId");
 
 -- CreateIndex
@@ -192,6 +215,15 @@ CREATE UNIQUE INDEX "Channel_name_key" ON "Channel"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ChannelMember_userId_channelId_key" ON "ChannelMember"("userId", "channelId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Powerup_name_key" ON "Powerup"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MatchPowerup_matchId_powerupId_key" ON "MatchPowerup"("matchId", "powerupId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BlockedUser_userId_targetUserId_key" ON "BlockedUser"("userId", "targetUserId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Matchmaking_userId_key" ON "Matchmaking"("userId");
@@ -218,13 +250,13 @@ ALTER TABLE "DirectMessage" ADD CONSTRAINT "DirectMessage_senderId_fkey" FOREIGN
 ALTER TABLE "DirectMessage" ADD CONSTRAINT "DirectMessage_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ChannelMessage" ADD CONSTRAINT "ChannelMessage_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "Message"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ChannelMessage" ADD CONSTRAINT "ChannelMessage_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "Message"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ChannelMessage" ADD CONSTRAINT "ChannelMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "ChannelMember"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ChannelMessageReadStatus" ADD CONSTRAINT "ChannelMessageReadStatus_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "ChannelMessage"("messageId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ChannelMessageReadStatus" ADD CONSTRAINT "ChannelMessageReadStatus_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "ChannelMessage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ChannelMessageReadStatus" ADD CONSTRAINT "ChannelMessageReadStatus_readerId_fkey" FOREIGN KEY ("readerId") REFERENCES "ChannelMember"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -249,6 +281,12 @@ ALTER TABLE "Match" ADD CONSTRAINT "Match_leftUserId_fkey" FOREIGN KEY ("leftUse
 
 -- AddForeignKey
 ALTER TABLE "Match" ADD CONSTRAINT "Match_rightUserId_fkey" FOREIGN KEY ("rightUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MatchPowerup" ADD CONSTRAINT "MatchPowerup_matchId_fkey" FOREIGN KEY ("matchId") REFERENCES "Match"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MatchPowerup" ADD CONSTRAINT "MatchPowerup_powerupId_fkey" FOREIGN KEY ("powerupId") REFERENCES "Powerup"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BlockedUser" ADD CONSTRAINT "BlockedUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

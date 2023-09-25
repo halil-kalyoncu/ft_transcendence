@@ -24,19 +24,49 @@
     </div>
 
     <div class="input-group">
-      <button class="secondary-btn" :class="{ enabled2FA: is2FAEnabled }" @click="toggle2FA">
-        {{ is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA' }}
+      <button @click="enable2FA" class="secondary-btn">
+        {{ twoFAEnabled ? 'Disable 2FA' : 'Enable 2FA' }}
       </button>
+    </div>
+    <div v-if="showEnable2FA && !twoFAEnabled">
+      <div class="qr-code-container">
+        <img :src="qrCodeImage" alt="QR Code" class="qrcode" />
+      </div>
+      <div class="input-group">
+        <div class="input-group-item">
+          <input
+            type="text"
+            id="2fa"
+            placeholder="Enter 2FA code"
+            class="two-FA-input"
+            v-model="twoFAcode"
+          />
+          <button @click="confirm2FA" class="secondary-btn confirm-button">Confirm 2FA</button>
+        </div>
+      </div>
+    </div>
+    <div v-if="showEnable2FA && twoFAEnabled">
+      <div class="input-group">
+        <div class="input-group-item">
+          <input
+            type="text"
+            id="2fa"
+            placeholder="Enter 'OK' to disable"
+            class="two-FA-input"
+            v-model="confirmation"
+          />
+          <button @click="confirmDisable2FA" class="secondary-btn confirm-button">Confirm</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
-import { fetchAndSaveAvatar } from '../../utils/fetchAndSaveAvatar'
 
 const notificationStore = useNotificationStore()
 
@@ -44,8 +74,10 @@ const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
 
 const username = ref('')
-const enable2FA = ref(false)
-const is2FAEnabled = ref(true)
+const twoFAcode = ref('')
+const confirmation = ref('')
+const showEnable2FA = ref(false)
+const twoFAEnabled = ref(true)
 const avatarInput: Ref<HTMLInputElement | null> = ref(null)
 const uploadedAvatarFile: Ref<File | null> = ref(null)
 const selectedFileName = ref('')
@@ -55,7 +87,7 @@ const images = ref([
   'src/assets/avatar-3.png',
   'src/assets/avatar-2.png'
 ])
-
+const qrCodeImage = ref('')
 const displayedCount = 3
 const startIndex = ref(0)
 const selectedImg = ref('src/assets/avatar-1.png')
@@ -64,21 +96,6 @@ const setSelectedImage = (img: string) => {
   selectedImg.value = img
 }
 
-const displayedImages = computed(() => {
-  return images.value.slice(startIndex.value, startIndex.value + displayedCount)
-})
-
-const nextImages = () => {
-  if (startIndex.value < images.value.length - displayedCount) {
-    startIndex.value += displayedCount
-  }
-}
-
-const previousImages = () => {
-  if (startIndex.value >= displayedCount) {
-    startIndex.value -= displayedCount
-  }
-}
 const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {
     uploadedAvatarFile.value = avatarInput.value.files[0]
@@ -97,12 +114,13 @@ const handleAvatarUpload = async () => {
 
       if (response.ok) {
         notificationStore.showNotification('Success upload image', true)
-        fetchAndSaveAvatar()
+        await userStore.fetchUser()
+        await userStore.fetchAvatar()
       } else {
         notificationStore.showNotification('Failed to upload image', false)
       }
     } catch (error: any) {
-      notificationStore.showNotification(`Error` + error.message, false)
+      notificationStore.showNotification('Error' + error.message, false)
     }
   }
 }
@@ -110,23 +128,143 @@ const handleAvatarUpload = async () => {
 const deleteAvatar = async () => {
   try {
     const response = await fetch(`http://localhost:3000/api/users/avatar/${userId.value}`, {
-      method: 'PATCH'
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+      }
     })
 
+    const responseData = await response.json()
     if (response.ok) {
       notificationStore.showNotification('Success delete avatar', true)
-      userStore.clearAvatarImageData()
+      userStore.clearAvatar()
     } else {
-      notificationStore.showNotification('User has no avatar', false)
+      notificationStore.showNotification(
+        'Error while deleting avatar ' + responseData.message,
+        false
+      )
+    }
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while deleting avatar', false)
+  }
+}
+
+const generateQRCode = async () => {
+  try {
+    const response = await fetch(`http://localhost:3000/api/2fa/generate?userId=${userId.value}`, {
+      method: 'POST'
+    })
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+
+    // Convert the response to a blob (binary data)
+    const blob = await response.blob()
+
+    // Create a URL for the blob data
+    const imageUrl = URL.createObjectURL(blob)
+    qrCodeImage.value = imageUrl
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
+}
+
+const enable2FA = () => {
+  if (showEnable2FA.value) {
+    showEnable2FA.value = false
+    return
+  }
+  generateQRCode()
+  showEnable2FA.value = true
+}
+
+const check2FAcode = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/api/2fa/enable', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: userId.value,
+        code: twoFAcode.value
+      })
+    })
+    if (!response.ok) {
+      const responseData = await response.json()
+      notificationStore.showNotification(responseData.message, false)
+    } else {
+      notificationStore.showNotification('2FA enabled', true)
+      showEnable2FA.value = false
+      twoFAcode.value = ''
+      twoFAEnabled.value = true
     }
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, false)
   }
 }
 
-const toggle2FA = () => {
-  is2FAEnabled.value = !is2FAEnabled.value
+const confirm2FA = () => {
+  check2FAcode()
 }
+
+const disable2FA = async () => {
+  try {
+    const response = await fetch(`http://localhost:3000/api/2fa/disable?userId=${userId.value}`, {
+      method: 'POST'
+    })
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    } else {
+      notificationStore.showNotification('2FA disabled', true)
+      showEnable2FA.value = false
+      confirmation.value = ''
+      twoFAEnabled.value = false
+    }
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
+}
+
+const confirmDisable2FA = () => {
+  if (confirmation.value === 'OK') {
+    disable2FA()
+  } else {
+    notificationStore.showNotification('Wrong Confirmation', false)
+  }
+}
+
+const set2FAStatus = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      {
+        method: 'GET'
+      }
+    )
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    } else {
+      twoFAEnabled.value = await response.json()
+    }
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, false)
+  }
+}
+
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
+  set2FAStatus()
+})
 </script>
 
 <style scoped>
@@ -211,15 +349,11 @@ input[type='text']::placeholder {
 
 .input[type='text']:hover,
 .secondary-btn:hover,
-.secondary-btn.upload-btn:hover,
-.enabled2FA {
+.secondary-btn.confirm-button:hover,
+.secondary-btn.upload-btn:hover {
   color: aliceblue;
   border: 1px solid #ea9f42;
   font-weight: bold;
-}
-
-.enabled2FA {
-  color: #ea9f42 !important;
 }
 
 input[type='text']:focus,
@@ -245,6 +379,12 @@ input[type='file']:focus,
   transition: all 0.25s ease;
 }
 
+.secondary-btn:active {
+  background-color: #ea9f42; /* Change the background color when the button is clicked */
+  border: none; /* Remove the border when the button is clicked */
+  color: #ffffff; /* Change the text color when the button is clicked */
+}
+
 .file-input {
   position: absolute;
   top: 0;
@@ -268,6 +408,73 @@ input[type='file']:focus,
 
 .disabled:hover {
   background: #2a2a2a;
+}
+
+.delete-button {
+  background-color: transparent;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin-left: 0.25rem;
+  margin-top: -0.5rem;
+  font-size: 15px;
+  min-width: 540px;
+  min-height: 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+  background-color: #a83232;
+  color: aliceblue;
+  border-color: #ff3333;
+}
+
+.delete-button:hover {
+  background-color: #ba4646;
+  border: none;
+}
+
+.delete-button:active {
+  background-color: #6a1e1e;
+}
+
+.delete-button:disabled {
+  background-color: #4c4c4c;
+  cursor: not-allowed;
+}
+
+.input-group .two-FA-input {
+  padding: 0.5rem 1rem;
+  /* min-width: 200px;  */
+  min-height: 35px;
+  min-width: 200px;
+  border: 1px solid #ba4646;
+  border-radius: 4px;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.input-group .confirm-button {
+  padding: 0.5rem 1rem;
+  min-width: 30px;
+  min-height: 35px;
+  border: 1px solid aliceblue;
+  border-radius: 4px;
+  font-size: 15px;
+  color: #ffffff;
+}
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+  max-width: 100%;
+}
+/* TODO: Make this responsive  */
+.qr-code-container .qrcode {
+  flex-grow: 1;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .margin-top {

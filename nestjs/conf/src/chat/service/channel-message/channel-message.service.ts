@@ -10,9 +10,11 @@ import {
   Channel,
   ChannelMember,
   ChannelMessageReadStatus,
+  BlockedUser,
 } from '@prisma/client';
 import { ChannelService } from '../channel/channel.service';
 import { ChannelMemberService } from '../channel-member/channel-member.service';
+import { BlockedUserService } from '../blocked-user/blocked-user.service';
 
 @Injectable()
 export class ChannelMessageService {
@@ -21,6 +23,7 @@ export class ChannelMessageService {
     private channelService: ChannelService,
     private messageService: MessageService,
     private channelMemberService: ChannelMemberService,
+    private blockedUserService: BlockedUserService,
   ) {}
 
   async create(
@@ -52,9 +55,6 @@ export class ChannelMessageService {
       },
     });
 
-    // Add a log to indicate that the ChannelMessage was created
-    console.log('ChannelMessage created:', createdChannelMessage);
-
     // Return the created ChannelMessage
     return createdChannelMessage;
   }
@@ -74,6 +74,10 @@ export class ChannelMessageService {
 
     if (!member) {
       throw new Error('Member is not part of the channel');
+    }
+
+    if (member.unmuteAt) {
+      throw new Error('You are muted');
     }
 
     const createdMessage = await this.messageService.createOne({ message });
@@ -98,14 +102,15 @@ export class ChannelMessageService {
       message: createdChannelMessage.message,
       sender: createdChannelMessage.sender.user,
       createdAt: createdChannelMessage.message.createdAt,
+      blockGroupMessage: false,
     };
-
     // Create a ChannelMessageReadStatus for each member of the channel
     const channelMembers = await this.channelService.findMembers(channelId);
+
     for (const channelMember of channelMembers) {
       await this.prisma.channelMessageReadStatus.create({
         data: {
-          message: { connect: { id: createdMessage.id } },
+          message: { connect: { id: createdChannelMessage.id } },
           reader: { connect: { id: channelMember.id } },
           isRead: channelMember.userId === member.userId,
         },
@@ -117,6 +122,7 @@ export class ChannelMessageService {
 
   async getChannelMessagesforChannel(
     channelId: number,
+    userId: number,
   ): Promise<ChannelMessageDto[]> {
     try {
       const channelMessages: any[] = await this.prisma.channelMessage.findMany({
@@ -141,13 +147,30 @@ export class ChannelMessageService {
           },
         },
       });
+      const blockedUsers: User[] = await this.blockedUserService.getUsers(
+        userId,
+      );
+      const channelMessageDtos: ChannelMessageDto[] = await Promise.all(
+        channelMessages.map(async (channelMessage) => {
+          let blockGroupMessage: boolean = false;
 
-      const channelMessageDtos: ChannelMessageDto[] = channelMessages.map(
-        (channelMessage) => ({
-          id: channelMessage.id,
-          message: channelMessage.message,
-          sender: channelMessage.sender.user,
-          createdAt: channelMessage.message.createdAt,
+          if (channelMessage.sender.userId !== userId) {
+            const isSenderBlocked = blockedUsers.some(
+              (blockedUser) => blockedUser.id === channelMessage.sender.userId,
+            );
+
+            if (isSenderBlocked) {
+              blockGroupMessage = true;
+            }
+          }
+
+          return {
+            id: channelMessage.id,
+            message: channelMessage.message,
+            sender: channelMessage.sender.user,
+            createdAt: channelMessage.message.createdAt,
+            blockGroupMessage,
+          };
         }),
       );
       return channelMessageDtos;
@@ -177,33 +200,10 @@ export class ChannelMessageService {
           isRead: true,
         },
       });
-      return await this.getChannelMessagesforChannel(channelId);
+      return await this.getChannelMessagesforChannel(channelId, userId);
     } catch (error: any) {
       console.error('Error marking messages as read:', error);
       throw error;
-    }
-  }
-
-  async getUnreadStatus(
-    channelId: number,
-    userId: number,
-  ): Promise<ChannelMessageReadStatus[]> {
-    try {
-      const unreadMessages =
-        await this.prisma.channelMessageReadStatus.findMany({
-          where: {
-            reader: {
-              channelId: channelId,
-              userId: userId,
-            },
-            isRead: false,
-          },
-        });
-      console.log('unreadMessages', unreadMessages);
-      return unreadMessages;
-    } catch (error) {
-      // Handle errors appropriately
-      throw new Error('Error fetching unread messages: ' + error.message);
     }
   }
 }

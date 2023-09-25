@@ -1,4 +1,4 @@
-# webapp_setup
+# ft_transcendence
 
 api is running on port 3000
 

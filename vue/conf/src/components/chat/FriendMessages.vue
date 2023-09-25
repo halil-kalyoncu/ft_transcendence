@@ -59,26 +59,50 @@ const setDirectMessages = async () => {
   }
   try {
     const response = await fetch(
-      `http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`
+      `http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
-    }
-    const data = await response.json()
-    if (Array.isArray(data)) {
-      messages.value = data
+    const responseData = await response.json()
+    if (response.ok) {
+      if (Array.isArray(responseData)) {
+        messages.value = responseData
+      } else {
+        notificationStore.showNotification(
+          'Something went wrong while fetching direct messages',
+          false
+        )
+      }
     } else {
-      console.error('Expected an array from the API but received:', data)
+      notificationStore.showNotification(
+        'Error while fetching direct messages: ' + responseData.message,
+        false
+      )
     }
   } catch (error: any) {
-    console.error('Expected an array from the API but received:', error)
+    notificationStore.showNotification('Something went wrong while fetching direct messages', false)
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   initSocket()
   setDirectMessages()
   setNewDirectMessageListener()
@@ -112,7 +136,7 @@ const isOwnMessage = (senderId: number | undefined) => {
   return senderId !== undefined && senderId === loggedUser.value.id
 }
 
-const formatDate = (createdAt: string) => {
+const formatDate = (createdAt: Date) => {
   const date = new Date(createdAt)
   const day = date.getDate()
   const month = date.getMonth() + 1
@@ -125,17 +149,19 @@ const formatDate = (createdAt: string) => {
 </script>
 
 <template>
-  <div class="chat">
+  <div v-if="props.selectedFriendEntry?.blocked!">You blocked {{ selectedUser?.username! }}</div>
+  <div v-else class="chat">
     <div></div>
     <ScrollViewer :maxHeight="'60vh'">
       <div class="messages" v-if="!loading" ref="chatContainerRef">
         <Message
           v-for="message in messages"
           :key="message.id"
-          :createdAt="'one minute ago'"
+          :createdAt="formatDate(message.message?.createdAt ?? new Date())"
           :message="message.message?.message ?? ''"
           :sender="message.sender?.username ?? ''"
           :isOwnMessage="isOwnMessage(message.sender.id)"
+          :blockedGroupMessage="false"
         />
       </div>
       <div v-else class="loading-text">Type to Start Conversation...</div>

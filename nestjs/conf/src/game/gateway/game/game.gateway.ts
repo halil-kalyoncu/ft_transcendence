@@ -130,6 +130,12 @@ export class EventsGateway {
     //first user that connects to the gateway creates the entry in the rooms array
     if (!this.rooms.has(queryMatchId)) {
       this.rooms.set(queryMatchId, new Room(queryMatchId));
+      const powerupNames: string[] = await this.matchService.getPowerupNames(
+        queryMatchId,
+      );
+      console.log('game socket');
+      console.log(socket.data.match);
+      console.log(powerupNames);
     }
 
     const room = this.rooms.get(queryMatchId);
@@ -162,9 +168,9 @@ export class EventsGateway {
       const match = await this.matchService.finishMatch(room);
 
       if (socket.data.isLeftPlayer) {
-        socket.to(room.socketIds[1]).emit('opponentDisconnect', match);
+        socket.to(room.socketIds[1]).emit('gameFinished', match);
       } else {
-        socket.to(room.socketIds[0]).emit('opponentDisconnect', match);
+        socket.to(room.socketIds[0]).emit('gameFinished', match);
       }
     }
     socket.disconnect();
@@ -343,6 +349,22 @@ export class EventsGateway {
     if (index != -1) {
       room.powerups.splice(index, 1);
     }
+  }
+
+  @SubscribeMessage('maxWaitingTimeReached')
+  async maxWaitingTimeReached(socket: Socket) {
+    const room = this.rooms.get(socket.data.match.id);
+
+    room.gameIsRunning = false;
+    if (socket.data.isLeftPlayer) {
+      room.leftPlayerDisconnect = true;
+    } else {
+      room.rightPlayerDisconnect = true;
+    }
+
+    const match = await this.matchService.finishMatch(room);
+
+    socket.emit('gameFinished', match);
   }
 
   //Helperfunctions

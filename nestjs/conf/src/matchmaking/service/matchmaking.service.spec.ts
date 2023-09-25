@@ -46,6 +46,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 2,
         opponentUserId: 1,
+        userReady: false,
+        opponentReady: false,
       };
 
       const findUniqueSpy = jest
@@ -87,6 +89,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 1,
         opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
       };
 
       const findFirstSpy = jest
@@ -111,6 +115,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 2,
         opponentUserId: 1,
+        userReady: false,
+        opponentReady: false,
       };
 
       const findFirstSpy = jest
@@ -166,6 +172,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 1,
         opponentUserId: null,
+        userReady: false,
+        opponentReady: false,
       };
 
       const findByIdSpy = jest
@@ -222,6 +230,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 2,
         opponentUserId: null,
+        userReady: false,
+        opponentReady: false,
       };
 
       const findByIdSpy = jest
@@ -263,6 +273,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 1,
         opponentUserId: null,
+        userReady: false,
+        opponentReady: false,
       };
 
       const findByIdSpy = jest
@@ -307,6 +319,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: user.id,
         opponentUserId: null,
+        userReady: false,
+        opponentReady: false,
       };
 
       const findByIdSpy = jest
@@ -344,6 +358,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: user.id,
         opponentUserId: null,
+        userReady: false,
+        opponentReady: false,
       };
 
       const findByIdSpy = jest
@@ -375,6 +391,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 1,
         opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
       };
 
       const getByUserIdSpy = jest
@@ -404,6 +422,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 1,
         opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
       };
 
       const getByUserIdSpy = jest
@@ -433,6 +453,8 @@ describe('MatchmakingService', () => {
         id: 1,
         userId: 1,
         opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
       };
 
       const getByUserIdSpy = jest
@@ -450,6 +472,103 @@ describe('MatchmakingService', () => {
 
       getByUserIdSpy.mockRestore();
       deleteSpy.mockRestore();
+    });
+  });
+
+  describe('setUserReady', () => {
+    it('should set userReady to true and return updated entry', async () => {
+      const userId: number = 1;
+      const matchmaking: Matchmaking = {
+        id: 1,
+        userId: 1,
+        opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
+      };
+
+      const getByUserIdSpy = jest
+        .spyOn(service, 'getByUserId')
+        .mockResolvedValue(matchmaking);
+      const updateSpy = jest
+        .spyOn(prismaService.matchmaking, 'update')
+        .mockResolvedValue({ ...matchmaking, userReady: true });
+
+      const result = await service.setUserReady(userId);
+
+      expect(result).toStrictEqual({ ...matchmaking, userReady: true });
+      expect(getByUserIdSpy).toBeCalledWith(userId);
+      expect(updateSpy).toBeCalledWith({
+        where: {
+          id: matchmaking.id,
+        },
+        data: {
+          userReady: true,
+        },
+      });
+
+      getByUserIdSpy.mockRestore();
+      updateSpy.mockRestore();
+    });
+
+    it('should set opponentReady to true and return updated entry', async () => {
+      const userId: number = 2;
+      const matchmaking: Matchmaking = {
+        id: 1,
+        userId: 1,
+        opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
+      };
+
+      const getByUserIdSpy = jest
+        .spyOn(service, 'getByUserId')
+        .mockResolvedValue(matchmaking);
+      const updateSpy = jest
+        .spyOn(prismaService.matchmaking, 'update')
+        .mockResolvedValue({ ...matchmaking, opponentReady: true });
+
+      const result = await service.setUserReady(userId);
+
+      expect(result).toStrictEqual({ ...matchmaking, opponentReady: true });
+      expect(getByUserIdSpy).toBeCalledWith(userId);
+      expect(updateSpy).toBeCalledWith({
+        where: {
+          id: matchmaking.id,
+        },
+        data: {
+          opponentReady: true,
+        },
+      });
+
+      getByUserIdSpy.mockRestore();
+      updateSpy.mockRestore();
+    });
+
+    it('should return null if user has no matchmaking entry', async () => {
+      const userId: number = 4242;
+      const matchmaking: Matchmaking = {
+        id: 1,
+        userId: 1,
+        opponentUserId: 2,
+        userReady: false,
+        opponentReady: false,
+      };
+
+      const getByUserIdSpy = jest
+        .spyOn(service, 'getByUserId')
+        .mockResolvedValue(null);
+      const updateSpy = jest
+        .spyOn(prismaService.matchmaking, 'update')
+        .mockResolvedValue({ ...matchmaking, userReady: true });
+
+      const result = await service.setUserReady(userId);
+
+      expect(result).toBe(null);
+      expect(getByUserIdSpy).toBeCalledWith(userId);
+      expect(updateSpy).not.toBeCalled();
+
+      getByUserIdSpy.mockRestore();
+      updateSpy.mockRestore();
     });
   });
 });

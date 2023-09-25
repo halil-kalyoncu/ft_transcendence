@@ -4,11 +4,11 @@
       <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
           :isPasswordProtected="channel.channel.protected"
+          :isPrivate="false"
           :channelName="channel.channel.name"
           :ownerName="channel.owner.username"
-          :joinChannelButtonName="'Join'"
+          :joinChannelButtonNameProps="'Join'"
           :channelId="channel.channel.id"
-          :userId="userId"
           @channelEntered="handleChannelEntered(channel.channel.id)"
         />
       </div>
@@ -23,6 +23,16 @@ import { onMounted, computed, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
+import { Socket } from 'socket.io-client'
+import { connectChatSocket } from '../../websocket'
+
+const socket = ref<Socket | null>(null)
+const notificationStore = useNotificationStore()
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
 
 const emit = defineEmits(['channel-entered'])
 const handleChannelEntered = (channelId: number) => {
@@ -34,7 +44,6 @@ const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
 
 const setPublicChannels = async () => {
-  const notificationStore = useNotificationStore()
   try {
     const response = await fetch(
       `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`
@@ -43,15 +52,42 @@ const setPublicChannels = async () => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    channelData.value = data
+    channelData.value = await data
   } catch (error: any) {
     notificationStore.showNotification(`Error` + error.message, true)
   }
 }
 
+const setChannelListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  socket.value.on('ChannelDestroy', () => {
+    console.log('ChannelDestroy fired from AvaibleChannelsList.vue')
+    setPublicChannels()
+    return
+  })
+  socket.value.on('channelCreated', () => {
+    console.log('channelCreated fired from AvaibleChannelsList.vue')
+    setPublicChannels()
+    return
+  })
+}
+
 onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+  initSocket()
   await setPublicChannels()
-  //listener
+  setChannelListener()
 })
 </script>
 

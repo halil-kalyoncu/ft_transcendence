@@ -7,6 +7,7 @@ export interface ChannelMessageI {
   message: MessageI
   sender: UserI
   createdAt: string
+  blockGroupMessage: boolean
   //channelMessageReadStatus: ChannelMessageReadStatusI[];
 }
 

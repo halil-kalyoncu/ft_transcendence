@@ -9,19 +9,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
 import { connectChatSocket } from '../websocket'
-import type { UserI } from '../model/user.interface'
-import jwtDecode from 'jwt-decode'
-import { fetchAndSaveAvatar } from '../utils/fetchAndSaveAvatar'
 
 const username = ref('')
+const userId = computed(() => userStore.userId)
 const router = useRouter()
-const userStore = useUserStore()
 const notificationStore = useNotificationStore()
+
+const get2FAStatus = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      {
+        method: 'GET'
+      }
+    )
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    } else {
+      return await response.json()
+    }
+  } catch (error) {
+    console.error('Error occurred during 2FA status check:', error)
+    notificationStore.showNotification('Error occurred during 2FA status check:' + error, false)
+  }
+}
+const userStore = useUserStore()
 
 const submitForm = async () => {
   try {
@@ -33,32 +50,26 @@ const submitForm = async () => {
       body: JSON.stringify({ username: username.value })
     })
 
+    const responseData = await response.json()
     if (response.ok) {
-      console.log('Login successful')
-      const { access_token } = await response.json()
-      //save jwt into local storage
-      localStorage.setItem('ponggame', access_token)
-      try {
-        const decodedToken: Record<string, unknown> = jwtDecode(access_token)
-        const loggedUser: UserI = decodedToken.user as UserI
-        userStore.setUserId(loggedUser.id as number)
-        if (loggedUser.avatarId) {
-          fetchAndSaveAvatar()
-        }
-      } catch (error: any) {
-        console.error('Invalid token:', error)
-        notificationStore.showNotification('Invalid Token', false)
+      localStorage.setItem('ponggame', responseData.access_token)
+      await userStore.initStore()
+      connectChatSocket(responseData.access_token)
+      const is2FAenabled = await get2FAStatus()
+
+      if (is2FAenabled) {
+        router.push('/twoFAAuth')
+      } else {
+        router.push('/home')
       }
-      userStore.setUsername(username.value)
-      connectChatSocket(access_token)
-      router.push('/home')
     } else {
-      console.error('Login failed!! ' + response.status + ': ' + response.statusText)
-      notificationStore.showNotification(response.status + ': ' + response.statusText, false)
+      notificationStore.showNotification(
+        'Error occurred during login' + responseData.message,
+        false
+      )
     }
   } catch (error) {
-    console.error('Error occurred during login:', error)
-    notificationStore.showNotification('Error occurred during login:' + error, false)
+    notificationStore.showNotification('Something went wrong during login', false)
   }
 }
 </script>

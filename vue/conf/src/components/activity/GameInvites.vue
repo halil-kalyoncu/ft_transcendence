@@ -35,6 +35,8 @@ import { useMatchRequestsStore } from '../../stores/matchRequests'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 import { useRouter } from 'vue-router'
+import type { MatchI } from '../../model/match/match.interface'
+import type { ErrorI } from '../../model/error.interface'
 
 const matchRequestStore = useMatchRequestsStore()
 const matchRequests = computed(() => matchRequestStore.matchRequests)
@@ -42,7 +44,6 @@ const router = useRouter()
 
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
-const username = computed(() => userStore.username)
 const socket = ref<Socket | null>(null)
 const props = defineProps({
   channelId: Number
@@ -69,11 +70,17 @@ const handleAcceptGameRequest = (requestId: number, username: string) => {
     return
   }
 
-  socket.value.emit('acceptMatchInvite', requestId)
-  router.push(`/invite/${requestId}`)
-
-  notificationStore.showNotification(`You accepted ${username}'s game request`, true)
-  matchRequestStore.removeMatchRequestById(requestId)
+  socket.value.emit('acceptMatchInvite', requestId, (response: MatchI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(
+        `You accepted ${response.leftUser?.username}'s game request`,
+        true
+      )
+      router.push(`/invite/${requestId}`)
+    }
+  })
 }
 
 const handleRejectGameRequest = (requestId: number, username: string) => {
@@ -82,9 +89,16 @@ const handleRejectGameRequest = (requestId: number, username: string) => {
     return
   }
 
-  socket.value.emit('rejectMatchInvite', requestId)
-  notificationStore.showNotification(`You rejected ${username}'s game request`, true)
-  matchRequestStore.removeMatchRequestById(requestId)
+  socket.value.emit('rejectMatchInvite', requestId, (response: MatchI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification(
+        `You rejected ${response.leftUser?.username}'s game request`,
+        true
+      )
+    }
+  })
 }
 </script>
 

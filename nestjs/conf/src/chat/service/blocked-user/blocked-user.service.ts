@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BlockedUser, Prisma, User } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UserService } from '../../../user/service/user-service/user.service';
+import { PrismaModel } from '../../../_gen/prisma-class/index';
 
 @Injectable()
 export class BlockedUserService {
@@ -10,14 +15,18 @@ export class BlockedUserService {
     private userService: UserService,
   ) {}
 
-  async block(userId: number, targetUserId: number): Promise<any> {
-    const isAlreadyBlocked = await this.find(userId, targetUserId);
-    if (isAlreadyBlocked) {
-      //or return error if already blocked?
-      return isAlreadyBlocked;
+  async block(userId: number, targetUserId: number): Promise<BlockedUser> {
+    const user = await this.userService.findById(targetUserId);
+    if (!user) {
+      throw new Error("User doesn't exists");
     }
 
-    return this.prisma.blockedUser.create({
+    const isAlreadyBlocked = await this.find(userId, targetUserId);
+    if (isAlreadyBlocked) {
+      throw new Error(`${user.username} is already blocked`);
+    }
+
+    return await this.prisma.blockedUser.create({
       data: {
         userId,
         targetUserId,
@@ -29,14 +38,18 @@ export class BlockedUserService {
     });
   }
 
-  async unblock(userId: number, targetUserId: number): Promise<any> {
-    const block = await this.find(userId, targetUserId);
-    if (!block) {
-      //return error?
-      return;
+  async unblock(userId: number, targetUserId: number): Promise<BlockedUser> {
+    const user = await this.userService.findById(targetUserId);
+    if (!user) {
+      throw new Error("User doesn't exists");
     }
 
-    return this.prisma.blockedUser.delete({
+    const block = await this.find(userId, targetUserId);
+    if (!block) {
+      throw new Error(`${user.username} is not blocked`);
+    }
+
+    return await this.prisma.blockedUser.delete({
       where: {
         id: block.id,
       },
@@ -47,11 +60,13 @@ export class BlockedUserService {
     });
   }
 
-  async getBlockedUsers(userId: number): Promise<any[]> {
+  async getBlockedUsers(userId: number): Promise<any> {
     const user = await this.userService.findById(userId);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(
+        `User with the id ${userId} couldn't be found`,
+      );
     }
 
     return this.prisma.blockedUser.findMany({
@@ -65,13 +80,21 @@ export class BlockedUserService {
     });
   }
 
-  async find(userId: number, targetUserId: number): Promise<any> {
+  async getUsers(userId: number): Promise<User[]> {
+    const blockedUsers = await this.getBlockedUsers(userId);
+
+    return blockedUsers.map((blockedUser) => blockedUser.targetUser);
+  }
+
+  async find(userId: number, targetUserId: number): Promise<BlockedUser> {
     await this.checkIds(userId, targetUserId);
 
-    return this.prisma.blockedUser.findFirst({
+    return await this.prisma.blockedUser.findUnique({
       where: {
-        userId,
-        targetUserId,
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
       },
       include: {
         user: true,
@@ -80,8 +103,8 @@ export class BlockedUserService {
     });
   }
 
-  async remove(blockedUserId: number): Promise<any> {
-    return this.prisma.blockedUser.delete({
+  async remove(blockedUserId: number): Promise<BlockedUser> {
+    return await this.prisma.blockedUser.delete({
       where: {
         id: blockedUserId,
       },
@@ -91,16 +114,20 @@ export class BlockedUserService {
   private async checkIds(userId: number, targetUserId: number): Promise<void> {
     const user = await this.userService.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(
+        `User with the id ${userId} couldn't be found`,
+      );
     }
 
     const targetUser = await this.userService.findById(targetUserId);
     if (!targetUser) {
-      throw new NotFoundException('Target user not found');
+      throw new NotFoundException(
+        `User with the id ${targetUserId} couldn't be found`,
+      );
     }
 
     if (userId === targetUserId) {
-      throw new Error("Can't block yourself");
+      throw new BadRequestException("Can't block yourself");
     }
     return;
   }

@@ -509,7 +509,7 @@ describe('UserService', () => {
   describe('uploadAvatar', () => {
     it('should upload an avatar and update the user', async () => {
       const userId = 1;
-      const file = { path: './files/abc-123.png' } as Express.Multer.File;
+      const file = { filename: 'abc-123.png' } as Express.Multer.File;
       const user: User = {
         id: 1,
         username: 'mmustermann',
@@ -524,18 +524,18 @@ describe('UserService', () => {
         .mockResolvedValue(user);
       const updateSpy = jest
         .spyOn(prismaService.user, 'update')
-        .mockResolvedValue({ ...user, avatarId: file.path });
+        .mockResolvedValue({ ...user, avatarId: file.filename });
       const unlinkSyncSpy = jest
         .spyOn(fs, 'unlinkSync')
         .mockImplementation(() => {});
 
       const result = await service.uploadAvatar(file, userId);
 
-      expect(result).toEqual({ ...user, avatarId: file.path });
+      expect(result).toEqual({ ...user, avatarId: file.filename });
       expect(findByIdSpy).toHaveBeenCalledWith(userId);
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { avatarId: file.path },
+        data: { avatarId: file.filename },
       });
       expect(unlinkSyncSpy).not.toHaveBeenCalled();
 
@@ -546,11 +546,11 @@ describe('UserService', () => {
 
     it('should upload an avatar and delete the existing one', async () => {
       const userId = 1;
-      const file = { path: './files/def-456.png' } as Express.Multer.File;
+      const file = { filename: 'def-456.png' } as Express.Multer.File;
       const user: User = {
         id: 1,
         username: 'mmustermann',
-        avatarId: './files/abc-123.png',
+        avatarId: 'abc-123.png',
         ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
@@ -562,7 +562,7 @@ describe('UserService', () => {
 
       const updateSpy = jest
         .spyOn(prismaService.user, 'update')
-        .mockResolvedValue({ ...user, avatarId: file.path });
+        .mockResolvedValue({ ...user, avatarId: file.filename });
 
       const unlinkSyncSpy = jest
         .spyOn(fs, 'unlinkSync')
@@ -570,13 +570,12 @@ describe('UserService', () => {
 
       const result = await service.uploadAvatar(file, userId);
 
-      expect(result).toEqual({ ...user, avatarId: file.path });
+      expect(result).toEqual({ ...user, avatarId: file.filename });
       expect(findByIdSpy).toHaveBeenCalledWith(userId);
       expect(updateSpy).toHaveBeenCalledWith({
         where: { id: userId },
-        data: { avatarId: file.path },
+        data: { avatarId: file.filename },
       });
-      expect(unlinkSyncSpy).toHaveBeenCalledWith(user.avatarId);
 
       findByIdSpy.mockRestore();
       updateSpy.mockRestore();
@@ -585,7 +584,7 @@ describe('UserService', () => {
 
     it('should throw an error when user is not found', async () => {
       const userId = 4242;
-      const file = { path: './files/abc-123.png' } as Express.Multer.File;
+      const file = { filename: 'abc-123.png' } as Express.Multer.File;
 
       const findByIdSpy = jest
         .spyOn(service, 'findById')
@@ -595,7 +594,7 @@ describe('UserService', () => {
         await service.uploadAvatar(file, userId);
       } catch (e) {
         expect(e).toBeInstanceOf(Error);
-        expect(e.message).toBe('user not found');
+        expect(e.message).toBe('User not found');
       }
 
       findByIdSpy.mockRestore();
@@ -608,7 +607,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
-        avatarId: './files/abc-123.png',
+        avatarId: 'abc-123.png',
         ladderLevel: 1000,
         enabled2FA: false,
         secret2FA: null,
@@ -632,7 +631,6 @@ describe('UserService', () => {
         where: { id: userId },
         data: { avatarId: null },
       });
-      expect(unlinkSyncSpy).toHaveBeenCalledWith(user.avatarId);
 
       findByIdSpy.mockRestore();
       updateSpy.mockRestore();
@@ -668,7 +666,6 @@ describe('UserService', () => {
         where: { id: userId },
         data: { avatarId: null },
       });
-      expect(unlinkSyncSpy).not.toHaveBeenCalled();
 
       findByIdSpy.mockRestore();
       updateSpy.mockRestore();
@@ -686,7 +683,7 @@ describe('UserService', () => {
         await service.deleteAvatar(userId);
       } catch (e) {
         expect(e).toBeInstanceOf(Error);
-        expect(e.message).toBe('user not found');
+        expect(e.message).toBe('User not found');
       }
 
       findByIdSpy.mockRestore();

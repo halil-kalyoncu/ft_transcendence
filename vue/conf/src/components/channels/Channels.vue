@@ -61,11 +61,22 @@ import type {
 } from '../../model/channels/createChannel.interface'
 import { Socket } from 'socket.io-client'
 import Modal from '../utils/Modal.vue'
+import type { ErrorI } from '../../model/error.interface'
 
 const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
 
@@ -73,9 +84,6 @@ onMounted(() => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('channelCreated', (success: boolean) => {
-    notificationStore.showNotification('Channel Succesfully Created!', true)
-  })
 
   socket.value.on('error', (error: string) => {
     notificationStore.showNotification('Error: ' + error, false)
@@ -106,7 +114,8 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-const handleConfirm = ({
+//Todo check with halil why there is a difference in the noticitaions
+const handleConfirm = async ({
   name,
   password,
   channelVisibility,
@@ -126,7 +135,7 @@ const handleConfirm = ({
     return
   }
   if (!socket || !socket.value) {
-    notificationStore.showNotification('Error: Connection problems', true)
+    notificationStore.showNotification('Error: Connection problems')
     return
   }
   if (passwordSet === true) {
@@ -136,14 +145,38 @@ const handleConfirm = ({
       password: password || '',
       channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
     }
-    socket.value.emit('createProtectedChannel', createChannelDto)
+    await socket.value.emit(
+      'createProtectedChannel',
+      createChannelDto,
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error)
+          return
+        } else {
+          notificationStore.showNotification('Channel created', true)
+          return
+        }
+      }
+    )
   } else {
     const createChannelDto: CreateChannelDto = {
       userId: userId.value,
       name: name || '',
       channelVisibility: channelVisibility.toUpperCase() as ChannelVisibilityType
     }
-    socket.value.emit('createUnProtectedChannel', createChannelDto)
+    await socket.value.emit(
+      'createUnProtectedChannel',
+      createChannelDto,
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error)
+          return
+        } else {
+          notificationStore.showNotification('Channel created', true)
+          return
+        }
+      }
+    )
   }
 }
 
@@ -168,24 +201,7 @@ const addUsertoChannel = async () => {
       throw new Error('Failed to add user to channel')
     }
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
-  }
-}
-const removeUserFromChannel = async () => {
-  try {
-    console.log(joinedChannelId.value)
-    const response = await fetch('http://localhost:3000/api/channel/removeUserFromChannel', {
-      method: 'Delete',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: userId.value,
-        channelId: joinedChannelId.value
-      })
-    })
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message)
   }
 }
 
@@ -237,7 +253,8 @@ const closeChannelManagerAndChat = async () => {
   return
 }
 
-const goBack = () => {
+const goBack = async () => {
+  await MarkMessagesAsRead()
   closeJoinChannels()
   closeMyChannels()
   closeChannelManagerAndChat()
@@ -245,12 +262,12 @@ const goBack = () => {
 
 const handleChannelEntered = async (channelId: number) => {
   joinedChannelId.value = channelId
-  await updateChannelManager()
   await closeJoinChannels()
   await closeMyChannels()
   await addUsertoChannel().then(() => {
     showChannelManagerAndChat.value = true
   })
+  await updateChannelManager()
 }
 
 const handleChannelLeft = async () => {
@@ -262,20 +279,21 @@ const hanndleChannelforceLeave = async () => {
 }
 
 const hanndleChannelSignedout = async () => {
-  await MarkMessagesAsRead()
-  removeUserFromChannel()
-  closeChannelManagerAndChat()
+  await closeChannelManagerAndChat()
 }
 
 const updateChannelManager = async () => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification('Error: Connection problems', true)
+    notificationStore.showNotification('Error: Connection problems')
     return
   }
   try {
-    socket.value.emit('SignInChannel', joinedChannelId.value)
+    socket.value.emit('SignInChannel', {
+      channelId: joinedChannelId.value,
+      username: username.value
+    })
   } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    notificationStore.showNotification(`Error` + error.message)
   }
 }
 </script>

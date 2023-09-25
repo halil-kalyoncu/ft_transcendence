@@ -31,15 +31,14 @@
         <button
           class="action-button-ban"
           @click="banUnbanUser"
-          :title="banTitle"
-          :class="isUserBanned ? 'Unban' : 'Ban'"
+          :title="isUserBanned ? 'Unban' : 'Ban'"
         >
           <font-awesome-icon :icon="isUserBanned ? ['fas', 'ban'] : ['fas', 'check']" />
         </button>
         <button
           class="action-button-mute"
           @click="openModal"
-          :title="muteTitle"
+          :title="isUserMuted ? 'Unmute' : 'Mute'"
           :class="isUserMuted ? 'disableMuteOption' : ''"
         >
           <font-awesome-icon :icon="isUserMuted ? ['fas', 'volume-mute'] : ['fas', 'volume-up']" />
@@ -51,24 +50,25 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref, watch, watchEffect, onMounted } from 'vue'
+import { computed, ref, watch, watchEffect, onMounted, onUnmounted } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
+import { useUserStore } from '../../stores/userInfo'
 import Modal from '../utils/Modal.vue'
 import type { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 
 library.add(fas)
 const router = useRouter()
+const userStore = useUserStore()
+const usernameUserStore = computed(() => userStore.username)
 const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 const minutesMuted = ref(0)
 const maxValue = ref(100)
-const isUserMuted = ref(false)
 const muteTitle = ref('Mute')
-const banTitle = ref('Ban')
 
 //get the props from parent
 const props = defineProps({
@@ -79,7 +79,8 @@ const props = defineProps({
   requesterId: Number,
   targetUserId: Number,
   channelId: Number,
-  isUserBannedProp: Boolean
+  isUserBannedProp: Boolean,
+  isUserMutedProp: Boolean
 })
 // const emit = defineEmits(['changedProperties']);
 
@@ -89,9 +90,17 @@ const props = defineProps({
 
 const role = ref(props.roleProp)
 const isUserBanned = ref(props.isUserBannedProp)
+const isUserMuted = ref(props.isUserMutedProp)
 
 watchEffect(() => {
   role.value = props.roleProp
+})
+
+watchEffect(() => {
+  isUserBanned.value = props.isUserBannedProp
+})
+watchEffect(() => {
+  isUserMuted.value = props.isUserMutedProp
 })
 
 const goToProfile = () => {
@@ -170,7 +179,25 @@ const makeAdmin = async () => {
   }
 }
 
-const muteUser = () => {
+const muteUser = async () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  try {
+    console.log(minutesMuted.value)
+    socket.value.emit('muteChannelMember', {
+      requesterId: props.requesterId,
+      targetUserId: props.targetUserId,
+      channelId: props.channelId,
+      minutesToMute: minutesMuted.value
+    })
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
+}
+
+const muteAUser = () => {
   if (minutesMuted.value === 0) {
     notificationStore.showNotification('Error: Minutes to be muted cannot be 0', false)
     return
@@ -178,20 +205,35 @@ const muteUser = () => {
 
   let muted = true
 
-  if (muted) {
-    notificationStore.showNotification(
-      props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
-      true
-    )
-    isUserMuted.value = true
-    muteTitle.value = 'User is muted'
+  try {
+    if (muted) {
+      muteUser()
+      notificationStore.showNotification(
+        props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
+        true
+      )
+    }
+    minutesMuted.value = 0
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
   }
-  minutesMuted.value = 0
 }
 
-const unmuteUser = () => {
-  isUserMuted.value = false
-  muteTitle.value = 'Mute'
+const unMuteUser = async () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', true)
+    return
+  }
+  try {
+    socket.value.emit('unMuteChannelMember', {
+      requesterId: props.requesterId,
+      targetUserId: props.targetUserId,
+      channelId: props.channelId
+    })
+    muteTitle.value = 'Mute'
+  } catch (error: any) {
+    notificationStore.showNotification(`Error` + error.message, true)
+  }
 }
 
 const getRoleIcon = (role: string | undefined) => {
@@ -215,9 +257,9 @@ interface ModalResult {
 }
 
 const isModalOpened = ref(false)
-const openModal = () => {
+const openModal = async () => {
   if (isUserMuted.value === true) {
-    unmuteUser()
+    await unMuteUser()
     return
   }
   isModalOpened.value = true
@@ -231,16 +273,18 @@ const handleConfirm = ({ name, password, visibility, minutesOfMute }: ModalResul
   isModalOpened.value = false
 
   minutesMuted.value = minutesOfMute !== undefined ? minutesOfMute : 0
-  muteUser()
+  muteAUser()
 }
 
-const initSocket = () => {
+const initSocket = async () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
+  return
 }
 
-onMounted(() => {
-  initSocket()
+//CHECK FOR NOTIFICTAIONS HERE
+onMounted(async () => {
+  await initSocket()
 })
 </script>
 

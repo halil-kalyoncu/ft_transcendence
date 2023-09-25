@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Friendship, FriendshipStatus, Prisma, User } from '@prisma/client';
 import { FriendshipDto, FriendshipEntryStatus } from '../../dto/friendship.dto';
 import { MatchService } from '../../../match/service/match.service';
+import { BlockedUserService } from '../blocked-user/blocked-user.service';
 
 @Injectable()
 export class FriendshipService {
@@ -11,6 +12,7 @@ export class FriendshipService {
     private prisma: PrismaService,
     private connectedUserService: ConnectedUserService,
     private matchService: MatchService,
+    private blockedUserService: BlockedUserService,
   ) {}
 
   async create(friendship: Prisma.FriendshipCreateInput): Promise<Friendship> {
@@ -21,16 +23,10 @@ export class FriendshipService {
 
     if (checkFriendship) {
       if (checkFriendship.status === FriendshipStatus.PENDING) {
-        throw new Error('Already send a request');
+        throw new BadRequestException('Already send a request');
       } else if (checkFriendship.status === FriendshipStatus.ACCEPTED) {
-        throw new Error('Already friends');
-      }
-      // else if (checkFriendship.status === FriendshipStatus.BLOCKED) {
-      //   throw new Error(
-      //     'Please check if the user is in your blocked list. Otherwise you have been blocked :(',
-      //   );
-      // }
-      else if (checkFriendship.status === FriendshipStatus.REJECTED) {
+        throw new BadRequestException('Already friends');
+      } else if (checkFriendship.status === FriendshipStatus.REJECTED) {
         await this.remove(checkFriendship.id);
       }
     }
@@ -75,12 +71,16 @@ export class FriendshipService {
         let status = FriendshipEntryStatus.Offline;
         const inGame = await this.matchService.isInGame(friend.id);
         const isConnected = await this.connectedUserService.findByUser(friend);
+        const blocked: boolean = !!(await this.blockedUserService.find(
+          userId,
+          friend.id,
+        ));
         if (inGame) {
           status = FriendshipEntryStatus.Ingame;
         } else if (isConnected) {
           status = FriendshipEntryStatus.Online;
         }
-        return { id, friend, status };
+        return { id, friend, status, blocked };
       }),
     );
 
@@ -117,7 +117,12 @@ export class FriendshipService {
       requests.map(async (request) => {
         const id = request.id;
         const sender = request.sender;
-        return { id, friend: sender, status: FriendshipEntryStatus.Offline };
+        return {
+          id,
+          friend: sender,
+          status: FriendshipEntryStatus.Offline,
+          blocked: false,
+        };
       }),
     );
 
@@ -144,42 +149,6 @@ export class FriendshipService {
     });
   }
 
-  // async block(friendship: Prisma.FriendshipCreateInput): Promise<Friendship> {
-  //   const checkFriendship: Friendship = await this.find(
-  //     friendship.sender.connect.id,
-  //     friendship.receiver.connect.id,
-  //   );
-  //   if (checkFriendship) {
-  //     this.remove(checkFriendship.id);
-  //   }
-  //   friendship.status = FriendshipStatus.BLOCKED;
-  //   return this.prisma.friendship.create({
-  //     data: friendship,
-  //   });
-  // }
-
-  // async unblock(userId: number, blockedUserId: number): Promise<Friendship> {
-  //   const friendship = await this.find(userId, blockedUserId);
-  //   if (!friendship || friendship.status !== FriendshipStatus.BLOCKED) {
-  //     throw new Error('User is not in your blocked list');
-  //   }
-  //   return await this.remove(friendship.id);
-  // }
-
-  // async getBlockedUsers(userId: number): Promise<Friendship[]> {
-  //   return await this.prisma.friendship.findMany({
-  //     where: {
-  //       AND: [
-  //         { status: FriendshipStatus.BLOCKED },
-  //         {
-  //           OR: [{ senderId: userId }, { receiverId: userId }],
-  //         },
-  //       ],
-  //     },
-  //     include: { sender: true, receiver: true },
-  //   });
-  // }
-
   async remove(friendshipId: number): Promise<Friendship> {
     return await this.prisma.friendship.delete({ where: { id: friendshipId } });
   }
@@ -189,5 +158,45 @@ export class FriendshipService {
       where: { id: friendshipId },
       include: { sender: true, receiver: true },
     });
+  }
+
+  async listFriendsLikeUsername(
+    userId: number,
+    searchTerm: string,
+  ): Promise<User[]> {
+    const searchTermLower: string = searchTerm.toLowerCase();
+
+    const friends = await this.prisma.friendship.findMany({
+      where: {
+        AND: [
+          { status: FriendshipStatus.ACCEPTED },
+          {
+            OR: [{ senderId: userId }, { receiverId: userId }],
+          },
+        ],
+      },
+      include: { sender: true, receiver: true },
+    });
+
+    const users: User[] = await Promise.all(
+      friends.map(async (friendship) => {
+        const friend =
+          friendship.senderId === userId
+            ? friendship.receiver
+            : friendship.sender;
+
+        if (searchTermLower) {
+          if (friend.username.toLowerCase().includes(searchTermLower)) {
+            return friend;
+          } else {
+            return null;
+          }
+        }
+
+        return friend;
+      }),
+    );
+
+    return users.filter((user) => user !== null) as User[];
   }
 }

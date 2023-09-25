@@ -19,7 +19,7 @@ import type { MatchI } from '../../model/match/match.interface'
 import type { ErrorI } from '../../model/error.interface'
 import type { UnreadMessageI } from '../../model/message/unreadMessage.interface'
 import type { DirectConverstationDto } from '../../model/message/directConversation.dto'
-import type { BlockUserDto } from '../../model/block-user.dto'
+import router from '../../router'
 library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
@@ -46,9 +46,7 @@ const initSocket = () => {
 
 const updateSelectedFriend = () => {
   if (!selectedFriend.value) return
-
   const updatedFriend = friends.value.find((f) => f.friend.id === selectedFriend.value?.friend.id)
-
   if (updatedFriend) {
     selectedFriend.value = updatedFriend
   } else {
@@ -56,48 +54,76 @@ const updateSelectedFriend = () => {
   }
 }
 
-const fetchUser = async (username: string): Promise<UserI> => {
-  const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`)
+const fetchUser = async (username: string): Promise<UserI | null> => {
+  try {
+    const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+      }
+    })
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    const responseData = await response.json()
+    if (response.ok) {
+      return responseData
+    } else {
+      return null
+    }
+  } catch (error) {
+    return null
   }
-
-  return await response.json()
 }
 
 const setFriendData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/friendships/get-accepted-friends?userId=${userId.value}`
+      `http://localhost:3000/api/friendships/get-accepted-friends?userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    const responseData = await response.json()
+    if (response.ok) {
+      friends.value = responseData
+      updateSelectedFriend()
+    } else {
+      notificationStore.showNotification('Error while fetching friends', false)
     }
-
-    const data = await response.json()
-    friends.value = data
-    updateSelectedFriend()
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while fetching friends', false)
   }
 }
 
 const setDirectMessageData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/directMessages/allUnreadByUserId?userId=${userId.value}`
+      `http://localhost:3000/api/directMessages/allUnreadByUserId?userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    const responseData = await response.json()
+    if (response.ok) {
+      unreadMessages.value = responseData
+    } else {
+      notificationStore.showNotification(
+        'Error while fetching unread messages: ' + responseData.message,
+        false
+      )
     }
-
-    const data = await response.json()
-    unreadMessages.value = data
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while fetching unread messages', false)
   }
 }
 
@@ -132,7 +158,17 @@ const unreadMessageReactive = computed(() => {
   return counts
 })
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   initSocket()
 
   setFriendsListener()
@@ -204,28 +240,24 @@ const handleBlock = async ({ username }: ModalResult) => {
     return
   }
 
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
   try {
-    const blockUser: UserI = await fetchUser(username)
+    const blockUser: UserI | null = await fetchUser(username)
     if (!blockUser) {
       throw new Error("Couldn't find user " + username)
     }
 
-    const blockUserDto: BlockUserDto = {
-      userId: userId.value as number,
-      targetUserId: blockUser.id as number
-    }
-    const response = await fetch('http://localhost:3000/api/blockedUsers', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(blockUserDto)
+    socket.value.emit('blockUser', blockUser.id as number, (response: any) => {
+      if ('error' in response) {
+        notificationStore.showNotification(`Error: ${response.error}`, false)
+      } else {
+        notificationStore.showNotification(`User ${username} was successfully blocked`, true)
+      }
     })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-    notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
   } catch (error: any) {
     notificationStore.showNotification('Error: ' + error.message, false)
   }
@@ -239,28 +271,24 @@ const handleUnblock = async ({ username }: ModalResult) => {
     return
   }
 
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
   try {
-    const unblockUser: UserI = await fetchUser(username)
+    const unblockUser: UserI | null = await fetchUser(username)
     if (!unblockUser) {
       throw new Error("Couldn't find user " + username)
     }
 
-    const blockUserDto: BlockUserDto = {
-      userId: userId.value as number,
-      targetUserId: unblockUser.id as number
-    }
-    const response = await fetch('http://localhost:3000/api/blockedUsers', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(blockUserDto)
+    socket.value.emit('unblockUser', unblockUser.id as number, (response: any) => {
+      if ('error' in response) {
+        notificationStore.showNotification(`Error: ${response.error}`, false)
+      } else {
+        notificationStore.showNotification(`User ${username} was successfully unblocked`, true)
+      }
     })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-    notificationStore.showNotification('User ' + username + ' was successfully unblocked', true)
   } catch (error: any) {
     notificationStore.showNotification('Error: ' + error.message, false)
   }
@@ -285,6 +313,7 @@ const handleUnfriendUser = (username: String, friendshipId: Number) => {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
+
   if (username !== '') {
     socket.value.emit('removeFriend', friendshipId, (response: FriendshipI | ErrorI) => {
       if ('error' in response) {
@@ -300,29 +329,51 @@ const handleUnfriendUser = (username: String, friendshipId: Number) => {
 }
 
 const handleBlockUser = async (username: string, blockUserId: number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
   if (username !== '') {
     try {
-      const blockUser: UserI = await fetchUser(username)
+      const blockUser: UserI | null = await fetchUser(username)
       if (!blockUser) {
         throw new Error("Couldn't find user " + username)
       }
 
-      const blockUserDto: BlockUserDto = {
-        userId: userId.value as number,
-        targetUserId: blockUser.id as number
-      }
-      const response = await fetch('http://localhost:3000/api/blockedUsers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(blockUserDto)
+      socket.value.emit('blockUser', blockUser.id as number, (response: any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(`Error: ${response.error}`, false)
+        } else {
+          notificationStore.showNotification(`User ${username} was successfully blocked`, true)
+        }
       })
+    } catch (error: any) {
+      notificationStore.showNotification('Error: ' + error.message, false)
+    }
+  }
+}
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+const handleUnblockUser = async (username: string, unblockUserId: number) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  if (username !== '') {
+    try {
+      const unblockUser: UserI | null = await fetchUser(username)
+      if (!unblockUser) {
+        throw new Error("Couldn't find user " + username)
       }
-      notificationStore.showNotification('User ' + username + ' was successfully blocked', true)
+
+      socket.value.emit('unblockUser', unblockUser.id as number, (response: any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(`Error: ${response.error}`, false)
+        } else {
+          notificationStore.showNotification(`User ${username} was successfully blocked`, true)
+        }
+      })
     } catch (error: any) {
       notificationStore.showNotification('Error: ' + error.message, false)
     }
@@ -330,8 +381,22 @@ const handleBlockUser = async (username: string, blockUserId: number) => {
 }
 
 const handleInviteToGame = (username: String, id: Number) => {
-  if (username !== '') {
-    notificationStore.showNotification('User ' + username + ' was invited to play', true)
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  try {
+    socket.value.emit('sendMatchInviteViaChat', id, (response: MatchI | ErrorI) => {
+      if ('error' in response) {
+        notificationStore.showNotification(`Error: ${response.error}`, false)
+      } else {
+        notificationStore.showNotification(`Send a game invitation to ${username}`, true)
+        router.push(`/invite/${response.id!}`)
+      }
+    })
+  } catch (error: any) {
+    notificationStore.showNotification('Error: ' + error.message, false)
   }
 }
 
@@ -345,21 +410,32 @@ const markConversationAsRead = async (withUserId: number) => {
     const response = await fetch('http://localhost:3000/api/directMessages/markAsRead', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       },
       body: JSON.stringify(directConversationDto)
     })
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-    const data = await response.json()
-    if (Array.isArray(data)) {
+    const responseData = await response.json()
+    if (response.ok) {
+      if (Array.isArray(responseData)) {
+      } else {
+        notificationStore.showNotification(
+          'Something went wrong while marking the direct messages as read',
+          false
+        )
+      }
     } else {
-      console.error('Expected an array from the API but received:', data)
+      notificationStore.showNotification(
+        'Error while marking the direct messages as read: ' + responseData.message,
+        false
+      )
     }
   } catch (error: any) {
-    console.error('Expected an array from the API but received:', error)
+    notificationStore.showNotification(
+      'Something went wrong while marking the direct messages as read',
+      false
+    )
   }
 }
 
@@ -389,6 +465,7 @@ const goBack = () => {
             <FriendsListItem
               @click="handleFriendManagerOpened(entry)"
               :status="entry.status!"
+              :blocked="entry.blocked!"
               :username="entry.friend.username"
               :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
               :showActions="false"
@@ -415,6 +492,7 @@ const goBack = () => {
       <FriendManager
         @unfriend-user="handleUnfriendUser"
         @block-user="handleBlockUser"
+        @unblock-user="handleUnblockUser"
         @invite-user-to-game="handleInviteToGame"
         :selectedFriendEntry="selectedFriend"
       />

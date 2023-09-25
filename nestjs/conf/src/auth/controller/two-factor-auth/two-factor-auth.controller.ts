@@ -3,6 +3,7 @@ import {
   Controller,
   ParseIntPipe,
   Post,
+  Get,
   Query,
   Res,
   UnauthorizedException,
@@ -13,6 +14,7 @@ import { TwoFactorAuthCodeDto } from '../../dto/two-factor-auth-code.dto';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { User } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @ApiTags('Two Factor Authentification (Auth module)')
 @Controller('2fa')
@@ -21,6 +23,29 @@ export class TwoFactorAuthController {
     private readonly twoFactorAuthService: TwoFactorAuthService,
     private readonly userService: UserService,
   ) {}
+
+  @Get('twoFAstatus')
+  async twoFAstatus(
+    @Query('userId', ParseIntPipe) userId: number,
+  ): Promise<boolean> {
+    try {
+      return await this.userService.twoFAstatus(userId);
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get('checkFAcode')
+  async checkFAcode(
+    @Query('userId', ParseIntPipe) userId: number,
+    @Query('code') code: string,
+  ): Promise<boolean> {
+    try {
+      return await this.twoFactorAuthService.checkCodeValid(userId, code);
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 
   @Post('generate')
   async generate(
@@ -37,13 +62,28 @@ export class TwoFactorAuthController {
   async enable(
     @Body() twoFactorAuthCodeDto: TwoFactorAuthCodeDto,
   ): Promise<User> {
-    const codeValid: boolean = await this.twoFactorAuthService.checkCodeValid(
-      twoFactorAuthCodeDto.userId,
-      twoFactorAuthCodeDto.code,
-    );
-    if (!codeValid) {
-      throw new UnauthorizedException('Wrong authentication code');
+    try {
+      const codeValid: boolean = await this.twoFactorAuthService.checkCodeValid(
+        twoFactorAuthCodeDto.userId,
+        twoFactorAuthCodeDto.code,
+      );
+      if (!codeValid) {
+        throw new UnauthorizedException('Wrong authentication code');
+      }
+      return await this.userService.turnOnTwoFactorAuth(
+        twoFactorAuthCodeDto.userId,
+      );
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
-    return this.userService.turnOnTwoFactorAuth(twoFactorAuthCodeDto.userId);
+  }
+
+  @Post('disable')
+  async disable(@Query('userId', ParseIntPipe) userId: number): Promise<User> {
+    try {
+      return this.userService.turnOffTwoFactorAuth(userId);
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }

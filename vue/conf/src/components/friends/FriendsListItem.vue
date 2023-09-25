@@ -19,8 +19,11 @@
         <button class="action-button-ban" @click="unfriendUser" title="Unfriend">
           <font-awesome-icon :icon="['fas', 'fa-user-times']" />
         </button>
-        <button class="action-button-ban" @click="banUser" title="Ban">
+        <button v-if="!blocked" class="action-button-ban" @click="blockUser" title="Block">
           <font-awesome-icon :icon="['fas', 'ban']" />
+        </button>
+        <button v-else class="action-button-ban" @click="unblockUser" title="Unblock">
+          <font-awesome-icon :icon="['fas', 'door-open']" />
         </button>
       </div>
       <div
@@ -48,18 +51,23 @@ const router = useRouter()
 const props = defineProps({
   username: String,
   status: String,
+  blocked: Boolean,
   unreadMessagesAmount: Number,
   showActions: Boolean
 })
 
-const emit = defineEmits(['handle-unfriend', 'handle-block'])
+const emit = defineEmits(['handle-unfriend', 'handle-block', 'handle-unblock'])
 
 const unfriendUser = () => {
   emit('handle-unfriend')
 }
 
-const banUser = () => {
+const blockUser = () => {
   emit('handle-block')
+}
+
+const unblockUser = () => {
+  emit('handle-unblock')
 }
 </script>
 

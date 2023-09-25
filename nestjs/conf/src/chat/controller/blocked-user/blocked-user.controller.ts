@@ -1,55 +1,62 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
+  NotFoundException,
   ParseIntPipe,
-  Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
-import { BlockUserDto } from '../../dto/block-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { BlockedUser } from '@prisma/client';
+import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
+import { PrismaModel } from '../../../_gen/prisma-class';
 
 @ApiTags('Blocked Users (Chat module)')
 @Controller('blockedUsers')
 export class BlockedUserController {
   constructor(private blockedUserService: BlockedUserService) {}
 
-  @Post()
-  async blockUser(@Body() blockUserDto: BlockUserDto): Promise<any> {
-    try {
-      return await this.blockedUserService.block(
-        blockUserDto.userId,
-        blockUserDto.targetUserId,
-      );
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-  }
-
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get a users blocked list' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of blocked list',
+    type: PrismaModel.BlockedUser,
+    isArray: true,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User couldn't be indentified with the userId",
+  })
+  @ApiResponse({ status: 500, description: 'Server error' })
+  @ApiBearerAuth('access-token')
   @Get()
   async getBlockedUsers(
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<any[]> {
+  ): Promise<BlockedUser[]> {
     try {
       return await this.blockedUserService.getBlockedUsers(userId);
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  @Delete()
-  async unblockUser(@Body() blockUserDto: BlockUserDto): Promise<any> {
-    try {
-      return await this.blockedUserService.unblock(
-        blockUserDto.userId,
-        blockUserDto.targetUserId,
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 }

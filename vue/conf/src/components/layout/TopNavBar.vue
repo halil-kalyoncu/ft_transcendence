@@ -15,18 +15,16 @@ import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.in
 
 library.add(fas)
 const userStore = useUserStore()
-const notificationStore = useNotificationStore()
-const username = computed(() => userStore.username)
 const userId = computed(() => userStore.userId)
+const username = computed(() => userStore.username)
 const userAvatar = computed(() => userStore.avatarImageData)
-const socket = ref<Socket | null>(null)
 const route = useRoute()
 const showHomePage = computed(() => route.path === '/home')
-const hasNotification = ref(false)
+const notificationStore = useNotificationStore()
 
 const avatarSrc = computed(() => {
   if (userAvatar.value === null) {
-    //can't happen because if check it before i call this function
+    //can't happen because it is checked before calling this function, but vue needs the null check
     return ''
   }
   return URL.createObjectURL(userAvatar.value)
@@ -34,10 +32,22 @@ const avatarSrc = computed(() => {
 
 const logout = () => {
   localStorage.removeItem('ponggame')
-  userStore.clearUsername()
+  userStore.clearStore()
   disconnectChatSocket()
   router.push('/')
 }
+
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+})
 </script>
 
 <template>

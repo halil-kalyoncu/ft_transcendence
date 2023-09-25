@@ -3,7 +3,15 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
 <template>
   <div class="channel-list-item">
     <div class="channel-info">
-      <p class="channel-name">{{ channelName }}</p>
+      <div class="channel-name-container">
+        <p class="channel-name">{{ channelName }}</p>
+        <font-awesome-icon
+          v-if="isPrivate"
+          class="icon"
+          :icon="['fas', 'user-secret']"
+          title="Private Channel"
+        ></font-awesome-icon>
+      </div>
       <div class="channel-owner-container">
         <font-awesome-icon class="icon" :icon="['fas', 'star']" />
         <p class="channel-owner">{{ ownerName }}</p>
@@ -27,9 +35,6 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
       />
     </div>
     <div class="channel-button-container">
-      <div v-if="unreadMessageCount && unreadMessageCount > 0" class="unread-messages">
-        +{{ unreadMessageCount }}
-      </div>
       <font-awesome-icon v-if="isPasswordProtected" class="icon" :icon="['fas', 'lock']" />
       <button
         class="join-channel-button"
@@ -45,53 +50,73 @@ Make badge number visibale. At the moment hidden. Delete big umber next to enter
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
+import { useUserStore } from '../../stores/userInfo'
 
 library.add(fas)
 
 const props = defineProps({
   isPasswordProtected: Boolean,
+  isPrivate: Boolean,
   channelName: String,
   ownerName: String,
-  joinChannelButtonName: String,
+  joinChannelButtonNameProps: String,
   channelId: Number,
-  unreadMessageCount: Number,
-  userId: Number
+  unreadMessageCount: Number
 })
-//const unreadMessageCount = ref(4)
+// const unreadMessageCount = ref(4)
 const emit = defineEmits(['channel-entered'])
 const showPasswordField = ref(false)
+
 const password = ref('')
 const userBanned = ref(false)
 const socket = ref<Socket | null>(null)
 const notificationStore = useNotificationStore()
+const userStore = useUserStore()
+const userId = computed<number>(() => userStore.userId)
+const username = computed(() => userStore.username)
+const isPasswordProtected = props.isPasswordProtected
+let joinChannelButtonName = ref(props.joinChannelButtonNameProps)
 
-const handleJoin = () => {
-  if (props.isPasswordProtected && password.value === '') {
-    showPasswordField.value = true
+const handleJoin = async () => {
+  if (isPasswordProtected) {
+    if (!showPasswordField.value) {
+      showPasswordField.value = true
+      joinChannelButtonName.value = 'Confirm'
+      return
+    } else {
+      if (password.value === '') {
+        notificationStore.showNotification('Error: Password is required')
+        return
+      } else {
+        const correct: boolean = await comparePassword()
+        if (!correct) {
+          notificationStore.showNotification('Error: Wrong password')
+          showPasswordField.value = false
+          joinChannelButtonName.value = 'Enter'
+          password.value = ''
+          return
+        } else {
+          showPasswordField.value = false
+          joinChannelButtonName.value = 'Enter'
+          password.value = ''
+          emit('channel-entered', props.channelId)
+        }
+      }
+    }
   } else {
-    // console.log(
-    //   'password: ' +
-    //     password.value +
-    //     ', channel name: ' +
-    //     props.channelName +
-    //     ', owner: ' +
-    //     props.ownerName +
-    //     ', channelId: ' +
-    //     props.channelId
-    // )
     emit('channel-entered', props.channelId)
   }
 }
 
 const tooltipText = () => {
-  if (userBanned) {
+  if (userBanned.value) {
     return 'You are banned from this channel'
   } else {
     return 'Go to channel'
@@ -112,10 +137,27 @@ const initSocket = () => {
   socket.value = connectChatSocket(accessToken)
 }
 
+const comparePassword = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    const data = response.json()
+    const correct = await data
+    return correct
+  } catch (error: any) {
+    console.error('Error: ', error)
+    return false
+  }
+}
+
 const setUserBanned = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${props.userId}`
+      `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${userId.value}`
     )
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`)
@@ -125,6 +167,14 @@ const setUserBanned = async () => {
     return
   } catch (error: any) {
     console.error('Error: ', error)
+  }
+}
+
+const getJoinChannelButtonName = async () => {
+  if (showPasswordField.value) {
+    return 'Confirm'
+  } else {
+    return 'Enter'
   }
 }
 
@@ -138,9 +188,25 @@ const setBannedFromChannelListener = () => {
     setUserBanned()
     return
   })
+  socket.value.on(
+    'memberUnBanned',
+    (unBannedUserName: string, unBanChannelId: number, unBanChannelName: string) => {
+      console.log('memberUnBanned fired from JoinedChannelsList.vue')
+      if (unBannedUserName === username.value) {
+        notificationStore.showNotification(
+          'You got unbanned from Channel: ' + unBanChannelName,
+          true
+        )
+      }
+      setUserBanned()
+      return
+    }
+  )
 }
+
 onMounted(() => {
   initSocket()
+  getJoinChannelButtonName()
   setUserBanned()
   setBannedFromChannelListener()
 })
@@ -174,6 +240,18 @@ onMounted(() => {
   font-size: 0.75rem;
 }
 
+.channel-name-container {
+  display: flex;
+  align-items: center;
+}
+
+.channel-name-container .icon {
+  margin: 0 0.5rem 0.25rem 0;
+  margin-left: 0.25rem;
+  color: #fff9f9;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
 .channel-name {
   margin: 0;
   padding: 0;
@@ -245,8 +323,11 @@ onMounted(() => {
   margin-right: 5px;
 }
 
-.envelope-icon {
-  width: 100%;
+.icon-container {
+  position: relative;
+  display: inline-block;
+  font-size: 0.75rem;
+  margin: 0.5rem 0 0 0.5rem;
 }
 
 .badge-number {
@@ -263,6 +344,10 @@ onMounted(() => {
   text-align: center;
   font-size: 0.55rem;
   font-weight: bold;
+}
+
+.envelope-icon {
+  width: 100%;
 }
 
 .disabled-button {

@@ -78,11 +78,11 @@ const rejectFriendRequest = () => {
 }
 
 const blockUser = () => {
-  emit('block-user', props.requestId, props.targetUserId, props.username)
+  emit('block-user', props.targetUserId, props.username)
 }
 
 const unblockUser = () => {
-  emit('unblock-user', props.requestId, props.targetUserId, props.username)
+  emit('unblock-user', props.targetUserId, props.username)
 }
 </script>
 

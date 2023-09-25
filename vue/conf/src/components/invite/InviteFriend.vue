@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import type { UserI } from '../../model/user.interface'
-import type { MatchI } from '../../model/match/match.interface'
 import { useNotificationStore } from '../../stores/notification'
 import { connectChatSocket } from '../../websocket'
 import ScrollViewer from '../utils/ScrollViewer.vue'
-import { useUserStore } from '../../stores/userInfo'
+import type { SendGameInviteDto } from '../../model/match/sendGameInvite.dto'
+import type { MatchI } from '../../model/match/match.interface'
+import type { ErrorI } from '../../model/error.interface'
+import jwtDecode from 'jwt-decode'
 
 const props = defineProps({
   matchId: {
@@ -14,44 +15,66 @@ const props = defineProps({
     required: true
   }
 })
-const router = useRouter()
-const userStore = useUserStore()
-const username = computed(() => userStore.username)
-const areRadioButtonsDisabled = computed(() => activePanel.value === 'DefaultGame')
+const areOptionsDisabled = computed(() => activePanel.value === 'DefaultGame')
 const activePanel = ref('DefaultGame')
-const selectedGoals = ref('five')
-const selectedPowerup1 = ref('slow')
-const selectedPowerup2 = ref('small')
+const selectedGoals = ref('5')
+const selectedPowerups = ref([
+  { name: 'slowBall', value: false },
+  { name: 'fastBall', value: false },
+  { name: 'decreasePaddleHeight', value: false },
+  { name: 'increasePaddleHeight', value: false },
+  { name: 'magnet', value: false }
+])
+const selectedPowerupNames = computed(() => {
+  return selectedPowerups.value.filter((p) => p.value).map((p) => p.name)
+})
 
 const numericMatchId = parseInt(props.matchId, 10)
 
 const notificationStore = useNotificationStore()
 
 const invitedUsername = ref('')
-const invitedUser = ref<UserI | null>(null)
 const userSuggestions = ref<UserI[]>([])
 const showSuggestionList = ref(false)
 
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const socket = connectChatSocket(accessToken)
 
-const findUserSuggestions = async (usernameSuggestion: string) => {
+const getUserFromAccessToken = (): UserI => {
+  const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
+  return decodedToken.user as UserI
+}
+
+const findFriendSuggestions = async (usernameSuggestion: string) => {
   if (usernameSuggestion.trim() === '') {
     userSuggestions.value = []
     return
   }
-
-  const response = await fetch(
-    `http://localhost:3000/api/users/find-by-username?username=${usernameSuggestion}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+  try {
+    const loggedUser: UserI = getUserFromAccessToken()
+    const userId: string = loggedUser.id?.toString(10) ?? ''
+    const response = await fetch(
+      `http://localhost:3000/api/friendships/get-like-username?userId=${userId}&username=${usernameSuggestion}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
+    )
+    const responseData = await response.json()
+    if (response.ok) {
+      userSuggestions.value = responseData
+    } else {
+      notificationStore.showNotification(
+        "Friend suggestions couldn't be loaded: " + responseData.message,
+        false
+      )
     }
-  )
-  const data = await response.json()
-  userSuggestions.value = data
+  } catch (error: any) {
+    notificationStore.showNotification("Friend suggestions couldn't be loaded", false)
+  }
 }
 
 const selectSuggestion = (suggestion: UserI) => {
@@ -69,43 +92,34 @@ const hideSuggestions = () => {
 }
 
 watch(invitedUsername, (newValue) => {
-  findUserSuggestions(newValue)
+  findFriendSuggestions(newValue)
 })
 
 const sendInvite = async () => {
   try {
-    if (invitedUsername.value.trim() === '' || invitedUsername.value == username.value) {
-      notificationStore.showNotification('Error: Invalid username', false)
+    if (invitedUsername.value.trim() === '') {
+      notificationStore.showNotification('Invalid username', false)
       return
     }
 
-    const response = await fetch(
-      `http://localhost:3000/api/users/find?username=${invitedUsername.value}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    if (response.ok) {
-      const userData = await response.json()
-      invitedUser.value = userData
-    } else {
-      notificationStore.showNotification('User not found', false)
-      return
-    }
-
-    socket.emit('sendMatchInvite', {
+    const sendGameInviteDto: SendGameInviteDto = {
       matchId: numericMatchId,
-      invitedUserId: invitedUser.value?.id
-      // todo check exact args
-      // goals: selectedRadio.value,
-      // powerup1: selectedPowerup1.value,
-      // powerup2: selectedPowerup2.value
-    })
+      invitedUsername: invitedUsername.value,
+      goalsToWin: parseInt(selectedGoals.value, 10),
+      powerupNames: selectedPowerupNames.value
+    }
 
-    emit('send-match-invite', invitedUser.value)
+    socket.emit('sendMatchInvite', sendGameInviteDto, (response: MatchI | ErrorI) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error, false)
+      } else {
+        notificationStore.showNotification(
+          `Successfully send a match invite to ${response.rightUser?.username}`,
+          true
+        )
+        emit('send-match-invite', response.rightUser)
+      }
+    })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.toString() : 'An error occurred'
     notificationStore.showNotification(errorMessage, false)
@@ -115,6 +129,19 @@ const sendInvite = async () => {
 
 const setActivePanel = (value: string) => {
   activePanel.value = value
+  if (value === 'DefaultGame') {
+    selectedGoals.value = '5'
+    selectedPowerups.value.forEach((powerup) => {
+      powerup.value = false
+    })
+  }
+}
+
+const togglePowerup = (powerupName: string) => {
+  const powerup = selectedPowerups.value.find((p) => p.name === powerupName)
+  if (powerup) {
+    powerup.value = !powerup.value
+  }
 }
 </script>
 
@@ -165,7 +192,7 @@ const setActivePanel = (value: string) => {
           id="three"
           v-model="selectedGoals"
           value="3"
-          :disabled="areRadioButtonsDisabled"
+          :disabled="areOptionsDisabled"
         />
         <label for="three" class="goals-label">3 goals</label>
         <input
@@ -174,68 +201,75 @@ const setActivePanel = (value: string) => {
           id="five"
           v-model="selectedGoals"
           value="5"
-          :disabled="areRadioButtonsDisabled"
+          :disabled="areOptionsDisabled"
           checked
         />
         <label for="five" class="goals-label">5 goals</label>
         <input
           type="radio"
           name="radio"
-          id="ten"
+          id="eleven"
           v-model="selectedGoals"
-          value="10"
-          :disabled="areRadioButtonsDisabled"
+          value="11"
+          :disabled="areOptionsDisabled"
         />
-        <label for="ten" class="goals-label">10 goals</label>
+        <label for="eleven" class="goals-label">11 goals</label>
         <input
           type="radio"
           name="radio"
           id="twentyone"
           v-model="selectedGoals"
           value="21"
-          :disabled="areRadioButtonsDisabled"
+          :disabled="areOptionsDisabled"
         />
         <label for="twentyone" class="goals-label">21 goals</label>
       </div>
-      <div class="radio_container">
-        <input
-          type="radio"
-          name="powerup1"
-          id="slow"
-          v-model="selectedPowerup1"
-          value="slow"
-          :disabled="areRadioButtonsDisabled"
-        />
-        <label for="slow" class="goals-label">slow</label>
-        <input
-          type="radio"
-          name="powerup1"
-          id="fast"
-          v-model="selectedPowerup1"
-          value="fast"
-          :disabled="areRadioButtonsDisabled"
-        />
-        <label for="fast" class="goals-label">fast</label>
+      <div>Ball Speed</div>
+      <div class="button_container">
+        <button
+          :class="{ selected: selectedPowerups.find((p) => p.name === 'slowBall')?.value }"
+          @click="togglePowerup('slowBall')"
+          :disabled="areOptionsDisabled"
+        >
+          slow
+        </button>
+        <button
+          :class="{ selected: selectedPowerups.find((p) => p.name === 'fastBall')?.value }"
+          @click="togglePowerup('fastBall')"
+          :disabled="areOptionsDisabled"
+        >
+          fast
+        </button>
       </div>
-      <div class="radio_container">
-        <input
-          type="radio"
-          name="powerup2"
-          id="small"
-          v-model="selectedPowerup2"
-          value="small"
-          :disabled="areRadioButtonsDisabled"
-        />
-        <label for="small" class="goals-label">small</label>
-        <input
-          type="radio"
-          name="powerup2"
-          id="big"
-          v-model="selectedPowerup2"
-          value="big"
-          :disabled="areRadioButtonsDisabled"
-        />
-        <label for="big" class="goals-label">big</label>
+      <div>Paddle Size</div>
+      <div class="button_container">
+        <button
+          :class="{
+            selected: selectedPowerups.find((p) => p.name === 'decreasePaddleHeight')?.value
+          }"
+          @click="togglePowerup('decreasePaddleHeight')"
+          :disabled="areOptionsDisabled"
+        >
+          decrease
+        </button>
+        <button
+          :class="{
+            selected: selectedPowerups.find((p) => p.name === 'increasePaddleHeight')?.value
+          }"
+          @click="togglePowerup('increasePaddleHeight')"
+          :disabled="areOptionsDisabled"
+        >
+          increase
+        </button>
+      </div>
+      <div class="button_container">
+        <button
+          :class="{ selected: selectedPowerups.find((p) => p.name === 'magnet')?.value }"
+          @click="togglePowerup('magnet')"
+          :disabled="areOptionsDisabled"
+        >
+          magnet
+        </button>
       </div>
     </div>
     <div class="invite-controls-container">
@@ -278,6 +312,7 @@ const setActivePanel = (value: string) => {
   min-width: 540px;
   background: rgba(0, 0, 0, 0.8);
   max-height: 500px;
+  z-index: 100;
 }
 
 ::placeholder {
@@ -336,6 +371,22 @@ const setActivePanel = (value: string) => {
   flex-direction: column;
 }
 
+.friend-invite .goals-label {
+  font-size: 1rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: linear 0.3s;
+  color: aliceblue;
+  border: 1px solid aliceblue;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  width: 100%;
+  margin: 0 0.5rem;
+}
+
 .friend-invite .radio_container {
   display: flex;
   justify-content: space-around;
@@ -356,25 +407,40 @@ const setActivePanel = (value: string) => {
   border-color: #ea9f42;
 }
 
-.friend-invite .goals-label {
-  font-size: 1rem;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  transition: linear 0.3s;
-  color: aliceblue;
-  border: 1px solid aliceblue;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  width: 100%;
-  margin: 0 0.5rem;
-}
-
 .friend-invite input[type='radio']:disabled + label {
   opacity: 0.5; /* makes it semi-transparent */
   cursor: not-allowed; /* indicates non-clickable item */
+}
+
+.friend-invite .button_container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 1rem;
+  width: calc(540px + 1rem);
+}
+
+.friend-invite .button_container button {
+  appearance: none;
+  border: 1px solid aliceblue;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: aliceblue;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  margin: 0 0.5rem;
+  width: 100%;
+  text-align: center;
+}
+
+.friend-invite .button_container button.selected {
+  color: #ea9f42;
+  border-color: #ea9f42;
+}
+
+.friend-invite .button_container button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .invite-controls-container {

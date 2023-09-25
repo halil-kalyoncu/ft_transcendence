@@ -23,98 +23,106 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref, watch } from 'vue'
+import { onMounted, computed, ref, watch, onBeforeUnmount } from 'vue'
 import RequestItem from './RequestItem.vue'
 
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
 import { useNotificationStore } from '../../stores/notification'
-import { useFriendRequestStore } from '../../stores/friendRequests'
 import { connectChatSocket } from '../../websocket'
 import type { BlockEntryI } from '../../model/users/blocked-users.interface'
-import type { BlockUserDto } from '../../model/block-user.dto'
-import type { UserI } from '../../model/user.interface'
 
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
 const socket = ref<Socket | null>(null)
 const userId = computed(() => userStore.userId)
 const blockedUsers = ref<BlockEntryI[]>([])
-const friendRequestStore = useFriendRequestStore()
-const friendRequests = computed(() => friendRequestStore.friendRequests)
-const username = computed(() => userStore.username)
 
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
 }
 
-onMounted(() => {
+const setBlockedUserListener = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.on('blockedUsers', () => {
+    setBlockedUsersData()
+  })
+}
+
+onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   initSocket()
 
   setBlockedUsersData()
+  setBlockedUserListener()
 })
 
-watch(
-  friendRequests,
-  (newVal, oldVal) => {
-    setBlockedUsersData()
-  },
-  { deep: true }
-)
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
 
-const handleUnblockUser = async (requestId: number, targetUserId: number, username: string) => {
+  socket.value.off('blockedUsers')
+})
+
+const handleUnblockUser = async (unblockUserId: number, username: string) => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
   if (username.trim() === '') {
     notificationStore.showNotification('Error: user name cannot be empty', false)
     return
   }
 
-  try {
-    const blockUserDto: BlockUserDto = {
-      userId: userId.value as number,
-      targetUserId: targetUserId as number
+  socket.value.emit('unblockUser', unblockUserId as number, (response: any) => {
+    if ('error' in response) {
+      notificationStore.showNotification(`Error: ${response.error}`, false)
+    } else {
+      notificationStore.showNotification(`User ${username} was successfully unblocked`, true)
     }
-    const response = await fetch('http://localhost:3000/api/blockedUsers', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(blockUserDto)
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
-    }
-    notificationStore.showNotification('User ' + username + ' was unblocked', true)
-    setBlockedUsersData()
-  } catch (error: any) {
-    notificationStore.showNotification('Error: ' + error.message, false)
-  }
+  })
 }
-
-type User = {
-  username: string
-  requestId: number
-}
-
-const dummyUserData: User[] = Array.from({ length: 9 }, (_, i) => ({
-  username: `Thomas ${i + 1}`,
-  requestId: i
-}))
 
 const setBlockedUsersData = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/blockedUsers?userId=${userId.value}`)
+    const accessToken = localStorage.getItem('ponggame') ?? ''
+    const response = await fetch(`http://localhost:3000/api/blockedUsers?userId=${userId.value}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    const responseData = await response.json()
+    if (response.ok) {
+      blockedUsers.value = responseData
+    } else {
+      notificationStore.showNotification(
+        'Error while loading blocked users: ' + responseData.message,
+        false
+      )
     }
-
-    const data = await response.json()
-    blockedUsers.value = data
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while loading blocked users', false)
   }
 }
 </script>

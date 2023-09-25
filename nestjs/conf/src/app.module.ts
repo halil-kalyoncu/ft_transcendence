@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { MatchModule } from './match/match.module';
 import { MatchmakingModule } from './matchmaking/matchmaking.module';
+import { PowerupModule } from './powerup/powerup.module';
 import { GameModule } from './game/game.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { GameModule } from './game/game.module';
     PrismaModule,
     MatchModule,
     MatchmakingModule,
+    PowerupModule,
     GameModule,
   ],
   controllers: [],

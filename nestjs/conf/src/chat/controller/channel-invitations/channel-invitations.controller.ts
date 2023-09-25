@@ -6,6 +6,9 @@ import {
   Patch,
   Post,
   ParseIntPipe,
+  HttpException,
+  HttpStatus,
+  ConsoleLogger,
 } from '@nestjs/common';
 import { ChannelInvitation } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
@@ -13,6 +16,7 @@ import { ChannelInvitationsService } from '../../service/channel-invitations/cha
 import { UserService } from '../../../user/service/user-service/user.service';
 import type { ChannelInvitationDto } from '../../dto/channelInvitation.dto';
 import { User } from '@prisma/client';
+import type { ErrorDto } from '../../dto/error.dto';
 
 @ApiTags('Channel-Invitations module')
 @Controller('channel-invitations')
@@ -48,14 +52,22 @@ export class ChannelInvitationsController {
     @Query('inviteeName') inviteeName: string,
     @Query('inviterId', ParseIntPipe) inviterId: number,
   ): Promise<ChannelInvitation> {
-    const user = await this.userService.findByUsername(inviteeName);
-    const inviteeId = user.id;
-    console.log(inviteeId);
-    return this.channelInvitationsService.inviteUserToChannel(
-      channelId,
-      inviteeId,
-      inviterId,
-    );
+    try {
+      const user = await this.userService.findByUsername(inviteeName);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const inviteeId = user.id;
+
+      return await this.channelInvitationsService.inviteUserToChannel(
+        channelId,
+        inviteeId,
+        inviterId,
+      );
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.CONFLICT);
+    }
   }
 
   @Patch('RejectInvitation')

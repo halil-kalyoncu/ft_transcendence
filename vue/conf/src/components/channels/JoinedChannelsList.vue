@@ -4,9 +4,10 @@
       <div v-for="channel in channelData" :key="channel.channel.id">
         <ChannelListItem
           :isPasswordProtected="channel.channel.protected"
+          :isPrivate="channel.channel.visibility === 'PRIVATE' ? true : false"
           :channelName="channel.channel.name"
           :ownerName="channel.owner.username"
-          :joinChannelButtonName="'Enter'"
+          :joinChannelButtonNameProps="'Enter'"
           :channelId="channel.channel.id"
           :unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
           :userId="userId"
@@ -107,9 +108,24 @@ const setNewChannelMessageListener = () => {
     setUnreadMessages()
     return
   })
+  socket.value.on('ChannelDestroy', () => {
+    console.log('ChannelDestroy fired from JoinedChannelsList.vue')
+    setChannels()
+    return
+  })
 }
 
 onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   await setChannels()
   await setUnreadMessages()
   initSocket()

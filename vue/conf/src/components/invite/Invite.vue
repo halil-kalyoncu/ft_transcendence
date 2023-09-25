@@ -35,8 +35,6 @@ const isWaitingForResponse = ref(false)
 
 const lobbyIsFinished = ref(false)
 
-const invitedUser = ref<UserI | null>(null)
-
 const authorized = ref<boolean>(true)
 
 const initChatSocket = () => {
@@ -62,18 +60,22 @@ async function fetchMatchData(): Promise<void> {
     const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
 
+    const responseData = await response.json()
     if (response.ok) {
-      const matchData = await response.json()
-      match.value = matchData
-      leftPlayer.value = matchData.leftUser
-      rightPlayer.value = matchData.rightUser
+      match.value = responseData
+      leftPlayer.value = responseData.leftUser
+      rightPlayer.value = responseData.rightUser
+      if (match.value.rightUser && match.value.state === 'INVITED') {
+        isWaitingForResponse.value = true
+      }
     } else {
       notificationStore.showNotification(
-        'Something went wrong while fetching the match data',
+        'Error while fetching the match data: ' + responseData.message,
         false
       )
       router.push('/home')
@@ -120,6 +122,15 @@ const handleLeaveMatch = () => {
   chatSocket.value.emit('leaveMatch', parseInt(matchId, 10))
 }
 
+const handleCancelWaiting = () => {
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  chatSocket.value.emit('cancelMatchInvite', parseInt(matchId, 10))
+}
+
 const handleStartMatch = () => {
   if (!userIsHost) {
     return
@@ -161,6 +172,11 @@ onMounted(async () => {
   })
 
   chatSocket.value.on('matchInviteRejected', (updatedMatch: MatchI) => {
+    notificationStore.showNotification(
+      `${match.value.rightUser?.username} rejected your invite`,
+      false
+    )
+    rightPlayer.value = null
     match.value = updatedMatch
     isWaitingForResponse.value = false
   })
@@ -193,13 +209,16 @@ onMounted(async () => {
   })
 })
 
-const handleSendMatchInvite = (userI: UserI) => {
-  isWaitingForResponse.value = true
-  invitedUser.value = userI
+const handleSendMatchInvite = (user: UserI | null) => {
+  if (user) {
+    isWaitingForResponse.value = true
+    rightPlayer.value = user
+  }
 }
 
 const cancelWaiting = () => {
   isWaitingForResponse.value = false
+  handleCancelWaiting()
 }
 
 onBeforeUnmount(() => {
@@ -227,26 +246,24 @@ onBeforeUnmount(() => {
 
 <template>
   <article class="createCustomGame">
-    <div>
-      <InviteFriend
-        v-if="!rightPlayer && !isWaitingForResponse"
-        :matchId="matchId"
-        @send-match-invite="handleSendMatchInvite"
-      />
-      <div v-if="isWaitingForResponse" class="waiting-container">
-        <Spinner />
-        <span
-          >waiting for <span class="orange-font">{{ invitedUser?.username }}</span
-          >...</span
-        >
-        <button class="icon-button-reject" title="Cancel request" @click="cancelWaiting">
-          <font-awesome-icon :icon="['fas', 'times']" />
-        </button>
-      </div>
+    <InviteFriend
+      v-if="!rightPlayer"
+      :matchId="matchId"
+      @send-match-invite="handleSendMatchInvite"
+    />
+    <div v-else-if="isWaitingForResponse" class="waiting-container">
+      <Spinner />
+      <span
+        >waiting for <span class="orange-font">{{ rightPlayer?.username }}</span
+        >...</span
+      >
+      <button class="icon-button-reject" title="Cancel request" @click="cancelWaiting">
+        <font-awesome-icon :icon="['fas', 'times']" />
+      </button>
     </div>
-    <div v-if="rightPlayer" class="flex-row">
-      <p v-if="invitedUser && invitedUser.username">
-        '<span class="orange-font">{{ invitedUser.username }}</span
+    <div v-else class="flex-row">
+      <p v-if="userIsHost">
+        '<span class="orange-font">{{ rightPlayer.username }}</span
         >' is ready to play
       </p>
 
@@ -254,12 +271,7 @@ onBeforeUnmount(() => {
         <Spinner />
         waiting for '<span class="orange-font">{{ leftPlayer.username }} </span> ' to launch game...
       </p>
-      <button
-        v-if="invitedUser != null && invitedUser?.username != ''"
-        class="dynamic-button"
-        @click="handleStartMatch"
-        :class="{ disabledButton: !userIsHost || !rightPlayer }"
-      >
+      <button v-if="userIsHost" class="dynamic-button" @click="handleStartMatch">
         Launch Game
       </button>
     </div>
@@ -316,19 +328,6 @@ onBeforeUnmount(() => {
 
 .suggestionList li {
   margin-bottom: 10px;
-}
-
-.disabledButton {
-  background-color: transparent;
-  cursor: not-allowed;
-  animation: none;
-  border: 0.25px solid aliceblue;
-}
-
-.disabledButton:hover {
-  background-color: transparent;
-  transform: none;
-  box-shadow: none;
 }
 
 .waiting-container {
