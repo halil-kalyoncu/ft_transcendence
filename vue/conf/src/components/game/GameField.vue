@@ -2,12 +2,12 @@
   <div v-if="!matchResult" class="field" ref="gameField">
     <div class="left-border"></div>
     <div class="right-border"></div>
-	<div v-if="countdown === -1" class="waiting">
-	  <p>Waiting for opponent... {{ formattedTimer }}</p>
-	</div>
-	<div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
-	  <p>{{ countdown }}</p>
-	</div>
+    <div v-if="countdown === -1" class="waiting">
+      <p>Waiting for opponent... {{ formattedTimer }}</p>
+    </div>
+    <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
+      <p>{{ countdown }}</p>
+    </div>
     <PlayerView
       ref="playerview"
       :playerA="playerAName"
@@ -25,18 +25,19 @@
       :y="powerup.y"
       :color="powerup.color"
       :index="powerup.index"
-	  :type="powerup.type"
+      :type="powerup.type"
     />
   </div>
   <div v-else>
-	<PostGame
-		:playerA="playerAName"
-		:playerB="playerBName"
-		:playerAScore="matchResult.goalsLeftPlayer!"
-		:playerBScore="matchResult.goalsRightPlayer!" />
+    <PostGame
+      :playerA="playerAName"
+      :playerB="playerBName"
+      :playerAScore="matchResult.goalsLeftPlayer!"
+      :playerBScore="matchResult.goalsRightPlayer!"
+    />
   </div>
-  <div class="leave-game"> 
-  	<button @click="goHome" class="leave-game-button">Leave Game</button>
+  <div class="leave-game">
+    <button @click="goHome" class="leave-game-button">Leave Game</button>
   </div>
   <!-- <form @submit.prevent="connectToWS">
 			<input type="text" v-model="serverIp" placeholder="Enter Server IP"/>
@@ -130,8 +131,8 @@ const keyHookUp = (e: KeyboardEvent) => {
       isMovingUp.value = false
       break
     case 'ArrowDown':
-		isMovingDown.value = false
-		break
+      isMovingDown.value = false
+      break
     case 'Space':
       socket.value.emit('fire')
       break
@@ -241,44 +242,44 @@ onMounted(() => {
   })
 
   // socket.on("newPowerUp", ({ id, x, y, type }) => {
-  socket.value.on('newPowerUp', (PowerUp: { powerUp: string, x: number, y: number}) => {
-	const newPowerUp = {
-    id: Math.floor(Date.now()),
-    x: PowerUp.x,
-    y: PowerUp.y, //Math.floor(Math.random() * ((fieldHeight.value! - 70) - 70 + 1)) + 70,
-	type: 'null',
-    index: 0,
-    color: 'white',
-    wid: 70,
-    hgt: 70
-  }
-  console.log("power name")
-  console.log(PowerUp.powerUp)
-  if (PowerUp.powerUp == 'increasePaddleHeight') {
-	newPowerUp.color = 'white'
-	newPowerUp.index = 0
-	newPowerUp.type = PowerUp.powerUp
-  } else if (PowerUp.powerUp == 'decreasePaddleHeight') {
-	newPowerUp.color = 'red'
-	newPowerUp.index = 1
-	newPowerUp.type = PowerUp.powerUp
-  } else if (PowerUp.powerUp == 'magnet') {
-	newPowerUp.color = 'green'
-	newPowerUp.index = 2
-	newPowerUp.type = PowerUp.powerUp
-  } else if (PowerUp.powerUp == 'slowBall') {
-    newPowerUp.color = 'blue'
-    newPowerUp.index = 3
-	newPowerUp.type = PowerUp.powerUp
-  } else if (PowerUp.powerUp == 'fastBall') {
-	console.log("WORKED")
-    newPowerUp.color = 'yellow'
-    newPowerUp.index = 4
-	newPowerUp.type = PowerUp.powerUp
-  }
-  
-  socket.value?.emit('spawnPowerUp', newPowerUp)
-  console.log('PU spawn local')
+  socket.value.on('newPowerUp', (PowerUp: { powerUp: string; x: number; y: number }) => {
+    const newPowerUp = {
+      id: Math.floor(Date.now()),
+      x: PowerUp.x,
+      y: PowerUp.y, //Math.floor(Math.random() * ((fieldHeight.value! - 70) - 70 + 1)) + 70,
+      type: 'null',
+      index: 0,
+      color: 'white',
+      wid: 70,
+      hgt: 70
+    }
+    console.log('power name')
+    console.log(PowerUp.powerUp)
+    if (PowerUp.powerUp == 'increasePaddleHeight') {
+      newPowerUp.color = 'white'
+      newPowerUp.index = 0
+      newPowerUp.type = PowerUp.powerUp
+    } else if (PowerUp.powerUp == 'decreasePaddleHeight') {
+      newPowerUp.color = 'red'
+      newPowerUp.index = 1
+      newPowerUp.type = PowerUp.powerUp
+    } else if (PowerUp.powerUp == 'magnet') {
+      newPowerUp.color = 'green'
+      newPowerUp.index = 2
+      newPowerUp.type = PowerUp.powerUp
+    } else if (PowerUp.powerUp == 'slowBall') {
+      newPowerUp.color = 'blue'
+      newPowerUp.index = 3
+      newPowerUp.type = PowerUp.powerUp
+    } else if (PowerUp.powerUp == 'fastBall') {
+      console.log('WORKED')
+      newPowerUp.color = 'yellow'
+      newPowerUp.index = 4
+      newPowerUp.type = PowerUp.powerUp
+    }
+
+    socket.value?.emit('spawnPowerUp', newPowerUp)
+    console.log('PU spawn local')
     PowerUps.value?.push(newPowerUp)
     // console.log("PU spawn remote");
   })
@@ -338,26 +339,26 @@ onMounted(() => {
     if (type == 'increasePaddleHeight') {
       target?.setHgt(400)
     }
-	if (type == 'decreasePaddleHeight'){
-		target?.setHgt(80)
-	}
-	if (type == 'slowBall') {
-		ball.value!.speed = 2
-	}
-	if (type == 'fastBall') {
-		ball.value!.speed = 9
-	}
-	socket.value?.emit('executePowerUp', { type: type, player: player })
+    if (type == 'decreasePaddleHeight') {
+      target?.setHgt(80)
+    }
+    if (type == 'slowBall') {
+      ball.value!.speed = 2
+    }
+    if (type == 'fastBall') {
+      ball.value!.speed = 9
+    }
+    socket.value?.emit('executePowerUp', { type: type, player: player })
   })
 
   socket.value.on('scoreGoal', (payload: string) => {
     if (payload == 'playerA') playerAScore.value++
     else playerBScore.value++
   })
-  
+
   socket.value.on('resetPaddle', () => {
-	paddleA.value?.setHgt(100)
-	paddleB.value?.setHgt(100)
+    paddleA.value?.setHgt(100)
+    paddleB.value?.setHgt(100)
   })
   initGameField()
 })
@@ -560,13 +561,13 @@ const goHome = () => {
 }
 
 .leave-game {
-	width: 800px;
-	display: flex;
-	justify-content: center;
+  width: 800px;
+  display: flex;
+  justify-content: center;
 }
-.leave-game-button{
+.leave-game-button {
   /* width: 800px; */
-  background-color: #007BFF;
+  background-color: #007bff;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -574,8 +575,7 @@ const goHome = () => {
   cursor: pointer;
 }
 
-.leave-game-button:hover{
-	background-color: #0056b3;
+.leave-game-button:hover {
+  background-color: #0056b3;
 }
-
 </style>

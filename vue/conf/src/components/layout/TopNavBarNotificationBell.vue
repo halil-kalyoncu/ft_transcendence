@@ -200,21 +200,21 @@ const setchannelInvitationListener = () => {
     return
   }
   socket.value.on('NewChannelInvitation', (inviteeName: string) => {
-	if (inviteeName === username.value) {
-		notificationStore.showNotification('New Channel Invitation', true)
-	}
-	setChannelInvitationData()
+    if (inviteeName === username.value) {
+      notificationStore.showNotification('New Channel Invitation', true)
+    }
+    setChannelInvitationData()
   })
 
-  socket.value.on('ChannelInvitationRejected', (channelName:string, inviteeName:string) => {
-	notificationStore.showNotification(
+  socket.value.on('ChannelInvitationRejected', (channelName: string, inviteeName: string) => {
+    notificationStore.showNotification(
       'Channel Invitaion for ' + channelName + ' from ' + inviteeName + 'rejected',
       true
     )
     setChannelInvitationData()
   })
-  socket.value.on('ChannelInvitationAccepted', (channelName:string, inviteeName:string) => {
-	notificationStore.showNotification('Invitaion for Channel: ' + channelName + ' accepted', true)
+  socket.value.on('ChannelInvitationAccepted', (channelName: string, inviteeName: string) => {
+    notificationStore.showNotification('Invitaion for Channel: ' + channelName + ' accepted', true)
     setChannelInvitationData()
   })
 }

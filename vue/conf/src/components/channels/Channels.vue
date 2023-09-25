@@ -67,7 +67,7 @@ const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 
 const initSocket = async () => {
-const accessToken = localStorage.getItem('ponggame') ?? ''
+  const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
 }
 
@@ -86,7 +86,6 @@ onMounted(async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
   }
-
 })
 
 onBeforeUnmount(() => {
@@ -190,20 +189,20 @@ const addUsertoChannel = async () => {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-		'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       },
       body: JSON.stringify({
         userId: userId.value,
         channelId: joinedChannelId.value
       })
     })
-	const responseData = await response.json()
-	if (!response.ok) {
+    const responseData = await response.json()
+    if (!response.ok) {
       notificationStore.showNotification(responseData.message, false)
       return
     }
   } catch (error) {
-	notificationStore.showNotification("Something went Wrong", false)
+    notificationStore.showNotification('Something went Wrong', false)
   }
 }
 
@@ -217,17 +216,17 @@ const MarkMessagesAsRead = async () => {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-			'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+            Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
           }
         }
       )
-	  const responseData = await response.json()
-	  if (!response.ok) {
-      notificationStore.showNotification(responseData.message, false)
-      return
-    }
-  } catch (error) {
-	notificationStore.showNotification("Something went Wrong", false)
+      const responseData = await response.json()
+      if (!response.ok) {
+        notificationStore.showNotification(responseData.message, false)
+        return
+      }
+    } catch (error) {
+      notificationStore.showNotification('Something went Wrong', false)
     }
   }
 }
@@ -292,15 +291,19 @@ const updateChannelManager = async () => {
     return
   }
   try {
-    socket.value.emit('SignInChannel', {
-      channelId: joinedChannelId.value,
-      username: username.value
-    },(response : ErrorI | any) => {
-	  if ('error' in response) {
-		notificationStore.showNotification(response.error, false)
-		return
-	  }
-	})
+    socket.value.emit(
+      'SignInChannel',
+      {
+        channelId: joinedChannelId.value,
+        username: username.value
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
   } catch (error) {
     notificationStore.showNotification(`Something went wrong`, false)
   }

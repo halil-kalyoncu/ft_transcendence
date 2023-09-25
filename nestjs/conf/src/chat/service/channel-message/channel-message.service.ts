@@ -124,85 +124,82 @@ export class ChannelMessageService {
     channelId: number,
     userId: number,
   ): Promise<ChannelMessageDto[]> {
-      const channelMessages: any[] = await this.prisma.channelMessage.findMany({
-        where: {
-          sender: {
-            channel: {
-              id: channelId,
-            },
+    const channelMessages: any[] = await this.prisma.channelMessage.findMany({
+      where: {
+        sender: {
+          channel: {
+            id: channelId,
           },
         },
-        include: {
-          message: true,
-          sender: {
-            include: {
-              user: true,
-            },
+      },
+      include: {
+        message: true,
+        sender: {
+          include: {
+            user: true,
           },
         },
-        orderBy: {
-          message: {
-            createdAt: 'desc',
-          },
+      },
+      orderBy: {
+        message: {
+          createdAt: 'desc',
         },
-      });
-      const blockedUsers: User[] = await this.blockedUserService.getUsers(
-        userId,
-      );
-      const channelMessageDtos: ChannelMessageDto[] = await Promise.all(
-        channelMessages.map(async (channelMessage) => {
-          let blockGroupMessage: boolean = false;
+      },
+    });
+    const blockedUsers: User[] = await this.blockedUserService.getUsers(userId);
+    const channelMessageDtos: ChannelMessageDto[] = await Promise.all(
+      channelMessages.map(async (channelMessage) => {
+        let blockGroupMessage: boolean = false;
 
-          if (channelMessage.sender.userId !== userId) {
-            const isSenderBlocked = blockedUsers.some(
-              (blockedUser) => blockedUser.id === channelMessage.sender.userId,
-            );
+        if (channelMessage.sender.userId !== userId) {
+          const isSenderBlocked = blockedUsers.some(
+            (blockedUser) => blockedUser.id === channelMessage.sender.userId,
+          );
 
-            if (isSenderBlocked) {
-              blockGroupMessage = true;
-            }
+          if (isSenderBlocked) {
+            blockGroupMessage = true;
           }
+        }
 
-          return {
-            id: channelMessage.id,
-            message: channelMessage.message,
-            sender: channelMessage.sender.user,
-            createdAt: channelMessage.message.createdAt,
-            blockGroupMessage,
-          };
-        }),
-      );
-      return channelMessageDtos;
+        return {
+          id: channelMessage.id,
+          message: channelMessage.message,
+          sender: channelMessage.sender.user,
+          createdAt: channelMessage.message.createdAt,
+          blockGroupMessage,
+        };
+      }),
+    );
+    return channelMessageDtos;
   }
 
   async markChannelMessagesAsRead(
     channelId: number,
     userId: number,
   ): Promise<ChannelMessageDto[]> {
-	  const channel = await this.channelService.find(channelId);
-	  if (!channel)
-	  {
-		  throw new Error("Channel doesn't exist");
-	  }
-      const channelMember = await this.channelMemberService.find(
-        channelId,
-        userId,
-      );
-      if (!channelMember) {
-        throw Error('user not in channel');
-      }
-      await this.prisma.channelMessageReadStatus.updateMany({
-        where: {
-          readerId: channelMember.id,
-        },
-        data: {
-          isRead: true,
-        },
-      });
-      return await this.getChannelMessagesforChannel(channelId, userId);
-    } catch (error: any) {
-      console.error('Error marking messages as read:', error);
-      throw error;
+    const channel = await this.channelService.find(channelId);
+    if (!channel) {
+      throw new Error("Channel doesn't exist");
     }
+    const channelMember = await this.channelMemberService.find(
+      channelId,
+      userId,
+    );
+    if (!channelMember) {
+      throw Error('user not in channel');
+    }
+    await this.prisma.channelMessageReadStatus.updateMany({
+      where: {
+        readerId: channelMember.id,
+      },
+      data: {
+        isRead: true,
+      },
+    });
+    return await this.getChannelMessagesforChannel(channelId, userId);
   }
-
+  catch(error: any) {
+    console.error('Error marking messages as read:', error);
+    throw error;
+  }
+}

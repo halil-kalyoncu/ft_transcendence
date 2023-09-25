@@ -42,12 +42,12 @@ const props = defineProps({
     default: 'white'
   },
   type: {
-	type: String,
-	required: true,
-	default: 'null'
+    type: String,
+    required: true,
+    default: 'null'
   }
 })
-let images = [widePaddle, smallPaddle , magnet, slowBall, fastBall]
+let images = [widePaddle, smallPaddle, magnet, slowBall, fastBall]
 </script>
 
 <style>

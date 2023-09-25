@@ -8,9 +8,9 @@ import {
   Query,
   Patch,
   UseGuards,
-  HttpException, 
+  HttpException,
   HttpStatus,
-  BadRequestException
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -40,7 +40,17 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   async getAllChannels(): Promise<Channel[]> {
-    return await this.prisma.channel.findMany();
+    try {
+      return await this.prisma.channel.findMany();
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get('getAllChannelsFromUser')
@@ -50,7 +60,17 @@ export class ChannelController {
     @Query('userId', ParseIntPipe) userId: number,
     @Query('role') role: string,
   ): Promise<ChannelInfoDto[]> {
-    return await this.ChannelService.getChannelsforId(userId, role);
+    try {
+      return await this.ChannelService.getChannelsforId(userId, role);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get('getAllChannelsWhereUserAdmin')
@@ -59,60 +79,70 @@ export class ChannelController {
   async getAllChannelsWhereUserAdmin(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInfoDto[]> {
-    return await this.ChannelService.getChannelsforId(userId, 'admin');
-  }
-
-  @Get('getAllChannelsWhereUserOwner')
-  async getAllChannelsWhereUserOwner(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<ChannelInfoDto[]> {
-    return await this.ChannelService.getChannelsforId(userId, 'owner');
-  }
-
-  @Get('getAllChannelsWhereUserMember')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token')
-  async getAllChannelsWhereUserMember(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<ChannelInfoDto[]> {
-    return await this.ChannelService.getChannelsforId(userId, 'member');
+    try {
+      return await this.ChannelService.getChannelsforId(userId, 'admin');
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get('getAllPublicChannels')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   async getAllPublicChannels(): Promise<ChannelInfoDto[]> {
-    return await this.ChannelService.getAllPublicChannels();
+    try {
+      return await this.ChannelService.getAllPublicChannels();
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
+
   @Get('getAllAvaiableChannels')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   async getAllAvaiableChannels(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInfoDto[]> {
-	try{
-		return await this.ChannelService.getAllAvailableChannels(userId);
-	}
-	catch(error) {
-		if (error instanceof BadRequestException) {
-			throw error;
-		}
-		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    try {
+      return await this.ChannelService.getAllAvailableChannels(userId);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
-}
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token') 
+  @ApiBearerAuth('access-token')
   @Get('getAllChannelManagerMembers')
   async getAllUsersChannelMembers(
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<ChannelMemberDto[]> {
-	try{
-		return await this.ChannelService.getAllChannelManagerMembers(channelId);
-	} catch(error) {
-		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    try {
+      return await this.ChannelService.getAllChannelManagerMembers(channelId);
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
-}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
@@ -121,11 +151,14 @@ export class ChannelController {
     @Query('userId', ParseIntPipe) userId: number,
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<boolean> {
-	try{
-		return await this.ChannelMemberService.isUserBanned(userId, channelId);
-	} catch(error) {
-		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-	}
+    try {
+      return await this.ChannelMemberService.isUserBanned(userId, channelId);
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -138,8 +171,11 @@ export class ChannelController {
     try {
       return await this.ChannelService.comparePassword(channelId, password);
     } catch (error) {
-		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-    } 
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   //Post Functions to create Channels
@@ -152,10 +188,13 @@ export class ChannelController {
     try {
       return await this.ChannelService.createProtectedChannel(CreateChannelDto);
     } catch (error) {
-		if (error instanceof BadRequestException) {
-			throw error;
-		}
-		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -170,10 +209,13 @@ export class ChannelController {
         CreateChannelDto,
       );
     } catch (error) {
-	  if (error instanceof BadRequestException) {
-		  throw error;
-	  }
-	  throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -185,28 +227,51 @@ export class ChannelController {
   async addUserToChannel(
     @Body() ChannelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {
-	try{
-		return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
-	} catch(error) {
-		if (error instanceof BadRequestException) {
-			throw error;
-		}
-		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-	}
+    try {
+      return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Patch('MakeUserAdmin')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   async MakeUserAdmin(@Body() AdminActionDto: AdminActionDto): Promise<void> {
-    await this.ChannelService.makeAdmin(AdminActionDto);
+    try {
+      await this.ChannelService.makeAdmin(AdminActionDto);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Patch('KickUser')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   async KickUser(@Body() AdminActionDto: AdminActionDto): Promise<void> {
-    await this.ChannelService.kickChannelMember(AdminActionDto);
+    try {
+      await this.ChannelService.kickChannelMember(AdminActionDto);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Patch('updateMutedUsers')
@@ -215,11 +280,14 @@ export class ChannelController {
   async updateMutedUsers(
     @Query('channelId', ParseIntPipe) channelId: number,
   ): Promise<ChannelMember[]> {
-	try{
-		return await this.ChannelService.updateMutedUsers(channelId);
-	} catch (error) {
-		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-	}
+    try {
+      return await this.ChannelService.updateMutedUsers(channelId);
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Delete('removeUserFromChannel')
@@ -233,6 +301,9 @@ export class ChannelController {
         ChannelMembershipDto,
       );
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -242,7 +313,17 @@ export class ChannelController {
   @ApiBearerAuth('access-token')
   async destroyChannel(
     @Query('channelId', ParseIntPipe) channelId: number,
-  ): Promise<void> {
-    await this.ChannelService.destroyChannel(channelId);
+  ): Promise<Channel> {
+    try {
+      return await this.ChannelService.destroyChannel(channelId);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

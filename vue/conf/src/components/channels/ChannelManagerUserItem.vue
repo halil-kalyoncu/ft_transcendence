@@ -83,7 +83,6 @@ const props = defineProps({
   isUserMutedProp: Boolean
 })
 
-
 const role = ref(props.roleProp)
 const isUserBanned = ref(props.isUserBannedProp)
 const isUserMuted = ref(props.isUserMutedProp)
@@ -109,16 +108,20 @@ const kickUser = async () => {
     return
   }
   try {
-    socket.value.emit('kickChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    }, (response : ErrorI | any) => {
-	  if ('error' in response) {
-		notificationStore.showNotification(response.error, false)
-		return
-	  }
-	})
+    socket.value.emit(
+      'kickChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
   } catch (error) {
     notificationStore.showNotification(`Something went wrong`, false)
   }
@@ -138,16 +141,20 @@ const unBanUser = async () => {
     return
   }
   try {
-    socket.value.emit('unBanChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    }, (response : ErrorI | any) => {
-	  if ('error' in response) {
-		notificationStore.showNotification(response.error, false)
-		return
-	  }
-	})
+    socket.value.emit(
+      'unBanChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
   } catch (error) {
     notificationStore.showNotification(`Something went wrong`, false)
   }
@@ -159,18 +166,22 @@ const banUser = async () => {
     return
   }
   try {
-    socket.value.emit('banChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    }, (response : ErrorI | any) => {
-		if ('error' in response) {
-			notificationStore.showNotification(response.error, false)
-			return
-		}
-	})
+    socket.value.emit(
+      'banChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
   } catch (error) {
-	notificationStore.showNotification(`Something went wrong`, false)
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -180,18 +191,22 @@ const makeAdmin = async () => {
     return
   }
   try {
-    socket.value.emit('makeChannelAdmin', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    }, (response : ErrorI | any) => {
-		if ('error' in response) {
-			notificationStore.showNotification(response.error, false)
-			return
-		}
-	})
+    socket.value.emit(
+      'makeChannelAdmin',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
   } catch (error) {
-	notificationStore.showNotification(`Something went wrong`, false)
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -201,25 +216,29 @@ const muteUser = async () => {
     return
   }
   try {
-    socket.value.emit('muteChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId,
-      minutesToMute: minutesMuted.value
-    }, (response : ErrorI | any) => {
-		if ('error' in response) {
-			notificationStore.showNotification(response.error, false)
-			return
-		} else {
-		notificationStore.showNotification(
-        props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
-        true
-      )
-		return
-		}
-	})
+    socket.value.emit(
+      'muteChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId,
+        minutesToMute: minutesMuted.value
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        } else {
+          notificationStore.showNotification(
+            props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
+            true
+          )
+          return
+        }
+      }
+    )
   } catch (error) {
-	notificationStore.showNotification(`Something went wrong`, false)
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -233,7 +252,7 @@ const muteAUser = () => {
     muteUser()
     minutesMuted.value = 0
   } catch (error) {
-	notificationStore.showNotification(`Something went wrong`, false)
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -243,21 +262,25 @@ const unMuteUser = async () => {
     return
   }
   try {
-    socket.value.emit('unMuteChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    }, (response : ErrorI | any) => {
-		if ('error' in response) {
-			notificationStore.showNotification(response.error, false)
-			return
-		} else {
-			return
-		}
-	})
-	  } catch (error) {
-		notificationStore.showNotification(`Something went wrong`, false)
-	  }
+    socket.value.emit(
+      'unMuteChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        } else {
+          return
+        }
+      }
+    )
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
+  }
 }
 
 const getRoleIcon = (role: string | undefined) => {
@@ -307,7 +330,7 @@ const initSocket = async () => {
 }
 
 onMounted(async () => {
-	try {
+  try {
     await userStore.mountStore()
   } catch (error) {
     notificationStore.showNotification(
@@ -319,8 +342,6 @@ onMounted(async () => {
 
   await initSocket()
 })
-
-
 </script>
 
 <style>

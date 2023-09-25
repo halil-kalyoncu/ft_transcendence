@@ -49,13 +49,13 @@ const props = defineProps({
   invitationId: Number
 })
 
-const initSocket = async() => {
+const initSocket = async () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = await connectChatSocket(accessToken)
 }
 
 onMounted(async () => {
- await initSocket()
+  await initSocket()
 })
 
 const viewProfile = () => {
@@ -67,18 +67,18 @@ const acceptRequest = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  try{
-	  socket.value.emit('acceptChannelInvitation', props.invitationId, (response : ErrorI | any) => {
-	  if ('error' in response) {
-		notificationStore.showNotification(response.error)
-		return
-	  } else {
-		notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
-		return
-	  }
-	})
+  try {
+    socket.value.emit('acceptChannelInvitation', props.invitationId, (response: ErrorI | any) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error)
+        return
+      } else {
+        notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
+        return
+      }
+    })
   } catch (error) {
-	notificationStore.showNotification(`Something went wrong`, false)
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -87,22 +87,19 @@ const rejectRequest = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-try {
-	socket.value.emit('rejectChannelInvitation', props.invitationId, (response : ErrorI | any) => {
-		if ('error' in response) {
-			notificationStore.showNotification(response.error)
-			return
-		}
-	})
-	notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
-	return
-} catch (error) {
-	notificationStore.showNotification(`Something went wrong`, false)
+  try {
+    socket.value.emit('rejectChannelInvitation', props.invitationId, (response: ErrorI | any) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error)
+        return
+      }
+    })
+    notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
+    return
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
+  }
 }
-
-}
-
-
 </script>
 
 <style>

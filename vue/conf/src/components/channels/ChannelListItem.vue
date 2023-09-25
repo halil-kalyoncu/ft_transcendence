@@ -139,23 +139,23 @@ const comparePassword = async (): Promise<boolean> => {
   try {
     const response = await fetch(
       `http://localhost:3000/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`,
-	  {
-		method: 'GET',
-		headers: {
+      {
+        method: 'GET',
+        headers: {
           'Content-Type': 'application/json',
-		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
-	  }
-	}
-	  )
-	  const responseData = await response.json()
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
+    )
+    const responseData = await response.json()
     if (!response.ok) {
-		notificationStore.showNotification(responseData.message, false)
-		return false
+      notificationStore.showNotification(responseData.message, false)
+      return false
     }
     const correct = await responseData
     return correct
   } catch (error) {
-	notificationStore.showNotification("Something went Wrong", false)
+    notificationStore.showNotification('Something went Wrong', false)
     return false
   }
 }
@@ -164,23 +164,23 @@ const setUserBanned = async () => {
   try {
     const response = await fetch(
       `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${userId.value}`,
-	  {
-		method: 'GET',
-		headers: {
+      {
+        method: 'GET',
+        headers: {
           'Content-Type': 'application/json',
-		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
-	  }
-	}
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (!response.ok) {
-		notificationStore.showNotification(responseData.message, false)
-		return
+      notificationStore.showNotification(responseData.message, false)
+      return
     }
     userBanned.value = await responseData
     return
   } catch (error) {
-	notificationStore.showNotification("Something went Wrong", false)
+    notificationStore.showNotification('Something went Wrong', false)
     return
   }
 }

@@ -124,18 +124,22 @@ const sendSubmitEvent = (inviteeUsername: string) => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  try{
-	  socket.value.emit('gotChannelInvitation', {
-		channelId: channelId,
-		inviteeUsername: inviteeUsername
-		},(response : ErrorI | any) => {
-	  if ('error' in response) {
-		notificationStore.showNotification("CHANNEL INTIVATION GOT" + response.error, false)
-		return
-	  }
-	})
+  try {
+    socket.value.emit(
+      'gotChannelInvitation',
+      {
+        channelId: channelId,
+        inviteeUsername: inviteeUsername
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification('CHANNEL INTIVATION GOT' + response.error, false)
+          return
+        }
+      }
+    )
   } catch (error) {
-	notificationStore.showNotification(`Something went wrong`, false)
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -144,9 +148,9 @@ const submit = async () => {
   let error_occured = false
   for (const inviteeUsername of selectedUsers.value) {
     error_occured = await inviteUser(channelId, inviteeUsername, userId.value)
-	if (error_occured) {
-		continue
-	}
+    if (error_occured) {
+      continue
+    }
     sendSubmitEvent(inviteeUsername)
   }
   if (!error_occured) {
@@ -169,18 +173,18 @@ const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId:
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
         }
       }
     )
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (!response.ok) {
       notificationStore.showNotification(responseData.message, false)
       return true
     }
     return false
   } catch (error) {
-	notificationStore.showNotification("Something went Wrong", false)
+    notificationStore.showNotification('Something went Wrong', false)
     return true
   }
 }
@@ -191,45 +195,46 @@ const handleClickOutside = () => {
 }
 
 const findUserSuggestions = async (input: string) => {
-	try{
-		const response = await fetch(
-		`http://localhost:3000/api/users/findUsersNotInChannel?channelId=${channelId}`,
-		{
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
-			}
-		})
-	const responseData = await response.json()
-	  if (!response.ok) {
-		notificationStore.showNotification("FINDSUGGESTION" + responseData.message, false)
-	  }
-	  if (input.trim() === '') {
-		userSuggestions.value = responseData
-		return
-	  }
-
-  // Filter user suggestions based on the provided letters in the right order
-  const filteredSuggestions = responseData.filter((user: any) => {
-    const username = user.username.toLowerCase()
-    const lettersLower = input.toLowerCase()
-
-    let currentIndex = 0
-    for (let i = 0; i < username.length; i++) {
-      if (username[i] === lettersLower[currentIndex]) {
-        currentIndex++
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/users/findUsersNotInChannel?channelId=${channelId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-      if (currentIndex === lettersLower.length) {
-        return true // All letters found in the right order
-      }
+    )
+    const responseData = await response.json()
+    if (!response.ok) {
+      notificationStore.showNotification('FINDSUGGESTION' + responseData.message, false)
     }
-    return false
-  })
-  userSuggestions.value = filteredSuggestions
-} catch (error) {
-	notificationStore.showNotification("Something went Wrong", false)
-}
+    if (input.trim() === '') {
+      userSuggestions.value = responseData
+      return
+    }
+
+    // Filter user suggestions based on the provided letters in the right order
+    const filteredSuggestions = responseData.filter((user: any) => {
+      const username = user.username.toLowerCase()
+      const lettersLower = input.toLowerCase()
+
+      let currentIndex = 0
+      for (let i = 0; i < username.length; i++) {
+        if (username[i] === lettersLower[currentIndex]) {
+          currentIndex++
+        }
+        if (currentIndex === lettersLower.length) {
+          return true // All letters found in the right order
+        }
+      }
+      return false
+    })
+    userSuggestions.value = filteredSuggestions
+  } catch (error) {
+    notificationStore.showNotification('Something went Wrong', false)
+  }
 }
 
 const showSuggestions = () => {
@@ -263,13 +268,13 @@ const setInvitationUpdateListener = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  socket.value.on('ChannelInvitationAccepted', (channelName:string, UserName:string) => {
+  socket.value.on('ChannelInvitationAccepted', (channelName: string, UserName: string) => {
     findUserSuggestions(inputName.value)
   })
-  socket.value.on('ChannelInvitationRejected', (channelName:string, UserName:string) => {
+  socket.value.on('ChannelInvitationRejected', (channelName: string, UserName: string) => {
     findUserSuggestions(inputName.value)
   })
-  socket.value.on('NewChannelInvitation', (inviteeName:string) => {
+  socket.value.on('NewChannelInvitation', (inviteeName: string) => {
     findUserSuggestions(inputName.value)
   })
 }
@@ -304,9 +309,7 @@ onBeforeUnmount(() => {
   socket.value.off('ChannelInvitationAccepted')
   socket.value.off('ChannelInvitationRejected')
   socket.value.off('NewChannelInvitation')
-
 })
-
 </script>
 <style>
 .modal {

@@ -22,7 +22,6 @@ import { User } from '@prisma/client';
 import type { ErrorDto } from '../../dto/error.dto';
 import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
 
-
 @ApiTags('Channel-Invitations module')
 @Controller('channel-invitations')
 export class ChannelInvitationsController {
@@ -31,24 +30,25 @@ export class ChannelInvitationsController {
     private userService: UserService,
   ) {}
 
-
   @Get('GetPendingInvitations')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   async GetInvitations(
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInvitationDto[]> {
-	try{
-		return await this.channelInvitationsService.getPendingInvitations(userId);
-	} catch (error) {
-		if (error instanceof NotFoundException) {
-			throw error;
-		}
-		else {
-			throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+    try {
+      return await this.channelInvitationsService.getPendingInvitations(userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException(
+          'Internal Server Error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
   }
-}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
@@ -58,23 +58,27 @@ export class ChannelInvitationsController {
     @Query('inviteeId', ParseIntPipe) inviteeId: number,
     @Query('inviterId', ParseIntPipe) inviterId: number,
   ): Promise<ChannelInvitation> {
-	try{
-		return this.channelInvitationsService.inviteUserToChannel(
-		  channelId,
-		  inviteeId,
-		  inviterId,
-		);
-	} catch(error) {
-		if (error instanceof NotFoundException || error instanceof BadRequestException) {
-			throw error;
-		}
-		else {
-			throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
+    try {
+      return this.channelInvitationsService.inviteUserToChannel(
+        channelId,
+        inviteeId,
+        inviterId,
+      );
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      } else {
+        throw new HttpException(
+          'Internal Server Error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
   }
 
-  //ERROR HANDLING API BACKEND
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @Post('InviteUserNameToChannel')
@@ -94,13 +98,18 @@ export class ChannelInvitationsController {
         inviteeId,
         inviterId,
       );
-    } catch(error) {
-		if (error instanceof NotFoundException || error instanceof BadRequestException) {
-			throw error;
-		}
-		else {
-			throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      } else {
+        throw new HttpException(
+          'Internal Server Error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
   }
 
@@ -111,7 +120,21 @@ export class ChannelInvitationsController {
     @Query('channelId', ParseIntPipe) channelId: number,
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInvitation> {
-    return this.channelInvitationsService.rejectInvitation(channelId, userId);
+    try {
+      return this.channelInvitationsService.rejectInvitation(channelId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        if (error instanceof BadRequestException) {
+          throw error;
+        }
+        throw new HttpException(
+          'Internal Server Error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -121,6 +144,23 @@ export class ChannelInvitationsController {
     @Query('channelId', ParseIntPipe) channelId: number,
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelInvitation> {
-    return this.channelInvitationsService.acceptInvitation(channelId, userId);
+    try {
+      return await this.channelInvitationsService.acceptInvitation(
+        channelId,
+        userId,
+      );
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        if (error instanceof BadRequestException) {
+          throw error;
+        }
+        throw new HttpException(
+          'Internal Server Error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
   }
 }

@@ -2,17 +2,17 @@
   <div class="available-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
       <div v-for="channel in channelData" :key="channel.channel?.id">
-		<div v-if="channel.channel?.id">
-        <ChannelListItem
-          :isPasswordProtected="channel.channel?.protected"
-          :isPrivate="false"
-          :channelName="channel.channel?.name"
-          :ownerName="channel.owner?.username"
-          :joinChannelButtonNameProps="'Join'"
-          :channelId="channel.channel?.id"
-          @channelEntered="handleChannelEntered(channel.channel.id)"
-        />
-		</div>
+        <div v-if="channel.channel?.id">
+          <ChannelListItem
+            :isPasswordProtected="channel.channel?.protected"
+            :isPrivate="false"
+            :channelName="channel.channel?.name"
+            :ownerName="channel.owner?.username"
+            :joinChannelButtonNameProps="'Join'"
+            :channelId="channel.channel?.id"
+            @channelEntered="handleChannelEntered(channel.channel.id)"
+          />
+        </div>
       </div>
     </ScrollViewer>
   </div>
@@ -49,22 +49,22 @@ const setPublicChannels = async () => {
   try {
     const response = await fetch(
       `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
-	  {
-		method: 'GET',
-		headers: {
-		  'Content-Type': 'application/json',
-		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
-		}
-	  }
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (!response.ok) {
-		notificationStore.showNotification(responseData.message, false)
+      notificationStore.showNotification(responseData.message, false)
     }
     channelData.value = await responseData
   } catch (error) {
-    notificationStore.showNotification("Something went Wrong", false)
-	return
+    notificationStore.showNotification('Something went Wrong', false)
+    return
   }
 }
 

@@ -1,4 +1,13 @@
-import { Controller, Query, Get, Patch, ParseIntPipe, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Query,
+  Get,
+  Patch,
+  ParseIntPipe,
+  HttpException,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { ChannelMessage, ChannelMessageReadStatus } from '@prisma/client';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ChannelMessageReadStatusService } from '../../service/channel-message-read-status/channel-message-read-status.service';
@@ -18,13 +27,16 @@ export class ChannelMessageReadStatusController {
     @Query('channelId', ParseIntPipe) channelId: number,
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ChannelMessageReadStatus[]> {
-	try{
-		return await this.ChannelMessageReadStatusService.getUnreadStatus(
-		  channelId,
-		  userId,
-		);
-	} catch(error) {
-		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    try {
+      return await this.ChannelMessageReadStatusService.getUnreadStatus(
+        channelId,
+        userId,
+      );
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
-}
 }

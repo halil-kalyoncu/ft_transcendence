@@ -1,4 +1,10 @@
-import { Injectable, forwardRef, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  forwardRef,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   Channel,
@@ -203,8 +209,10 @@ export class ChannelService {
       channelMembershipDto.channelId,
     );
     if (existingMembership) {
-      console.log( 'User is already a member of this channel. Is not registered again.');
-	  return existingMembership;
+      console.log(
+        'User is already a member of this channel. Is not registered again.',
+      );
+      return existingMembership;
     }
     return await this.prisma.channelMember.create({
       data: {
@@ -246,10 +254,10 @@ export class ChannelService {
 
   async makeAdmin(adminActionDto: AdminActionDto): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
-	
-	if (!channel) {
-		throw new Error('Channel does not exist.');
-	}
+
+    if (!channel) {
+      throw new Error('Channel does not exist.');
+    }
     const channelOwner = await this.channelMemberService.findOwner(channel.id);
     if (!channelOwner || channelOwner.userId !== adminActionDto.requesterId) {
       throw new Error(
@@ -346,9 +354,9 @@ export class ChannelService {
       throw new Error('Target user is not a member of the channel.');
     }
 
-	if (targetMembership.status === ChannelMemberStatus.BANNED) {
-		throw new Error('Target user is already banned.');
-	}
+    if (targetMembership.status === ChannelMemberStatus.BANNED) {
+      throw new Error('Target user is already banned.');
+    }
     return await this.prisma.channelMember.update({
       where: {
         userId_channelId: {
@@ -393,9 +401,9 @@ export class ChannelService {
       throw new Error('Target user is not a member of the channel.');
     }
 
-	if (targetMembership.status !== ChannelMemberStatus.BANNED) {
-		throw new Error('Target user is not banned.');
-	}
+    if (targetMembership.status !== ChannelMemberStatus.BANNED) {
+      throw new Error('Target user is not banned.');
+    }
 
     return await this.prisma.channelMember.update({
       where: {
@@ -479,9 +487,9 @@ export class ChannelService {
     adminActionDto: AdminActionDto,
   ): Promise<ChannelMember> {
     const channel = await this.find(adminActionDto.channelId);
-	if (!channel) {
-		throw new Error('Channel does not exist.');
-	}
+    if (!channel) {
+      throw new Error('Channel does not exist.');
+    }
     const channelOwner = await this.channelMemberService.findOwner(channel.id);
     const requesterMembership = await this.findMember(
       adminActionDto.requesterId,
@@ -684,14 +692,14 @@ export class ChannelService {
       },
     });
 
-	if (channels.length === 0) {
-		console.log('No channels found.');
-		const emptyDto = new ChannelInfoDto();
-		emptyDto.channel = null;
-		emptyDto.owner = null;
+    if (channels.length === 0) {
+      console.log('No channels found.');
+      const emptyDto = new ChannelInfoDto();
+      emptyDto.channel = null;
+      emptyDto.owner = null;
 
-		return [emptyDto];
-	}
+      return [emptyDto];
+    }
     const channelEntries: ChannelInfoDto[] = await Promise.all(
       channels.map((channel) => {
         const owner = channel.members[0]?.user || null;
@@ -752,17 +760,17 @@ export class ChannelService {
   }
 
   async updateMutedUsers(channelId: number): Promise<ChannelMember[]> {
-      const channelMembers: ChannelMember[] = await this.findMembers(channelId);
-      const membersToUnmute: ChannelMember[] = [];
-      for (const channelMember of channelMembers) {
-        if (
-          channelMember.unmuteAt &&
-          channelMember.unmuteAt.getTime() < Date.now()
-        ) {
-          membersToUnmute.push(channelMember);
-          await this.unMuteMember(channelMember.userId, channelId);
-        }
+    const channelMembers: ChannelMember[] = await this.findMembers(channelId);
+    const membersToUnmute: ChannelMember[] = [];
+    for (const channelMember of channelMembers) {
+      if (
+        channelMember.unmuteAt &&
+        channelMember.unmuteAt.getTime() < Date.now()
+      ) {
+        membersToUnmute.push(channelMember);
+        await this.unMuteMember(channelMember.userId, channelId);
       }
-      return membersToUnmute;
+    }
+    return membersToUnmute;
   }
 }

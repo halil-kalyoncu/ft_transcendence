@@ -112,23 +112,24 @@ const setUserChangesListener = () => {
 const setNewChannelMessages = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId.value}`
-    ,{
-		method: 'GET',
-		headers: {
-		'Content-Type': 'application/json',
-		'Authorization': `Bearer ${localStorage.getItem('ponggame')}`,
-  }
-	})
-	const responseData = await response.json()
+      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame')}`
+        }
+      }
+    )
+    const responseData = await response.json()
     if (!response.ok) {
-		notificationStore.showNotification(responseData.message, false)
-		return
+      notificationStore.showNotification(responseData.message, false)
+      return
     }
     channelMessages.value = responseData
   } catch (error) {
-	notificationStore.showNotification('Something went Wrong', false)
-	return
+    notificationStore.showNotification('Something went Wrong', false)
+    return
   } finally {
     loading.value = false
   }
@@ -160,13 +161,12 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (!socket || !socket.value) {
-	notificationStore.showNotification('Error: Connection problems', false)
-	return
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
   }
 
   socket.value.off('newChannelMessage')
   socket.value.off('UserSignedOut')
-
 })
 
 const sendChannelMessage = async () => {
@@ -174,32 +174,32 @@ const sendChannelMessage = async () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-try{
+  try {
+    if (newchannelMessages.value.trim() === '') {
+      return
+    }
 
-  if (newchannelMessages.value.trim() === '') {
+    socket.value.emit(
+      'sendChannelMessage',
+      {
+        senderId: loggedUser.value.id,
+        channelId: channelId,
+        message: newchannelMessages.value
+      },
+      (response: any | ErrorI) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        } else {
+          return
+        }
+      }
+    )
+    newchannelMessages.value = ''
     return
-  }
-
-  socket.value.emit(
-    'sendChannelMessage',
-    {
-      senderId: loggedUser.value.id,
-      channelId: channelId,
-      message: newchannelMessages.value
-    },
-    (response: any | ErrorI) => {
-		if ('error' in response) {
-		notificationStore.showNotification(response.error, false)
-		return
-	  } else {
-		return
-	  }
-	})
-  newchannelMessages.value = ''
-  return
-} catch (error) {
-	notificationStore.showNotification('Something went Wrong', false)
-	return
+  } catch (error) {
+    notificationStore.showNotification('Something went Wrong', false)
+    return
   }
 }
 
@@ -211,14 +211,14 @@ const updateMutedUsers = async () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
         }
       }
     )
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (!response.ok) {
       notificationStore.showNotification(responseData.message, false)
-	  return
+      return
     }
     return responseData
   } catch (error) {

@@ -52,23 +52,24 @@ const initSocket = () => {
 const calculateUnreadMessages = async (channelId: number) => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${userId.value}`
-    , {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-		}
-	})
-	const responseData = await response.json()
+      `http://localhost:3000/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
+    )
+    const responseData = await response.json()
     if (!response.ok) {
-		notificationStore.showNotification(responseData.message, false)
-		return 0
+      notificationStore.showNotification(responseData.message, false)
+      return 0
     }
     unreadMessages.value = responseData
     return unreadMessages.value.length
   } catch (error) {
-    notificationStore.showNotification("Something went Wrong", false)
+    notificationStore.showNotification('Something went Wrong', false)
     return 0
   }
 }
@@ -76,23 +77,24 @@ const calculateUnreadMessages = async (channelId: number) => {
 const setChannels = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`
-    ,{
-		method: 'GET',
-		headers: {
-		'Content-Type': 'application/json',
-		'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
-  }
-})
-	const responseData = await response.json()
+      `http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
+    )
+    const responseData = await response.json()
     if (!response.ok) {
-		notificationStore.showNotification(responseData.message, false)
-		return
+      notificationStore.showNotification(responseData.message, false)
+      return
     }
     channelData.value = responseData
     return
   } catch (error) {
-    notificationStore.showNotification("Something went Wrong", false)
+    notificationStore.showNotification('Something went Wrong', false)
     return
   }
 }

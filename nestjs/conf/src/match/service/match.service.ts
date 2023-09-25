@@ -218,8 +218,8 @@ export class MatchService {
       data: {
         state: gameState,
         finishedAt: new Date(),
-		goalsLeftPlayer: room.leftPlayerGoals,
-		goalsRightPlayer: room.rightPlayerGoals
+        goalsLeftPlayer: room.leftPlayerGoals,
+        goalsRightPlayer: room.rightPlayerGoals,
       },
       include: {
         leftUser: true,

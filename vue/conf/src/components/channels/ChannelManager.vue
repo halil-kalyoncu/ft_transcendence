@@ -71,7 +71,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import ChannelManagerUserItem from './ChannelManagerUserItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
@@ -111,7 +110,7 @@ const modalTitle = ref('')
 const isModalOpened = ref(false)
 
 const memberItems = computed(() => {
-  return Members.value.map((member:ChannelManagerMemberI) => {
+  return Members.value.map((member: ChannelManagerMemberI) => {
     return {
       username: member.username,
       date: member.statusSince,
@@ -149,7 +148,7 @@ const initSocket = () => {
 }
 
 onMounted(async () => {
-	try {
+  try {
     await userStore.mountStore()
   } catch (error) {
     notificationStore.showNotification(
@@ -183,28 +182,26 @@ onBeforeUnmount(() => {
   socket.value.off('passwordSet')
 })
 
-
-
 const setMembers = async () => {
   try {
     const response = await fetch(
       `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`,
-	  {
-		method: 'GET',
-		headers: {
+      {
+        method: 'GET',
+        headers: {
           'Content-Type': 'application/json',
-		  'Authorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
         }
-	  }
+      }
     )
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (!response.ok) {
-		notificationStore.showNotification(responseData.message, false)
-		return
+      notificationStore.showNotification(responseData.message, false)
+      return
     }
     Members.value = await responseData
   } catch (error) {
-    notificationStore.showNotification("Something went Wrong", false)
+    notificationStore.showNotification('Something went Wrong', false)
     return true
   }
 }
@@ -259,8 +256,8 @@ const setUserSignedListener = async () => {
     })
   })
 
-  socket.value.on('ChannelInvitationAccepted', (channelName:string, inviteeName:string) => {
-	console.log('ChannelInvitationAccepted fired')
+  socket.value.on('ChannelInvitationAccepted', (channelName: string, inviteeName: string) => {
+    console.log('ChannelInvitationAccepted fired')
     //notificationStore.showNotification(' Signed in Channel', true)
     setMembers().then(() => {
       setCurrentUserRole()
@@ -268,10 +265,10 @@ const setUserSignedListener = async () => {
   })
 
   socket.value.on('madeAdmin', (username: string, channelname: string) => {
-	if (channelname !== ChannelName.value) {
-		return
-	}
-	notificationStore.showNotification(username + ' is now Admin of Channel:' + channelname, true)
+    if (channelname !== ChannelName.value) {
+      return
+    }
+    notificationStore.showNotification(username + ' is now Admin of Channel:' + channelname, true)
     console.log('madeAdmin fired')
     setMembers().then(() => {
       setCurrentUserRole()
@@ -404,17 +401,21 @@ const destroyChannel = async () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  await socket.value.emit('DestroyChannel', {
-    channelId: channelId,
-    senderId: userId.value
-  }, async (response: any | ErrorI) => {
-	if ('error' in response) {
-	  await notificationStore.showNotification(response.error)
-	  return
-	} else {
-	  return
-	}
-  })
+  await socket.value.emit(
+    'DestroyChannel',
+    {
+      channelId: channelId,
+      senderId: userId.value
+    },
+    async (response: any | ErrorI) => {
+      if ('error' in response) {
+        await notificationStore.showNotification(response.error)
+        return
+      } else {
+        return
+      }
+    }
+  )
 }
 
 const DestroyChannel = async () => {
@@ -436,17 +437,21 @@ const SignOutChannel = async () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-  await socket.value.emit('SignOutChannel', {
-    channelId: channelId,
-    userId: userId.value
-  }, async (response: any | ErrorI) => {
-	if ('error' in response) {
-	  await notificationStore.showNotification(response.error)
-	  return
-	} else {
-	return
-	}
-})
+  await socket.value.emit(
+    'SignOutChannel',
+    {
+      channelId: channelId,
+      userId: userId.value
+    },
+    async (response: any | ErrorI) => {
+      if ('error' in response) {
+        await notificationStore.showNotification(response.error)
+        return
+      } else {
+        return
+      }
+    }
+  )
 }
 
 const setPassword = async () => {
@@ -490,11 +495,9 @@ const changePassword = async () => {
     await resetPasswordField()
   }
 }
-
 </script>
 
 <style>
-
 .current-channel-name {
   text-align: center;
   font-size: 1.25rem;
