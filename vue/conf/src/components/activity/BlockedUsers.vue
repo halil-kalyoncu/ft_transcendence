@@ -103,16 +103,26 @@ const handleUnblockUser = async (unblockUserId: number, username: string) => {
 
 const setBlockedUsersData = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/blockedUsers?userId=${userId.value}`)
+    const accessToken = localStorage.getItem('ponggame') ?? ''
+    const response = await fetch(`http://localhost:3000/api/blockedUsers?userId=${userId.value}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! ${response.status}: ${response.statusText}`)
+    const responseData = await response.json()
+    if (response.ok) {
+      blockedUsers.value = responseData
+    } else {
+      notificationStore.showNotification(
+        'Error while loading blocked users: ' + responseData.message,
+        false
+      )
     }
-
-    const data = await response.json()
-    blockedUsers.value = data
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while loading blocked users', false)
   }
 }
 </script>

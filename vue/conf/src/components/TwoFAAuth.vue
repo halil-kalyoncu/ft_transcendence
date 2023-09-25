@@ -26,15 +26,15 @@ const check2FAcode = async () => {
     const response = await fetch(
       `http://localhost:3000/api/2fa/checkFAcode?userId=${userId.value}&code=${twoFACode.value}`
     )
+    const responseData = await response.json()
     if (!response.ok) {
-      const responseData = await response.json()
       notificationStore.showNotification(responseData.message, false)
       return false
     } else {
-      return await response.json()
+      return responseData
     }
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, false)
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong', false)
     return false
   }
 }

@@ -13,7 +13,6 @@ import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { Match } from '@prisma/client';
 
-let ballPos = { x: 0, y: 0 };
 let diffPadBall = 0;
 let intervalId;
 @WebSocketGateway({

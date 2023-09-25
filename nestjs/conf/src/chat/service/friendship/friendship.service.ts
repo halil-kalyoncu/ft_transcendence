@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Friendship, FriendshipStatus, Prisma, User } from '@prisma/client';
@@ -23,16 +23,10 @@ export class FriendshipService {
 
     if (checkFriendship) {
       if (checkFriendship.status === FriendshipStatus.PENDING) {
-        throw new Error('Already send a request');
+        throw new BadRequestException('Already send a request');
       } else if (checkFriendship.status === FriendshipStatus.ACCEPTED) {
-        throw new Error('Already friends');
-      }
-      // else if (checkFriendship.status === FriendshipStatus.BLOCKED) {
-      //   throw new Error(
-      //     'Please check if the user is in your blocked list. Otherwise you have been blocked :(',
-      //   );
-      // }
-      else if (checkFriendship.status === FriendshipStatus.REJECTED) {
+        throw new BadRequestException('Already friends');
+      } else if (checkFriendship.status === FriendshipStatus.REJECTED) {
         await this.remove(checkFriendship.id);
       }
     }
@@ -154,42 +148,6 @@ export class FriendshipService {
       include: { sender: true, receiver: true },
     });
   }
-
-  // async block(friendship: Prisma.FriendshipCreateInput): Promise<Friendship> {
-  //   const checkFriendship: Friendship = await this.find(
-  //     friendship.sender.connect.id,
-  //     friendship.receiver.connect.id,
-  //   );
-  //   if (checkFriendship) {
-  //     this.remove(checkFriendship.id);
-  //   }
-  //   friendship.status = FriendshipStatus.BLOCKED;
-  //   return this.prisma.friendship.create({
-  //     data: friendship,
-  //   });
-  // }
-
-  // async unblock(userId: number, blockedUserId: number): Promise<Friendship> {
-  //   const friendship = await this.find(userId, blockedUserId);
-  //   if (!friendship || friendship.status !== FriendshipStatus.BLOCKED) {
-  //     throw new Error('User is not in your blocked list');
-  //   }
-  //   return await this.remove(friendship.id);
-  // }
-
-  // async getBlockedUsers(userId: number): Promise<Friendship[]> {
-  //   return await this.prisma.friendship.findMany({
-  //     where: {
-  //       AND: [
-  //         { status: FriendshipStatus.BLOCKED },
-  //         {
-  //           OR: [{ senderId: userId }, { receiverId: userId }],
-  //         },
-  //       ],
-  //     },
-  //     include: { sender: true, receiver: true },
-  //   });
-  // }
 
   async remove(friendshipId: number): Promise<Friendship> {
     return await this.prisma.friendship.delete({ where: { id: friendshipId } });

@@ -1,11 +1,59 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+import { useRoute } from 'vue-router'
+import type { MatchI } from '../../model/match/match.interface'
 
-const props = defineProps({
-  username: String
+const route = useRoute()
+const userId = route.params.userId as string
+const username = route.params.username as string
+
+// let userId = ref<number>(0)
+
+// const props = defineProps<{
+//   username: string;
+// }>();
+
+const achievements = ref([
+  { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
+  { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
+  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' }
+])
+
+const matchHistory = ref<MatchI[] | null>(null)
+
+async function getMatchHistory(): Promise<void> {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/matches/find-matches-by-user?userid=${userId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    // console.log("RESPONSE:", userId.value)
+    if (response.ok) {
+      const matchData = await response.json()
+
+      matchHistory.value = matchData
+
+      console.log('RESPONSE:', matchData)
+    }
+  } catch (error) {
+    console.error('Failed to fetch match history:', error)
+  }
+}
+
+onMounted(() => {
+  getMatchHistory()
 })
 </script>
 
@@ -16,63 +64,22 @@ const props = defineProps({
       <div class="achievements">
         <h2 class="profile-title">achievements</h2>
         <ScrollViewer :maxHeight="'50vh'">
-          <!-- todo: replace with foreach -->
           <ProfileAchievementItem
-            :achievementType="1"
-            :achievementTitle="'First Achievement'"
-            :achievementDescription="'This is the first achievement'"
-          />
-          <ProfileAchievementItem
-            :achievementType="6"
-            :achievementTitle="'Last Achievement'"
-            :achievementDescription="'This is the last achievement'"
-          />
-          <ProfileAchievementItem
-            :achievementType="2"
-            :achievementTitle="'Second Achievement'"
-            :achievementDescription="'This is the second achievement'"
+            v-for="achievement in achievements"
+            :achievementType="achievement.type"
+            :achievementTitle="achievement.title"
+            :achievementDescription="achievement.description"
           />
         </ScrollViewer>
       </div>
       <div class="match-history">
         <h2 class="profile-title">match history</h2>
         <ScrollViewer :maxHeight="'50vh'">
-          <!-- todo: replace with foreach -->
           <ProfileMatchHistoryItem
-            :score="'5 : 3'"
-            :victory="true"
-            :playerName="'username'"
-            :opponentName="'Opponent 1'"
-            :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'../src/assets/avatar-1.png'"
-            :opponentAvatar="'../src/assets/avatar-2.png'"
-          />
-          <ProfileMatchHistoryItem
-            :score="'1 : 5'"
-            :victory="false"
-            :playerName="'username'"
-            :opponentName="'Opponent 2'"
-            :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'../src/assets/avatar-1.png'"
-            :opponentAvatar="'../src/assets/avatar-3.png'"
-          />
-          <ProfileMatchHistoryItem
-            :score="'5 : 4'"
-            :victory="true"
-            :playerName="'username'"
-            :opponentName="'Opponent 2'"
-            :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'../src/assets/avatar-1.png'"
-            :opponentAvatar="'../src/assets/avatar-3.png'"
-          />
-          <ProfileMatchHistoryItem
-            :score="'5 : 0'"
-            :victory="true"
-            :playerName="'username'"
-            :opponentName="'Opponent 1'"
-            :dateTime="'2023/07/16 11:11'"
-            :playerAvatar="'../src/assets/avatar-1.png'"
-            :opponentAvatar="'../src/assets/avatar-2.png'"
+            v-for="match in matchHistory"
+            :key="match.id"
+            :match="match"
+            :userId="userId"
           />
         </ScrollViewer>
       </div>

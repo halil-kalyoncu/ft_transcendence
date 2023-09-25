@@ -16,17 +16,19 @@ export const useUserStore = defineStore('user', () => {
     const response = await fetch(`http://localhost:3000/api/users/find-by-id?id=${jwtUserId}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
 
+    const responseData = await response.json()
     if (response.ok) {
-      user.value = await response.json()
+      user.value = responseData
       userId.value = user.value?.id as number
       username.value = user.value?.username as string
     } else {
       clearStore()
-      throw new Error('Failed to fetch user')
+      throw new Error('Failed to fetch user ' + responseData)
     }
   }
 
@@ -38,7 +40,13 @@ export const useUserStore = defineStore('user', () => {
     const jwtUser: UserI = getUserFromAccessToken()
     const jwtUserId: number = jwtUser.id as number
 
-    const response = await fetch(`http://localhost:3000/api/users/avatar/${jwtUserId}`)
+    const response = await fetch(`http://localhost:3000/api/users/avatar/${jwtUserId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+      }
+    })
     if (response.ok) {
       avatarImageData.value = await response.blob()
     } else {

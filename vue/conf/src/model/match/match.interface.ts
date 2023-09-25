@@ -12,7 +12,7 @@ export const MatchState = {
   INVITED: 'INVITED' as const,
   ACCEPTED: 'ACCEPTED' as const,
   STARTED: 'STARTED' as const,
-  DISCONNECTLEFT: 'DICONNECTLEFT' as const,
+  DISCONNECTLEFT: 'DISCONNECTLEFT' as const,
   DISCONNECTRIGHT: 'DISCONNECTRIGHT' as const,
   WINNERLEFT: 'WINNERLEFT' as const,
   WINNERRIGHT: 'WINNERRIGHT' as const

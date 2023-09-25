@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   Match,
@@ -20,6 +24,42 @@ export class MatchService {
   async create(newMatch: Prisma.MatchCreateInput): Promise<Match> {
     return await this.prisma.match.create({
       data: newMatch,
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
+    });
+  }
+
+  //   async findUserByName(username: string): Promise<Match> {
+  // 	return await this.prisma.match.findUnique({
+  // 	  where: {
+  // 		username: username,
+  // 	  },
+  // 	});
+  //   }
+  // async findUserByName(username: string): Promise<User | null> {
+  // 	return await this.prisma.user.findUnique({
+  // 	where: {
+  // 		username: username,
+  // 	},
+  // 	});
+  // }
+
+  async findMatchByUser(userid: number): Promise<Match[]> {
+    return await this.prisma.match.findMany({
+      where: {
+        OR: [{ leftUserId: userid }, { rightUserId: userid }],
+      },
+      include: {
+        leftUser: true,
+        rightUser: true,
+      },
+    });
+  }
+
+  async findAll(): Promise<Match[]> {
+    return await this.prisma.match.findMany({
       include: {
         leftUser: true,
         rightUser: true,
@@ -59,7 +99,7 @@ export class MatchService {
     if (!match) {
       return null;
     } else if (match.leftUserId == invitedUserId) {
-      throw new Error("Can't invite yourself to a match");
+      throw new BadRequestException("Can't invite yourself to a match");
     }
 
     const matchPowerups = await Promise.all(
@@ -193,7 +233,7 @@ export class MatchService {
     const match: Match = await this.findById(id);
 
     if (!match) {
-      throw new Error("Can't find match");
+      throw new NotFoundException("Can't find match");
     }
 
     const matchPowerups: MatchPowerup[] =
