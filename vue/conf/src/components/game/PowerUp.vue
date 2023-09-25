@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+
 import widePaddle from '../../assets/increasePaddle.png'
 import smallPaddle from '../../assets/decreasePaddle.png'
 import magnet from '../../assets/magnet.png'

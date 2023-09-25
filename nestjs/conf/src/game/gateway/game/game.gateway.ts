@@ -382,7 +382,7 @@ export class EventsGateway {
     }
 
     const match = await this.matchService.finishMatch(room);
-
+	clearInterval(intervalId);
     socket.emit('gameFinished', match);
   }
 

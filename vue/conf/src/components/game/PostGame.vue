@@ -22,7 +22,7 @@
 			<div class="playerA">{{ playerA }}</div>
 			<div class="playerB">{{ playerB }}</div>
 		</div>
-		<div class="score">{{ playerAScore + ' | ' + playerBScore }}</div>
+		<div class="score">{{ playerAScore + ' : ' + playerBScore }}</div>
 	</div>
 </template>
 
