@@ -14,7 +14,7 @@ import { UserService } from '../../../user/service/user-service/user.service';
 import { Match } from '@prisma/client';
 
 let diffPadBall = 0;
-// let end = new(Number);
+let intervalId;
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost:4200', 'http://localhost:3000'],
@@ -67,8 +67,28 @@ export class EventsGateway {
           this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
         }
         for (let powerup of room.powerups) {
+			// if (room.ball.handlePowerUpCollision(room.ball.x, room.ball.y, powerup)) {
+			// 	let target;
+			// 	if (room.ball.dx > 0) target = 'left';
+			// 	else target = 'right';
+		
+			// 	this.server.emit('activatePowerUp', {
+			// 		player: target,
+			// 		type: 'increasePaddleHeight',
+			// 	});
+			// 	this.server.emit('destroyPowerUp', { id: powerup.id });
+			// 	}
+			// 	if (
+			// 	powerup.y + powerup.hgt >= room.ball.fieldHeight &&
+			// 	!room.ball.handlePowerUpCollision(room.ball.x, room.ball.y, powerup)
+			// 	) {
+			// 	console.log('powerupid: ', powerup.id);
+			// 	this.server.emit('destroyPowerUp', { id: powerup.id });
+			// } 
+
           powerup.moveDown();
           this.server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
+
         }
         // this.server.emit('ballPosition', newBallPos);
 
@@ -129,14 +149,20 @@ export class EventsGateway {
 
     //first user that connects to the gateway creates the entry in the rooms array
     if (!this.rooms.has(queryMatchId)) {
-      this.rooms.set(queryMatchId, new Room(queryMatchId));
+      this.rooms.set(queryMatchId, new Room(queryMatchId, socket.data.match.goalsToWin));
       const powerupNames: string[] = await this.matchService.getPowerupNames(
         queryMatchId,
       );
-      console.log('game socket');
-      console.log(socket.data.match);
-      console.log(powerupNames);
+	  console.log(powerupNames)
+	  intervalId = setInterval(async () => {
+		let powerUpIndex = Math.floor(Math.random() * (powerupNames.length));
+		console.log(powerUpIndex)
+		let x = Math.floor(Math.random() * ((room.ball.fieldWidth - 70) - 70 + 1)) + 70
+		let y = -70
+		this.server.emit("newPowerUp", { powerUp: powerupNames[powerUpIndex], x: x, y: y })
+	  }, 10000);
     }
+
 
     const room = this.rooms.get(queryMatchId);
     if (queryUserId === socket.data.match.leftUserId) {
@@ -160,19 +186,20 @@ export class EventsGateway {
     if (room.gameIsRunning) {
       room.gameIsRunning = false;
       if (socket.data.isLeftPlayer) {
-        room.leftPlayerDisconnect = true;
-      } else {
-        room.rightPlayerDisconnect = true;
-      }
-
-      const match = await this.matchService.finishMatch(room);
-
-      if (socket.data.isLeftPlayer) {
-        socket.to(room.socketIds[1]).emit('gameFinished', match);
-      } else {
-        socket.to(room.socketIds[0]).emit('gameFinished', match);
-      }
+		  room.leftPlayerDisconnect = true;
+		} else {
+			room.rightPlayerDisconnect = true;
+		}
+		
+		const match = await this.matchService.finishMatch(room);
+		
+		if (socket.data.isLeftPlayer) {
+			socket.to(room.socketIds[1]).emit('gameFinished', match);
+		} else {
+			socket.to(room.socketIds[0]).emit('gameFinished', match);
+		}
     }
+	clearInterval(intervalId);
     socket.disconnect();
   }
 
@@ -215,6 +242,8 @@ export class EventsGateway {
         'paddleMove',
         { playerId: 'left', newPos: paddleAPos.y },
       );
+
+
       //this.server.emit('paddleMove', { playerId: 'left', newPos: paddleAPos.y }); ->	this would send to all clients currently on the server,
       //																					we only want to send to the two users that are playing the match
     } else {
@@ -270,14 +299,14 @@ export class EventsGateway {
       x: number;
       y: number;
       speed: number;
-      type: number;
+      type: string;
       wid: number;
       hgt: number;
       color: string;
     },
   ): void {
     const room = this.rooms.get(socket.data.match.id);
-    data.speed = 3;
+    data.speed = 0.2;
     // data.color = "blue";
     const newPowerUp = new PowerUp(
       data.id,
@@ -290,13 +319,13 @@ export class EventsGateway {
       data.color,
     );
     room.powerups.push(newPowerUp);
-    socket.emit('newPowerUp', data);
-    this.sendToOpponent(socket, room.socketIds, 'newPowerUp', data);
-    //this.server.emit('newPowerUp', data);
+    // socket.emit('newPowerUp', data);
+    // this.sendToOpponent(socket, room.socketIds, 'newPowerUp', data);
+    // this.server.to(room.socketIds[1]).emit('newPowerUp', data);
     // console.log("powerup spawned at x: ", data.x)
   }
 
-  @SubscribeMessage('activatePowerUp')
+  @SubscribeMessage('executePowerUp')
   activatePowerUp(
     socket: Socket,
     data: {
@@ -309,36 +338,25 @@ export class EventsGateway {
 
     if (data.player == 'left') {
       target = room.paddleA;
-      // console.log("PU::: left");
     } else {
       target = room.paddleB;
-      // console.log("PU::: right");
     }
-
     if (data.type == 'increasePaddleHeight') {
       target.setHeight(400);
-      // socket.emit('activatePowerUp', {type: 'increasePaddleHeight', player: data.player});
-      // this.sendToOpponent(socket, room.socketIds, 'activatePowerUp', {type: 'increasePaddleHeight', player: data.player});
-      console.log('increase Pad');
-    }
-    // console.log(data.type);
+	}
+	if (data.type == 'decreasePaddleHeight') {
+		target.setHeight(80);
+	}
     if (data.type == 'magnet') {
-      // const room = this.rooms.get(socket.data.match.id);
-      console.log('EVENT: magnet');
       if (data.player == 'left') room.ball.magnet = 1;
       else room.ball.magnet = 2;
-      // let end = Date.now() + 5000;
-      // while (Date.now() < end){
-      // 	let newBallPos= {x: room.paddleA.wid, y: room.paddleA.y + (room.paddleA.hgt / 2)};
-      // 	this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos)
-      // 	this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos)
-      // 	room.ball.x = newBallPos.x;
-      // 	room.ball.y = newBallPos.y;
-      // }
     }
     if (data.type == 'slowBall') {
+		room.ball.updateSpeed(2);
     }
-    // console.log(data.type, data.player);
+	if (data.type == 'fastBall') {
+		room.ball.updateSpeed(9);
+    }
   }
 
   @SubscribeMessage('removePowerUp')
@@ -366,6 +384,7 @@ export class EventsGateway {
 
     socket.emit('gameFinished', match);
   }
+
 
   //Helperfunctions
   private sendToOpponent(

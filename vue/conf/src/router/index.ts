@@ -4,6 +4,7 @@ import ErrorLayout from '../components/layout/ErrorLayout.vue'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
+import GameLayout from '../components/layout/GameLayout.vue'
 import TwoFAAuthView from '../views/TwoFAAuthView.vue'
 import jwtDecode from 'jwt-decode'
 
@@ -168,7 +169,7 @@ const router = createRouter({
     },
     {
       path: '/game/:matchId',
-      component: MainLayout,
+      component: GameLayout,
       children: [
         {
           path: '',

@@ -2,6 +2,12 @@
   <div v-if="!matchResult" class="field" ref="gameField">
     <div class="left-border"></div>
     <div class="right-border"></div>
+	<div v-if="countdown === -1" class="waiting">
+	  <p>Waiting for opponent... {{ formattedTimer }}</p>
+	</div>
+	<div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
+	  <p>{{ countdown }}</p>
+	</div>
     <PlayerView
       ref="playerview"
       :playerA="playerAName"
@@ -12,29 +18,26 @@
     <GameBall ref="ball" />
     <GamePaddle ref="paddleA" />
     <GamePaddle ref="paddleB" />
-    <div v-if="countdown === -1" class="waiting">
-      <p>Waiting for opponent... {{ formattedTimer }}</p>
-    </div>
-    <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
-      <p>{{ countdown }}</p>
-    </div>
     <PowerUp
       v-for="powerup in PowerUps"
       :id="powerup.id"
       :x="powerup.x"
       :y="powerup.y"
-      :type="powerup.type"
       :color="powerup.color"
       :index="powerup.index"
+	  :type="powerup.type"
     />
   </div>
   <div v-else>
-    <p>{{ matchResult.goalsLeftPlayer }}:{{ matchResult.goalsLeftPlayer }}</p>
-    <button @click="goHome">Leave Match</button>
+	<PostGame
+		:playerA="playerAName"
+		:playerB="playerBName"
+		:playerAScore="matchResult.goalsLeftPlayer!"
+		:playerBScore="matchResult.goalsRightPlayer!" />
   </div>
-  <!-- <div class="ball-coordinates" v-if="ballCoordinates">
-			Ball Position: x = {{ ballCoordinates.x }}, y = {{ ballCoordinates.y }}
-		</div> -->
+  <div class="leave-game"> 
+  	<button @click="goHome" class="leave-game-button">Leave Game</button>
+  </div>
   <!-- <form @submit.prevent="connectToWS">
 			<input type="text" v-model="serverIp" placeholder="Enter Server IP"/>
 			<button type="submit">Connect</button>
@@ -45,6 +48,7 @@
 import { defineComponent, ref, onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import type { GamePaddleSetup } from './GamePaddle.vue'
 import PlayerView from './PlayerView.vue'
+import PostGame from './PostGame.vue'
 import GamePaddle from './GamePaddle.vue'
 import GameBall from './GameBall.vue'
 import PowerUp from './PowerUp.vue'
@@ -126,15 +130,8 @@ const keyHookUp = (e: KeyboardEvent) => {
       isMovingUp.value = false
       break
     case 'ArrowDown':
-      isMovingDown.value = false
-      break
-    case 'KeyB':
-      //   playerAScore.value++
-      spawnPowerUp()
-      // socket.value.emit('activatePowerUp', { type: 'magnet', player: 'right' })
-      break
-    // socket.value.emit('activatePowerUp', { type: "increasePaddleHeight", player: "right" })
-    //   break
+		isMovingDown.value = false
+		break
     case 'Space':
       socket.value.emit('fire')
       break
@@ -244,8 +241,45 @@ onMounted(() => {
   })
 
   // socket.on("newPowerUp", ({ id, x, y, type }) => {
-  socket.value.on('newPowerUp', (data: any) => {
-    PowerUps.value?.push(data)
+  socket.value.on('newPowerUp', (PowerUp: { powerUp: string, x: number, y: number}) => {
+	const newPowerUp = {
+    id: Math.floor(Date.now()),
+    x: PowerUp.x,
+    y: PowerUp.y, //Math.floor(Math.random() * ((fieldHeight.value! - 70) - 70 + 1)) + 70,
+	type: 'null',
+    index: 0,
+    color: 'white',
+    wid: 70,
+    hgt: 70
+  }
+  console.log("power name")
+  console.log(PowerUp.powerUp)
+  if (PowerUp.powerUp == 'increasePaddleHeight') {
+	newPowerUp.color = 'white'
+	newPowerUp.index = 0
+	newPowerUp.type = PowerUp.powerUp
+  } else if (PowerUp.powerUp == 'decreasePaddleHeight') {
+	newPowerUp.color = 'red'
+	newPowerUp.index = 1
+	newPowerUp.type = PowerUp.powerUp
+  } else if (PowerUp.powerUp == 'magnet') {
+	newPowerUp.color = 'green'
+	newPowerUp.index = 2
+	newPowerUp.type = PowerUp.powerUp
+  } else if (PowerUp.powerUp == 'slowBall') {
+    newPowerUp.color = 'blue'
+    newPowerUp.index = 3
+	newPowerUp.type = PowerUp.powerUp
+  } else if (PowerUp.powerUp == 'fastBall') {
+	console.log("WORKED")
+    newPowerUp.color = 'yellow'
+    newPowerUp.index = 4
+	newPowerUp.type = PowerUp.powerUp
+  }
+  
+  socket.value?.emit('spawnPowerUp', newPowerUp)
+  console.log('PU spawn local')
+    PowerUps.value?.push(newPowerUp)
     // console.log("PU spawn remote");
   })
 
@@ -298,23 +332,33 @@ onMounted(() => {
 
   socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
     let target
-    console.log(player)
     if (player == 'left') target = paddleA.value
     else target = paddleB.value
 
     if (type == 'increasePaddleHeight') {
       target?.setHgt(400)
-      socket.value?.emit('activatePowerUp', { type: type, player: player })
     }
-
-    // console.log(player, type);
+	if (type == 'decreasePaddleHeight'){
+		target?.setHgt(80)
+	}
+	if (type == 'slowBall') {
+		ball.value!.speed = 2
+	}
+	if (type == 'fastBall') {
+		ball.value!.speed = 9
+	}
+	socket.value?.emit('executePowerUp', { type: type, player: player })
   })
 
   socket.value.on('scoreGoal', (payload: string) => {
     if (payload == 'playerA') playerAScore.value++
     else playerBScore.value++
   })
-
+  
+  socket.value.on('resetPaddle', () => {
+	paddleA.value?.setHgt(100)
+	paddleB.value?.setHgt(100)
+  })
   initGameField()
 })
 
@@ -383,33 +427,33 @@ function update() {
   requestAnimationFrame(update)
 }
 
-function spawnPowerUp() {
-  const newPowerUp = {
-    id: Math.floor(Date.now()),
-    x: Math.floor(Math.random() * fieldWidth.value!),
-    y: -30,
-    index: 0,
-    type: Math.floor(Math.random() * 4),
-    color: 'white',
-    wid: 30,
-    hgt: 30
-  }
-  if (newPowerUp.type == 0) {
-    newPowerUp.color = 'red'
-    newPowerUp.index = 0
-  } else if (newPowerUp.type == 1) {
-    newPowerUp.color = 'green'
-    newPowerUp.index = 3
-  } else if (newPowerUp.type == 2) {
-    newPowerUp.color = 'blue'
-    newPowerUp.index = 2
-  } else if (newPowerUp.type == 3) {
-    newPowerUp.color = 'white'
-    newPowerUp.index = 1
-  }
-  socket.value?.emit('spawnPowerUp', newPowerUp)
-  console.log('PU spawn local')
-}
+// function spawnPowerUp() {
+//   const newPowerUp = {
+//     id: Math.floor(Date.now()),
+//     x: Math.floor(Math.random() * fieldWidth.value!),
+//     y: -30,
+//     index: 0,
+//     type: Math.floor(Math.random() * 4),
+//     color: 'white',
+//     wid: 30,
+//     hgt: 30
+//   }
+//   if (newPowerUp.type == 0) {
+//     newPowerUp.color = 'red'
+//     newPowerUp.index = 0
+//   } else if (newPowerUp.type == 1) {
+//     newPowerUp.color = 'green'
+//     newPowerUp.index = 3
+//   } else if (newPowerUp.type == 2) {
+//     newPowerUp.color = 'blue'
+//     newPowerUp.index = 2
+//   } else if (newPowerUp.type == 3) {
+//     newPowerUp.color = 'white'
+//     newPowerUp.index = 1
+//   }
+//   socket.value?.emit('spawnPowerUp', newPowerUp)
+//   console.log('PU spawn local')
+// }
 
 async function getUserNames(): Promise<void> {
   try {
@@ -514,4 +558,24 @@ const goHome = () => {
   font-size: 100px;
   text-align: center;
 }
+
+.leave-game {
+	width: 800px;
+	display: flex;
+	justify-content: center;
+}
+.leave-game-button{
+  /* width: 800px; */
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.leave-game-button:hover{
+	background-color: #0056b3;
+}
+
 </style>

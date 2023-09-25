@@ -35,7 +35,7 @@ export class Ball {
     this.dx = 5;
     this.dy = 3;
     this.speed = 4;
-    this.magnet = 0;
+    // this.magnet = 0;
   }
 
   moveBallDir(paddleBY: number, paddleHeight: number, paddle: string): void {
@@ -53,7 +53,14 @@ export class Ball {
     this.dy = this.speed * Math.sin(bounceAngle);
     this.dx = -this.dx;
   }
+  updateSpeed(newSpeed: number): void{
+	const speedFactor = newSpeed / this.speed;
 
+	this.speed = newSpeed;
+
+	this.dx *= speedFactor;
+	this.dy *= speedFactor;
+  }
   handleBallCollision(
     nextBallX: number,
     nextBallY: number,
@@ -124,7 +131,12 @@ export class Ball {
     let nextBallX = this.x + this.dx;
     let nextBallY = this.y + this.dy;
 
-    if (this.scoreGoal(room, nextBallX, server)) this.resetBall();
+    if (this.scoreGoal(room, nextBallX, server)) {
+		this.resetBall();
+		room.paddleA.setHeight(100);
+		room.paddleB.setHeight(100);
+		server.emit('resetPaddle');
+	}
     else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;
@@ -149,15 +161,13 @@ export class Ball {
     }
 
     for (let powerup of room.powerups) {
-      // console.log(this.dx);
       if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)) {
         let target;
         if (this.dx > 0) target = 'left';
         else target = 'right';
-
         server.emit('activatePowerUp', {
           player: target,
-          type: 'increasePaddleHeight',
+          type: powerup.type,
         });
         server.emit('destroyPowerUp', { id: powerup.id });
       }
@@ -165,12 +175,8 @@ export class Ball {
         powerup.y + powerup.hgt >= this.fieldHeight &&
         !this.handlePowerUpCollision(nextBallX, nextBallY, powerup)
       ) {
-        console.log('powerupid: ', powerup.id);
         server.emit('destroyPowerUp', { id: powerup.id });
-      } else {
-        powerup.moveDown();
-        server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
-      }
+      } 
     }
     return {
       x: this.x,
