@@ -1,16 +1,18 @@
 <template>
   <div class="available-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
-      <div v-for="channel in channelData" :key="channel.channel.id">
+      <div v-for="channel in channelData" :key="channel.channel?.id">
+		<div v-if="channel.channel?.id">
         <ChannelListItem
-          :isPasswordProtected="channel.channel.protected"
+          :isPasswordProtected="channel.channel?.protected"
           :isPrivate="false"
-          :channelName="channel.channel.name"
+          :channelName="channel.channel?.name"
           :ownerName="channel.owner?.username"
           :joinChannelButtonNameProps="'Join'"
-          :channelId="channel.channel.id"
+          :channelId="channel.channel?.id"
           @channelEntered="handleChannelEntered(channel.channel.id)"
         />
+		</div>
       </div>
     </ScrollViewer>
   </div>

@@ -251,9 +251,6 @@ export class ChannelService {
 		throw new Error('Channel does not exist.');
 	}
     const channelOwner = await this.channelMemberService.findOwner(channel.id);
-	console.log('channelOwner: ', channelOwner);
-	console.log('channelOwner.userId: ', channelOwner.userId);
-	console.log('adminActionDto.requesterId: ', adminActionDto.requesterId);
     if (!channelOwner || channelOwner.userId !== adminActionDto.requesterId) {
       throw new Error(
         'Only the owner of the channel can make a user an admin.',
