@@ -21,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { PrismaModel } from '../../_gen/prisma-class/index';
 import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
+import { WinsLosesDto } from '../dto/wins-loses.dto'
 
 @ApiTags('Match module')
 @Controller('matches')
@@ -89,6 +90,12 @@ export class MatchController {
   ): Promise<Match[] | null> {
     return await this.matchService.findMatchByUser(userid);
     // return await this.matchService.findMatchByUser();
+  }
+
+  @Get('winsLoses/:userId')
+  async getWinsLoses(@Query('userId', ParseIntPipe) userId: number): Promise<WinsLosesDto> {
+	const winsLoses: WinsLosesDto = await this.matchService.getMatchCountByUserId(userId);
+	return winsLoses;
   }
 
   @UseGuards(JwtAuthGuard)

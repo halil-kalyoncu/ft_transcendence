@@ -133,14 +133,15 @@ export class EventsGateway {
       const powerupNames: string[] = await this.matchService.getPowerupNames(
         queryMatchId,
       );
-	  console.log(powerupNames)
-	  intervalId = setInterval(async () => {
-		let powerUpIndex = Math.floor(Math.random() * (powerupNames.length));
-		console.log(powerUpIndex)
-		let x = Math.floor(Math.random() * ((room.ball.fieldWidth - 70) - 70 + 1)) + 70
-		let y = -70
-		this.server.emit("newPowerUp", { powerUp: powerupNames[powerUpIndex], x: x, y: y })
-	  }, 10000);
+	  if (powerupNames.length > 0) {
+		  intervalId = setInterval(async () => {
+			let powerUpIndex = Math.floor(Math.random() * (powerupNames.length));
+			console.log(powerUpIndex)
+			let x = Math.floor(Math.random() * ((room.ball.fieldWidth - 70) - 70 + 1)) + 70
+			let y = -70
+			this.server.emit("newPowerUp", { powerUp: powerupNames[powerUpIndex], x: x, y: y })
+		  }, 10000);
+	  }
     }
 
 

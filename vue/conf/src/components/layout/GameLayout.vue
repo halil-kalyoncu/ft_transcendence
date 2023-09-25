@@ -8,9 +8,9 @@ const route = useRoute()
 
 <template>
   <main>
-    <section>
-      <RouterView />
-    </section>
+	<section>
+		<RouterView />
+	</section>
   </main>
 </template>
 
@@ -22,10 +22,9 @@ main {
   align-items: center;
   justify-content: center;
   background-image: url('../../assets/gamebackground.png');
-  /* background-repeat: no-repeat; */
+  /* background-position: center; */
   background-position: center;
-  /* background-size: cover; */
-  /* background-attachment: fixed; */
   font-family: 'Courier New', Courier, monospace;
 }
+
 </style>
