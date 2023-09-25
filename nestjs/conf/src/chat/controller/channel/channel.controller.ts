@@ -123,32 +123,45 @@ export class ChannelController {
   }
 
   //Post Functions to create Channels
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Post('createProtectedChannel')
   async createChannel(
     @Body() CreateChannelDto: CreateChannelDto,
-  ): Promise<Channel | ErrorDto> {
+  ): Promise<Channel> {
     try {
       return await this.ChannelService.createProtectedChannel(CreateChannelDto);
     } catch (error) {
-      return { error: error.message as string };
+		if (error instanceof BadRequestException) {
+			throw error;
+		}
+		throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Post('createUnProtectedChannel')
   async createUnProtectedChannel(
     @Body() CreateChannelDto: CreateChannelDto,
-  ): Promise<Channel | ErrorDto> {
+  ): Promise<Channel> {
     try {
       return await this.ChannelService.createUnProtectedChannel(
         CreateChannelDto,
       );
     } catch (error) {
-      return { error: error.message as string };
+	  if (error instanceof BadRequestException) {
+		  throw error;
+	  }
+	  throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   //Patch Functions to change existing Channel properties
+
   @Patch('addUserToChannel')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async addUserToChannel(
     @Body() ChannelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember> {

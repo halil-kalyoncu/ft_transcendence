@@ -470,7 +470,7 @@ export class ChatGateway
   async handleKickChannelMember(
     socket: Socket,
     adminActionDto: AdminActionDto,
-  ): Promise<string | ErrorDto> {
+  ): Promise<User | ErrorDto> {
     try {
       const members: User[] = await this.channelService.getMembers(
         adminActionDto.channelId,
@@ -503,7 +503,7 @@ export class ChatGateway
         adminActionDto.channelId,
         channel.name,
       );
-      return targetUser.username;
+      return targetUser;
     } catch (error) {
       return { error: error.message as string };
     }

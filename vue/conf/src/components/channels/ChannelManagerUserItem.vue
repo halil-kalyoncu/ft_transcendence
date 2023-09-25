@@ -121,8 +121,6 @@ const kickUser = async () => {
 	  if ('error' in response) {
 		notificationStore.showNotification(response.error, false)
 		return
-	  } else {
-		return
 	  }
 	})
   } catch (error) {

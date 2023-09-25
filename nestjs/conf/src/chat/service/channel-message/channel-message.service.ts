@@ -172,6 +172,8 @@ export class ChannelMessageService {
           };
         }),
       );
+	  console.log("CHANNEL MESSAGE DTO")
+	  console.log(channelMessageDtos);
       return channelMessageDtos;
   }
 
@@ -179,6 +181,11 @@ export class ChannelMessageService {
     channelId: number,
     userId: number,
   ): Promise<ChannelMessageDto[]> {
+	  const channel = await this.channelService.find(channelId);
+	  if (!channel)
+	  {
+		  throw new Error("Channel doesn't exist");
+	  }
       const channelMember = await this.channelMemberService.find(
         channelId,
         userId,
@@ -194,7 +201,8 @@ export class ChannelMessageService {
           isRead: true,
         },
       });
-      return await this.getChannelMessagesforChannel(channelId, userId);
+      const channelMessageDto =  await this.getChannelMessagesforChannel(channelId, userId);
+	  return channelMessageDto;
 }
 
   async getUnreadStatus(

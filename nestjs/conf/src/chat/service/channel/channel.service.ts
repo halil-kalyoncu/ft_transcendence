@@ -41,7 +41,7 @@ export class ChannelService {
     name: string;
     password?: string;
     channelVisibility: ChannelVisibility;
-  }): Promise<Channel | { error: string }> {
+  }): Promise<Channel> {
     const existingChannel = await this.prisma.channel.findFirst({
       where: { name: name },
     });
@@ -203,7 +203,8 @@ export class ChannelService {
       channelMembershipDto.channelId,
     );
     if (existingMembership) {
-      throw new BadRequestException ('User is already a member of this channel.');
+      console.log( 'User is already a member of this channel. Is not registered again.');
+	  return existingMembership;
     }
     return this.prisma.channelMember.create({
       data: {

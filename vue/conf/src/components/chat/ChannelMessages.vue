@@ -111,14 +111,13 @@ const setUserChangesListener = () => {
 
 const setNewChannelMessages = async () => {
   try {
-	console.log(localStorage.getItem('ponggame') ?? '')
     const response = await fetch(
       `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId.value}`
     ,{
 		method: 'GET',
 		headers: {
 		'Content-Type': 'application/json',
-		'Auhorization': `Bearer ${localStorage.getItem('ponggame') ?? ''}`,
+		'Authorization': `Bearer ${localStorage.getItem('ponggame')}`,
   }
 	})
 	const responseData = await response.json()
@@ -126,7 +125,6 @@ const setNewChannelMessages = async () => {
 		notificationStore.showNotification(responseData.message, false)
 		return
     }
-	console.log("WORKED")
     channelMessages.value = responseData
   } catch (error) {
 	notificationStore.showNotification('Something went Wrong', false)
