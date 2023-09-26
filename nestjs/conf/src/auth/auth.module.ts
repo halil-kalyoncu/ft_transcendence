@@ -10,6 +10,7 @@ import { UserService } from '../user/service/user-service/user.service';
 import { TwoFactorAuthController } from './controller/two-factor-auth/two-factor-auth.controller';
 import { ChatModule } from '../chat/chat.module';
 import { ConnectedUserService } from '../chat/service/connected-user/connected-user.service';
+import { AuthController } from './controller/auth/auth.controller';
 
 @Module({
   imports: [
@@ -35,6 +36,6 @@ import { ConnectedUserService } from '../chat/service/connected-user/connected-u
     ConnectedUserService,
   ],
   exports: [JwtAuthService],
-  controllers: [TwoFactorAuthController],
+  controllers: [TwoFactorAuthController, AuthController],
 })
 export class AuthModule {}

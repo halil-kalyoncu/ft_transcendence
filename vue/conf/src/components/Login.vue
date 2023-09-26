@@ -5,6 +5,7 @@
       <input type="text" id="username" v-model="username" required />
       <button type="submit" role="link" class="dynamic-button">42 Login</button>
     </form>
+	<button @click="handle42Api">Go to hell</button>
   </div>
 </template>
 
@@ -25,7 +26,7 @@ const get2FAStatus = async () => {
     const response = await fetch(
       `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
       {
-        method: 'GET'
+        method: 'GET',
       }
     )
     if (!response.ok) {
@@ -38,6 +39,7 @@ const get2FAStatus = async () => {
     notificationStore.showNotification('Error occurred during 2FA status check:' + error, false)
   }
 }
+
 const userStore = useUserStore()
 
 const submitForm = async () => {
@@ -72,6 +74,33 @@ const submitForm = async () => {
     notificationStore.showNotification('Something went wrong during login', false)
   }
 }
+
+const handle42Api = async () => {
+	try {
+		const clientID = "u-s4t2ud-ed681aac38facba73c47424c0e7e832f42a961819948f18cfcd350cc1da505e7";
+		const redirectUri = encodeURIComponent('http://10.12.5.1:3000/api/auth/callback');
+
+		const response = await fetch(`https://api.intra.42.fr/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectUri}&response_type=code`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+
+		console.log(response)
+		if (response.ok) {
+			const responseData = await response.json()
+		}
+		else {
+			notificationStore.showNotification('Failed to authenticate with 42', false)
+		}
+	}
+	catch (error) {
+		console.log(error);
+		notificationStore.showNotification('Something went wrong when redirecting to 42intra', false)
+	}
+}
+
 </script>
 
 <style>
