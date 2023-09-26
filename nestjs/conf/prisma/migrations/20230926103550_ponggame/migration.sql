@@ -215,12 +215,6 @@ CREATE TABLE "Matchmaking" (
 CREATE UNIQUE INDEX "Achievement_name_key" ON "Achievement"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UserAchievements_userId_key" ON "UserAchievements"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "UserAchievements_achievementId_key" ON "UserAchievements"("achievementId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex

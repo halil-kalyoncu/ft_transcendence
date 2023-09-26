@@ -34,8 +34,8 @@ model Achievement {
 
 model UserAchievements {
     id            Int              @id @default(autoincrement())
-    userId        Int              @unique
-    achievementId Int              @unique
+    userId        Int
+    achievementId Int
     progress      Int              @default(0)
     state         AchievementState
 
