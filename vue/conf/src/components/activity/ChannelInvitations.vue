@@ -7,6 +7,7 @@
             :username="invitation.inviterName"
             :channelName="invitation.channelName"
             :isPasswordProtected="invitation.isPasswordProtected"
+			:isPrivate = "invitation.ChannelVisibility === 'PRIVATE' ? true : false "
             :invitationId="invitation.invitationId"
           />
         </div>

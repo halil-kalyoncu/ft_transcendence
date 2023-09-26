@@ -1,4 +1,3 @@
-<!-- CHECK IN THE MUTED! -->
 <template>
   <div v-if="isOpened" class="modal" @click="handleClickOutside">
     <div class="modal-content" @click.stop>
@@ -28,13 +27,11 @@
         <div class="radio-button-input-group">
           <input type="radio" id="Public" value="Public" v-model="channelVisibility" hidden />
           <label for="Public">Public </label>
-          <!-- TODO: Change layout -->
 
           <input type="radio" id="Private" value="Private" v-model="channelVisibility" hidden />
           <label for="Private">Private</label>
         </div>
       </div>
-
       <div class="input-group" v-if="checkPassword">
         <input
           id="input-password"
@@ -48,9 +45,9 @@
       <div class="checkbox-container" v-if="!isNumberSelection">
         <label for="check-box">
           Password
+		</label>
           <input type="checkbox" id="check-box" v-model="checkPassword" />
-        </label>
-      </div>
+		</div>
 
       <div class="button-group">
         <button class="submit-button" @click="isNumberSelection ? submitNumber() : submit()">
@@ -266,6 +263,7 @@ watch(numberValue, (newValue) => {
   justify-content: flex-end;
   margin-bottom: 0.8rem;
 }
+
 
 .checkbox-container label {
   margin-right: 0.5rem;

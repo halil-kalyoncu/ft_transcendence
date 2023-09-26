@@ -286,6 +286,7 @@ onMounted(async () => {
   font-size: 0.75rem;
   cursor: pointer;
 }
+
 .channel-name {
   margin: 0;
   padding: 0;
