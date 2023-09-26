@@ -53,13 +53,13 @@ export class Ball {
     this.dy = this.speed * Math.sin(bounceAngle);
     this.dx = -this.dx;
   }
-  updateSpeed(newSpeed: number): void{
-	const speedFactor = newSpeed / this.speed;
+  updateSpeed(newSpeed: number): void {
+    const speedFactor = newSpeed / this.speed;
 
-	this.speed = newSpeed;
+    this.speed = newSpeed;
 
-	this.dx *= speedFactor;
-	this.dy *= speedFactor;
+    this.dx *= speedFactor;
+    this.dy *= speedFactor;
   }
   handleBallCollision(
     nextBallX: number,
@@ -132,12 +132,11 @@ export class Ball {
     let nextBallY = this.y + this.dy;
 
     if (this.scoreGoal(room, nextBallX, server)) {
-		this.resetBall();
-		room.paddleA.setHeight(100);
-		room.paddleB.setHeight(100);
-		server.emit('resetPaddle');
-	}
-    else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
+      this.resetBall();
+      room.paddleA.setHeight(100);
+      room.paddleB.setHeight(100);
+      server.emit('resetPaddle');
+    } else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;
     else if (this.handleBallCollision(nextBallX, nextBallY, room, 'A')) {
@@ -176,7 +175,7 @@ export class Ball {
         !this.handlePowerUpCollision(nextBallX, nextBallY, powerup)
       ) {
         server.emit('destroyPowerUp', { id: powerup.id });
-      } 
+      }
     }
     return {
       x: this.x,

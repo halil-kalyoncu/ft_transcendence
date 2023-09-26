@@ -67,28 +67,27 @@ export class EventsGateway {
           this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
         }
         for (let powerup of room.powerups) {
-			// if (room.ball.handlePowerUpCollision(room.ball.x, room.ball.y, powerup)) {
-			// 	let target;
-			// 	if (room.ball.dx > 0) target = 'left';
-			// 	else target = 'right';
-		
-			// 	this.server.emit('activatePowerUp', {
-			// 		player: target,
-			// 		type: 'increasePaddleHeight',
-			// 	});
-			// 	this.server.emit('destroyPowerUp', { id: powerup.id });
-			// 	}
-			// 	if (
-			// 	powerup.y + powerup.hgt >= room.ball.fieldHeight &&
-			// 	!room.ball.handlePowerUpCollision(room.ball.x, room.ball.y, powerup)
-			// 	) {
-			// 	console.log('powerupid: ', powerup.id);
-			// 	this.server.emit('destroyPowerUp', { id: powerup.id });
-			// } 
+          // if (room.ball.handlePowerUpCollision(room.ball.x, room.ball.y, powerup)) {
+          // 	let target;
+          // 	if (room.ball.dx > 0) target = 'left';
+          // 	else target = 'right';
+
+          // 	this.server.emit('activatePowerUp', {
+          // 		player: target,
+          // 		type: 'increasePaddleHeight',
+          // 	});
+          // 	this.server.emit('destroyPowerUp', { id: powerup.id });
+          // 	}
+          // 	if (
+          // 	powerup.y + powerup.hgt >= room.ball.fieldHeight &&
+          // 	!room.ball.handlePowerUpCollision(room.ball.x, room.ball.y, powerup)
+          // 	) {
+          // 	console.log('powerupid: ', powerup.id);
+          // 	this.server.emit('destroyPowerUp', { id: powerup.id });
+          // }
 
           powerup.moveDown();
           this.server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
-
         }
         // this.server.emit('ballPosition', newBallPos);
 
@@ -149,20 +148,32 @@ export class EventsGateway {
 
     //first user that connects to the gateway creates the entry in the rooms array
     if (!this.rooms.has(queryMatchId)) {
-      this.rooms.set(queryMatchId, new Room(queryMatchId, socket.data.match.goalsToWin, socket.data.match.leftUserId, socket.data.match.rightUserId));
+      this.rooms.set(
+        queryMatchId,
+        new Room(
+          queryMatchId,
+          socket.data.match.goalsToWin,
+          socket.data.match.leftUserId,
+          socket.data.match.rightUserId,
+        ),
+      );
       const powerupNames: string[] = await this.matchService.getPowerupNames(
         queryMatchId,
       );
-	  console.log(powerupNames)
-	  intervalId = setInterval(async () => {
-		let powerUpIndex = Math.floor(Math.random() * (powerupNames.length));
-		console.log(powerUpIndex)
-		let x = Math.floor(Math.random() * ((room.ball.fieldWidth - 70) - 70 + 1)) + 70
-		let y = -70
-		this.server.emit("newPowerUp", { powerUp: powerupNames[powerUpIndex], x: x, y: y })
-	  }, 10000);
+      console.log(powerupNames);
+      intervalId = setInterval(async () => {
+        let powerUpIndex = Math.floor(Math.random() * powerupNames.length);
+        console.log(powerUpIndex);
+        let x =
+          Math.floor(Math.random() * (room.ball.fieldWidth - 70 - 70 + 1)) + 70;
+        let y = -70;
+        this.server.emit('newPowerUp', {
+          powerUp: powerupNames[powerUpIndex],
+          x: x,
+          y: y,
+        });
+      }, 10000);
     }
-
 
     const room = this.rooms.get(queryMatchId);
     if (queryUserId === socket.data.match.leftUserId) {
@@ -186,20 +197,20 @@ export class EventsGateway {
     if (room.gameIsRunning) {
       room.gameIsRunning = false;
       if (socket.data.isLeftPlayer) {
-		  room.leftPlayerDisconnect = true;
-		} else {
-			room.rightPlayerDisconnect = true;
-		}
-		
-		const match = await this.matchService.finishMatch(room);
-		
-		if (socket.data.isLeftPlayer) {
-			socket.to(room.socketIds[1]).emit('gameFinished', match);
-		} else {
-			socket.to(room.socketIds[0]).emit('gameFinished', match);
-		}
+        room.leftPlayerDisconnect = true;
+      } else {
+        room.rightPlayerDisconnect = true;
+      }
+
+      const match = await this.matchService.finishMatch(room);
+
+      if (socket.data.isLeftPlayer) {
+        socket.to(room.socketIds[1]).emit('gameFinished', match);
+      } else {
+        socket.to(room.socketIds[0]).emit('gameFinished', match);
+      }
     }
-	clearInterval(intervalId);
+    clearInterval(intervalId);
     socket.disconnect();
   }
 
@@ -242,7 +253,6 @@ export class EventsGateway {
         'paddleMove',
         { playerId: 'left', newPos: paddleAPos.y },
       );
-
 
       //this.server.emit('paddleMove', { playerId: 'left', newPos: paddleAPos.y }); ->	this would send to all clients currently on the server,
       //																					we only want to send to the two users that are playing the match
@@ -343,19 +353,19 @@ export class EventsGateway {
     }
     if (data.type == 'increasePaddleHeight') {
       target.setHeight(400);
-	}
-	if (data.type == 'decreasePaddleHeight') {
-		target.setHeight(80);
-	}
+    }
+    if (data.type == 'decreasePaddleHeight') {
+      target.setHeight(80);
+    }
     if (data.type == 'magnet') {
       if (data.player == 'left') room.ball.magnet = 1;
       else room.ball.magnet = 2;
     }
     if (data.type == 'slowBall') {
-		room.ball.updateSpeed(2);
+      room.ball.updateSpeed(2);
     }
-	if (data.type == 'fastBall') {
-		room.ball.updateSpeed(9);
+    if (data.type == 'fastBall') {
+      room.ball.updateSpeed(9);
     }
   }
 
@@ -384,7 +394,6 @@ export class EventsGateway {
 
     socket.emit('gameFinished', match);
   }
-
 
   //Helperfunctions
   private sendToOpponent(

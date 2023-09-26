@@ -200,33 +200,81 @@ export class MatchService {
     });
   }
 
-  async finishMatch(room: Room): Promise<Match | null> {
-    let gameState: MatchState;
-	let flawlessVictory: number = 0;
+  // Determine the state of the match
+  determineMatchState(room: Room): {
+    state: MatchState;
+    flawlessVictory: number;
+  } {
+    let flawlessVictory = 0;
+    let state: MatchState;
 
-	console.log("right:", room.rightPlayerId);
-	console.log("left:", room.leftPlayerId);
     if (room.leftPlayerGoals === 5) {
-		if (room.rightPlayerGoals === 0)
-			flawlessVictory = room.leftPlayerId;
-      gameState = 'WINNERLEFT';
+      if (room.rightPlayerGoals === 0) flawlessVictory = room.leftPlayerId;
+      state = 'WINNERLEFT';
     } else if (room.rightPlayerGoals === 5) {
-		if (room.leftPlayerGoals === 0)
-			flawlessVictory = room.rightPlayerId;
-      gameState = 'WINNERRIGHT';
+      if (room.leftPlayerGoals === 0) flawlessVictory = room.rightPlayerId;
+      state = 'WINNERRIGHT';
     } else if (room.leftPlayerDisconnect) {
-      gameState = 'DISCONNECTLEFT';
+      state = 'DISCONNECTLEFT';
     } else {
-      gameState = 'DISCONNECTRIGHT';
+      state = 'DISCONNECTRIGHT';
     }
 
-    const updatedMatch = await this.prisma.match.update({
-      where: { id: room.id },
+    return { state, flawlessVictory };
+  }
+
+  // Increment the goals of a player
+  async updatePlayerGoals(userId: number, goals: number): Promise<void> {
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
       data: {
-        state: gameState,
+        totalGoals: {
+          increment: goals,
+        },
+      },
+    });
+  }
+
+  async updateTotalWins(userId: number): Promise<void> {
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        totalWins: {
+          increment: 1,
+        },
+      },
+    });
+  }
+  // Update flawless victory count
+  async updateFlawlessVictory(userId: number): Promise<void> {
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        flawlessVictories: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  async finishMatch(room: Room): Promise<Match | null> {
+    const { state, flawlessVictory } = this.determineMatchState(room);
+
+    const updatedMatch = await this.prisma.match.update({
+      where: {
+        id: room.id,
+      },
+      data: {
+        state: state,
         finishedAt: new Date(),
-		goalsLeftPlayer: room.leftPlayerGoals,
-		goalsRightPlayer: room.rightPlayerGoals,
+        goalsLeftPlayer: room.leftPlayerGoals,
+        goalsRightPlayer: room.rightPlayerGoals,
       },
       include: {
         leftUser: true,
@@ -234,41 +282,22 @@ export class MatchService {
       },
     });
 
-	//increment left player total goals
-	await this.prisma.user.update({
-		where: { id: updatedMatch.leftUserId },
-		data: {
-			totalGoals: {
-				increment: room.leftPlayerGoals
-			}
-		}
-	});
-	
-	//increment right player total goals
-	await this.prisma.user.update({
-		where: { id: updatedMatch.rightUserId },
-		data: {
-			totalGoals: {
-				increment: room.rightPlayerGoals
-			}
-		}
-	});
+    await this.updatePlayerGoals(updatedMatch.leftUserId, room.leftPlayerGoals);
 
-	if (flawlessVictory && flawlessVictory !== 0) {
-		console.log(flawlessVictory);
-		await this.prisma.user.update({
-			where: { id: flawlessVictory },
-			data: {
-				flawlessVictories: {
-					increment: 1
-				}
-			}
-		});
-	}
+    await this.updatePlayerGoals(
+      updatedMatch.rightUserId,
+      room.rightPlayerGoals,
+    );
 
+    if (flawlessVictory && flawlessVictory !== 0) {
+      await this.updateFlawlessVictory(flawlessVictory);
+    }
 
-	return updatedMatch;
+    if (state === 'WINNERLEFT' || state === 'DISCONNECTRIGHT')
+      this.updateTotalWins(updatedMatch.leftUserId);
+    else this.updateTotalWins(updatedMatch.rightUserId);
 
+    return updatedMatch;
   }
 
   async getPowerupNames(id: number): Promise<string[]> {
