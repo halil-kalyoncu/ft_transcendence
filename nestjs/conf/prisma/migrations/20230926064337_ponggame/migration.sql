@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "AchievementState" AS ENUM ('NONE', 'BRONZE', 'SILVER', 'GOLD');
+
+-- CreateEnum
 CREATE TYPE "FriendshipStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
 
 -- CreateEnum
@@ -20,6 +23,28 @@ CREATE TYPE "MatchType" AS ENUM ('LADDER', 'CUSTOM');
 CREATE TYPE "MatchState" AS ENUM ('CREATED', 'INVITED', 'ACCEPTED', 'STARTED', 'DISCONNECTLEFT', 'DISCONNECTRIGHT', 'WINNERLEFT', 'WINNERRIGHT');
 
 -- CreateTable
+CREATE TABLE "Achievement" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "scoreBronze" INTEGER NOT NULL DEFAULT 0,
+    "scoreSilver" INTEGER NOT NULL DEFAULT 0,
+    "scoreGold" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "Achievement_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserAchievements" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "achievementId" INTEGER NOT NULL,
+    "progress" INTEGER NOT NULL DEFAULT 0,
+    "state" "AchievementState" NOT NULL,
+
+    CONSTRAINT "UserAchievements_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "username" TEXT NOT NULL,
@@ -27,6 +52,9 @@ CREATE TABLE "User" (
     "ladderLevel" INTEGER NOT NULL DEFAULT 1000,
     "enabled2FA" BOOLEAN NOT NULL DEFAULT false,
     "secret2FA" TEXT,
+    "totalGoals" INTEGER NOT NULL DEFAULT 0,
+    "flawlessVictories" INTEGER NOT NULL DEFAULT 0,
+    "totalWins" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -184,6 +212,15 @@ CREATE TABLE "Matchmaking" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Achievement_name_key" ON "Achievement"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserAchievements_userId_key" ON "UserAchievements"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserAchievements_achievementId_key" ON "UserAchievements"("achievementId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
@@ -230,6 +267,12 @@ CREATE UNIQUE INDEX "Matchmaking_userId_key" ON "Matchmaking"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Matchmaking_opponentUserId_key" ON "Matchmaking"("opponentUserId");
+
+-- AddForeignKey
+ALTER TABLE "UserAchievements" ADD CONSTRAINT "UserAchievements_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserAchievements" ADD CONSTRAINT "UserAchievements_achievementId_fkey" FOREIGN KEY ("achievementId") REFERENCES "Achievement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ConnectedUser" ADD CONSTRAINT "ConnectedUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
