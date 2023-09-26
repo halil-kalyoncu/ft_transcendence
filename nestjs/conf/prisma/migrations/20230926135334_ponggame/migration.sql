@@ -39,7 +39,7 @@ CREATE TABLE "UserAchievements" (
     "userId" INTEGER NOT NULL,
     "achievementId" INTEGER NOT NULL,
     "progress" INTEGER NOT NULL DEFAULT 0,
-    "state" "AchievementState" NOT NULL,
+    "state" "AchievementState" NOT NULL DEFAULT 'NONE',
 
     CONSTRAINT "UserAchievements_pkey" PRIMARY KEY ("id")
 );
@@ -52,9 +52,6 @@ CREATE TABLE "User" (
     "ladderLevel" INTEGER NOT NULL DEFAULT 1000,
     "enabled2FA" BOOLEAN NOT NULL DEFAULT false,
     "secret2FA" TEXT,
-    "totalGoals" INTEGER NOT NULL DEFAULT 0,
-    "flawlessVictories" INTEGER NOT NULL DEFAULT 0,
-    "totalWins" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -213,6 +210,9 @@ CREATE TABLE "Matchmaking" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Achievement_name_key" ON "Achievement"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserAchievements_userId_achievementId_key" ON "UserAchievements"("userId", "achievementId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");

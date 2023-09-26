@@ -37,10 +37,13 @@ model UserAchievements {
     userId        Int
     achievementId Int
     progress      Int              @default(0)
-    state         AchievementState
+    state         AchievementState @default(NONE)
+
 
     user        User        @relation(fields: [userId], references: [id])
     achievement Achievement @relation(fields: [achievementId], references: [id])
+
+	@@unique([userId, achievementId])
 }
 
 model User {
@@ -52,11 +55,6 @@ model User {
     secret2FA   String?
 
     connectedUser ConnectedUser?
-
-    // achievements
-    totalGoals        Int @default(0)
-    flawlessVictories Int @default(0)
-    totalWins         Int @default(0)
 
     achievements UserAchievements[]
 

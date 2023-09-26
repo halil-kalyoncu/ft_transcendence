@@ -5,11 +5,17 @@ import {
 } from '@nestjs/common';
 import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, User, ChannelInvitationStatus } from '@prisma/client';
+import {
+  Prisma,
+  User,
+  ChannelInvitationStatus,
+  Achievement,
+} from '@prisma/client';
 import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
 import { ChannelInviteeUserDto } from '../../../chat/dto/channelInvitation.dto';
 import * as fs from 'fs';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
+import { UserAchievements } from 'src/_gen/prisma-class/user_achievements';
 
 @Injectable()
 export class UserService {
@@ -38,9 +44,38 @@ export class UserService {
 
   async create(newUser: Prisma.UserCreateInput): Promise<User> {
     try {
-      return await this.prisma.user.create({
+      const user: User = await this.prisma.user.create({
         data: newUser,
       });
+
+      const achievements: Achievement[] =
+        await this.prisma.achievement.findMany();
+      const userAchievements = await Promise.all(
+        achievements.map(async (achievement) => {
+          const existingUserAchievent =
+            await this.prisma.userAchievements.findUnique({
+              where: {
+                userId_achievementId: {
+                  userId: user.id,
+                  achievementId: achievement.id,
+                },
+              },
+            });
+
+          if (existingUserAchievent) {
+            return;
+          }
+
+          return await this.prisma.userAchievements.create({
+            data: {
+              userId: user.id,
+              achievementId: achievement.id,
+            },
+          });
+        }),
+      );
+      console.log(userAchievements);
+      return user;
     } catch (error) {
       //P2002 is the prisma error code for the unique constraint
       if (error.code === 'P2002') {

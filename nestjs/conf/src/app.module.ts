@@ -8,7 +8,7 @@ import { MatchModule } from './match/match.module';
 import { MatchmakingModule } from './matchmaking/matchmaking.module';
 import { PowerupModule } from './powerup/powerup.module';
 import { GameModule } from './game/game.module';
-
+import { AchievementModule } from './achievement/achievement.module';
 
 @Module({
   imports: [
@@ -21,6 +21,7 @@ import { GameModule } from './game/game.module';
     MatchmakingModule,
     PowerupModule,
     GameModule,
+    AchievementModule,
   ],
   controllers: [],
   providers: [],
