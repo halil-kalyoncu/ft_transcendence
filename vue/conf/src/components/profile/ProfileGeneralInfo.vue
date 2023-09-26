@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineProps, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 
