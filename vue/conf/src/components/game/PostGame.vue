@@ -1,14 +1,14 @@
 <template>
 	<div class="field" >
 		<div v-if="playerAScore > playerBScore" class="winner">
-			<div class="headline">{{ playerA }} has won!</div>
+			<div class="headline">{{ shortenName(playerA) }} has won!</div>
 			<div class="trophys">
 				<div class="trophyA" :style="{backgroundImage: `url(${image[0]})`}"></div>
 				<div class="trophyB" :style="{backgroundImage: `url(${image[1]})`}"></div>
 			</div>
 		</div>
 		<div v-else-if="playerAScore < playerBScore" class="winner">
-			<div class="headline">{{ playerB }} has won!</div>
+			<div class="headline">{{ shortenName(playerB) }} has won!</div>
 			<div class="trophys">
 				<div class="trophyA" :style="{backgroundImage: `url(${image[1]})`}"></div>
 				<div class="trophyB" :style="{backgroundImage: `url(${image[0]})`}"></div>
@@ -19,8 +19,8 @@
 			<div class="trophys"></div>
 		</div>
 		<div class="players">
-			<div class="playerA">{{ playerA }}</div>
-			<div class="playerB">{{ playerB }}</div>
+			<div class="playerA">{{ shortenName(playerA) }}</div>
+			<div class="playerB">{{ shortenName(playerB) }}</div>
 		</div>
 		<div class="score">{{ playerAScore + ' : ' + playerBScore }}</div>
 	</div>
@@ -28,8 +28,15 @@
 
 
 <script setup lang="ts">
+
 import Trophy from '../../assets/trophy.png'
 import SadFace from '../../assets/sad_face.png'
+const shortenName = (name: string) => {
+	if (name.length > 6)
+		return name.substring(0, 6) + "...";
+	return name;
+}
+
 let image = [Trophy, SadFace]
 const props = defineProps<{
 	playerA: string
@@ -38,7 +45,6 @@ const props = defineProps<{
 	playerBScore: number
 }>()
 </script>
-
 
 <style scoped>
 .field{

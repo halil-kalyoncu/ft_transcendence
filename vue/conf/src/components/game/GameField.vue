@@ -1,33 +1,35 @@
 <template>
-  <div v-if="!matchResult" class="field" ref="gameField">
-    <div class="left-border"></div>
-    <div class="right-border"></div>
-	<div v-if="countdown === -1" class="waiting">
-	  <p>Waiting for opponent... {{ formattedTimer }}</p>
+	<div v-if="!matchResult" >
+	<PlayerView
+		ref="playerview"
+		:playerA="playerAName"
+		:playerB="playerBName"
+		:playerAScore="playerAScore"
+		:playerBScore="playerBScore"
+		/>
+	<div class="field" ref="gameField">
+		<div class="left-border"></div>
+		<div class="right-border"></div>
+		<div v-if="countdown === -1" class="waiting">
+			<p>Waiting for opponent... {{ formattedTimer }}</p>
+		</div>
+		<div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
+			<p>{{ countdown }}</p>
+		</div>
+		<GameBall ref="ball" />
+		<GamePaddle ref="paddleA" />
+		<GamePaddle ref="paddleB" />
+		<PowerUp
+		v-for="powerup in PowerUps"
+		:id="powerup.id"
+		:x="powerup.x"
+		:y="powerup.y"
+		:color="powerup.color"
+		:index="powerup.index"
+		:type="powerup.type"
+		/>
 	</div>
-	<div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
-	  <p>{{ countdown }}</p>
 	</div>
-    <PlayerView
-      ref="playerview"
-      :playerA="playerAName"
-      :playerB="playerBName"
-      :playerAScore="playerAScore"
-      :playerBScore="playerBScore"
-    />
-    <GameBall ref="ball" />
-    <GamePaddle ref="paddleA" />
-    <GamePaddle ref="paddleB" />
-    <PowerUp
-      v-for="powerup in PowerUps"
-      :id="powerup.id"
-      :x="powerup.x"
-      :y="powerup.y"
-      :color="powerup.color"
-      :index="powerup.index"
-	  :type="powerup.type"
-    />
-  </div>
   <div v-else>
 	<PostGame
 		:playerA="playerAName"
@@ -87,6 +89,7 @@ let playerAName = ref<string>('')
 let playerBName = ref<string>('')
 let playerAScore = ref<number>(0)
 let playerBScore = ref<number>(0)
+// let goalsToBeat = ref<number>(0)
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
