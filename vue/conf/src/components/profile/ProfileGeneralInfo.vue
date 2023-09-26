@@ -1,7 +1,8 @@
 <template>
   <section class="general-info">
     <div class="profile-section">
-      <img class="profile-image" src="../../assets/avatar-1.png" alt="Profile" />
+      <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />
+	  <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
       <span class="header-username profile-username">{{ username }}</span>
     </div>
     <div class="stats-section">
@@ -18,9 +19,36 @@
 </template>
 
 <script lang="ts" setup>
+import { defineProps, computed, onMounted } from 'vue'
+import { useUserStore } from '../../stores/userInfo'
+import { useNotificationStore } from '../../stores/notification'
+
 const props = defineProps({
   username: String
 })
+
+const notificationStore = useNotificationStore()
+const userStore = useUserStore()
+const userAvatar = computed(() => userStore.avatarImageData)
+
+const avatarSrc = computed(() => {
+  if (userAvatar.value === null) {
+    return ''
+  }
+  return URL.createObjectURL(userAvatar.value)
+})
+
+onMounted(async () => {
+  try{
+	await userStore.mountStore()
+  } catch (error){
+	notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false)
+	  return
+  }
+})
+
 </script>
 
 <style>
