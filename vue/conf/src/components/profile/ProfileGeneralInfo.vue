@@ -2,7 +2,7 @@
   <section class="general-info">
     <div class="profile-section">
       <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />
-	  <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
+      <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
       <span class="header-username profile-username">{{ username }}</span>
     </div>
     <div class="stats-section">
@@ -39,16 +39,16 @@ const avatarSrc = computed(() => {
 })
 
 onMounted(async () => {
-  try{
-	await userStore.mountStore()
-  } catch (error){
-	notificationStore.showNotification(
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
       "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
-      false)
-	  return
+      false
+    )
+    return
   }
 })
-
 </script>
 
 <style>

@@ -43,11 +43,9 @@
       </div>
 
       <div class="checkbox-container" v-if="!isNumberSelection">
-        <label for="check-box">
-          Password
-		</label>
-          <input type="checkbox" id="check-box" v-model="checkPassword" />
-		</div>
+        <label for="check-box"> Password </label>
+        <input type="checkbox" id="check-box" v-model="checkPassword" />
+      </div>
 
       <div class="button-group">
         <button class="submit-button" @click="isNumberSelection ? submitNumber() : submit()">
@@ -263,7 +261,6 @@ watch(numberValue, (newValue) => {
   justify-content: flex-end;
   margin-bottom: 0.8rem;
 }
-
 
 .checkbox-container label {
   margin-right: 0.5rem;

@@ -17,7 +17,6 @@ export class ChannelInvitationDto {
 
   @IsOptional()
   ChannelVisibility: ChannelVisibility;
-
 }
 
 export class AnswerChannelInvitationDto {

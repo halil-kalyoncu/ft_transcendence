@@ -89,7 +89,6 @@ const images = ref([
 ])
 const qrCodeImage = ref('')
 
-
 const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {
     uploadedAvatarFile.value = avatarInput.value.files[0]
