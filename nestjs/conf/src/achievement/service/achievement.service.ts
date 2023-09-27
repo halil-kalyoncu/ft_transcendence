@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserAchievements } from '@prisma/client';
+import { Achievement } from '@prisma/client';
 
 @Injectable()
 export class AchievementService {
@@ -60,18 +61,18 @@ export class AchievementService {
     return achievement.progress;
   }
 
-  async getAchievements(userId: number): Promise<UserAchievements[]> {
+  async getUserAchievements(userId: number): Promise<UserAchievements[]> {
     return await this.prisma.userAchievements.findMany({
       where: {
         userId: userId,
       },
-      select: {
-        id: true,
-        userId: true,
-        achievementId: true,
-        progress: true,
-        state: true,
-      },
+	  include: {
+		achievement: true
+	  }
     });
+  }
+
+  async getAchievements(): Promise<Achievement[]> {
+    return await this.prisma.achievement.findMany()
   }
 }

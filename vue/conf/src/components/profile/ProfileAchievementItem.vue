@@ -1,123 +1,104 @@
 <template>
-	<div class="achievement">
-		<img :src="`../src/assets/achievement-${achievementType}.png`" alt="Achievement" class="achievement-image" />
-		<div class="achievement-content">
-			<h2 class="achievement-title">{{ achievementTitle }}</h2>
-			<p class="achievement-progress">{{ achievementProgress }}</p>
-			<div class="progress-bar">
-				<div class="progress-bar-fill" :style="{ width: achievementProg + '%' }"></div>
-			</div>
-		</div>
-	</div>
+  <div class="achievement" :style="{ background: backgroundColor }">
+    <img
+      :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
+      alt="Achievement"
+      class="achievement-image"
+    />
+    <div class="achievement-content">
+      <h2 class="achievement-title text">{{ achievement.achievement.name }}</h2>
+      <p class="achievement-progress text">{{ achievement.progress }}</p>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" :style="{ width: currentProgress + '%' }"></div>
+      </div>
+    </div>
+  </div>
 </template>
-  
+
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
+import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
 
-type Props = {
-	achievementType: number;
-	achievementProgress: number;
-}
+const props = defineProps<{ achievement: UserAchievementI }>()
 
-const props = defineProps<Props>();
+const currentProgress = computed(() => {
+  let currentMax = props.achievement.achievement.scoreGold
+  if (props.achievement.progress < props.achievement.achievement.scoreBronze) {
+    currentMax = props.achievement.achievement.scoreBronze
+  } else if (props.achievement.progress < props.achievement.achievement.scoreSilver) {
+    currentMax = props.achievement.achievement.scoreSilver
+  } else if (props.achievement.progress < props.achievement.achievement.scoreGold) {
+    currentMax = props.achievement.achievement.scoreGold
+  }
 
-const achievementMap = ref({
-	1: { 
-		title: "Total Goals", 
-		tiers: {
-			none: 0,
-			bronze: 10,
-			silver: 25,
-			gold: 50
-		}
-	},
-	2: { 
-		title: "Flawless Victories", 
-		tiers: {
-			none: 0,
-			bronze: 2,
-			silver: 4,
-			gold: 6
-		}
-	},
-	3: { 
-		title: "Total Wins", 
-		tiers: {
-			none: 0,
-			bronze: 3,
-			silver: 7,
-			gold: 10
-		}
-	}
-});
+  const progressRatio = props.achievement.progress / currentMax
+  return Math.min(100, progressRatio * 100)
+})
 
-const achievementTitle = computed(() => achievementMap.value[props.achievementType].title);
-
-const achievementProg = computed(() => {
-	const tiers = achievementMap.value[props.achievementType].tiers;
-	let currentMax = tiers.gold;
-	if (props.achievementProgress < tiers.bronze) {
-		currentMax = tiers.bronze;
-	} else if (props.achievementProgress < tiers.silver) {
-		currentMax = tiers.silver;
-	} else if (props.achievementProgress < tiers.gold) {
-		currentMax = tiers.gold;
-	}
-
-	const progressRatio = props.achievementProgress / currentMax;
-	return Math.min(100, progressRatio * 100);
-});
+const backgroundColor = computed(() => {
+  if (props.achievement.progress < props.achievement.achievement.scoreBronze) {
+    return 'linear-gradient(to right, #8c7a58, #bfa980)' // Background for bronze
+  } else if (props.achievement.progress < props.achievement.achievement.scoreSilver) {
+    return 'linear-gradient(to right, #b0b0b0, #d7d7d7)' // Background for silver
+  } else {
+    return 'linear-gradient(to right, #051139, #0d2265)' // Background for gold
+  }
+})
 </script>
-  
+
 <style>
 .achievement {
-	display: flex;
-	align-items: center;
-	background: linear-gradient(to right, #051139, #0d2265);
-	opacity: 0.9;
-	padding: 1rem;
-	color: white;
-	border-radius: 0.25rem;
-	margin: 0 1.5rem 1.5rem 0;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(to right, #051139, #0d2265);
+  opacity: 0.9;
+  padding: 1rem;
+  color: white;
+  border-radius: 0.25rem;
+  margin: 0 1.5rem 1.5rem 0;
 }
 
 .achievement-image {
-	width: 100px;
-	height: 100px;
-	object-fit: cover;
-	margin-right: 1rem;
-	border: 0.1rem solid gold;
-	border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  margin-right: 1rem;
+  border: 0.1rem solid gold;
+  border-radius: 50%;
 }
 
 .achievement-content {
-	display: flex;
-	flex-direction: column;
-	min-width: 40%;
+  display: flex;
+  flex-direction: column;
+  min-width: 80%;
 }
 
 .achievement-title {
-	font-size: 1.5rem;
-	margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .achievement-description {
-	font-size: 1rem;
-	margin-bottom: 1rem;
-	/* Added some margin to space out the progress bar */
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  /* Added some margin to space out the progress bar */
 }
 
 .progress-bar {
-	height: 1rem;
-	background: #333;
-	border-radius: 5px;
-	overflow: hidden;
+  height: 1rem;
+  background: #333;
+  border-radius: 5px;
+  overflow: hidden;
 }
 
 .progress-bar-fill {
-	height: 100%;
-	background: gold;
-	/* color for the progress */
-	transition: width 0.4s ease;
-}</style>
-  
+  height: 100%;
+  background: gold;
+  /* color for the progress */
+  transition: width 0.4s ease;
+}
+
+.text {
+  color: black;
+}
+</style>

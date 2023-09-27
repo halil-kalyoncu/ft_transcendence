@@ -6,7 +6,8 @@ import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useRoute } from 'vue-router'
 import type { MatchI } from '../../model/match/match.interface'
-import { AchievementI } from '../../model/achievement/achievement.interface'
+import type { AchievementI } from '../../model/achievement/achievement.interface'
+import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
 
 const route = useRoute()
 const userId = route.params.userId as string
@@ -19,16 +20,16 @@ const username = route.params.username as string
 // }>();
 
 // const achievements = ref([
-	//   { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
-	//   { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
-	//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-	//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-	//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-	//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' }
-	// ])
-	
+//   { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
+//   { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
+//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' }
+// ])
+
 const matchHistory = ref<MatchI[] | null>(null)
-const achievements = ref<AchievementI[] | null>(null)
+const achievements = ref<UserAchievementI[] | null>(null)
 
 async function getMatchHistory(): Promise<void> {
   try {
@@ -57,7 +58,7 @@ async function getMatchHistory(): Promise<void> {
 async function getAchievments(): Promise<void> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/achievement/get-achievements?userId=${userId}`,
+      `http://localhost:3000/api/achievement/get-user-achievements?userId=${userId}`,
       {
         method: 'GET',
         headers: {
@@ -78,8 +79,6 @@ async function getAchievments(): Promise<void> {
   }
 }
 
-
-
 onMounted(() => {
   getMatchHistory()
   getAchievments()
@@ -96,10 +95,7 @@ onMounted(() => {
           <ProfileAchievementItem
             v-for="achievement in achievements"
             :key="achievement.id"
-			:achievementType="achievement.achievementId"
-            :achievementTitle="achievement.achievementId"
-            :achievementDescription="achievement.achievementId"
-            :achievementProgress="achievement.progress"
+            :achievement="achievement"
           />
         </ScrollViewer>
       </div>
