@@ -20,10 +20,10 @@ export class AchievementController {
     private AchievementService: AchievementService,
   ) {}
 
-  @Get('getAchievements')
+  @Get('get-achievements')
   async getAchievements(
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<UserAchievements[]> {
+  ): Promise<UserAchievements[] | null> {
     try {
       return await this.AchievementService.getAchievements(userId);
     } catch (error) {

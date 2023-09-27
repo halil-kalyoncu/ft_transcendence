@@ -6,6 +6,7 @@ import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useRoute } from 'vue-router'
 import type { MatchI } from '../../model/match/match.interface'
+import { AchievementI } from '../../model/achievement/achievement.interface'
 
 const route = useRoute()
 const userId = route.params.userId as string
@@ -17,16 +18,17 @@ const username = route.params.username as string
 //   username: string;
 // }>();
 
-const achievements = ref([
-  { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
-  { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' }
-])
-
+// const achievements = ref([
+	//   { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
+	//   { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
+	//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+	//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+	//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
+	//   { type: 2, title: 'Second Achievement', description: 'This is the second achievement' }
+	// ])
+	
 const matchHistory = ref<MatchI[] | null>(null)
+const achievements = ref<AchievementI[] | null>(null)
 
 async function getMatchHistory(): Promise<void> {
   try {
@@ -52,10 +54,35 @@ async function getMatchHistory(): Promise<void> {
   }
 }
 
+async function getAchievments(): Promise<void> {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/achievement/get-achievements?userId=${userId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    // console.log("RESPONSE:", userId.value)
+    if (response.ok) {
+      const matchData = await response.json()
+
+      achievements.value = matchData
+
+      console.log('RESPONSE:', matchData)
+    }
+  } catch (error) {
+    console.error('Failed to fetch achievement history:', error)
+  }
+}
+
 
 
 onMounted(() => {
   getMatchHistory()
+  getAchievments()
 })
 </script>
 
@@ -68,9 +95,11 @@ onMounted(() => {
         <ScrollViewer :maxHeight="'50vh'">
           <ProfileAchievementItem
             v-for="achievement in achievements"
-            :achievementType="achievement.type"
-            :achievementTitle="achievement.title"
-            :achievementDescription="achievement.description"
+            :key="achievement.id"
+			:achievementType="achievement.achievementId"
+            :achievementTitle="achievement.achievementId"
+            :achievementDescription="achievement.achievementId"
+            :achievementProgress="achievement.progress"
           />
         </ScrollViewer>
       </div>
