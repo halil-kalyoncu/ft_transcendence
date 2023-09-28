@@ -53,6 +53,9 @@ export class MatchService {
       where: {
         OR: [{ leftUserId: userid }, { rightUserId: userid }],
       },
+	  orderBy: {
+		createdAt: 'desc'
+	  },
       include: {
         leftUser: true,
         rightUser: true,
