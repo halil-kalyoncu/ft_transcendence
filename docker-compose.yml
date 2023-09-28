@@ -35,6 +35,8 @@ services:
       - ./vue/conf:/pong_game/frontend/src/app
       - /pong_game/frontend/src/app/node_modules/
     command: npm run dev
+    env_file:
+      - .env.production
     restart: unless-stopped
     ports:
       - 4200:4200
