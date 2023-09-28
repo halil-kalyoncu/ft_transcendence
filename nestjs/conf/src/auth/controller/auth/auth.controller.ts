@@ -15,6 +15,9 @@ export class AuthController {
 
   @Get('callback')
   async fortyTwoCallback(@Query('code') code: string, @Res() res) {
+	const ipAddress = process.env.IP_ADDRESS;
+	const frontendPort = process.env.FRONTEND_PORT;
+
     try {
       const response = await axios.post(
         'https://api.intra.42.fr/oauth/token',
@@ -46,7 +49,7 @@ export class AuthController {
           user = await this.userService.create({ intraLogin });
         }
         return res.redirect(
-          `http://localhost:4200/register/${user.intraLogin}`,
+          `http://${ipAddress}:${frontendPort}/register/${user.intraLogin}`,
         );
       }
 
@@ -54,19 +57,19 @@ export class AuthController {
         user.id,
       );
       if (connectedUser) {
-        return res.redirect('http://localhost:4200?error=already_signedIn');
+        return res.redirect(`http://${ipAddress}:${frontendPort}?error=already_signedIn`);
       }
 
       if (user.enabled2FA) {
         return res.redirect(
-          `http://localhost:4200/twoFAAuth/${user.intraLogin}`,
+          `http://${ipAddress}:${frontendPort}/twoFAAuth/${user.intraLogin}`,
         );
       }
 
       const jwt: string = await this.jwtAuthService.generateJwt(user);
-      return res.redirect(`http://localhost:4200/validateToken/${btoa(jwt)}`);
+      return res.redirect(`http://${ipAddress}:${frontendPort}/validateToken/${btoa(jwt)}`);
     } catch (error) {
-      return res.redirect('http://localhost:4200?error=authentication_failed');
+      return res.redirect(`http://${ipAddress}:${frontendPort}?error=authentication_failed`);
     }
   }
 }

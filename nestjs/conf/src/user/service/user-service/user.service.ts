@@ -38,7 +38,6 @@ export class UserService {
   }
 
   async register(userInput: Prisma.UserCreateInput): Promise<string> {
-    console.log('register service');
     let user: User | null = await this.findByUsername(userInput.username);
 
     if (user) {
@@ -55,9 +54,35 @@ export class UserService {
       },
     });
 
-    console.log(user);
     if (!user || !user.username) {
-      console.log(':(');
+      throw new InternalServerErrorException();
+    }
+    return await this.jwtAuthService.generateJwt(user);
+  }
+
+  async registerWithAvatar(
+    file: Express.Multer.File,
+    userInput: Prisma.UserCreateInput,
+  ): Promise<string> {
+    let user: User | null = await this.findByUsername(userInput.username);
+
+    if (user) {
+      throw new ConflictException(
+        'Username ' + user.username + ' is already used',
+      );
+    }
+
+    user = await this.prisma.user.update({
+      where: {
+        intraLogin: userInput.intraLogin,
+      },
+      data: {
+        username: userInput.username,
+        avatarId: file.filename,
+      },
+    });
+
+    if (!user || !user.username) {
       throw new InternalServerErrorException();
     }
     return await this.jwtAuthService.generateJwt(user);

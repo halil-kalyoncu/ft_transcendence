@@ -120,11 +120,56 @@ export class UserController {
   @Post('register')
   async register(@Body() registerUserDto: RegisterUserDto): Promise<string> {
     try {
-      console.log('register controller');
       const userEntity: Prisma.UserCreateInput =
         this.userHelperService.dtoToEntity(registerUserDto);
       const jwt: string = await this.userService.register(userEntity);
-      console.log(jwt);
+      return btoa(jwt);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('registerWithAvatar')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: process.env.AVATARPATH,
+        filename: (req, file, callback) => {
+          const id = uuidv4();
+          const ext = extname(file.originalname);
+          const filename = `${id}${ext}`;
+          callback(null, filename);
+        },
+      }),
+    }),
+  )
+  async registerWithAvatar(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new FileTypeValidator({
+            fileType: '.(png|jpeg|jpg)',
+          }),
+          new MaxFileSizeValidator({
+            maxSize: 1024 * 1024 * 10, //10mb
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() registerUserDto: RegisterUserDto,
+  ): Promise<string> {
+    try {
+      const jwt: string = await this.userService.registerWithAvatar(
+        file,
+        registerUserDto,
+      );
       return btoa(jwt);
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -304,13 +349,14 @@ export class UserController {
     )
     file: Express.Multer.File,
     @Query('userId', ParseIntPipe) userId: number,
-    @Res() res: Response,
-  ): Promise<void> {
+  ): Promise<User> {
     try {
-      const updatedUser = await this.userService.uploadAvatar(file, userId);
-      res.json(updatedUser);
+      return await this.userService.uploadAvatar(file, userId);
     } catch (error) {
-      res.status(500).send(error.message);
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
