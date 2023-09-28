@@ -6,6 +6,8 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import GameLayout from '../components/layout/GameLayout.vue'
 import TwoFAAuthView from '../views/TwoFAAuthView.vue'
+import ValidateTokenView from '../views/ValidateTokenView.vue'
+import RegisterView from '../views/RegisterView.vue'
 import jwtDecode from 'jwt-decode'
 
 const redirectToHomeIfLoggedIn = (
@@ -78,14 +80,34 @@ const router = createRouter({
       ): void => redirectToHomeIfLoggedIn(to, from, next)
     },
     {
-      path: '/twoFAAuth',
+      path: '/validateToken/:token',
+      name: 'validateToken',
+      component: ValidateTokenView,
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => redirectToHomeIfLoggedIn(to, from, next)
+    },
+    {
+      path: '/register/:intraLogin',
+      name: 'register',
+      component: RegisterView,
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => redirectToHomeIfLoggedIn(to, from, next)
+    },
+    {
+      path: '/twoFAAuth/:intraLogin',
       name: 'twoFAAuth',
       component: TwoFAAuthView,
       beforeEnter: (
         to: RouteLocationNormalized,
         from: RouteLocationNormalized,
         next: NavigationGuardNext
-      ): void => jwtGuard(to, from, next)
+      ): void => redirectToHomeIfLoggedIn(to, from, next)
     },
     {
       path: '/home',
@@ -119,22 +141,6 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => jwtGuard(to, from, next)
     },
-    // {
-    //   path: '/profile/:matchId',
-    //   component: MainLayout,
-    //   children: [
-    //     {
-    //       path: '',
-    //       name: 'invite',
-    //       component: () => import('../components/invite/Invite.vue') //lazy load
-    //     }
-    //   ],
-    //   beforeEnter: (
-    //     to: RouteLocationNormalized,
-    //     from: RouteLocationNormalized,
-    //     next: NavigationGuardNext
-    //   ): void => jwtGuard(to, from, next)
-    // },
     {
       path: '/settings',
       component: MainLayout,

@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
@@ -36,6 +37,32 @@ export class UserService {
     return await this.jwtAuthService.generateJwt(foundUser);
   }
 
+  async register(userInput: Prisma.UserCreateInput): Promise<string> {
+    console.log('register service');
+    let user: User | null = await this.findByUsername(userInput.username);
+
+    if (user) {
+      throw new ConflictException(
+        'Username ' + user.username + ' is already used',
+      );
+    }
+    user = await this.prisma.user.update({
+      where: {
+        intraLogin: userInput.intraLogin,
+      },
+      data: {
+        username: userInput.username,
+      },
+    });
+
+    console.log(user);
+    if (!user || !user.username) {
+      console.log(':(');
+      throw new InternalServerErrorException();
+    }
+    return await this.jwtAuthService.generateJwt(user);
+  }
+
   async create(newUser: Prisma.UserCreateInput): Promise<User> {
     try {
       return await this.prisma.user.create({
@@ -58,6 +85,12 @@ export class UserService {
       include: {
         blockedUsers: true,
       },
+    });
+  }
+
+  async findByIntraLogin(intraLogin: string): Promise<User | null> {
+    return await this.prisma.user.findUnique({
+      where: { intraLogin },
     });
   }
 

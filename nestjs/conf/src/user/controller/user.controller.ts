@@ -20,9 +20,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from '../service/user-service/user.service';
-import { CreateUserDto } from '../dto/create-user.dto';
 import { UserHelperService } from '../service/user-helper/user-helper.service';
-import { LoginResponseDto } from '../dto/login-response.dto';
 import { Prisma, User } from '@prisma/client';
 import {
   ApiBearerAuth,
@@ -39,6 +37,7 @@ import { Response } from 'express';
 import { PrismaModel } from '../../_gen/prisma-class/index';
 import { ChannelInviteeUserDto } from '../../chat/dto/channelInvitation.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
+import { RegisterUserDto } from '../dto/register-user.dto';
 
 @ApiTags('User module')
 @Controller('users')
@@ -49,40 +48,40 @@ export class UserController {
   ) {}
 
   //TODO remove this function, when 42 login works
-  @ApiOperation({ summary: 'Login' })
-  @ApiResponse({
-    status: 201,
-    description: 'Successful login',
-    type: LoginResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'CreateUserDto has errors' })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized, access token is invalid',
-  })
-  @ApiResponse({ status: 409, description: 'User is already logged in' })
-  @ApiResponse({ status: 500, description: 'Server error' })
-  @Post('login')
-  async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseDto> {
-    try {
-      const userEntity: Prisma.UserCreateInput =
-        this.userHelperService.createUserDtoToEntity(createUserDto);
-      const jwt: string = await this.userService.login(userEntity);
-      return {
-        access_token: jwt,
-        token_type: 'JWT',
-        expires_in: 10000,
-      };
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
+  //   @ApiOperation({ summary: 'Login' })
+  //   @ApiResponse({
+  //     status: 201,
+  //     description: 'Successful login',
+  //     type: LoginResponseDto,
+  //   })
+  //   @ApiResponse({ status: 400, description: 'CreateUserDto has errors' })
+  //   @ApiResponse({
+  //     status: 401,
+  //     description: 'Unauthorized, access token is invalid',
+  //   })
+  //   @ApiResponse({ status: 409, description: 'User is already logged in' })
+  //   @ApiResponse({ status: 500, description: 'Server error' })
+  //   @Post('login')
+  //   async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseDto> {
+  //     try {
+  //       const userEntity: Prisma.UserCreateInput =
+  //         this.userHelperService.createUserDtoToEntity(createUserDto);
+  //       const jwt: string = await this.userService.login(userEntity);
+  //       return {
+  //         access_token: jwt,
+  //         token_type: 'JWT',
+  //         expires_in: 10000,
+  //       };
+  //     } catch (error) {
+  //       if (error instanceof ConflictException) {
+  //         throw error;
+  //       }
+  //       throw new HttpException(
+  //         'Internal Server Error',
+  //         HttpStatus.INTERNAL_SERVER_ERROR,
+  //       );
+  //     }
+  //   }
 
   //use this route, when 42 login works
   // @Post()
@@ -98,6 +97,45 @@ export class UserController {
   //     throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
   //   }
   // }
+
+  @Get('canBeRegistered')
+  async canBeRegistered(
+    @Query('intraLogin') intraLogin: string,
+  ): Promise<boolean> {
+    try {
+      const user: User = await this.userService.findByIntraLogin(intraLogin);
+
+      if (!user || user.username) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('register')
+  async register(@Body() registerUserDto: RegisterUserDto): Promise<string> {
+    try {
+      console.log('register controller');
+      const userEntity: Prisma.UserCreateInput =
+        this.userHelperService.dtoToEntity(registerUserDto);
+      const jwt: string = await this.userService.register(userEntity);
+      console.log(jwt);
+      return btoa(jwt);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get all users' })

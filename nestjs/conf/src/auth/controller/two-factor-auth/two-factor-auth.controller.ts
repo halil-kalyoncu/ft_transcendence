@@ -7,6 +7,8 @@ import {
   Query,
   Res,
   UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { TwoFactorAuthService } from '../../service/two-factor-auth/two-factor-auth.service';
 import { Response } from 'express';
@@ -37,13 +39,27 @@ export class TwoFactorAuthController {
 
   @Get('checkFAcode')
   async checkFAcode(
-    @Query('userId', ParseIntPipe) userId: number,
+    @Query('intraLogin') intraLogin: string,
     @Query('code') code: string,
-  ): Promise<boolean> {
+  ): Promise<string> {
     try {
-      return await this.twoFactorAuthService.checkCodeValid(userId, code);
-    } catch (error: any) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      const jwt: string = await this.twoFactorAuthService.checkFAcode(
+        intraLogin,
+        code,
+      );
+      return btoa(jwt);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException ||
+        error instanceof UnauthorizedException
+      ) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -63,18 +79,21 @@ export class TwoFactorAuthController {
     @Body() twoFactorAuthCodeDto: TwoFactorAuthCodeDto,
   ): Promise<User> {
     try {
-      const codeValid: boolean = await this.twoFactorAuthService.checkCodeValid(
+      return await this.twoFactorAuthService.enable(
         twoFactorAuthCodeDto.userId,
         twoFactorAuthCodeDto.code,
       );
-      if (!codeValid) {
-        throw new UnauthorizedException('Wrong authentication code');
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof UnauthorizedException
+      ) {
+        throw error;
       }
-      return await this.userService.turnOnTwoFactorAuth(
-        twoFactorAuthCodeDto.userId,
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
-    } catch (error: any) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 

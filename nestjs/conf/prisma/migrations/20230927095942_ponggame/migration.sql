@@ -22,7 +22,8 @@ CREATE TYPE "MatchState" AS ENUM ('CREATED', 'INVITED', 'ACCEPTED', 'STARTED', '
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
-    "username" TEXT NOT NULL,
+    "intraLogin" TEXT NOT NULL,
+    "username" TEXT,
     "avatarId" TEXT,
     "ladderLevel" INTEGER NOT NULL DEFAULT 1000,
     "enabled2FA" BOOLEAN NOT NULL DEFAULT false,
@@ -182,6 +183,9 @@ CREATE TABLE "Matchmaking" (
 
     CONSTRAINT "Matchmaking_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_intraLogin_key" ON "User"("intraLogin");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");

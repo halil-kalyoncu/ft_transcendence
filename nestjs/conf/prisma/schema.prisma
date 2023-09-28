@@ -17,7 +17,8 @@ datasource db {
 
 model User {
     id          Int     @id @default(autoincrement())
-    username    String  @unique
+    intraLogin  String  @unique
+    username    String? @unique
     avatarId    String?
     ladderLevel Int     @default(1000)
     enabled2FA  Boolean @default(false)
@@ -107,7 +108,7 @@ model ChannelMessageReadStatus {
     message ChannelMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
     reader  ChannelMember  @relation(fields: [readerId], references: [id], onDelete: Cascade)
 
-	@@unique([messageId, readerId])
+    @@unique([messageId, readerId])
 }
 
 model Message {
@@ -118,7 +119,6 @@ model Message {
     directMessage  DirectMessage?
     channelMessage ChannelMessage?
 }
-
 
 enum ChannelInvitationStatus {
     PENDING
@@ -253,11 +253,11 @@ model BlockedUser {
 }
 
 model Matchmaking {
-    id             Int  @id @default(autoincrement())
-    userId         Int  @unique
-    opponentUserId Int? @unique
-    userReady Boolean @default(false)
-    opponentReady Boolean @default(false)
+    id             Int     @id @default(autoincrement())
+    userId         Int     @unique
+    opponentUserId Int?    @unique
+    userReady      Boolean @default(false)
+    opponentReady  Boolean @default(false)
 
     user     User  @relation("WaitingLadderGame", fields: [userId], references: [id])
     opponent User? @relation("OpponentLadderGame", fields: [opponentUserId], references: [id])

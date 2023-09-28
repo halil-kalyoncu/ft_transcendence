@@ -9,49 +9,38 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '../stores/userInfo'
+import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
 
-const username = ref('')
+const route = useRoute()
+const intraLogin = route.params.intraLogin as string
 const router = useRouter()
-const userStore = useUserStore()
-const userId = computed(() => userStore.userId)
 const notificationStore = useNotificationStore()
-const twoFACode = ref('')
 
-const check2FAcode = async () => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/2fa/checkFAcode?userId=${userId.value}&code=${twoFACode.value}`
-    )
-    const responseData = await response.json()
-    if (!response.ok) {
-      notificationStore.showNotification(responseData.message, false)
-      return false
-    } else {
-      return responseData
-    }
-  } catch (error) {
-    notificationStore.showNotification('Something went wrong', false)
-    return false
-  }
-}
+const twoFACode = ref('')
 
 const submitForm = async () => {
   try {
-    const codeCorrect = await check2FAcode()
-    if (codeCorrect) {
-      router.push('/home')
-      notificationStore.showNotification('Login successful', true)
+    const response = await fetch(
+      `http://localhost:3000/api/2fa/checkFAcode?intraLogin=${intraLogin}&code=${twoFACode.value}`
+    )
+
+    twoFACode.value = ''
+    if (response.ok) {
+      const responseData = await response.text()
+      notificationStore.showNotification('Validation successful', true)
+      router.push(`/validateToken/${responseData}`)
     } else {
-      notificationStore.showNotification('Login failed', false)
-      twoFACode.value = ''
+      const responseMessage = await response.json()
+      notificationStore.showNotification('Validation failed: ' + responseMessage.message, false)
+      if (response.status !== 401) {
+        router.push('/')
+      }
     }
   } catch (error) {
-    console.error('Error occurred during authentication:', error)
-    notificationStore.showNotification('Error occurred during login:' + error, false)
+    notificationStore.showNotification('Something went wrong during Validation', false)
+    router.push('/')
   }
 }
 </script>

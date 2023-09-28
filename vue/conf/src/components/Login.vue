@@ -1,106 +1,42 @@
 <template>
   <div class="login">
-    <form @submit.prevent="submitForm" class="login-form">
-      <label for="username" class="font-color">Username:</label>
-      <input type="text" id="username" v-model="username" required />
-      <button type="submit" role="link" class="dynamic-button">42 Login</button>
-    </form>
-	<button @click="handle42Api">Go to hell</button>
+    <button @click="redirectTo42Authentication">42 Login</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
 import { connectChatSocket } from '../websocket'
 
-const username = ref('')
-const userId = computed(() => userStore.userId)
-const router = useRouter()
+const route = useRoute()
 const notificationStore = useNotificationStore()
 
-const get2FAStatus = async () => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
-      {
-        method: 'GET',
-      }
-    )
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
-    } else {
-      return await response.json()
+watch(
+  () => route.query.error,
+  (newError) => {
+    if (newError === 'authentication_failed') {
+      notificationStore.showNotification('42 Authentication failed', false)
+    } else if (newError === 'already_signedIn') {
+      notificationStore.showNotification('Already signed in on another browser', false)
     }
-  } catch (error) {
-    console.error('Error occurred during 2FA status check:', error)
-    notificationStore.showNotification('Error occurred during 2FA status check:' + error, false)
   }
-}
+)
 
 const userStore = useUserStore()
 
-const submitForm = async () => {
+const redirectTo42Authentication = () => {
   try {
-    const response = await fetch('http://localhost:3000/api/users/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ username: username.value })
-    })
-
-    const responseData = await response.json()
-    if (response.ok) {
-      localStorage.setItem('ponggame', responseData.access_token)
-      await userStore.initStore()
-      connectChatSocket(responseData.access_token)
-      const is2FAenabled = await get2FAStatus()
-
-      if (is2FAenabled) {
-        router.push('/twoFAAuth')
-      } else {
-        router.push('/home')
-      }
-    } else {
-      notificationStore.showNotification(
-        'Error occurred during login' + responseData.message,
-        false
-      )
-    }
+    const clientID = 'u-s4t2ud-ed681aac38facba73c47424c0e7e832f42a961819948f18cfcd350cc1da505e7'
+    const redirectUri = encodeURIComponent('http://10.11.4.1:3000/api/auth/callback')
+    window.location.href = `https://api.intra.42.fr/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectUri}&response_type=code`
   } catch (error) {
-    notificationStore.showNotification('Something went wrong during login', false)
+    console.log(error)
+    notificationStore.showNotification('Something went wrong when redirecting to 42intra', false)
   }
 }
-
-const handle42Api = async () => {
-	try {
-		const clientID = "u-s4t2ud-ed681aac38facba73c47424c0e7e832f42a961819948f18cfcd350cc1da505e7";
-		const redirectUri = encodeURIComponent('http://10.12.5.1:3000/api/auth/callback');
-
-		const response = await fetch(`https://api.intra.42.fr/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectUri}&response_type=code`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-
-		console.log(response)
-		if (response.ok) {
-			const responseData = await response.json()
-		}
-		else {
-			notificationStore.showNotification('Failed to authenticate with 42', false)
-		}
-	}
-	catch (error) {
-		console.log(error);
-		notificationStore.showNotification('Something went wrong when redirecting to 42intra', false)
-	}
-}
-
 </script>
 
 <style>
