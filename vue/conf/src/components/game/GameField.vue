@@ -6,6 +6,7 @@
 		:playerB="playerBName"
 		:playerAScore="playerAScore"
 		:playerBScore="playerBScore"
+		:goalsToBeat="goalsToBeat"
 		/>
 	<div class="field" ref="gameField">
 		<div class="left-border"></div>
@@ -89,7 +90,7 @@ let playerAName = ref<string>('')
 let playerBName = ref<string>('')
 let playerAScore = ref<number>(0)
 let playerBScore = ref<number>(0)
-// let goalsToBeat = ref<number>(0)
+let goalsToBeat = ref<number>(0)
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
@@ -166,12 +167,13 @@ const initGameField = async () => {
   fieldWidth.value = gameField.value?.clientWidth || 0
   fieldHeight.value = gameField.value?.clientHeight || 0
   // console.log(fieldWidth.value);
-  await getUserNames()
-  if (!playerAName || playerAName.value === '' || !playerBName || playerBName.value === '') {
+  await getMatchData()
+  if (!playerAName || playerAName.value === '' || !playerBName || playerBName.value === '' || !goalsToBeat || goalsToBeat.value === 0) {
     //TODO what to do if the usernames are not set
     console.log('something went wrong fetching the usernames')
     return
   }
+  console.log("goalsTobeatttttttt: ", goalsToBeat)
   setTimeout(() => {
     update()
   }, 200)
@@ -455,7 +457,7 @@ function update() {
 //   console.log('PU spawn local')
 // }
 
-async function getUserNames(): Promise<void> {
+async function getMatchData(): Promise<void> {
   try {
     const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
       method: 'GET',
@@ -469,6 +471,7 @@ async function getUserNames(): Promise<void> {
     if (response.ok) {
       playerAName = responseData.leftUser.username
       playerBName = responseData.rightUser.username
+	  goalsToBeat = responseData.goalsToWin
     } else {
       notificationStore.showNotification(
         'Error while fetching the match data' + responseData.message,

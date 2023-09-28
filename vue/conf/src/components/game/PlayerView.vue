@@ -1,5 +1,5 @@
 <template>
-	<!-- <div class="goals-to-beat">{{ goalsToBeat }}</div> -->
+	<div class="goals-to-beat">Goals to beat: {{ goalsToBeat }}</div>
 	<div class="playerView">
 	  <div class="playerA">
 		  <div class="playerAName">{{ shortenName(playerA) }}</div>
@@ -25,10 +25,15 @@ const props = defineProps<{
   playerB: string
   playerAScore: number
   playerBScore: number
+  goalsToBeat: number
 }>()
 </script>
 
 <style scoped>
+.goals-to-beat {
+	display: flex;
+	justify-content: center;
+}
 .playerView {
   position: absolute;
   display: flex;
