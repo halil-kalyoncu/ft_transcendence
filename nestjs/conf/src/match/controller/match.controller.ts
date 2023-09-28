@@ -92,7 +92,7 @@ export class MatchController {
     // return await this.matchService.findMatchByUser();
   }
 
-  @Get('match-outcomes/:userId')
+  @Get('match-outcomes')
   async getMatchOutcomes(@Query('userId', ParseIntPipe) userId: number): Promise<matchOutcomesDto> {
 	const matchOutcomes: matchOutcomesDto = await this.matchService.getMatchOutcomesByUserId(userId);
 	return matchOutcomes;

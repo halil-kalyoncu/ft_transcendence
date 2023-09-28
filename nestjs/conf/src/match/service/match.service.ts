@@ -67,7 +67,6 @@ export class MatchService {
 			OR: [{ leftUserId: userId }, { rightUserId: userId }]
 		},
 	});
-	console.log(matches);
 	matches.map((match: Match) => {
 		if (match.leftUserId === userId && match.state === 'WINNERLEFT') {
 			wins++;

@@ -429,34 +429,6 @@ function update() {
   requestAnimationFrame(update)
 }
 
-// function spawnPowerUp() {
-//   const newPowerUp = {
-//     id: Math.floor(Date.now()),
-//     x: Math.floor(Math.random() * fieldWidth.value!),
-//     y: -30,
-//     index: 0,
-//     type: Math.floor(Math.random() * 4),
-//     color: 'white',
-//     wid: 30,
-//     hgt: 30
-//   }
-//   if (newPowerUp.type == 0) {
-//     newPowerUp.color = 'red'
-//     newPowerUp.index = 0
-//   } else if (newPowerUp.type == 1) {
-//     newPowerUp.color = 'green'
-//     newPowerUp.index = 3
-//   } else if (newPowerUp.type == 2) {
-//     newPowerUp.color = 'blue'
-//     newPowerUp.index = 2
-//   } else if (newPowerUp.type == 3) {
-//     newPowerUp.color = 'white'
-//     newPowerUp.index = 1
-//   }
-//   socket.value?.emit('spawnPowerUp', newPowerUp)
-//   console.log('PU spawn local')
-// }
-
 async function getMatchData(): Promise<void> {
   try {
     const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
@@ -486,7 +458,9 @@ async function getMatchData(): Promise<void> {
 }
 
 const goHome = () => {
-  router.push('/home')
+	// if (!matchResult)
+	// 	socket.value?.emit('resetGoals')
+	router.push('/home')
 }
 </script>
 

@@ -6,11 +6,11 @@
     </div>
     <div class="stats-section">
       <div class="stat-item">
-        <span class="stat-number">wins</span>
+        <span class="stat-number">{{ wins }}</span>
         <span class="stat-text stat-wins">Victories</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">losses</span>
+        <span class="stat-number">{{ losses }}</span>
         <span class="stat-text stat-losses">Defeats</span>
       </div>
     </div>
@@ -20,8 +20,8 @@
 <script lang="ts" setup>
 const props = defineProps({
   username: String,
-//   wins: number,
-//   losses: number
+  wins: Number,
+  losses: Number
 })
 </script>
 

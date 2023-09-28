@@ -78,6 +78,7 @@ export class EventsGateway {
         this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
         this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
         clearInterval(gameInterval);
+		clearInterval(intervalId);
       }
     }, 15);
   }
@@ -370,6 +371,22 @@ export class EventsGateway {
     const match = await this.matchService.finishMatch(room);
 	clearInterval(intervalId);
     socket.emit('gameFinished', match);
+  }
+
+  @SubscribeMessage('resetGoals')
+  resetGoals(socket: Socket) {
+	const room = this.rooms.get(socket.data.match.id);
+
+	if (socket.id === room.socketIds[0]){
+		room.leftPlayerGoals = 0;
+		if (room.rightPlayerGoals == 0)
+			room.rightPlayerGoals = 1;
+	}
+	if (socket.id === room.socketIds[1]){
+		room.rightPlayerGoals = 0;
+		if (room.leftPlayerGoals == 0)
+			room.leftPlayerGoals = 1;
+	}
   }
 
 
