@@ -5,11 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUserStore } from '../stores/userInfo'
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
-import { connectChatSocket } from '../websocket'
 
 const route = useRoute()
 const notificationStore = useNotificationStore()
@@ -25,15 +23,12 @@ watch(
   }
 )
 
-const userStore = useUserStore()
-
 const redirectTo42Authentication = () => {
   try {
     const clientID = 'u-s4t2ud-ed681aac38facba73c47424c0e7e832f42a961819948f18cfcd350cc1da505e7'
-    const redirectUri = encodeURIComponent('http://10.11.4.1:3000/api/auth/callback')
+    const redirectUri = encodeURIComponent('http://localhost:3000/api/auth/callback')
     window.location.href = `https://api.intra.42.fr/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectUri}&response_type=code`
   } catch (error) {
-    console.log(error)
     notificationStore.showNotification('Something went wrong when redirecting to 42intra', false)
   }
 }
