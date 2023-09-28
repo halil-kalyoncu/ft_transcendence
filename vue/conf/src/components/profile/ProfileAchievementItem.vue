@@ -1,13 +1,14 @@
 <template>
-  <div class="achievement" :style="{ background: backgroundColor }">
+  <div class="achievement">
     <img
       :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
+	  :style="{ background: backgroundColor }"
       alt="Achievement"
       class="achievement-image"
     />
     <div class="achievement-content">
-      <h2 class="achievement-title text">{{ achievement.achievement.name }}</h2>
-      <p class="achievement-progress text">{{ achievement.progress }}</p>
+      <h2 class="achievement-title">{{ achievement.achievement.name }}</h2>
+      <p class="achievement-progress">{{ achievement.progress }} {{ "/" }} {{ currentMax }}</p>
       <div class="progress-bar">
         <div class="progress-bar-fill" :style="{ width: currentProgress + '%' }"></div>
       </div>
@@ -16,13 +17,16 @@
 </template>
 
 <script setup lang="ts">
+
+let currentMax = 0;
+
 import { ref, computed } from 'vue'
 import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
 
 const props = defineProps<{ achievement: UserAchievementI }>()
 
 const currentProgress = computed(() => {
-  let currentMax = props.achievement.achievement.scoreGold
+	currentMax = props.achievement.achievement.scoreGold
   if (props.achievement.progress < props.achievement.achievement.scoreBronze) {
     currentMax = props.achievement.achievement.scoreBronze
   } else if (props.achievement.progress < props.achievement.achievement.scoreSilver) {
@@ -37,11 +41,11 @@ const currentProgress = computed(() => {
 
 const backgroundColor = computed(() => {
   if (props.achievement.progress < props.achievement.achievement.scoreBronze) {
-    return 'linear-gradient(to right, #8c7a58, #bfa980)' // Background for bronze
+    return 'linear-gradient(to right, #8c7a58, #bfa980)'
   } else if (props.achievement.progress < props.achievement.achievement.scoreSilver) {
-    return 'linear-gradient(to right, #b0b0b0, #d7d7d7)' // Background for silver
+    return 'linear-gradient(to right, #b0b0b0, #d7d7d7)'
   } else {
-    return 'linear-gradient(to right, #051139, #0d2265)' // Background for gold
+    return 'linear-gradient(to right, #051139, #0d2265)'
   }
 })
 </script>
@@ -49,13 +53,19 @@ const backgroundColor = computed(() => {
 <style>
 .achievement {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to right, #051139, #0d2265);
+  background-color: #333;
   opacity: 0.9;
-  padding: 1rem;
-  color: white;
-  border-radius: 0.25rem;
+  color: #fff;
+  padding: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   margin: 0 1.5rem 1.5rem 0;
+  border-radius: 0.25rem;
+}
+
+.achievement-progress {
+	text-align: center;
 }
 
 .achievement-image {
@@ -64,7 +74,7 @@ const backgroundColor = computed(() => {
   object-fit: cover;
   margin-right: 1rem;
   border: 0.1rem solid gold;
-  border-radius: 50%;
+  border-radius: 0%;
 }
 
 .achievement-content {
@@ -81,12 +91,11 @@ const backgroundColor = computed(() => {
 .achievement-description {
   font-size: 1rem;
   margin-bottom: 1rem;
-  /* Added some margin to space out the progress bar */
 }
 
 .progress-bar {
   height: 1rem;
-  background: #333;
+  background: #0c0c0c;
   border-radius: 5px;
   overflow: hidden;
 }
@@ -94,11 +103,7 @@ const backgroundColor = computed(() => {
 .progress-bar-fill {
   height: 100%;
   background: gold;
-  /* color for the progress */
   transition: width 0.4s ease;
 }
 
-.text {
-  color: black;
-}
 </style>

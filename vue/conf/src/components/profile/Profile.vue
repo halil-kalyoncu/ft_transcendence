@@ -91,7 +91,7 @@ onMounted(() => {
     <section class="detailed-info">
       <div class="achievements">
         <h2 class="profile-title">achievements</h2>
-        <ScrollViewer :maxHeight="'50vh'">
+        <ScrollViewer :maxHeight="'67vh'">
           <ProfileAchievementItem
             v-for="achievement in achievements"
             :key="achievement.id"
@@ -101,7 +101,7 @@ onMounted(() => {
       </div>
       <div class="match-history">
         <h2 class="profile-title">match history</h2>
-        <ScrollViewer :maxHeight="'50vh'">
+        <ScrollViewer :maxHeight="'67vh'">
           <ProfileMatchHistoryItem
             v-for="match in matchHistory"
             :key="match.id"

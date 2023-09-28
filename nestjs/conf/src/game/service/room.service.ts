@@ -25,6 +25,9 @@ export class Room {
   leftPlayerDisconnect: boolean;
   rightPlayerDisconnect: boolean;
 
+  comeback: string;
+  firstGoal: string;
+
   constructor(
     id: number,
     goalsToWin: number,
@@ -45,6 +48,9 @@ export class Room {
 
     this.leftPlayerGoals = 0;
     this.rightPlayerGoals = 0;
+
+    this.comeback = 'NONE';
+    this.firstGoal = 'NONE';
   }
 
   checkGameFinished(): void {

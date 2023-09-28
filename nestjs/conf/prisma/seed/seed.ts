@@ -36,17 +36,18 @@ async function createAchievement(achievementName: string, scoreBronze: number, s
 		});
 	  }	
 }
-
 async function main() {
-  createPowerup('slowBall');
-  createPowerup('fastBall');
-  createPowerup('decreasePaddleHeight');
-  createPowerup('increasePaddleHeight');
-  createPowerup('magnet');
+  await createPowerup('slowBall');
+  await createPowerup('fastBall');
+  await createPowerup('decreasePaddleHeight');
+  await createPowerup('increasePaddleHeight');
+  await createPowerup('magnet');
 
-  createAchievement('totalGoals', 10, 20, 30);
-  createAchievement('flawlessVictories', 2, 4, 6);
-  createAchievement('totalWins', 10, 20, 30);
+  await createAchievement('total Goals', 10, 20, 30);
+  await createAchievement('flawless Victories', 2, 4, 6);
+  await createAchievement('total Wins', 10, 20, 30);
+  await createAchievement('Comebacks', 10, 20, 30);
+  await createAchievement('first Goal', 10, 20, 30);
 
   await prisma.$disconnect();
 }

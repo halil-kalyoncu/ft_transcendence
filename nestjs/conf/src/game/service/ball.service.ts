@@ -115,11 +115,23 @@ export class Ball {
       server.to(room.socketIds[1]).emit('scoreGoal', 'playerB');
       // this.magdiff = this.y - padd
       scoredGoal = true;
+      if (room.comeback == 'NONE') {
+        if (room.rightPlayerGoals == 1 && room.leftPlayerGoals == 0)
+          room.firstGoal = 'RIGHT';
+        if (room.rightPlayerGoals - room.leftPlayerGoals > room.goalsToWin / 2)
+          room.comeback = 'LEFT';
+      }
     } else if (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x) {
       server.to(room.socketIds[0]).emit('scoreGoal', 'playerA');
       server.to(room.socketIds[1]).emit('scoreGoal', 'playerA');
       room.leftPlayerGoals++;
       scoredGoal = true;
+      if (room.leftPlayerGoals == 1 && room.rightPlayerGoals == 0)
+        room.firstGoal = 'LEFT';
+      if (room.comeback == 'NONE') {
+        if (room.leftPlayerGoals - room.rightPlayerGoals > room.goalsToWin / 2)
+          room.comeback = 'RIGHT';
+      }
     }
     if (scoredGoal) {
       room.checkGameFinished();

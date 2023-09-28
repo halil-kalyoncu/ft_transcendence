@@ -290,8 +290,12 @@ export class MatchService {
     }
 
     if (state === 'WINNERLEFT' || state === 'DISCONNECTRIGHT') {
+      if (room.comeback == 'LEFT')
+        this.achievementService.updateComebacks(updatedMatch.leftUserId);
       this.achievementService.updateTotalWins(updatedMatch.leftUserId);
     } else {
+      if (room.comeback == 'RIGHT')
+        this.achievementService.updateComebacks(updatedMatch.rightUserId);
       this.achievementService.updateTotalWins(updatedMatch.rightUserId);
     }
 

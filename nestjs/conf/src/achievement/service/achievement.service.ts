@@ -46,6 +46,32 @@ export class AchievementService {
     });
   }
 
+  async updateComebacks(userId: number): Promise<void> {
+    await this.prisma.userAchievements.update({
+      where: {
+        userId_achievementId: { userId: userId, achievementId: 4 },
+      },
+      data: {
+        progress: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  async updateFistGoal(userId: number): Promise<void> {
+    await this.prisma.userAchievements.update({
+      where: {
+        userId_achievementId: { userId: userId, achievementId: 5 },
+      },
+      data: {
+        progress: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
   async getAchievementProgress(
     userId: number,
     achievementId: number,
@@ -66,13 +92,13 @@ export class AchievementService {
       where: {
         userId: userId,
       },
-	  include: {
-		achievement: true
-	  }
+      include: {
+        achievement: true,
+      },
     });
   }
 
   async getAchievements(): Promise<Achievement[]> {
-    return await this.prisma.achievement.findMany()
+    return await this.prisma.achievement.findMany();
   }
 }
