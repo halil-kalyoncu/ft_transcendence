@@ -1,30 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UserAchievements, Achievement, AchievementState } from '@prisma/client';
+import {
+  UserAchievements,
+  Achievement,
+  AchievementState,
+} from '@prisma/client';
 
 @Injectable()
 export class AchievementService {
   constructor(private prisma: PrismaService) {}
 
-  async updateTotalGoals(userId: number, goals: number): Promise<void> {
-    await this.prisma.userAchievements.update({
-      where: {
-        userId_achievementId: { userId: userId, achievementId: 1 },
-      },
-      data: {
-        progress: {
-          increment: goals,
-        },
-      },
-    });
-  }
-  // Update flawless victory count
-  async updateFlawlessVictory(userId: number): Promise<UserAchievements> {
-    let currentProgress = await this.getAchievementProgress(userId, 2) + 1;
-    let currentState: AchievementState
+  async updateAchievement(
+    userId: number,
+    achievementId: number,
+    score: number,
+  ): Promise<UserAchievements> {
+    let currentProgress: number =
+      (await this.getAchievementProgress(userId, achievementId)) + score;
+    let currentState: AchievementState;
 
     const achievement = await this.prisma.achievement.findUnique({
-      where: { id: 2 },
+      where: { id: achievementId },
       select: {
         scoreBronze: true,
         scoreSilver: true,
@@ -42,37 +38,11 @@ export class AchievementService {
 
     return this.prisma.userAchievements.update({
       where: {
-        userId_achievementId: { userId: userId, achievementId: 2 },
+        userId_achievementId: { userId: userId, achievementId: achievementId },
       },
       data: {
-        progress: { increment: 1 },
-		state: currentState
-      },
-    });
-  }
-
-  async updateTotalWins(userId: number): Promise<void> {
-    await this.prisma.userAchievements.update({
-      where: {
-        userId_achievementId: { userId: userId, achievementId: 3 },
-      },
-      data: {
-        progress: {
-          increment: 1,
-        },
-      },
-    });
-  }
-
-  async updateComebacks(userId: number): Promise<void> {
-    await this.prisma.userAchievements.update({
-      where: {
-        userId_achievementId: { userId: userId, achievementId: 4 },
-      },
-      data: {
-        progress: {
-          increment: 1,
-        },
+        progress: { increment: score },
+        state: currentState,
       },
     });
   }
@@ -104,21 +74,6 @@ export class AchievementService {
     });
     return achievement.progress;
   }
-
-//   async getAchievementState(
-//     userId: number,
-//     achievementId: number,
-//   ): Promise<UserAchievementState> {
-//     const achievement = await this.prisma.userAchievements.findUnique({
-//       where: {
-//         userId_achievementId: { userId: userId, achievementId: achievementId },
-//       },
-//       select: {
-//         state: true,
-//       },
-//     });
-//     return achievement.state;
-//   }
 
   async getUserAchievements(userId: number): Promise<UserAchievements[]> {
     return await this.prisma.userAchievements.findMany({

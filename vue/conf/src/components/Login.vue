@@ -20,7 +20,6 @@ const userId = computed(() => userStore.userId)
 const router = useRouter()
 const notificationStore = useNotificationStore()
 
-
 console.log(import.meta.env)
 console.log(import.meta.env.VITE_SOMETHING)
 

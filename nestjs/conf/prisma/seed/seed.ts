@@ -47,7 +47,7 @@ async function main() {
   await createAchievement('flawless Victories', 2, 4, 6);
   await createAchievement('total Wins', 10, 20, 30);
   await createAchievement('Comebacks', 10, 20, 30);
-  await createAchievement('first Goal', 10, 20, 30);
+  await createAchievement('first Goal', 1, 2, 3);
 
   await prisma.$disconnect();
 }

@@ -154,7 +154,6 @@ const initGameSocket = () => {
   })
 }
 
-
 const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
 }

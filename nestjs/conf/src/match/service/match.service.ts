@@ -232,33 +232,6 @@ export class MatchService {
     return { state, flawlessVictory };
   }
 
-  //   // Increment the goals of a player
-  //   async updatePlayerGoals(userId: number, goals: number): Promise<void> {
-  //     await this.prisma.user.update({
-  //       where: {
-  //         id: userId,
-  //       },
-  //       data: {
-  //         totalGoals: {
-  //           increment: goals,
-  //         },
-  //       },
-  //     });
-  //   }
-
-  //   async updateTotalWins(userId: number): Promise<void> {
-  //     await this.prisma.user.update({
-  //       where: {
-  //         id: userId,
-  //       },
-  //       data: {
-  //         totalWins: {
-  //           increment: 1,
-  //         },
-  //       },
-  //     });
-  //   }
-
   async finishMatch(room: Room): Promise<Match | null> {
     const { state, flawlessVictory } = this.determineMatchState(room);
 
@@ -278,28 +251,38 @@ export class MatchService {
       },
     });
 
-    await this.achievementService.updateTotalGoals(
+    await this.achievementService.updateAchievement(
       updatedMatch.leftUserId,
+      1,
       room.leftPlayerGoals,
     );
 
-    await this.achievementService.updateTotalGoals(
+    await this.achievementService.updateAchievement(
       updatedMatch.rightUserId,
+      1,
       room.rightPlayerGoals,
     );
 
     if (flawlessVictory && flawlessVictory !== 0) {
-      await this.achievementService.updateFlawlessVictory(flawlessVictory);
+      await this.achievementService.updateAchievement(flawlessVictory, 2, 1);
     }
 
     if (state === 'WINNERLEFT' || state === 'DISCONNECTRIGHT') {
       if (room.comeback == 'LEFT')
-        this.achievementService.updateComebacks(updatedMatch.leftUserId);
-      this.achievementService.updateTotalWins(updatedMatch.leftUserId);
+        this.achievementService.updateAchievement(
+          updatedMatch.leftUserId,
+          4,
+          1,
+        );
+      this.achievementService.updateAchievement(updatedMatch.leftUserId, 3, 1);
     } else {
       if (room.comeback == 'RIGHT')
-        this.achievementService.updateComebacks(updatedMatch.rightUserId);
-      this.achievementService.updateTotalWins(updatedMatch.rightUserId);
+        this.achievementService.updateAchievement(
+          updatedMatch.leftUserId,
+          4,
+          1,
+        );
+      this.achievementService.updateAchievement(updatedMatch.leftUserId, 3, 1);
     }
 
     return updatedMatch;
