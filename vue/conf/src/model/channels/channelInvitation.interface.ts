@@ -3,4 +3,5 @@ export interface ChannelInvitationI {
   inviterName: string
   channelName: string
   isPasswordProtected: boolean
+  ChannelVisibility: string
 }

@@ -848,12 +848,12 @@ export class ChatGateway
         const memberOnline: ConnectedUser =
           await this.connectedUserService.findByUserId(member.id);
         if (memberOnline) {
-          await socket
-            .to(memberOnline.socketId)
-            .emit('ChannelInvitationAccepted', channelName, inviteeName);
+          console.log('ACCEPTCHANNEL INVITATION');
+          console.log(memberOnline);
+          console.log(channelName + ' ' + inviteeName);
           socket
             .to(memberOnline.socketId)
-            .emit('NewChannelInvitation', inviteeName);
+            .emit('ChannelInvitationAccepted', channelName, inviteeName);
         }
       }
       return invitation;

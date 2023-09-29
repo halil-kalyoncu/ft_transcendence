@@ -35,7 +35,7 @@ export class ChannelController {
     private ChannelService: ChannelService,
     private ChannelMemberService: ChannelMemberService,
   ) {}
-  //Get Functions for getting Channels
+
   @Get('getAllChannels')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')

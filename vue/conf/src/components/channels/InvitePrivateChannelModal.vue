@@ -305,10 +305,6 @@ onBeforeUnmount(() => {
     notificationStore.showNotification('Error: Connection problems', false)
     return
   }
-
-  socket.value.off('ChannelInvitationAccepted')
-  socket.value.off('ChannelInvitationRejected')
-  socket.value.off('NewChannelInvitation')
 })
 </script>
 <style>

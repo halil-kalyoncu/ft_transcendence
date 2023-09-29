@@ -88,13 +88,6 @@ const images = ref([
   'src/assets/avatar-2.png'
 ])
 const qrCodeImage = ref('')
-const displayedCount = 3
-const startIndex = ref(0)
-const selectedImg = ref('src/assets/avatar-1.png')
-
-const setSelectedImage = (img: string) => {
-  selectedImg.value = img
-}
 
 const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {

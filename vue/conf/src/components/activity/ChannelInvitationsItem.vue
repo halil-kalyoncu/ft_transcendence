@@ -5,12 +5,19 @@
         v-if="isPasswordProtected"
         class="icon margin-right"
         :icon="['fas', 'lock']"
-      />
-      <p>{{ channelName }}</p>
-      <div class="friend-info margin-left" @click="viewProfile">
-        <p>[</p>
-        <p class="friend-username small-font">{{ username }}</p>
-        <p class="margin-left">]</p>
+      /><font-awesome-icon
+        v-if="isPrivate"
+        class="icon"
+        :icon="['fas', 'user-secret']"
+        title="Private Channel"
+      ></font-awesome-icon>
+      <div class="channel-name-container">
+        <p>{{ channelName }}</p>
+        <div class="friend-info margin-left" @click="viewProfile">
+          <p>[</p>
+          <p class="friend-username small-font">{{ username }}</p>
+          <p class="margin-left">]</p>
+        </div>
       </div>
     </div>
 
@@ -46,7 +53,8 @@ const props = defineProps({
   username: String,
   channelName: String,
   isPasswordProtected: Boolean,
-  invitationId: Number
+  invitationId: Number,
+  isPrivate: Boolean
 })
 
 const initSocket = async () => {
@@ -113,5 +121,9 @@ const rejectRequest = () => {
 
 .margin-right {
   margin-right: 0.5rem;
+}
+
+.channel-name-container {
+  margin-left: 0.5rem;
 }
 </style>

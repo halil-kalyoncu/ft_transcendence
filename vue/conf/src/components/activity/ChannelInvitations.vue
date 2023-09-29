@@ -7,6 +7,7 @@
             :username="invitation.inviterName"
             :channelName="invitation.channelName"
             :isPasswordProtected="invitation.isPasswordProtected"
+            :isPrivate="invitation.ChannelVisibility === 'PRIVATE' ? true : false"
             :invitationId="invitation.invitationId"
           />
         </div>
@@ -23,8 +24,6 @@ import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 import type { ChannelInvitationI } from '../../model/channels/channelInvitation.interface'
-import type { ChannelMemberRoleType } from '../../model/channels/createChannel.interface'
-import { ChannelMemberRole } from '../../model/channels/createChannel.interface'
 import ChannelInvitationsItem from './ChannelInvitationsItem.vue'
 
 import ScrollViewer from '../utils/ScrollViewer.vue'
@@ -109,6 +108,8 @@ const setInvitationListener = () => {
     if (UserName !== username.value) {
       return
     }
+    console.log(channelName)
+    console.log(UserName)
     console.log('User Accepted ChannelInvitaion fired')
     setChannelInvitations()
   })
