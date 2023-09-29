@@ -2,6 +2,7 @@ import type { UserI } from '../user.interface'
 import type { AchievementI } from './achievement.interface'
 
 export const UserAchievementState = {
+  NONE: 'NONE' as const,
   BRONZE: 'BRONZE' as const,
   SILVER: 'SILVER' as const,
   GOLD: 'GOLD' as const

@@ -143,12 +143,7 @@ const keyHookUp = (e: KeyboardEvent) => {
   }
 }
 
-window.addEventListener('w', keyHookDown)
-window.addEventListener('s', keyHookDown)
 window.addEventListener('keydown', keyHookDown)
-
-window.addEventListener('w', keyHookUp)
-window.addEventListener('s', keyHookUp)
 window.addEventListener('keyup', keyHookUp)
 
 const initGameSocket = () => {
