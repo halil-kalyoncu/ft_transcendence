@@ -263,6 +263,19 @@ export class MatchService {
       room.rightPlayerGoals,
     );
 
+    if (room.firstGoal === 'LEFT')
+      await this.achievementService.updateAchievement(
+        updatedMatch.leftUserId,
+        5,
+        1,
+      );
+    else
+      await this.achievementService.updateAchievement(
+        updatedMatch.rightUserId,
+        5,
+        1,
+      );
+
     if (flawlessVictory && flawlessVictory !== 0) {
       await this.achievementService.updateAchievement(flawlessVictory, 2, 1);
     }

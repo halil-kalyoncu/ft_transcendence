@@ -1,34 +1,48 @@
 <template>
-	<div class="achievement" :class="{ 'is-inactive': props.achievement.state === UserAchievementState.NONE }">
-	  <div class="achievement-wrapper">  <!-- This is the new wrapper div -->
-		<img
-		  :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
-		  :style="{ background: backgroundColor }"
-		  alt="Achievement"
-		  class="achievement-image"
-		/>
-		<div class="achievement-content">
-		  <h2 class="achievement-title">{{ achievement.achievement.name }}</h2>
-		  <div class="progress-bar" @mouseover="showTooltip" @mousemove="updateTooltipPosition" @mouseout="hideTooltip">
-			<div class="progress-bar-fill" :style="{ width: currentProgress + '%' }"></div>
-		  </div>
-		</div>
-	  </div>
-	  <transition name="fade">
-		<div v-if="tooltipVisible" :style="{ top: tooltipY + 'px', left: tooltipX + 'px' }" class="tooltip-box">
-		  <div>{{ 'Progress: ' }} {{ achievement.progress }} {{ '/' }} {{ currentMax }}</div>
-		</div>
-	  </transition>
-	</div>
-  </template>
-  
-
+  <div
+    class="achievement"
+    :class="{ 'is-inactive': props.achievement.state === UserAchievementState.NONE }"
+  >
+    <div class="achievement-wrapper">
+      <!-- This is the new wrapper div -->
+      <img
+        :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
+        :style="{ background: backgroundColor }"
+        alt="Achievement"
+        class="achievement-image"
+      />
+      <div class="achievement-content">
+        <h2 class="achievement-title">{{ achievement.achievement.name }}</h2>
+        <div
+          class="progress-bar"
+          @mouseover="showTooltip"
+          @mousemove="updateTooltipPosition"
+          @mouseout="hideTooltip"
+        >
+          <div class="progress-bar-fill" :style="{ width: currentProgress + '%' }"></div>
+        </div>
+      </div>
+    </div>
+    <transition name="fade">
+      <div
+        v-if="tooltipVisible"
+        :style="{ top: tooltipY + 'px', left: tooltipX + 'px' }"
+        class="tooltip-box"
+      >
+        <div>{{ 'Progress: ' }} {{ achievement.progress }} {{ '/' }} {{ currentMax }}</div>
+      </div>
+    </transition>
+  </div>
+</template>
 
 <script setup lang="ts">
-let currentMax = ref(0);
+let currentMax = ref(0)
 
 import { ref, computed, onMounted } from 'vue'
-import { UserAchievementState, type UserAchievementI } from '../../model/achievement/userAchievement.interface'
+import {
+  UserAchievementState,
+  type UserAchievementI
+} from '../../model/achievement/userAchievement.interface'
 
 const props = defineProps<{ achievement: UserAchievementI }>()
 
@@ -48,34 +62,32 @@ const currentProgress = computed(() => {
 
 const backgroundColor = computed(() => {
   if (props.achievement.state == UserAchievementState.BRONZE) {
-    return 'radial-gradient(circle, #ffcc66, #cd7f32)';
+    return 'radial-gradient(circle, #ffcc66, #cd7f32)'
   } else if (props.achievement.state == UserAchievementState.SILVER) {
-    return 'radial-gradient(circle, #e6e6e6, #a8a8a8)';
+    return 'radial-gradient(circle, #e6e6e6, #a8a8a8)'
   } else if (props.achievement.state == UserAchievementState.GOLD) {
-    return 'radial-gradient(circle, #ffff33, #ff9900)'; // Made the final gold color even darker for a stronger effect
+    return 'radial-gradient(circle, #ffff33, #ff9900)' // Made the final gold color even darker for a stronger effect
   } else {
-    return;
+    return
   }
-});
+})
 
-let tooltipVisible = ref(false);
-let tooltipX = ref(0);
-let tooltipY = ref(0);
+let tooltipVisible = ref(false)
+let tooltipX = ref(0)
+let tooltipY = ref(0)
 
 const showTooltip = () => {
-  tooltipVisible.value = true;
-};
+  tooltipVisible.value = true
+}
 
 const hideTooltip = () => {
-  tooltipVisible.value = false;
-};
+  tooltipVisible.value = false
+}
 
 const updateTooltipPosition = (event: MouseEvent) => {
-  tooltipX.value = event.clientX + 10; // 10px offset for better visibility
-  tooltipY.value = event.clientY + 10; // 10px offset for better visibility
-};
-
-
+  tooltipX.value = event.clientX + 10 // 10px offset for better visibility
+  tooltipY.value = event.clientY + 10 // 10px offset for better visibility
+}
 </script>
 
 <style>
@@ -152,7 +164,7 @@ const updateTooltipPosition = (event: MouseEvent) => {
 }
 
 .is-inactive::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -160,12 +172,12 @@ const updateTooltipPosition = (event: MouseEvent) => {
   bottom: 0;
   background: rgba(255, 255, 255, 0.2); /* Opacity */
   filter: grayscale(100%);
-  pointer-events: none; 
-  z-index: 1; 
+  pointer-events: none;
+  z-index: 1;
 }
 
 .tooltip-box {
-  position: fixed; 
+  position: fixed;
   box-sizing: border-box;
   background-color: rgba(18, 18, 18, 0.8);
   /* border-width: 2px; */
@@ -173,21 +185,23 @@ const updateTooltipPosition = (event: MouseEvent) => {
   color: #fff;
   padding: 5px 10px;
   border-radius: 5px;
-  z-index: 1000; 
+  z-index: 1000;
   opacity: 1;
-  pointer-events: none; 
+  pointer-events: none;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.2s;
 }
 
-.fade-enter-to, .fade-leave-from {
+.fade-enter-to,
+.fade-leave-from {
   opacity: 1;
 }
-
 </style>
