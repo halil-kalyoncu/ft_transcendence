@@ -1,20 +1,28 @@
 <template>
-  <div class="achievement" :class="{ 'is-inactive': props.achievement.state === UserAchievementState.NONE }">
-    <img
-      :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
-      :style="{ background: backgroundColor }"
-      alt="Achievement"
-      class="achievement-image"
-    />
-    <div class="achievement-content">
-      <h2 class="achievement-title">{{ achievement.achievement.name }}</h2>
-      <p class="achievement-progress">{{ achievement.progress }} {{ '/' }} {{ currentMax }}</p>
-      <div class="progress-bar">
-        <div class="progress-bar-fill" :style="{ width: currentProgress + '%' }"></div>
-      </div>
-    </div>
-  </div>
-</template>
+	<div class="achievement" :class="{ 'is-inactive': props.achievement.state === UserAchievementState.NONE }">
+	  <div class="achievement-wrapper">  <!-- This is the new wrapper div -->
+		<img
+		  :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
+		  :style="{ background: backgroundColor }"
+		  alt="Achievement"
+		  class="achievement-image"
+		/>
+		<div class="achievement-content">
+		  <h2 class="achievement-title">{{ achievement.achievement.name }}</h2>
+		  <div class="progress-bar" @mouseover="showTooltip" @mousemove="updateTooltipPosition" @mouseout="hideTooltip">
+			<div class="progress-bar-fill" :style="{ width: currentProgress + '%' }"></div>
+		  </div>
+		</div>
+	  </div>
+	  <transition name="fade">
+		<div v-if="tooltipVisible" :style="{ top: tooltipY + 'px', left: tooltipX + 'px' }" class="tooltip-box">
+		  <div>{{ 'Progress: ' }} {{ achievement.progress }} {{ '/' }} {{ currentMax }}</div>
+		</div>
+	  </transition>
+	</div>
+  </template>
+  
+
 
 <script setup lang="ts">
 let currentMax = ref(0);
@@ -50,11 +58,30 @@ const backgroundColor = computed(() => {
   }
 });
 
+let tooltipVisible = ref(false);
+let tooltipX = ref(0);
+let tooltipY = ref(0);
+
+const showTooltip = () => {
+  tooltipVisible.value = true;
+};
+
+const hideTooltip = () => {
+  tooltipVisible.value = false;
+};
+
+const updateTooltipPosition = (event: MouseEvent) => {
+  tooltipX.value = event.clientX + 10; // 10px offset for better visibility
+  tooltipY.value = event.clientY + 10; // 10px offset for better visibility
+};
+
+
 </script>
 
 <style>
 .achievement {
-  display: flex;
+  /* display: flex; */
+  position: relative;
   justify-content: space-between;
   align-items: center;
   background-color: #333;
@@ -83,6 +110,8 @@ const backgroundColor = computed(() => {
   display: flex;
   flex-direction: column;
   min-width: 80%;
+  margin-top: 3px;
+  margin-left: 5px;
 }
 
 .achievement-title {
@@ -100,6 +129,8 @@ const backgroundColor = computed(() => {
   background: #0c0c0c;
   border-radius: 5px;
   overflow: hidden;
+  z-index: 2;
+  margin-top: 25px;
 }
 
 .progress-bar-fill {
@@ -108,9 +139,55 @@ const backgroundColor = computed(() => {
   transition: width 0.4s ease;
 }
 
-.is-inactive {
+.achievement-wrapper {
+  display: flex;
+  /* align-items: center;
+  /* justify-content: space-between; */
+  /* min-width: 80%; */
+}
+
+.achievement.is-inactive .achievement-wrapper {
   filter: grayscale(100%);
   opacity: 0.5;
+}
+
+.is-inactive::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.2); /* Opacity */
+  filter: grayscale(100%);
+  pointer-events: none; 
+  z-index: 1; 
+}
+
+.tooltip-box {
+  position: fixed; 
+  box-sizing: border-box;
+  background-color: rgba(18, 18, 18, 0.8);
+  /* border-width: 2px; */
+  /* border: 1px solid rgb(78, 78, 78); */
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  z-index: 1000; 
+  opacity: 1;
+  pointer-events: none; 
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s;
+}
+
+.fade-enter-to, .fade-leave-from {
+  opacity: 1;
 }
 
 </style>
