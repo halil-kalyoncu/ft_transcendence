@@ -1,5 +1,5 @@
 <template>
-  <div class="achievement">
+  <div class="achievement" :class="{ 'is-inactive': props.achievement.state === UserAchievementState.NONE }">
     <img
       :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
       :style="{ background: backgroundColor }"
@@ -17,36 +17,39 @@
 </template>
 
 <script setup lang="ts">
-let currentMax = 0
+let currentMax = ref(0);
 
-import { ref, computed } from 'vue'
-import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
+import { ref, computed, onMounted } from 'vue'
+import { UserAchievementState, type UserAchievementI } from '../../model/achievement/userAchievement.interface'
 
 const props = defineProps<{ achievement: UserAchievementI }>()
 
 const currentProgress = computed(() => {
-  currentMax = props.achievement.achievement.scoreGold
+  currentMax.value = 0
   if (props.achievement.progress < props.achievement.achievement.scoreBronze) {
-    currentMax = props.achievement.achievement.scoreBronze
+    currentMax.value = props.achievement.achievement.scoreBronze
   } else if (props.achievement.progress < props.achievement.achievement.scoreSilver) {
-    currentMax = props.achievement.achievement.scoreSilver
+    currentMax.value = props.achievement.achievement.scoreSilver
   } else if (props.achievement.progress < props.achievement.achievement.scoreGold) {
-    currentMax = props.achievement.achievement.scoreGold
+    currentMax.value = props.achievement.achievement.scoreGold
   }
 
-  const progressRatio = props.achievement.progress / currentMax
+  const progressRatio = props.achievement.progress / currentMax.value
   return Math.min(100, progressRatio * 100)
 })
 
 const backgroundColor = computed(() => {
-  if (props.achievement.progress < props.achievement.achievement.scoreBronze) {
-    return 'linear-gradient(to right, #8c7a58, #bfa980)'
-  } else if (props.achievement.progress < props.achievement.achievement.scoreSilver) {
-    return 'linear-gradient(to right, #b0b0b0, #d7d7d7)'
+  if (props.achievement.state == UserAchievementState.BRONZE) {
+    return 'radial-gradient(circle, #ffcc66, #cd7f32)';
+  } else if (props.achievement.state == UserAchievementState.SILVER) {
+    return 'radial-gradient(circle, #e6e6e6, #a8a8a8)';
+  } else if (props.achievement.state == UserAchievementState.GOLD) {
+    return 'radial-gradient(circle, #ffff33, #ff9900)'; // Made the final gold color even darker for a stronger effect
   } else {
-    return 'linear-gradient(to right, #051139, #0d2265)'
+    return;
   }
-})
+});
+
 </script>
 
 <style>
@@ -104,4 +107,10 @@ const backgroundColor = computed(() => {
   background: gold;
   transition: width 0.4s ease;
 }
+
+.is-inactive {
+  filter: grayscale(100%);
+  opacity: 0.5;
+}
+
 </style>

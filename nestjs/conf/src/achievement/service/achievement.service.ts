@@ -83,6 +83,9 @@ export class AchievementService {
       include: {
         achievement: true,
       },
+	  orderBy: {
+		achievementId: 'asc',
+	  }
     });
   }
 
@@ -90,3 +93,4 @@ export class AchievementService {
     return await this.prisma.achievement.findMany();
   }
 }
+
