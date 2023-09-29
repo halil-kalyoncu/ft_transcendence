@@ -4,9 +4,11 @@ import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
 import type { MatchI } from '../../model/match/match.interface'
 
+const router = useRouter()
 const route = useRoute()
 const userId = route.params.userId as string
 const username = route.params.username as string
@@ -73,7 +75,27 @@ async function getMatchHistory(): Promise<void> {
   }
 }
 
-onMounted(() => {
+async function checkUserId(): Promise<void> {
+	try {
+	const response = await fetch(`http://localhost:3000/api/users/find-by-id?id=${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+      }
+    })
+	if (response.ok) {
+		const userData = await response.json()
+		console.log("USERDATA", userData)
+    }
+	} catch (error) {
+		console.error('Failed to fetch user data:', error)
+		router.push('/home')
+	}
+}
+
+onMounted(async () => {
+  await checkUserId()
   getMatchHistory()
   getMatchOutcomes()
 })

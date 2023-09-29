@@ -250,7 +250,7 @@ onMounted(() => {
 	const newPowerUp = {
     id: Math.floor(Date.now()),
     x: PowerUp.x,
-    y: PowerUp.y, //Math.floor(Math.random() * ((fieldHeight.value! - 70) - 70 + 1)) + 70,
+    y: PowerUp.y, 
 	type: 'null',
     index: 0,
     color: 'white',
