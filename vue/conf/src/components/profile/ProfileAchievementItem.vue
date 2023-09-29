@@ -2,13 +2,13 @@
   <div class="achievement">
     <img
       :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
-	  :style="{ background: backgroundColor }"
+      :style="{ background: backgroundColor }"
       alt="Achievement"
       class="achievement-image"
     />
     <div class="achievement-content">
       <h2 class="achievement-title">{{ achievement.achievement.name }}</h2>
-      <p class="achievement-progress">{{ achievement.progress }} {{ "/" }} {{ currentMax }}</p>
+      <p class="achievement-progress">{{ achievement.progress }} {{ '/' }} {{ currentMax }}</p>
       <div class="progress-bar">
         <div class="progress-bar-fill" :style="{ width: currentProgress + '%' }"></div>
       </div>
@@ -17,8 +17,7 @@
 </template>
 
 <script setup lang="ts">
-
-let currentMax = 0;
+let currentMax = 0
 
 import { ref, computed } from 'vue'
 import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
@@ -26,7 +25,7 @@ import type { UserAchievementI } from '../../model/achievement/userAchievement.i
 const props = defineProps<{ achievement: UserAchievementI }>()
 
 const currentProgress = computed(() => {
-	currentMax = props.achievement.achievement.scoreGold
+  currentMax = props.achievement.achievement.scoreGold
   if (props.achievement.progress < props.achievement.achievement.scoreBronze) {
     currentMax = props.achievement.achievement.scoreBronze
   } else if (props.achievement.progress < props.achievement.achievement.scoreSilver) {
@@ -65,7 +64,7 @@ const backgroundColor = computed(() => {
 }
 
 .achievement-progress {
-	text-align: center;
+  text-align: center;
 }
 
 .achievement-image {
@@ -105,5 +104,4 @@ const backgroundColor = computed(() => {
   background: gold;
   transition: width 0.4s ease;
 }
-
 </style>

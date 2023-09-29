@@ -107,13 +107,15 @@ const getUserFromAccessToken = () => {
 }
 
 const keyHookDown = (e: KeyboardEvent) => {
-  switch (e.key) {
+  switch (e.code) {
     case 'p':
       isPaused.value = !isPaused.value
       break
+    case 'KeyW':
     case 'ArrowUp':
       isMovingUp.value = true
       break
+    case 'KeyS':
     case 'ArrowDown':
       isMovingDown.value = true
       break
@@ -127,9 +129,11 @@ const keyHookUp = (e: KeyboardEvent) => {
   }
 
   switch (e.code) {
+    case 'KeyW':
     case 'ArrowUp':
       isMovingUp.value = false
       break
+    case 'KeyS':
     case 'ArrowDown':
       isMovingDown.value = false
       break
@@ -139,7 +143,12 @@ const keyHookUp = (e: KeyboardEvent) => {
   }
 }
 
+window.addEventListener('w', keyHookDown)
+window.addEventListener('s', keyHookDown)
 window.addEventListener('keydown', keyHookDown)
+
+window.addEventListener('w', keyHookUp)
+window.addEventListener('s', keyHookUp)
 window.addEventListener('keyup', keyHookUp)
 
 const initGameSocket = () => {
@@ -149,6 +158,7 @@ const initGameSocket = () => {
     matchId: matchId
   })
 }
+
 
 const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
@@ -289,7 +299,6 @@ onMounted(() => {
       // console.log("ID: ", powerUp.id, "Y:", y);
     }
   })
-
 
   socket.value.on('destroyPowerUp', ({ id }: { id: number }) => {
     if (!socket || !socket.value) {
