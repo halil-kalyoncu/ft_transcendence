@@ -11,7 +11,6 @@ const setActivePanel = (value: string) => {
   activePanel.value = value
 }
 
-console.log("env variable value: " + import.meta.env.VITE_EXAMPLE)
 </script>
 <template>
   <nav class="activityCenter">
