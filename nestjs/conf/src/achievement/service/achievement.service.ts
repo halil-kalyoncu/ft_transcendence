@@ -84,7 +84,7 @@ export class AchievementService {
         achievement: true,
       },
       orderBy: {
-        achievementId: 'asc',
+        state: 'desc',
       },
     });
   }
