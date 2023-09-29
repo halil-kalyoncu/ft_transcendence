@@ -16,7 +16,7 @@ const avatarSelected = ref<boolean>(false)
 const fetchCanBeRegistered = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/users/canBeRegistered?intraLogin=${intraLogin}`
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/canBeRegistered?intraLogin=${intraLogin}`
     )
 
 	console.log(response);
@@ -47,7 +47,7 @@ const removeAvatarInput = () => {
 
 const handleRegisterWithoutAvatar = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/users/register', {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -79,7 +79,7 @@ const handleRegisterWithAvatar = async () => {
 		formData.append('username', username.value)
 		formData.append('intraLogin', intraLogin)
 
-		const response = await fetch('http://localhost:3000/api/users/registerWithAvatar', {
+		const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/registerWithAvatar`, {
 			method: 'POST',
 			body: formData
 		})

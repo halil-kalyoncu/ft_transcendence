@@ -25,8 +25,8 @@ watch(
 
 const redirectTo42Authentication = () => {
   try {
-    const clientID = 'u-s4t2ud-ed681aac38facba73c47424c0e7e832f42a961819948f18cfcd350cc1da505e7'
-    const redirectUri = encodeURIComponent('http://localhost:3000/api/auth/callback')
+    const clientID = import.meta.env.VITE_API42CLIENTID
+    const redirectUri = encodeURIComponent(import.meta.env.VITE_API42REDIRECTURI)
     window.location.href = `https://api.intra.42.fr/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectUri}&response_type=code`
   } catch (error) {
     notificationStore.showNotification('Something went wrong when redirecting to 42intra', false)
