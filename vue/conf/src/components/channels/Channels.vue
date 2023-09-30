@@ -44,9 +44,7 @@
 import ChannelManager from './ChannelManager.vue'
 import ChannelMessages from '../chat/ChannelMessages.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import { connectChatSocket, disconnectChatSocket } from '../../websocket'

@@ -10,6 +10,8 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const props = defineProps({
   selectedFriendEntry: {
@@ -149,10 +151,12 @@ const formatDate = (createdAt: Date) => {
 </script>
 
 <template>
-  <div v-if="props.selectedFriendEntry?.blocked!">You blocked {{ selectedUser?.username! }}</div>
-  <div v-else class="chat">
+  <div v-if="props.selectedFriendEntry?.blocked!" class="blocked-friend">
+    <font-awesome-icon :icon="['fas', 'ban']" class="blocked-icon" />
+  </div>
+  <div class="chat">
     <div></div>
-    <ScrollViewer :maxHeight="'60vh'">
+    <ScrollViewer :maxHeight="'60vh'" :class="{ blur: props.selectedFriendEntry?.blocked }">
       <div class="messages" v-if="!loading" ref="chatContainerRef">
         <Message
           v-for="message in messages"
@@ -166,7 +170,7 @@ const formatDate = (createdAt: Date) => {
       </div>
       <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
-    <div class="chat-input">
+    <div class="chat-input" :class="{ blur: props.selectedFriendEntry?.blocked }">
       <textarea
         type="text"
         v-model="newMessage"
@@ -244,5 +248,29 @@ const formatDate = (createdAt: Date) => {
 .chat .loading-text {
   font-size: 0.8rem;
   padding-left: 0.75rem;
+}
+
+.blur {
+  filter: blur(7.5px);
+  -moz-filter: blur(7.5px);
+  -webkit-filter: blur(7.5px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.blocked-friend {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #a83232;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+}
+
+.blocked-icon {
+  font-size: 6rem;
 }
 </style>

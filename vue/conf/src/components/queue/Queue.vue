@@ -12,9 +12,7 @@ import jwtDecode from 'jwt-decode'
 import Spinner from '../utils/Spinner.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faArrowLeft)
 const route = useRoute()
 const matchmakingId: string = route.params.matchmakingId as string
 

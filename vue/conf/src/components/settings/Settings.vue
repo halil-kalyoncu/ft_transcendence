@@ -4,8 +4,14 @@
 
     <form @submit.prevent="changeUsername" class="input-group">
       <div class="username-container">
-        <input type="text" id="username" placeholder="Enter New Username" v-model="username" required />
-        <button> <font-awesome-icon :icon="['fa', 'fa-pencil-alt']" /></button>
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter New Username"
+          v-model="username"
+          required
+        />
+        <button><font-awesome-icon :icon="['fa', 'fa-pencil-alt']" /></button>
       </div>
     </form>
 
@@ -73,7 +79,6 @@ import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import type { UserI } from '../../model/user.interface'
 import type { ErrorI } from '../../model/error.interface'
@@ -93,7 +98,6 @@ const twoFAEnabled = ref(true)
 const avatarInput: Ref<HTMLInputElement | null> = ref(null)
 const uploadedAvatarFile: Ref<File | null> = ref(null)
 const qrCodeImage = ref('')
-library.add(faArrowLeft)
 
 const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {
@@ -421,12 +425,11 @@ input[type='file']:focus,
   clip: rect(0, 0, 0, 0);
 }
 
-.username-container{
+.username-container {
   display: flex;
 }
 
-
-.username-container button{
+.username-container button {
   width: 40px;
   background-color: transparent;
   border: 1px solid aliceblue;
@@ -434,12 +437,11 @@ input[type='file']:focus,
   cursor: pointer;
   color: #fff;
   transition: all 0.25s ease;
-
 }
 
-.username-container button:hover{
+.username-container button:hover {
   border: 1px solid #ea9f42;
-  color:  #ea9f42;
+  color: #ea9f42;
 }
 
 .disabled {
