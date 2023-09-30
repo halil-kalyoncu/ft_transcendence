@@ -458,8 +458,6 @@ async function getMatchData(): Promise<void> {
 }
 
 const goHome = () => {
-	// if (!matchResult)
-	// 	socket.value?.emit('resetGoals')
 	router.push('/home')
 }
 </script>

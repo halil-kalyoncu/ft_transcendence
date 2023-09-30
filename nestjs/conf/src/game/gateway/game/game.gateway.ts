@@ -373,23 +373,6 @@ export class EventsGateway {
     socket.emit('gameFinished', match);
   }
 
-  @SubscribeMessage('resetGoals')
-  resetGoals(socket: Socket) {
-	const room = this.rooms.get(socket.data.match.id);
-
-	if (socket.id === room.socketIds[0]){
-		room.leftPlayerGoals = 0;
-		if (room.rightPlayerGoals == 0)
-			room.rightPlayerGoals = 1;
-	}
-	if (socket.id === room.socketIds[1]){
-		room.rightPlayerGoals = 0;
-		if (room.leftPlayerGoals == 0)
-			room.leftPlayerGoals = 1;
-	}
-  }
-
-
   //Helperfunctions
   private sendToOpponent(
     socket: Socket,
