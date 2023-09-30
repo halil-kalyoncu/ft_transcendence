@@ -14,13 +14,13 @@
 
 <script setup lang="ts">
 
-const props = defineProps<{
-  playerA: string
-  playerB: string
-  playerAScore: number
-  playerBScore: number
-  goalsToBeat: number
-}>()
+const props = defineProps({
+  playerA: String,
+  playerB: String,
+  playerAScore: Number,
+  playerBScore: Number,
+  goalsToBeat: Number
+})
 </script>
 
 <style scoped>

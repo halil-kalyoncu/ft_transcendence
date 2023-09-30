@@ -95,8 +95,7 @@ async function checkUserId(): Promise<void> {
       }
     })
     if (response.ok) {
-      const userData = await response.json()
-      console.log('USERDATA', userData)
+		const userData = await response.json()
     }
   } catch (error) {
     console.error('Failed to fetch user data:', error)
