@@ -16,7 +16,6 @@ import { createECDH } from 'crypto';
 
 let diffPadBall = 0;
 let intervalId;
-
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost:4200', 'http://localhost:3000'],
@@ -43,7 +42,6 @@ export class EventsGateway {
     const gameInterval = setInterval(async () => {
       if (room.gameIsRunning) {
         let newBallPos;
-
         if (room.ball.magnet && room.ball.ballSticking) {
           if (room.ball.magnet == 1 && room.ball.ballSticking == 1) {
             if (diffPadBall == 0) diffPadBall = room.ball.y - room.paddleA.y;
@@ -63,7 +61,7 @@ export class EventsGateway {
           this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
           room.ball.x = newBallPos.x;
           room.ball.y = newBallPos.y;
-        } else {
+        } else if (room.ball.pause == false) {
           newBallPos = room.ball.moveBall(room, this.server);
           this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos);
           this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
@@ -77,6 +75,7 @@ export class EventsGateway {
         this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
         this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
         clearInterval(gameInterval);
+        clearInterval(intervalId);
       }
     }, 15);
   }

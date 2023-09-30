@@ -1,32 +1,35 @@
 <template>
-  <div v-if="!matchResult" class="field" ref="gameField">
-    <div class="left-border"></div>
-    <div class="right-border"></div>
-    <div v-if="countdown === -1" class="waiting">
-      <p>Waiting for opponent... {{ formattedTimer }}</p>
-    </div>
-    <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
-      <p>{{ countdown }}</p>
-    </div>
+  <div v-if="!matchResult">
     <PlayerView
       ref="playerview"
       :playerA="playerAName"
       :playerB="playerBName"
       :playerAScore="playerAScore"
       :playerBScore="playerBScore"
+      :goalsToBeat="goalsToBeat"
     />
-    <GameBall ref="ball" />
-    <GamePaddle ref="paddleA" />
-    <GamePaddle ref="paddleB" />
-    <PowerUp
-      v-for="powerup in PowerUps"
-      :id="powerup.id"
-      :x="powerup.x"
-      :y="powerup.y"
-      :color="powerup.color"
-      :index="powerup.index"
-      :type="powerup.type"
-    />
+    <div class="field" ref="gameField">
+      <div class="left-border"></div>
+      <div class="right-border"></div>
+      <div v-if="countdown === -1" class="waiting">
+        <p>Waiting for opponent... {{ formattedTimer }}</p>
+      </div>
+      <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
+        <p>{{ countdown }}</p>
+      </div>
+      <GameBall ref="ball" />
+      <GamePaddle ref="paddleA" />
+      <GamePaddle ref="paddleB" />
+      <PowerUp
+        v-for="powerup in PowerUps"
+        :id="powerup.id"
+        :x="powerup.x"
+        :y="powerup.y"
+        :color="powerup.color"
+        :index="powerup.index"
+        :type="powerup.type"
+      />
+    </div>
   </div>
   <div v-else>
     <PostGame
@@ -88,6 +91,7 @@ let playerAName = ref<string>('')
 let playerBName = ref<string>('')
 let playerAScore = ref<number>(0)
 let playerBScore = ref<number>(0)
+let goalsToBeat = ref<number>(0)
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
@@ -168,12 +172,20 @@ const initGameField = async () => {
   fieldWidth.value = gameField.value?.clientWidth || 0
   fieldHeight.value = gameField.value?.clientHeight || 0
   // console.log(fieldWidth.value);
-  await getUserNames()
-  if (!playerAName || playerAName.value === '' || !playerBName || playerBName.value === '') {
+  await getMatchData()
+  if (
+    !playerAName ||
+    playerAName.value === '' ||
+    !playerBName ||
+    playerBName.value === '' ||
+    !goalsToBeat ||
+    goalsToBeat.value === 0
+  ) {
     //TODO what to do if the usernames are not set
     console.log('something went wrong fetching the usernames')
     return
   }
+  console.log('goalsTobeatttttttt: ', goalsToBeat)
   setTimeout(() => {
     update()
   }, 200)
@@ -248,7 +260,7 @@ onMounted(() => {
     const newPowerUp = {
       id: Math.floor(Date.now()),
       x: PowerUp.x,
-      y: PowerUp.y, //Math.floor(Math.random() * ((fieldHeight.value! - 70) - 70 + 1)) + 70,
+      y: PowerUp.y,
       type: 'null',
       index: 0,
       color: 'white',
@@ -406,7 +418,7 @@ function update() {
   requestAnimationFrame(update)
 }
 
-async function getUserNames(): Promise<void> {
+async function getMatchData(): Promise<void> {
   try {
     const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
       method: 'GET',
@@ -420,6 +432,7 @@ async function getUserNames(): Promise<void> {
     if (response.ok) {
       playerAName = responseData.leftUser.username
       playerBName = responseData.rightUser.username
+      goalsToBeat = responseData.goalsToWin
     } else {
       notificationStore.showNotification(
         'Error while fetching the match data' + responseData.message,

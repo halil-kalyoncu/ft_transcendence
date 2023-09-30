@@ -29,6 +29,12 @@
 <script setup lang="ts">
 import Trophy from '../../assets/trophy.png'
 import SadFace from '../../assets/sad_face.png'
+
+const shortenName = (name: string) => {
+  if (name.length > 6) return name.substring(0, 6) + '...'
+  return name
+}
+
 let image = [Trophy, SadFace]
 const props = defineProps<{
   playerA: string

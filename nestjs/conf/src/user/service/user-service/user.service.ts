@@ -75,7 +75,6 @@ export class UserService {
           });
         }),
       );
-      console.log(userAchievements);
       return user;
     } catch (error) {
       //P2002 is the prisma error code for the unique constraint
