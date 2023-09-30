@@ -71,6 +71,10 @@ const initSocket = () => {
   socket.value = connectChatSocket(accessToken)
 }
 
+const handleShowLeaderboard = () => {
+  router.push('/leaderboard')
+}
+
 onMounted(() => {
   initSocket()
 })
@@ -81,7 +85,10 @@ onMounted(() => {
     <button @click="handleQueueUpLadder" class="dynamic-button" :class="'margin-right-queue'">
       QUEUE UP FOR LADDER GAME
     </button>
-    <button @click="handleInviteClick" class="dynamic-button">START A CUSTOM GAME</button>
+    <button @click="handleInviteClick" class="dynamic-button" :class="'margin-right-queue'">
+      START A CUSTOM GAME
+    </button>
+    <button @click="handleShowLeaderboard" class="dynamic-button">SHOW LEADERBOARD</button>
   </div>
 </template>
 

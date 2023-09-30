@@ -2,19 +2,19 @@
   <div class="joinned-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
       <div v-if="channelData && channelData.length">
-      <div v-for="channel in channelData" :key="channel.channel.id">
-        <ChannelListItem
-          :isPasswordProtected="channel.channel.protected"
-          :isPrivate="channel.channel.visibility === 'PRIVATE' ? true : false"
-          :channelName="channel.channel.name"
-          :ownerName="channel.owner.username"
-          :joinChannelButtonNameProps="'Enter'"
-          :channelId="channel.channel.id"
-          :unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
-          :userId="userId"
-          @channelEntered="handleChannelEntered(channel.channel.id)"
-        />
-      </div>
+        <div v-for="channel in channelData" :key="channel.channel.id">
+          <ChannelListItem
+            :isPasswordProtected="channel.channel.protected"
+            :isPrivate="channel.channel.visibility === 'PRIVATE' ? true : false"
+            :channelName="channel.channel.name"
+            :ownerName="channel.owner.username"
+            :joinChannelButtonNameProps="'Enter'"
+            :channelId="channel.channel.id"
+            :unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
+            :userId="userId"
+            @channelEntered="handleChannelEntered(channel.channel.id)"
+          />
+        </div>
       </div>
       <div v-else>
         <p class="friends-empty-notification">Channel list is empty</p>
