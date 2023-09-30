@@ -1,18 +1,14 @@
 <template>
   <div class="match-history-item">
     <section class="left-player-section">
-      <!-- <img class="profile-image" :src="playerAvatar" alt="Player Profile" /> -->
       <h2 class="profile-username">{{ leftPlayerName }}</h2>
     </section>
-
     <section class="result-section">
       <p class="score">{{ scoreMessage }}</p>
       <p class="goals">{{ combinedScore }}</p>
       <p class="date-time" v-if="time">{{ formattedTimestamp }}</p>
     </section>
-
     <section class="right-player-section">
-      <!-- <img class="profile-image" :src="opponentAvatar" alt="Opponent Profile" /> -->
       <h2 class="profile-username">{{ rightPlayerName }}</h2>
     </section>
   </div>
@@ -32,8 +28,8 @@ const props = defineProps({
 })
 
 const time: Date | null = props.match?.finishedAt ?? null
-const leftPlayerName: String | null = props.match?.leftUser?.username ?? null
-const rightPlayerName: String | null = props.match?.rightUser?.username ?? null
+const leftPlayerName: string | null = props.match?.leftUser?.username ?? null
+const rightPlayerName: string | null = props.match?.rightUser?.username ?? null
 
 const scoreMessage = computed(() => {
   if (!props.match?.state || !props.userId) return null
@@ -58,10 +54,13 @@ const combinedScore = computed(() => {
   return `${leftScore} : ${rightScore}`
 })
 
-const formatDate = (createdAt: Date) => {
+const formatDate = (createdAt: Date | null) => {
+  if (!createdAt)
+  	return '';
+
   const date = new Date(createdAt);
   const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Note: +1 to get the correct month
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
@@ -70,7 +69,7 @@ const formatDate = (createdAt: Date) => {
   return `${month}-${day}-${year} ${hours}:${minutes}:${seconds}`
 }
 
-const formattedTimestamp = computed(() => formatDate(time));
+const formattedTimestamp = computed(() => formatDate(time ?? null));
 
 </script>
 
