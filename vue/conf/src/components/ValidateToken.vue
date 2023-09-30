@@ -5,6 +5,7 @@ import { useUserStore } from '../stores/userInfo'
 import { connectChatSocket } from '../websocket'
 import jwtDecode from 'jwt-decode'
 import { useNotificationStore } from '../stores/notification'
+import Spinner from './utils/Spinner.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,4 +30,23 @@ onMounted(async () => {
 })
 </script>
 
-<template>You are being redirected</template>
+<template>
+<div class="login">
+    <div class="waiting-container">
+      <Spinner />
+      <span>redirecting...</span>
+    </div>
+</div>
+
+</template>
+
+<style>
+
+.waiting-container {
+  margin: 10% 0 0 22.5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+</style>

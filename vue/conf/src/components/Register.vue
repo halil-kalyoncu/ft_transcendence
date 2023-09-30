@@ -2,7 +2,6 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
 import { onMounted, ref } from 'vue'
-import Spinner from './utils/Spinner.vue'
 import type { Ref } from 'vue'
 
 const route = useRoute()
@@ -10,7 +9,6 @@ const intraLogin = route.params.intraLogin as string
 const notificationStore = useNotificationStore()
 const router = useRouter()
 
-const isLoading = ref(true)
 const username = ref('')
 const selectedAvatarName = ref('')
 const avatarInput: Ref<HTMLInputElement | null> = ref(null)
@@ -129,21 +127,13 @@ const submitForm = async () => {
 }
 
 onMounted(async () => {
-  try {
     await fetchCanBeRegistered()
-  } finally {
-    isLoading.value = false
-  }
 })
 </script>
 
 <template>
   <div class="register">
-    <div v-if="isLoading" class="waiting-container">
-      <Spinner />
-      <span>preparing registration...</span>
-    </div>
-    <form v-else @submit.prevent="submitForm">
+    <form @submit.prevent="submitForm">
       <div class="input-group">
         <input type="text" id="username" v-model="username" placeholder="Enter username" required />
       </div>
@@ -285,9 +275,5 @@ onMounted(async () => {
   clip: rect(0, 0, 0, 0);
 }
 
-.waiting-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+
 </style>
