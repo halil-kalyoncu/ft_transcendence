@@ -34,6 +34,7 @@ export class MatchService {
     });
   }
 
+
   //   async findUserByName(username: string): Promise<Match> {
   // 	return await this.prisma.match.findUnique({
   // 	  where: {
@@ -73,11 +74,11 @@ export class MatchService {
       },
     });
     matches.map((match: Match) => {
-      if (match.leftUserId === userId && match.state === 'WINNERLEFT') {
+      if (match.leftUserId === userId && (match.state === 'WINNERLEFT' || match.state === 'DISCONNECTRIGHT')) {
         wins++;
       } else if (
         match.rightUserId === userId &&
-        match.state === 'WINNERRIGHT'
+        (match.state === 'WINNERRIGHT' || match.state === 'DISCONNECTLEFT')
       ) {
         wins++;
       } else {

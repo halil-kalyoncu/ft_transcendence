@@ -184,6 +184,7 @@ export class EventsGateway {
       }
 
       const match = await this.matchService.finishMatch(room);
+	  console.log(match)
 
       if (socket.data.isLeftPlayer) {
         socket.to(room.socketIds[1]).emit('gameFinished', match);

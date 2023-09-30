@@ -1,47 +1,41 @@
 <template>
   <div class="field">
-    <div v-if="playerAScore > playerBScore" class="winner">
-      <div class="headline">{{ playerA }} has won!</div>
+    <div v-if="matchResult!.state == 'WINNERLEFT' || matchResult!.state == 'DISCONNECTRIGHT'" class="winner">
+      <div class="headline">{{ matchResult!.leftUser!.username }} has won!</div>
       <div class="trophys">
         <div class="trophyA" :style="{ backgroundImage: `url(${image[0]})` }"></div>
         <div class="trophyB" :style="{ backgroundImage: `url(${image[1]})` }"></div>
       </div>
     </div>
-    <div v-else-if="playerAScore < playerBScore" class="winner">
-      <div class="headline">{{ playerB }} has won!</div>
+    <div v-else-if="matchResult!.state == 'WINNERRIGHT' || matchResult!.state == 'DISCONNECTLEFT'" class="winner">
+      <div class="headline">{{ matchResult!.rightUser!.username }} has won!</div>
       <div class="trophys">
         <div class="trophyA" :style="{ backgroundImage: `url(${image[1]})` }"></div>
         <div class="trophyB" :style="{ backgroundImage: `url(${image[0]})` }"></div>
       </div>
     </div>
-    <div v-else class="winner">
-      <div class="headline">Its a draw!</div>
-      <div class="trophys"></div>
-    </div>
     <div class="players">
-      <div class="playerA">{{ playerA }}</div>
-      <div class="playerB">{{ playerB }}</div>
+      <div class="playerA">{{ matchResult!.leftUser!.username }}</div>
+      <div class="playerB">{{ matchResult!.rightUser!.username }}</div>
     </div>
-    <div class="score">{{ playerAScore + ' : ' + playerBScore }}</div>
+    <div class="score">{{ matchResult!.goalsLeftPlayer + ' : ' + matchResult!.goalsRightPlayer }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import Trophy from '../../assets/trophy.png'
 import SadFace from '../../assets/sad_face.png'
-
-const shortenName = (name: string) => {
-  if (name.length > 6) return name.substring(0, 6) + '...'
-  return name
-}
+import type { MatchI } from '../../model/match/match.interface'
 
 let image = [Trophy, SadFace]
-const props = defineProps<{
-  playerA: string
-  playerB: string
-  playerAScore: number
-  playerBScore: number
-}>()
+
+const props = defineProps({
+  matchResult: {
+    type: Object as () => MatchI | null,
+    required: true
+  }
+})
+
 </script>
 
 <style scoped>
