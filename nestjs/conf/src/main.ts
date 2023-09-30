@@ -7,8 +7,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+  //Todo: set url back to http://10.12.5.1:4200?
   app.enableCors({
-    origin: 'http://10.12.5.1:4200',
+    origin: 'http://localhost:4200',
   });
   app.useGlobalPipes(new ValidationPipe());
   app.use(

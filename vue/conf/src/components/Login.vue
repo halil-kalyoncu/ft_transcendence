@@ -1,6 +1,8 @@
 <template>
   <div class="login">
-    <button @click="redirectTo42Authentication">42 Login</button>
+    <div class="login-form">
+      <button @click="redirectTo42Authentication" class="dynamic-button">42 Login</button>
+    </div>
   </div>
 </template>
 
@@ -40,7 +42,10 @@ const redirectTo42Authentication = () => {
   width: 100vw;
   height: 100vh;
   position: relative;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7) !important;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .login-form {
@@ -53,17 +58,6 @@ const redirectTo42Authentication = () => {
   -webkit-transform: translateX(-50%) translateY(-50%);
   -moz-transform: translateX(-50%) translateY(-50%);
   text-align: center;
-}
-
-.login-form input {
-  padding: 0.5rem 0.25rem;
-  background-color: lightgray;
-  border-radius: 0.25rem;
-  margin: 1rem;
-}
-
-.login-form input:focus {
-  outline: solid 2px #ea9f42;
 }
 
 .font-color {

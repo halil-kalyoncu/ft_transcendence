@@ -373,9 +373,9 @@ input[type='file']:focus,
 }
 
 .secondary-btn:active {
-  background-color: #ea9f42; /* Change the background color when the button is clicked */
-  border: none; /* Remove the border when the button is clicked */
-  color: #ffffff; /* Change the text color when the button is clicked */
+  background-color: #ea9f42;
+  border: none;
+  color: #ffffff;
 }
 
 .file-input {
@@ -436,7 +436,6 @@ input[type='file']:focus,
 
 .input-group .two-FA-input {
   padding: 0.5rem 1rem;
-  /* min-width: 200px;  */
   min-height: 35px;
   min-width: 200px;
   border: 1px solid #ba4646;
@@ -462,6 +461,7 @@ input[type='file']:focus,
   margin-bottom: 1rem;
   max-width: 100%;
 }
+
 /* TODO: Make this responsive  */
 .qr-code-container .qrcode {
   flex-grow: 1;

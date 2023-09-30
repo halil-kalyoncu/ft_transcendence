@@ -10,7 +10,6 @@ const activePanel = ref('GameInvites')
 const setActivePanel = (value: string) => {
   activePanel.value = value
 }
-
 </script>
 <template>
   <nav class="activityCenter">
