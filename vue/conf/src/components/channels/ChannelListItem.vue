@@ -339,8 +339,10 @@ onMounted(async () => {
   display: block;
   max-width: 150px;
   border: none;
-  background-color: lightgray;
+  background-color: transparent;
   margin-top: 0.25rem;
+  color: aliceblue;
+  outline: solid 0.25px aliceblue;
 }
 
 .password-input:focus {

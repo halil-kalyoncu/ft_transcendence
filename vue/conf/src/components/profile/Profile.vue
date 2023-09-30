@@ -7,6 +7,8 @@ import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useRoute } from 'vue-router'
 import type { MatchI } from '../../model/match/match.interface'
+import type { AchievementI } from '../../model/achievement/achievement.interface'
+import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
 
 const route = ref(useRoute())
 let userId = route.value.params.userId as string
@@ -23,17 +25,9 @@ watch(() => route, (newVal, oldVal) => {
 	console.log('userId', userId)
 
    }
-});
-const achievements = ref([
-  { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
-  { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' }
-])
 
 const matchHistory = ref<MatchI[] | null>(null)
+const achievements = ref<UserAchievementI[] | null>(null)
 
 async function getMatchHistory(): Promise<void> {
   try {
@@ -59,8 +53,33 @@ async function getMatchHistory(): Promise<void> {
   }
 }
 
+async function getAchievments(): Promise<void> {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/achievement/get-user-achievements?userId=${userId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    // console.log("RESPONSE:", userId.value)
+    if (response.ok) {
+      const matchData = await response.json()
+
+      achievements.value = matchData
+
+      console.log('RESPONSE:', matchData)
+    }
+  } catch (error) {
+    console.error('Failed to fetch achievement history:', error)
+  }
+}
+
 onMounted(() => {
   getMatchHistory()
+  getAchievments()
 })
 </script>
 
@@ -70,18 +89,17 @@ onMounted(() => {
     <section class="detailed-info">
       <div class="achievements">
         <h2 class="profile-title">achievements</h2>
-        <ScrollViewer :maxHeight="'50vh'">
+        <ScrollViewer :maxHeight="'67vh'">
           <ProfileAchievementItem
             v-for="achievement in achievements"
-            :achievementType="achievement.type"
-            :achievementTitle="achievement.title"
-            :achievementDescription="achievement.description"
+            :key="achievement.id"
+            :achievement="achievement"
           />
         </ScrollViewer>
       </div>
       <div class="match-history">
         <h2 class="profile-title">match history</h2>
-        <ScrollViewer :maxHeight="'50vh'">
+        <ScrollViewer :maxHeight="'67vh'">
           <ProfileMatchHistoryItem
             v-for="match in matchHistory"
             :key="match.id"

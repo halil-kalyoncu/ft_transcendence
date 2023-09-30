@@ -1306,6 +1306,29 @@ export class ChatGateway
     }
   }
 
+  /****************
+   *** Settings ***
+   ****************/
+
+  @SubscribeMessage('changeUsername')
+  async changeUsername(
+    socket: Socket,
+    newUsername: string,
+  ): Promise<User | ErrorDto> {
+    try {
+      const updatedUser: User = await this.userService.changeUsername(
+        socket.data.user.id,
+        newUsername,
+      );
+      //TODO send events that need updating after username is changed
+      socket.emit('friends');
+      this.updateFriendsOf(updatedUser.id);
+      return updatedUser;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
   /**********************
    *** Helperfunctions ***
    ***********************/

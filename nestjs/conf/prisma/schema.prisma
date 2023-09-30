@@ -15,6 +15,37 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum AchievementState {
+    NONE
+    BRONZE
+    SILVER
+    GOLD
+}
+
+model Achievement {
+    id          Int    @id @default(autoincrement())
+    name        String @unique
+    scoreBronze Int    @default(0)
+    scoreSilver Int    @default(0)
+    scoreGold   Int    @default(0)
+
+    userAchievement UserAchievements[] //@relation(fields: [])
+}
+
+model UserAchievements {
+    id            Int              @id @default(autoincrement())
+    userId        Int
+    achievementId Int
+    progress      Int              @default(0)
+    state         AchievementState @default(NONE)
+
+
+    user        User        @relation(fields: [userId], references: [id])
+    achievement Achievement @relation(fields: [achievementId], references: [id])
+
+	@@unique([userId, achievementId])
+}
+
 model User {
     id          Int     @id @default(autoincrement())
     username    String  @unique
@@ -24,6 +55,8 @@ model User {
     secret2FA   String?
 
     connectedUser ConnectedUser?
+
+    achievements UserAchievements[]
 
     blockedUsers BlockedUser[] @relation("Blocked")
     blockedBy    BlockedUser[] @relation("BlockedBy")
@@ -107,7 +140,7 @@ model ChannelMessageReadStatus {
     message ChannelMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
     reader  ChannelMember  @relation(fields: [readerId], references: [id], onDelete: Cascade)
 
-	@@unique([messageId, readerId])
+    @@unique([messageId, readerId])
 }
 
 model Message {
@@ -118,7 +151,6 @@ model Message {
     directMessage  DirectMessage?
     channelMessage ChannelMessage?
 }
-
 
 enum ChannelInvitationStatus {
     PENDING
@@ -253,11 +285,11 @@ model BlockedUser {
 }
 
 model Matchmaking {
-    id             Int  @id @default(autoincrement())
-    userId         Int  @unique
-    opponentUserId Int? @unique
-    userReady Boolean @default(false)
-    opponentReady Boolean @default(false)
+    id             Int     @id @default(autoincrement())
+    userId         Int     @unique
+    opponentUserId Int?    @unique
+    userReady      Boolean @default(false)
+    opponentReady  Boolean @default(false)
 
     user     User  @relation("WaitingLadderGame", fields: [userId], references: [id])
     opponent User? @relation("OpponentLadderGame", fields: [opponentUserId], references: [id])

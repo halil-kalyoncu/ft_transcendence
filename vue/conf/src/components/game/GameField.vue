@@ -107,13 +107,15 @@ const getUserFromAccessToken = () => {
 }
 
 const keyHookDown = (e: KeyboardEvent) => {
-  switch (e.key) {
+  switch (e.code) {
     case 'p':
       isPaused.value = !isPaused.value
       break
+    case 'KeyW':
     case 'ArrowUp':
       isMovingUp.value = true
       break
+    case 'KeyS':
     case 'ArrowDown':
       isMovingDown.value = true
       break
@@ -127,9 +129,11 @@ const keyHookUp = (e: KeyboardEvent) => {
   }
 
   switch (e.code) {
+    case 'KeyW':
     case 'ArrowUp':
       isMovingUp.value = false
       break
+    case 'KeyS':
     case 'ArrowDown':
       isMovingDown.value = false
       break
@@ -227,10 +231,8 @@ onMounted(() => {
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
     if (playerId === 'left') {
       paddleA.value?.setY(newPos)
-      // console.log(playerId, ": ", newPos);
     } else {
       paddleB.value?.setY(newPos)
-      // console.log(playerId, ": ", newPos);
     }
   })
 
@@ -278,7 +280,6 @@ onMounted(() => {
     socket.value?.emit('spawnPowerUp', newPowerUp)
     console.log('PU spawn local')
     PowerUps.value?.push(newPowerUp)
-    // console.log("PU spawn remote");
   })
 
   socket.value.on('powerUpMove', ({ id, y }: { id: number; y: number }) => {
@@ -289,14 +290,6 @@ onMounted(() => {
       // console.log("ID: ", powerUp.id, "Y:", y);
     }
   })
-
-  // socket.value.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
-  // 	// return ;
-  // 	if (paddleA.value && player == "left")
-  // 		paddleA.value?.setHgt(hgt);
-  // 	else if (paddleB.value && player == "right")
-  // 		paddleB.value?.setHgt(hgt);
-  // });
 
   socket.value.on('destroyPowerUp', ({ id }: { id: number }) => {
     if (!socket || !socket.value) {
@@ -375,18 +368,6 @@ onBeforeUnmount(() => {
   disconnectGameSocket()
 })
 
-// watch(isMovingUp, () => {
-// 	if (socket.value) {
-// 		socket.value.emit('paddle', 'up');
-// 	}
-// });
-
-// watch(isMovingDown, () => {
-// 	if (socket.value) {
-// 		socket.value.emit('paddle', 'down');
-// 	}
-// });
-
 function update() {
   // console.log("UPDATE");
   if (isPaused.value) {
@@ -424,34 +405,6 @@ function update() {
   // console.log(isMovingUp.value);
   requestAnimationFrame(update)
 }
-
-// function spawnPowerUp() {
-//   const newPowerUp = {
-//     id: Math.floor(Date.now()),
-//     x: Math.floor(Math.random() * fieldWidth.value!),
-//     y: -30,
-//     index: 0,
-//     type: Math.floor(Math.random() * 4),
-//     color: 'white',
-//     wid: 30,
-//     hgt: 30
-//   }
-//   if (newPowerUp.type == 0) {
-//     newPowerUp.color = 'red'
-//     newPowerUp.index = 0
-//   } else if (newPowerUp.type == 1) {
-//     newPowerUp.color = 'green'
-//     newPowerUp.index = 3
-//   } else if (newPowerUp.type == 2) {
-//     newPowerUp.color = 'blue'
-//     newPowerUp.index = 2
-//   } else if (newPowerUp.type == 3) {
-//     newPowerUp.color = 'white'
-//     newPowerUp.index = 1
-//   }
-//   socket.value?.emit('spawnPowerUp', newPowerUp)
-//   console.log('PU spawn local')
-// }
 
 async function getUserNames(): Promise<void> {
   try {

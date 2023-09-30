@@ -13,6 +13,7 @@ import {
 } from '@prisma/client';
 import { Room } from '../../game/service/room.service';
 import { PowerupService } from '../../powerup/service/powerup.service';
+import { AchievementService } from '../../achievement/service/achievement.service';
 import { WinsLosesDto } from '../dto/wins-loses.dto';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class MatchService {
   constructor(
     private prisma: PrismaService,
     private powerupService: PowerupService,
+    private achievementService: AchievementService,
   ) {}
 
   async create(newMatch: Prisma.MatchCreateInput): Promise<Match> {
@@ -51,6 +53,9 @@ export class MatchService {
     return await this.prisma.match.findMany({
       where: {
         OR: [{ leftUserId: userid }, { rightUserId: userid }],
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
       include: {
         leftUser: true,
@@ -224,23 +229,42 @@ export class MatchService {
     });
   }
 
-  async finishMatch(room: Room): Promise<Match | null> {
-    let gameState: MatchState;
+  // Determine the state of the match
+  determineMatchState(room: Room): {
+    state: MatchState;
+    flawlessVictory: number;
+  } {
+    let flawlessVictory = 0;
+    let state: MatchState;
 
     if (room.leftPlayerGoals === 5) {
-      gameState = 'WINNERLEFT';
+      if (room.rightPlayerGoals === 0) {
+        flawlessVictory = room.leftPlayerId;
+      }
+      state = 'WINNERLEFT';
     } else if (room.rightPlayerGoals === 5) {
-      gameState = 'WINNERRIGHT';
+      if (room.leftPlayerGoals === 0) {
+        flawlessVictory = room.rightPlayerId;
+      }
+      state = 'WINNERRIGHT';
     } else if (room.leftPlayerDisconnect) {
-      gameState = 'DISCONNECTLEFT';
+      state = 'DISCONNECTLEFT';
     } else {
-      gameState = 'DISCONNECTRIGHT';
+      state = 'DISCONNECTRIGHT';
     }
 
-    return await this.prisma.match.update({
-      where: { id: room.id },
+    return { state, flawlessVictory };
+  }
+
+  async finishMatch(room: Room): Promise<Match | null> {
+    const { state, flawlessVictory } = this.determineMatchState(room);
+
+    const updatedMatch = await this.prisma.match.update({
+      where: {
+        id: room.id,
+      },
       data: {
-        state: gameState,
+        state: state,
         finishedAt: new Date(),
         goalsLeftPlayer: room.leftPlayerGoals,
         goalsRightPlayer: room.rightPlayerGoals,
@@ -250,6 +274,55 @@ export class MatchService {
         rightUser: true,
       },
     });
+
+    await this.achievementService.updateAchievement(
+      updatedMatch.leftUserId,
+      1,
+      room.leftPlayerGoals,
+    );
+
+    await this.achievementService.updateAchievement(
+      updatedMatch.rightUserId,
+      1,
+      room.rightPlayerGoals,
+    );
+
+    if (room.firstGoal === 'LEFT')
+      await this.achievementService.updateAchievement(
+        updatedMatch.leftUserId,
+        5,
+        1,
+      );
+    else
+      await this.achievementService.updateAchievement(
+        updatedMatch.rightUserId,
+        5,
+        1,
+      );
+
+    if (flawlessVictory && flawlessVictory !== 0) {
+      await this.achievementService.updateAchievement(flawlessVictory, 2, 1);
+    }
+
+    if (state === 'WINNERLEFT' || state === 'DISCONNECTRIGHT') {
+      if (room.comeback == 'LEFT')
+        this.achievementService.updateAchievement(
+          updatedMatch.leftUserId,
+          4,
+          1,
+        );
+      this.achievementService.updateAchievement(updatedMatch.leftUserId, 3, 1);
+    } else {
+      if (room.comeback == 'RIGHT')
+        this.achievementService.updateAchievement(
+          updatedMatch.leftUserId,
+          4,
+          1,
+        );
+      this.achievementService.updateAchievement(updatedMatch.leftUserId, 3, 1);
+    }
+
+    return updatedMatch;
   }
 
   async getPowerupNames(id: number): Promise<string[]> {

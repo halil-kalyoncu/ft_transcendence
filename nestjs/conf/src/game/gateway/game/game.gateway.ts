@@ -12,9 +12,11 @@ import { PowerUp } from '../../service/powerup.service';
 import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { Match } from '@prisma/client';
+import { createECDH } from 'crypto';
 
 let diffPadBall = 0;
 let intervalId;
+
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost:4200', 'http://localhost:3000'],
@@ -70,9 +72,6 @@ export class EventsGateway {
           powerup.moveDown();
           this.server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
         }
-        // this.server.emit('ballPosition', newBallPos);
-
-        // console.log(room.ball.speed);
       } else {
         const finishedMatch: Match = await this.matchService.finishMatch(room);
         this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
@@ -131,7 +130,12 @@ export class EventsGateway {
     if (!this.rooms.has(queryMatchId)) {
       this.rooms.set(
         queryMatchId,
-        new Room(queryMatchId, socket.data.match.goalsToWin),
+        new Room(
+          queryMatchId,
+          socket.data.match.goalsToWin,
+          socket.data.match.leftUserId,
+          socket.data.match.rightUserId,
+        ),
       );
       const powerupNames: string[] = await this.matchService.getPowerupNames(
         queryMatchId,
