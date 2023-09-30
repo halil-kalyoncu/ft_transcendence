@@ -63,7 +63,7 @@ const backgroundColor = computed(() => {
   if (props.achievement.state == UserAchievementState.BRONZE) {
     return 'radial-gradient(circle, #ffcc66, #cd7f32)'
   } else if (props.achievement.state == UserAchievementState.SILVER) {
-    return 'radial-gradient(circle, #e6e6e6, #a8a8a8)'
+    return 'radial-gradient(circle, #cccccc, #8c8c8c)'
   } else if (props.achievement.state == UserAchievementState.GOLD) {
     return 'radial-gradient(circle, #ffff33, #ff9900)'
   } else {
