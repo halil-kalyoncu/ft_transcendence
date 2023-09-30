@@ -1,5 +1,6 @@
+<!-- TODO CHECK THE ROUTER! ID HAS THE USERNAME INSED USERNAME NOT DEFINED, CALL TO MATCHES NOT WORKING -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
@@ -7,9 +8,8 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useRoute } from 'vue-router'
 import type { MatchI } from '../../model/match/match.interface'
 
-const route = useRoute()
-const userId = route.params.userId as string
-const username = route.params.username as string
+const route = ref(useRoute())
+let userId = route.value.params.userId as string
 
 // let userId = ref<number>(0)
 
@@ -17,6 +17,13 @@ const username = route.params.username as string
 //   username: string;
 // }>();
 
+watch(() => route, (newVal, oldVal) => {
+  if(newVal){
+	userId = newVal.value.params.userId as string
+	console.log('userId', userId)
+
+   }
+});
 const achievements = ref([
   { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
   { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
@@ -59,7 +66,7 @@ onMounted(() => {
 
 <template>
   <article class="profile">
-    <ProfileGeneralInfo :username="username" />
+    <ProfileGeneralInfo :username="userId" />
     <section class="detailed-info">
       <div class="achievements">
         <h2 class="profile-title">achievements</h2>

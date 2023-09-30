@@ -304,6 +304,7 @@ export class UserController {
         return res.status(404).send('User not found.');
       }
       if (!user.avatarId) {
+		console.log(user.avatarId)
         return res.status(404).send('User does not have an avatar.');
       }
 

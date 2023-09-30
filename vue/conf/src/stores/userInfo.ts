@@ -47,6 +47,7 @@ export const useUserStore = defineStore('user', () => {
         Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
+
     if (response.ok) {
       avatarImageData.value = await response.blob()
     } else {

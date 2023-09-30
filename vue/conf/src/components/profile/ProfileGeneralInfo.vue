@@ -3,7 +3,7 @@
     <div class="profile-section">
       <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />
       <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
-      <span class="header-username profile-username">{{ username }}</span>
+      <span class="header-username profile-username">{{ userName }}</span>
     </div>
     <div class="stats-section">
       <div class="stat-item">
@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 
@@ -29,14 +29,64 @@ const props = defineProps({
 
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
-const userAvatar = computed(() => userStore.avatarImageData)
+const avatarImageData = ref<Blob | null>(null)
+const visitedUserId = ref(0)
+const avatarSrc = ref('')
+const userAvatar = ref(false)
+let userName = ref(props.username)
 
-const avatarSrc = computed(() => {
-  if (userAvatar.value === null) {
-    return ''
+
+watch(() => props.username, async (newVal, oldVal) =>  {
+  if(newVal){
+	userName.value = newVal
+    console.log('USERNAME FROM INFO', userName.value)
+	await getVisitedUserId()
+	await setAvatar()
+   }
+});
+
+const setAvatar = async () => {
+  try {
+	console.log('visitedUserId', visitedUserId.value)
+	const response = await fetch(`http://localhost:3000/api/users/avatar/${visitedUserId.value}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+      }
+    })
+    if (!response.ok) {
+	  userAvatar.value = false
+      throw new Error()
+    }
+    avatarImageData.value = await response.blob()
+	avatarSrc.value = URL.createObjectURL(avatarImageData.value)
+	userAvatar.value = true
+  } catch (error) {
+    notificationStore.showNotification('No Avatar set yet.', false)
+    userAvatar.value = false
   }
-  return URL.createObjectURL(userAvatar.value)
-})
+}
+
+const getVisitedUserId = async () => {
+	  try {
+	const response = await fetch(`http://localhost:3000/api/users/find?username=${userName.value}`, {
+	  method: 'GET',
+	  headers: {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+	  }
+	})
+	const responseData = await response.json()
+	if (!response.ok) {
+	  notificationStore.showNotification(responseData.message, false)
+	  return
+	}
+	visitedUserId.value = responseData.id
+  } catch (error) {
+	notificationStore.showNotification('Something went Wrong', false)
+  }
+}
 
 onMounted(async () => {
   try {
@@ -48,6 +98,9 @@ onMounted(async () => {
     )
     return
   }
+  console.log('username', userName.value)
+  await getVisitedUserId()
+  await setAvatar()
 })
 </script>
 
