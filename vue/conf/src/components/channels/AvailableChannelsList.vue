@@ -1,18 +1,21 @@
 <template>
   <div class="available-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
-      <div v-for="channel in channelData" :key="channel.channel?.id">
-        <div v-if="channel.channel?.id">
-          <ChannelListItem
-            :isPasswordProtected="channel.channel?.protected"
-            :isPrivate="false"
-            :channelName="channel.channel?.name"
-            :ownerName="channel.owner?.username"
-            :joinChannelButtonNameProps="'Join'"
-            :channelId="channel.channel?.id"
-            @channelEntered="handleChannelEntered(channel.channel.id)"
-          />
-        </div>
+      <div v-if="channelData && channelData.length">
+      <div v-for="channel in channelData" :key="channel.channel.id">
+        <ChannelListItem
+          :isPasswordProtected="channel.channel.protected"
+          :isPrivate="false"
+          :channelName="channel.channel.name"
+          :ownerName="channel.owner.username"
+          :joinChannelButtonNameProps="'Join'"
+          :channelId="channel.channel.id"
+          @channelEntered="handleChannelEntered(channel.channel.id)"
+        />
+      </div>
+      </div>
+      <div v-else>
+        <p class="friends-empty-notification">Channel list is empty</p>
       </div>
     </ScrollViewer>
   </div>

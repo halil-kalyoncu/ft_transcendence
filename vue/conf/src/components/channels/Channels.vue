@@ -330,7 +330,7 @@ const updateChannelManager = async () => {
   display: block;
   width: calc(100%);
   background: transparent;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 .5rem 0;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
   color: aliceblue;
@@ -338,6 +338,11 @@ const updateChannelManager = async () => {
   cursor: pointer;
   font-size: 1rem;
   transition: 0.25s color ease-out, border 0.25s ease-out;
+}
+
+.channels .channel-option-button:last-child {
+  margin: 0 0 1rem 0;
+
 }
 
 .channels .channel-option-button:hover {
