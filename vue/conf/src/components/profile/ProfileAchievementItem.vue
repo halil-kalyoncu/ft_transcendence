@@ -97,7 +97,7 @@ const updateTooltipPosition = (event: MouseEvent) => {
   background-color: #333;
   opacity: 0.9;
   color: #fff;
-  padding: 20px;
+  padding: 11px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   margin: 0 1.5rem 1.5rem 0;
   border-radius: 0.25rem;
