@@ -66,6 +66,11 @@ import type { ErrorI } from '../../model/error.interface'
 const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 
+const initSocket = async () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
+
 onMounted(async () => {
   try {
     await userStore.mountStore()
@@ -77,18 +82,12 @@ onMounted(async () => {
     return
   }
 
-  const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectChatSocket(accessToken)
-
+  initSocket()
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
-    return
   }
-
-  socket.value.on('error', (error: string) => {
-    notificationStore.showNotification('Error: ' + error, false)
-  })
 })
+
 onBeforeUnmount(() => {
   disconnectChatSocket()
 })
@@ -114,7 +113,6 @@ const handleClose = () => {
   isModalOpened.value = false
 }
 
-//Todo check with halil why there is a difference in the noticitaions
 const handleConfirm = async ({
   name,
   password,
@@ -190,18 +188,21 @@ const addUsertoChannel = async () => {
     const response = await fetch('http://localhost:3000/api/channel/addUserToChannel', {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       },
       body: JSON.stringify({
         userId: userId.value,
         channelId: joinedChannelId.value
       })
     })
+    const responseData = await response.json()
     if (!response.ok) {
-      throw new Error('Failed to add user to channel')
+      notificationStore.showNotification(responseData.message, false)
+      return
     }
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message)
+  } catch (error) {
+    notificationStore.showNotification('Something went Wrong', false)
   }
 }
 
@@ -214,17 +215,18 @@ const MarkMessagesAsRead = async () => {
         {
           method: 'PATCH',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
           }
         }
       )
-
+      const responseData = await response.json()
       if (!response.ok) {
-        throw new Error('Failed to mark messages as read')
+        notificationStore.showNotification(responseData.message, false)
+        return
       }
-      return
-    } catch (error: any) {
-      notificationStore.showNotification(`Error` + error.message, false)
+    } catch (error) {
+      notificationStore.showNotification('Something went Wrong', false)
     }
   }
 }
@@ -282,18 +284,28 @@ const hanndleChannelSignedout = async () => {
   await closeChannelManagerAndChat()
 }
 
+// ERROR HANDLING GATEWAY FRONTEND
 const updateChannelManager = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems')
     return
   }
   try {
-    socket.value.emit('SignInChannel', {
-      channelId: joinedChannelId.value,
-      username: username.value
-    })
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message)
+    socket.value.emit(
+      'SignInChannel',
+      {
+        channelId: joinedChannelId.value,
+        username: username.value
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 </script>

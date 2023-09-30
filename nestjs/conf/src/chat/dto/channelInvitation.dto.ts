@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { ChannelInvitationStatus } from '@prisma/client';
+import { ChannelVisibility } from '@prisma/client';
 
 export class ChannelInvitationDto {
   @IsNotEmpty()
@@ -13,6 +14,9 @@ export class ChannelInvitationDto {
 
   @IsOptional()
   isPasswordProtected: boolean;
+
+  @IsOptional()
+  ChannelVisibility: ChannelVisibility;
 }
 
 export class AnswerChannelInvitationDto {

@@ -18,11 +18,8 @@ services:
     command: npm run start:debug
     depends_on:
       - postgres
-    environment:
-      NODE_ENV: development
-      JWT_SECRET: hard_to_guess_secret_123
-      PORT: 3000
-      AVATARPATH: ./files
+    env_file:
+      - .env
     restart: unless-stopped
     ports:
       - 3000:3000
@@ -49,10 +46,8 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: db
+    env_file:
+      - .env
     restart: unless-stopped
     ports:
       - 35000:5432

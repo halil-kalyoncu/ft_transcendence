@@ -5,12 +5,19 @@
         v-if="isPasswordProtected"
         class="icon margin-right"
         :icon="['fas', 'lock']"
-      />
-      <p>{{ channelName }}</p>
-      <div class="friend-info margin-left" @click="viewProfile">
-        <p>[</p>
-        <p class="friend-username small-font">{{ username }}</p>
-        <p class="margin-left">]</p>
+      /><font-awesome-icon
+        v-if="isPrivate"
+        class="icon"
+        :icon="['fas', 'user-secret']"
+        title="Private Channel"
+      ></font-awesome-icon>
+      <div class="channel-name-container">
+        <p>{{ channelName }}</p>
+        <div class="friend-info margin-left" @click="viewProfile">
+          <p>[</p>
+          <p class="friend-username small-font">{{ username }}</p>
+          <p class="margin-left">]</p>
+        </div>
       </div>
     </div>
 
@@ -35,6 +42,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
+import type { ErrorI } from '../../model/error.interface'
 
 library.add(fas)
 const router = useRouter()
@@ -45,16 +53,17 @@ const props = defineProps({
   username: String,
   channelName: String,
   isPasswordProtected: Boolean,
-  invitationId: Number
+  invitationId: Number,
+  isPrivate: Boolean
 })
 
-const initSocket = () => {
+const initSocket = async () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
-  socket.value = connectChatSocket(accessToken)
+  socket.value = await connectChatSocket(accessToken)
 }
 
-onMounted(() => {
-  initSocket()
+onMounted(async () => {
+  await initSocket()
 })
 
 const viewProfile = () => {
@@ -66,9 +75,19 @@ const acceptRequest = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-
-  socket.value.emit('acceptChannelInvitation', props.invitationId)
-  notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
+  try {
+    socket.value.emit('acceptChannelInvitation', props.invitationId, (response: ErrorI | any) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error)
+        return
+      } else {
+        notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
+        return
+      }
+    })
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
+  }
 }
 
 const rejectRequest = () => {
@@ -76,9 +95,18 @@ const rejectRequest = () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
-
-  socket.value.emit('rejectChannelInvitation', props.invitationId)
-  notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
+  try {
+    socket.value.emit('rejectChannelInvitation', props.invitationId, (response: ErrorI | any) => {
+      if ('error' in response) {
+        notificationStore.showNotification(response.error)
+        return
+      }
+    })
+    notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
+    return
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
+  }
 }
 </script>
 
@@ -93,5 +121,9 @@ const rejectRequest = () => {
 
 .margin-right {
   margin-right: 0.5rem;
+}
+
+.channel-name-container {
+  margin-left: 0.5rem;
 }
 </style>

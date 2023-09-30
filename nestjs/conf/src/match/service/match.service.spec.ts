@@ -3,6 +3,7 @@ import { MatchService } from './match.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Match, Prisma } from '@prisma/client';
 import { PowerupService } from '../../powerup/service/powerup.service';
+import { AchievementService } from '../../achievement/service/achievement.service';
 
 describe('MatchService', () => {
   let service: MatchService;
@@ -18,6 +19,7 @@ describe('MatchService', () => {
           useValue: PrismaService.getInstance(),
         },
         PowerupService,
+        AchievementService,
       ],
     }).compile();
 

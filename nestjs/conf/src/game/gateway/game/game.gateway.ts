@@ -140,19 +140,21 @@ export class EventsGateway {
       const powerupNames: string[] = await this.matchService.getPowerupNames(
         queryMatchId,
       );
-      console.log(powerupNames);
-      intervalId = setInterval(async () => {
-        let powerUpIndex = Math.floor(Math.random() * powerupNames.length);
-        console.log(powerUpIndex);
-        let x =
-          Math.floor(Math.random() * (room.ball.fieldWidth - 70 - 70 + 1)) + 70;
-        let y = -70;
-        this.server.emit('newPowerUp', {
-          powerUp: powerupNames[powerUpIndex],
-          x: x,
-          y: y,
-        });
-      }, 10000);
+      if (powerupNames.length > 0) {
+        intervalId = setInterval(async () => {
+          let powerUpIndex = Math.floor(Math.random() * powerupNames.length);
+          console.log(powerUpIndex);
+          let x =
+            Math.floor(Math.random() * (room.ball.fieldWidth - 70 - 70 + 1)) +
+            70;
+          let y = -70;
+          this.server.emit('newPowerUp', {
+            powerUp: powerupNames[powerUpIndex],
+            x: x,
+            y: y,
+          });
+        }, 10000);
+      }
     }
 
     const room = this.rooms.get(queryMatchId);
@@ -205,10 +207,16 @@ export class EventsGateway {
   handleMagnetFire(socket: Socket): void {
     console.log('FIRE');
     const room = this.rooms.get(socket.data.match.id);
-
-    room.ball.ballSticking = 0;
-    room.ball.magnet = 0;
-    diffPadBall = 0;
+    if (socket.id === room.socketIds[0] && room.ball.magnet === 1) {
+      room.ball.ballSticking = 0;
+      room.ball.magnet = 0;
+      diffPadBall = 0;
+    }
+    if (socket.id === room.socketIds[1] && room.ball.magnet === 2) {
+      room.ball.ballSticking = 0;
+      room.ball.magnet = 0;
+      diffPadBall = 0;
+    }
   }
 
   @SubscribeMessage('paddle')
@@ -371,7 +379,7 @@ export class EventsGateway {
     }
 
     const match = await this.matchService.finishMatch(room);
-
+    clearInterval(intervalId);
     socket.emit('gameFinished', match);
   }
 

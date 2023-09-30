@@ -7,6 +7,7 @@
             :username="invitation.inviterName"
             :channelName="invitation.channelName"
             :isPasswordProtected="invitation.isPasswordProtected"
+            :isPrivate="invitation.ChannelVisibility === 'PRIVATE' ? true : false"
             :invitationId="invitation.invitationId"
           />
         </div>
@@ -19,12 +20,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
 import type { ChannelInvitationI } from '../../model/channels/channelInvitation.interface'
-import type { ChannelMemberRoleType } from '../../model/channels/createChannel.interface'
-import { ChannelMemberRole } from '../../model/channels/createChannel.interface'
 import ChannelInvitationsItem from './ChannelInvitationsItem.vue'
 
 import ScrollViewer from '../utils/ScrollViewer.vue'
@@ -54,6 +53,17 @@ onMounted(async () => {
   setInvitationListener()
 })
 
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+  socket.value.off('NewChannelInvitation')
+  socket.value.off('ChannelInvitationAccepted')
+  socket.value.off('ChannelInvitationRejected')
+  socket.value.off('InvitationObsolete')
+})
+
 const initSocket = () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = connectChatSocket(accessToken)
@@ -62,15 +72,22 @@ const initSocket = () => {
 const setChannelInvitations = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`
+      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame')}`
+        }
+      }
     )
+    const responseData = await response.json()
     if (!response.ok) {
-      throw new Error('Could not fetch channel manager members')
+      notificationStore.showNotification(responseData.message, false)
     }
-    const data = response.json()
-    channelInvitations.value = await data
-  } catch (error: any) {
-    console.error('Error: ', error)
+    channelInvitations.value = await responseData
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong', false)
   }
 }
 
@@ -79,21 +96,37 @@ const setInvitationListener = () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('NewChannelInvitation', () => {
+  socket.value.on('NewChannelInvitation', (inviteeName: string) => {
+    if (inviteeName !== username.value) {
+      return
+    }
+    notificationStore.showNotification('New Channel Invitation', true)
     console.log('newChannelInvitation fired from ChannelsInvitations.vue')
     setChannelInvitations()
   })
-  socket.value.on('ChannelInvitationAccepted', (channelName, UserName) => {
+  socket.value.on('ChannelInvitationAccepted', (channelName: string, UserName: string) => {
+    if (UserName !== username.value) {
+      return
+    }
+    console.log(channelName)
+    console.log(UserName)
     console.log('User Accepted ChannelInvitaion fired')
-    notificationStore.showNotification('Channel Invitaion accepted', true)
     setChannelInvitations()
   })
-  socket.value.on('ChannelInvitationRejected', (channelName, UserName) => {
+  socket.value.on('ChannelInvitationRejected', (channelName: string, UserName: string) => {
+    if (UserName !== username.value) {
+      return
+    }
     console.log('User Rejected ChannelInvitaion fired')
-    notificationStore.showNotification(
-      'Channel Invitaion for ' + channelName + ' from ' + UserName + 'rejected',
-      true
-    )
+    setChannelInvitations()
+  })
+
+  socket.value.on('InvitationObsolete', (UserName: string, channelId: number) => {
+    if (UserName !== username.value) {
+      return
+    }
+    console.log('InvitationObsolete from ChannelInvitations.vue fired')
+    notificationStore.showNotification('User Signed In', true)
     setChannelInvitations()
   })
 }

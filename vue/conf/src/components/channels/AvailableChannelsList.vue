@@ -1,16 +1,18 @@
 <template>
   <div class="available-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
-      <div v-for="channel in channelData" :key="channel.channel.id">
-        <ChannelListItem
-          :isPasswordProtected="channel.channel.protected"
-          :isPrivate="false"
-          :channelName="channel.channel.name"
-          :ownerName="channel.owner.username"
-          :joinChannelButtonNameProps="'Join'"
-          :channelId="channel.channel.id"
-          @channelEntered="handleChannelEntered(channel.channel.id)"
-        />
+      <div v-for="channel in channelData" :key="channel.channel?.id">
+        <div v-if="channel.channel?.id">
+          <ChannelListItem
+            :isPasswordProtected="channel.channel?.protected"
+            :isPrivate="false"
+            :channelName="channel.channel?.name"
+            :ownerName="channel.owner?.username"
+            :joinChannelButtonNameProps="'Join'"
+            :channelId="channel.channel?.id"
+            @channelEntered="handleChannelEntered(channel.channel.id)"
+          />
+        </div>
       </div>
     </ScrollViewer>
   </div>
@@ -19,7 +21,7 @@
 <script setup lang="ts">
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import ChannelListItem from './ChannelListItem.vue'
-import { onMounted, computed, ref } from 'vue'
+import { onMounted, computed, ref, onBeforeUnmount } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
@@ -46,15 +48,23 @@ const userId = computed(() => userStore.userId)
 const setPublicChannels = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`
+      `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
     )
+    const responseData = await response.json()
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      notificationStore.showNotification(responseData.message, false)
     }
-    const data = await response.json()
-    channelData.value = await data
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    channelData.value = await responseData
+  } catch (error) {
+    notificationStore.showNotification('Something went Wrong', false)
+    return
   }
 }
 
@@ -63,7 +73,7 @@ const setChannelListener = () => {
     notificationStore.showNotification('Error: Connection problems', true)
     return
   }
-  socket.value.on('ChannelDestroy', () => {
+  socket.value.on('ChannelDestroy', (channelName: string) => {
     console.log('ChannelDestroy fired from AvaibleChannelsList.vue')
     setPublicChannels()
     return
@@ -88,6 +98,16 @@ onMounted(async () => {
   initSocket()
   await setPublicChannels()
   setChannelListener()
+})
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('ChannelDestroy')
+  socket.value.off('channelCreated')
 })
 </script>
 

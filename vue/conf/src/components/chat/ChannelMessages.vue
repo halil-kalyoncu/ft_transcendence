@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { connectChatSocket } from '../../websocket'
 import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
 import type { UserI } from '../../model/user.interface'
@@ -96,10 +96,6 @@ const setNewChannelMessageListener = () => {
     console.log('newChannelMessage fired')
     setNewChannelMessages()
   })
-  socket.value.on('UserSignedOut', (userName: string) => {
-    console.log('UserSignedOut from ChannelMessages fired')
-    setNewChannelMessages()
-  })
 }
 
 const setUserChangesListener = () => {
@@ -116,15 +112,24 @@ const setUserChangesListener = () => {
 const setNewChannelMessages = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId.value}`
+      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame')}`
+        }
+      }
     )
+    const responseData = await response.json()
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
+      notificationStore.showNotification(responseData.message, false)
+      return
     }
-    const data = await response.json()
-    channelMessages.value = data
-  } catch (error: any) {
-    console.error('Error: ', error)
+    channelMessages.value = responseData
+  } catch (error) {
+    notificationStore.showNotification('Something went Wrong', false)
+    return
   } finally {
     loading.value = false
   }
@@ -154,33 +159,48 @@ onMounted(async () => {
   setUserChangesListener()
 })
 
-//Todo Check for selectedChannel after implementaiton
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('newChannelMessage')
+  socket.value.off('UserSignedOut')
+})
 
 const sendChannelMessage = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
+  try {
+    if (newchannelMessages.value.trim() === '') {
+      return
+    }
 
-  if (newchannelMessages.value.trim() === '') {
+    socket.value.emit(
+      'sendChannelMessage',
+      {
+        senderId: loggedUser.value.id,
+        channelId: channelId,
+        message: newchannelMessages.value
+      },
+      (response: any | ErrorI) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        } else {
+          return
+        }
+      }
+    )
+    newchannelMessages.value = ''
+    return
+  } catch (error) {
+    notificationStore.showNotification('Something went Wrong', false)
     return
   }
-
-  socket.value.emit(
-    'sendChannelMessage',
-    {
-      senderId: loggedUser.value.id,
-      channelId: channelId,
-      message: newchannelMessages.value
-    },
-    (response: any | ErrorI) => {
-      if ('error' in response) {
-        notificationStore.showNotification(response.error, false)
-      }
-    }
-  )
-  newchannelMessages.value = ''
-  return
 }
 
 const updateMutedUsers = async () => {
@@ -190,17 +210,19 @@ const updateMutedUsers = async () => {
       {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
         }
       }
     )
+    const responseData = await response.json()
     if (!response.ok) {
-      throw new Error('Failed to add user to channel')
+      notificationStore.showNotification(responseData.message, false)
+      return
     }
-    const data = await response.json()
-    return data
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    return responseData
+  } catch (error) {
+    notificationStore.showNotification('Something went Wrong', false)
   }
 }
 
@@ -211,6 +233,7 @@ const checkForMutedUsers = async () => {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
+
   if (membersToUnmute.length > 0) {
     socket.value.emit('sendUpdateUnMuted', membersToUnmute, (response: any | ErrorI) => {
       if ('error' in response) {

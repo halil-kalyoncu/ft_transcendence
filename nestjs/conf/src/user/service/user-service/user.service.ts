@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -239,6 +240,32 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     return user.enabled2FA;
+  }
+
+  async changeUsername(userId: number, newUsername: string): Promise<User> {
+    let user: User | null = await this.findByUsername(newUsername);
+
+    if (user && userId === user.id) {
+      throw new BadRequestException(
+        'Please choose a different username then your current one',
+      );
+    } else if (user) {
+      throw new ConflictException(`Username ${newUsername} is already taken`);
+    }
+
+    user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        username: newUsername,
+      },
+    });
   }
 
   private generateAvatarPath(avatarId: string): string {

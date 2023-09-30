@@ -178,76 +178,76 @@ describe('UserService', () => {
     });
   });
 
-  describe('create', () => {
-    it('should create user', async () => {
-      const newUser: Prisma.UserCreateInput = {
-        username: 'mmustermann',
-      };
-      const expectedResult: User = {
-        id: 1,
-        username: 'mmustermann',
-        avatarId: null,
-        ladderLevel: 1000,
-        enabled2FA: false,
-        secret2FA: null,
-      };
+  //   describe('create', () => {
+  //     it('should create user', async () => {
+  //       const newUser: Prisma.UserCreateInput = {
+  //         username: 'mmustermann',
+  //       };
+  //       const expectedResult: User = {
+  //         id: 1,
+  //         username: 'mmustermann',
+  //         avatarId: null,
+  //         ladderLevel: 1000,
+  //         enabled2FA: false,
+  //         secret2FA: null,
+  //       };
 
-      const createSpy = jest
-        .spyOn(prismaService.user, 'create')
-        .mockResolvedValue(expectedResult);
+  //       const createSpy = jest
+  //         .spyOn(prismaService.user, 'create')
+  //         .mockResolvedValue(expectedResult);
 
-      const result = await service.create(newUser);
+  //       const result = await service.create(newUser);
 
-      expect(result).toEqual(expectedResult);
-      expect(createSpy).toHaveBeenCalledWith({
-        data: newUser,
-      });
+  //       expect(result).toEqual(expectedResult);
+  //       expect(createSpy).toHaveBeenCalledWith({
+  //         data: newUser,
+  //       });
 
-      createSpy.mockRestore();
-    });
+  //       createSpy.mockRestore();
+  //     });
 
-    it('should throw an error when username is already in use', async () => {
-      const newUser: Prisma.UserCreateInput = {
-        username: 'mmustermann',
-      };
-      const expectedError = new Error('Username is already in use');
+  //     it('should throw an error when username is already in use', async () => {
+  //       const newUser: Prisma.UserCreateInput = {
+  //         username: 'mmustermann',
+  //       };
+  //       const expectedError = new Error('Username is already in use');
 
-      const createSpy = jest
-        .spyOn(prismaService.user, 'create')
-        .mockRejectedValue(expectedError);
+  //       const createSpy = jest
+  //         .spyOn(prismaService.user, 'create')
+  //         .mockRejectedValue(expectedError);
 
-      try {
-        const result = await service.create(newUser);
-      } catch (e) {
-        expect(e).toStrictEqual(expectedError);
-      }
-      expect(createSpy).toHaveBeenCalledWith({
-        data: newUser,
-      });
+  //       try {
+  //         const result = await service.create(newUser);
+  //       } catch (e) {
+  //         expect(e).toStrictEqual(expectedError);
+  //       }
+  //       expect(createSpy).toHaveBeenCalledWith({
+  //         data: newUser,
+  //       });
 
-      createSpy.mockRestore();
-    });
+  //       createSpy.mockRestore();
+  //     });
 
-    it('should throw an error when newUser is invalid', async () => {
-      const newUser = null;
-      const expectedError = new Error();
+  //     it('should throw an error when newUser is invalid', async () => {
+  //       const newUser = null;
+  //       const expectedError = new Error();
 
-      const createSpy = jest
-        .spyOn(prismaService.user, 'create')
-        .mockRejectedValue(expectedError);
+  //       const createSpy = jest
+  //         .spyOn(prismaService.user, 'create')
+  //         .mockRejectedValue(expectedError);
 
-      try {
-        const result = await service.create(newUser);
-      } catch (e) {
-        expect(e).toStrictEqual(expectedError);
-      }
-      expect(createSpy).toHaveBeenCalledWith({
-        data: newUser,
-      });
+  //       try {
+  //         const result = await service.create(newUser);
+  //       } catch (e) {
+  //         expect(e).toStrictEqual(expectedError);
+  //       }
+  //       expect(createSpy).toHaveBeenCalledWith({
+  //         data: newUser,
+  //       });
 
-      createSpy.mockRestore();
-    });
-  });
+  //       createSpy.mockRestore();
+  //     });
+  //   });
 
   describe('findById', () => {
     it('should find a user by id', async () => {

@@ -59,6 +59,7 @@ import { useUserStore } from '../../stores/userInfo'
 import Modal from '../utils/Modal.vue'
 import type { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
+import type { ErrorI } from '../../model/error.interface'
 
 library.add(fas)
 const router = useRouter()
@@ -68,7 +69,6 @@ const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 const minutesMuted = ref(0)
 const maxValue = ref(100)
-const muteTitle = ref('Mute')
 
 //get the props from parent
 const props = defineProps({
@@ -82,11 +82,6 @@ const props = defineProps({
   isUserBannedProp: Boolean,
   isUserMutedProp: Boolean
 })
-// const emit = defineEmits(['changedProperties']);
-
-// const emitChanges = () => {
-//   emit('changedProperties')
-// }
 
 const role = ref(props.roleProp)
 const isUserBanned = ref(props.isUserBannedProp)
@@ -113,13 +108,22 @@ const kickUser = async () => {
     return
   }
   try {
-    socket.value.emit('kickChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    })
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    socket.value.emit(
+      'kickChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -137,13 +141,22 @@ const unBanUser = async () => {
     return
   }
   try {
-    socket.value.emit('unBanChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    })
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    socket.value.emit(
+      'unBanChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -153,13 +166,22 @@ const banUser = async () => {
     return
   }
   try {
-    socket.value.emit('banChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    })
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    socket.value.emit(
+      'banChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -169,13 +191,22 @@ const makeAdmin = async () => {
     return
   }
   try {
-    socket.value.emit('makeChannelAdmin', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    })
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    socket.value.emit(
+      'makeChannelAdmin',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        }
+      }
+    )
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -185,15 +216,29 @@ const muteUser = async () => {
     return
   }
   try {
-    console.log(minutesMuted.value)
-    socket.value.emit('muteChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId,
-      minutesToMute: minutesMuted.value
-    })
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    socket.value.emit(
+      'muteChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId,
+        minutesToMute: minutesMuted.value
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        } else {
+          notificationStore.showNotification(
+            props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
+            true
+          )
+          return
+        }
+      }
+    )
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -203,19 +248,11 @@ const muteAUser = () => {
     return
   }
 
-  let muted = true
-
   try {
-    if (muted) {
-      muteUser()
-      notificationStore.showNotification(
-        props.username + ' was muted for ' + minutesMuted.value + ' minutes ',
-        true
-      )
-    }
+    muteUser()
     minutesMuted.value = 0
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -225,14 +262,24 @@ const unMuteUser = async () => {
     return
   }
   try {
-    socket.value.emit('unMuteChannelMember', {
-      requesterId: props.requesterId,
-      targetUserId: props.targetUserId,
-      channelId: props.channelId
-    })
-    muteTitle.value = 'Mute'
-  } catch (error: any) {
-    notificationStore.showNotification(`Error` + error.message, true)
+    socket.value.emit(
+      'unMuteChannelMember',
+      {
+        requesterId: props.requesterId,
+        targetUserId: props.targetUserId,
+        channelId: props.channelId
+      },
+      (response: ErrorI | any) => {
+        if ('error' in response) {
+          notificationStore.showNotification(response.error, false)
+          return
+        } else {
+          return
+        }
+      }
+    )
+  } catch (error) {
+    notificationStore.showNotification(`Something went wrong`, false)
   }
 }
 
@@ -282,8 +329,17 @@ const initSocket = async () => {
   return
 }
 
-//CHECK FOR NOTIFICTAIONS HERE
 onMounted(async () => {
+  try {
+    await userStore.mountStore()
+  } catch (error) {
+    notificationStore.showNotification(
+      "We're sorry, but it seems there was an issue initializing your user data. Please sign out and try logging in again. If the problem persists, please get in touch with a site administrator for assistance.",
+      false
+    )
+    return
+  }
+
   await initSocket()
 })
 </script>

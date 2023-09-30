@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   ChannelInvitation,
@@ -17,26 +21,45 @@ export class ChannelInvitationsService {
   ) {}
 
   async getPendingInvitations(userId: number): Promise<ChannelInvitationDto[]> {
-    try {
-      const invitations: any[] = await this.prisma.channelInvitation.findMany({
-        where: { inviteeId: userId, status: ChannelInvitationStatus.PENDING },
-        include: { channel: true, inviter: true },
+    const finalInvitations: any[] = [];
+    const invitations: any[] = await this.prisma.channelInvitation.findMany({
+      where: { inviteeId: userId, status: ChannelInvitationStatus.PENDING },
+      include: { channel: true, inviter: true },
+    });
+    for (const invitation of invitations) {
+      const userInChannel = await this.prisma.channelMember.findUnique({
+        where: {
+          userId_channelId: { userId: userId, channelId: invitation.channelId },
+        },
       });
-
-      const ChannelInvitationsDtos: ChannelInvitationDto[] = invitations.map(
-        (invitation) => ({
+      if (userInChannel) {
+        const deleted = await this.prisma.channelInvitation.delete({
+          where: {
+            channelId_inviteeId: {
+              channelId: invitation.channelId,
+              inviteeId: userId,
+            },
+          },
+        });
+      } else {
+        finalInvitations.push(invitation);
+      }
+    }
+    if (finalInvitations.length !== 0) {
+      const ChannelInvitationsDtos: ChannelInvitationDto[] =
+        finalInvitations.map((invitation) => ({
           invitationId: invitation.id,
           inviterName: invitation.inviter.username,
           channelName: invitation.channel.name,
           isPasswordProtected: invitation.channel.protected,
-        }),
-      );
+          ChannelVisibility: invitation.channel.visibility,
+        }));
       return ChannelInvitationsDtos;
-    } catch (error: any) {
-      console.error('Error fetching channel messages: ', error);
-      throw error;
+    } else {
+      return [];
     }
   }
+
   async getOne(invitationId: number): Promise<any> {
     const invitation = await this.prisma.channelInvitation.findUnique({
       where: { id: invitationId },
@@ -53,19 +76,13 @@ export class ChannelInvitationsService {
     return invitations;
   }
 
+  //ERROR HANDLING API BACKEND
   async inviteUserToChannel(
     channelId: number,
     inviteeId: number,
     inviterId: number,
   ): Promise<ChannelInvitation> {
-    const error_string = await this.ErrorCheckInvite(
-      channelId,
-      inviteeId,
-      inviterId,
-    );
-    if (error_string) {
-      throw new Error(error_string);
-    }
+    await this.ErrorCheckInvite(channelId, inviteeId, inviterId);
 
     const invitation = await this.prisma.channelInvitation.create({
       data: {
@@ -82,7 +99,6 @@ export class ChannelInvitationsService {
     channelId: number,
     userId: number,
   ): Promise<ChannelInvitation> {
-    //TODO ERROR HANDLING
     const invitation = await this.prisma.channelInvitation.findUnique({
       where: {
         channelId_inviteeId: { channelId: channelId, inviteeId: userId },
@@ -99,21 +115,13 @@ export class ChannelInvitationsService {
       channelId: channelId,
       userId: userId,
     };
-    this.ChannelService.addUserToChannel(ChannelMembershipDto);
+    await this.ChannelService.addUserToChannel(ChannelMembershipDto);
 
-    //delete invitation
     await this.prisma.channelInvitation.delete({
       where: {
         channelId_inviteeId: { channelId: channelId, inviteeId: userId },
       },
     });
-
-    // await this.prisma.channelInvitation.update({
-    // 	where: { channelId_inviteeId: {channelId:channelId, inviteeId:userId}},
-    // 	data: {
-    // 		status: ChannelInvitationStatus.ACCEPTED,
-    // 	},
-    // });
 
     return invitation;
   }
@@ -160,7 +168,7 @@ export class ChannelInvitationsService {
       },
     });
     if (!channel) {
-      return `Channel to invite to not found`;
+      throw new NotFoundException(`Channel to invite to not found`);
     }
     const channelName = channel.name;
 
@@ -170,7 +178,7 @@ export class ChannelInvitationsService {
       },
     });
     if (!invitee) {
-      return `Invitee-User not found`;
+      throw new NotFoundException(`Invitee-User not found`);
     }
     const inviter = await this.prisma.user.findUnique({
       where: {
@@ -178,7 +186,7 @@ export class ChannelInvitationsService {
       },
     });
     if (!inviter) {
-      return `Inviter-User not found`;
+      throw new NotFoundException(`Inviter-User not found`);
     }
     const inviteeName = invitee.username;
     const inviterName = inviter.username;
@@ -193,17 +201,23 @@ export class ChannelInvitationsService {
     });
 
     if (!inviterMember) {
-      return `User: ${inviterName} is not a member of channel: ${channelName}`;
+      throw new BadRequestException(
+        `User: ${inviterName} is not a member of channel: ${channelName}`,
+      );
     }
     if (
       inviterMember.role !== ChannelMemberRole.OWNER &&
       inviterMember.role !== ChannelMemberRole.ADMIN
     ) {
-      return `User: ${inviterName} is not allowed to invite users`;
+      throw new BadRequestException(
+        `User: ${inviterName} is not allowed to invite users`,
+      );
     }
 
     if (channel.members.find((member) => member.userId === inviteeId)) {
-      return `User: ${inviteeName} is already a member of channel: ${channelName}`;
+      throw new BadRequestException(
+        `User: ${inviteeName} is already a member of channel: ${channelName}`,
+      );
     }
 
     const existingInvitation = await this.prisma.channelInvitation.findUnique({
@@ -224,8 +238,9 @@ export class ChannelInvitationsService {
         });
       }
       if (existingInvitation.status === ChannelInvitationStatus.PENDING) {
-        console.log('User already invited to channel');
-        return `User: ${inviteeName} is already invited to channel: ${channelName}`;
+        throw new BadRequestException(
+          `User: ${inviteeName} is already invited to channel: ${channelName}`,
+        );
       }
     }
     return null;

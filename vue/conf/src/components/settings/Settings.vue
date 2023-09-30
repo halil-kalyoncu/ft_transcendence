@@ -2,9 +2,11 @@
   <div class="settings-container">
     <h2 class="page-title">User Settings</h2>
 
-    <div class="input-group">
-      <input type="text" id="username" placeholder="Enter username" v-model="username" />
-    </div>
+    <form @submit.prevent="changeUsername" class="input-group">
+      <label for="username">Username:</label>
+      <input type="text" id="username" placeholder="Enter username" v-model="username" required />
+      <button type="submit">change</button>
+    </form>
 
     <div class="input-group">
       <div class="file-upload-wrapper">
@@ -51,7 +53,7 @@
           <input
             type="text"
             id="2fa"
-            placeholder="Enter 'OK' to disable"
+            placeholder="'OK' to disable"
             class="two-FA-input"
             v-model="confirmation"
           />
@@ -67,11 +69,17 @@ import { ref, computed, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
+import { Socket } from 'socket.io-client'
+import { connectChatSocket } from '../../websocket'
+import type { UserI } from '../../model/user.interface'
+import type { ErrorI } from '../../model/error.interface'
 
 const notificationStore = useNotificationStore()
 
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
+
+const socket = ref<Socket | null>(null)
 
 const username = ref('')
 const twoFAcode = ref('')
@@ -80,21 +88,7 @@ const showEnable2FA = ref(false)
 const twoFAEnabled = ref(true)
 const avatarInput: Ref<HTMLInputElement | null> = ref(null)
 const uploadedAvatarFile: Ref<File | null> = ref(null)
-const selectedFileName = ref('')
-const images = ref([
-  'src/assets/avatar-1.png',
-  'src/assets/avatar-2.png',
-  'src/assets/avatar-3.png',
-  'src/assets/avatar-2.png'
-])
 const qrCodeImage = ref('')
-const displayedCount = 3
-const startIndex = ref(0)
-const selectedImg = ref('src/assets/avatar-1.png')
-
-const setSelectedImage = (img: string) => {
-  selectedImg.value = img
-}
 
 const handleAvatarUpload = async () => {
   if (avatarInput.value && avatarInput.value.files && avatarInput.value.files.length) {
@@ -252,6 +246,28 @@ const set2FAStatus = async () => {
   }
 }
 
+const changeUsername = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.emit('changeUsername', username.value, async (response: UserI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification('username changed', true)
+      await userStore.fetchUser()
+    }
+  })
+  username.value = ''
+}
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
+
 onMounted(async () => {
   try {
     await userStore.mountStore()
@@ -262,6 +278,8 @@ onMounted(async () => {
     )
     return
   }
+
+  initSocket()
 
   set2FAStatus()
 })

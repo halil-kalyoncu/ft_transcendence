@@ -255,8 +255,6 @@ onMounted(() => {
       wid: 70,
       hgt: 70
     }
-    console.log('power name')
-    console.log(PowerUp.powerUp)
     if (PowerUp.powerUp == 'increasePaddleHeight') {
       newPowerUp.color = 'white'
       newPowerUp.index = 0
@@ -274,7 +272,6 @@ onMounted(() => {
       newPowerUp.index = 3
       newPowerUp.type = PowerUp.powerUp
     } else if (PowerUp.powerUp == 'fastBall') {
-      console.log('WORKED')
       newPowerUp.color = 'yellow'
       newPowerUp.index = 4
       newPowerUp.type = PowerUp.powerUp

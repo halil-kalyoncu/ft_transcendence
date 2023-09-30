@@ -20,7 +20,6 @@ export class ChannelMessageReadStatusService {
       );
       const blockedUserIds: number[] = blockedUsers.map((user) => user.id);
 
-      console.log(blockedUserIds);
       const unreadMessages =
         await this.prisma.channelMessageReadStatus.findMany({
           where: {
@@ -38,7 +37,6 @@ export class ChannelMessageReadStatusService {
             isRead: false,
           },
         });
-      console.log(unreadMessages);
       return unreadMessages;
     } catch (error) {
       // Handle errors appropriately
