@@ -4,7 +4,6 @@
     :class="{ 'is-inactive': props.achievement.state === UserAchievementState.NONE }"
   >
     <div class="achievement-wrapper">
-      <!-- This is the new wrapper div -->
       <img
         :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
         :style="{ background: backgroundColor }"
@@ -66,7 +65,7 @@ const backgroundColor = computed(() => {
   } else if (props.achievement.state == UserAchievementState.SILVER) {
     return 'radial-gradient(circle, #e6e6e6, #a8a8a8)'
   } else if (props.achievement.state == UserAchievementState.GOLD) {
-    return 'radial-gradient(circle, #ffff33, #ff9900)' // Made the final gold color even darker for a stronger effect
+    return 'radial-gradient(circle, #ffff33, #ff9900)'
   } else {
     return
   }
@@ -85,14 +84,13 @@ const hideTooltip = () => {
 }
 
 const updateTooltipPosition = (event: MouseEvent) => {
-  tooltipX.value = event.clientX + 10 // 10px offset for better visibility
-  tooltipY.value = event.clientY + 10 // 10px offset for better visibility
+  tooltipX.value = event.clientX + 10
+  tooltipY.value = event.clientY + 10
 }
 </script>
 
 <style>
 .achievement {
-  /* display: flex; */
   position: relative;
   justify-content: space-between;
   align-items: center;
@@ -110,6 +108,7 @@ const updateTooltipPosition = (event: MouseEvent) => {
 }
 
 .achievement-image {
+  display: flex;
   width: 100px;
   height: 100px;
   object-fit: cover;
@@ -121,7 +120,7 @@ const updateTooltipPosition = (event: MouseEvent) => {
 .achievement-content {
   display: flex;
   flex-direction: column;
-  min-width: 80%;
+  width: 100%;
   margin-top: 3px;
   margin-left: 5px;
 }
@@ -137,6 +136,7 @@ const updateTooltipPosition = (event: MouseEvent) => {
 }
 
 .progress-bar {
+  display: flex;
   height: 1rem;
   background: #0c0c0c;
   border-radius: 5px;
@@ -153,27 +153,12 @@ const updateTooltipPosition = (event: MouseEvent) => {
 
 .achievement-wrapper {
   display: flex;
-  /* align-items: center;
-  /* justify-content: space-between; */
-  /* min-width: 80%; */
+  min-width: 40%;
 }
 
 .achievement.is-inactive .achievement-wrapper {
   filter: grayscale(100%);
   opacity: 0.5;
-}
-
-.is-inactive::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.2); /* Opacity */
-  filter: grayscale(100%);
-  pointer-events: none;
-  z-index: 1;
 }
 
 .tooltip-box {
