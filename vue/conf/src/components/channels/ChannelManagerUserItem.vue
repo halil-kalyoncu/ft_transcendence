@@ -29,7 +29,7 @@
           <font-awesome-icon :icon="['fas', 'futbol']" />
         </button>
         <button
-          :class="{'action-button-ban' : !isUserBanned, 'action-button-unban' : isUserBanned}"
+          :class="{ 'action-button-ban': !isUserBanned, 'action-button-unban': isUserBanned }"
           @click="banUnbanUser"
           :title="isUserBanned ? 'Unban' : 'Ban'"
         >

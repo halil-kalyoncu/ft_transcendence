@@ -50,7 +50,7 @@ export class ChannelInvitationsService {
         finalInvitations.map((invitation) => ({
           invitationId: invitation.id,
           inviterName: invitation.inviter.username,
-		  inviterUserId: invitation.inviter.id,
+          inviterUserId: invitation.inviter.id,
           channelName: invitation.channel.name,
           isPasswordProtected: invitation.channel.protected,
           ChannelVisibility: invitation.channel.visibility,

@@ -5,7 +5,7 @@
         <div v-for="invitation in channelInvitations" :key="invitation.invitationId">
           <ChannelInvitationsItem
             :username="invitation.inviterName"
-			:inviterId="invitation.inviterUserId"
+            :inviterId="invitation.inviterUserId"
             :channelName="invitation.channelName"
             :isPasswordProtected="invitation.isPasswordProtected"
             :isPrivate="invitation.ChannelVisibility === 'PRIVATE' ? true : false"

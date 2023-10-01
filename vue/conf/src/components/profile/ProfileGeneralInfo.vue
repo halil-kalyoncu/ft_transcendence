@@ -37,18 +37,20 @@ const avatarSrc = ref('')
 const userAvatar = ref(false)
 let userName = ref(props.username)
 
-
-watch(() => props.username, async (newVal, oldVal) =>  {
-  if(newVal){
-	userName.value = newVal
-	await getVisitedUserId()
-	await setAvatar()
-   }
-});
+watch(
+  () => props.username,
+  async (newVal, oldVal) => {
+    if (newVal) {
+      userName.value = newVal
+      await getVisitedUserId()
+      await setAvatar()
+    }
+  }
+)
 
 const setAvatar = async () => {
   try {
-	const response = await fetch(`http://localhost:3000/api/users/avatar/${props.userid}`, {
+    const response = await fetch(`http://localhost:3000/api/users/avatar/${props.userid}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -56,12 +58,12 @@ const setAvatar = async () => {
       }
     })
     if (!response.ok) {
-	  userAvatar.value = false
+      userAvatar.value = false
       throw new Error()
     }
     avatarImageData.value = await response.blob()
-	avatarSrc.value = URL.createObjectURL(avatarImageData.value)
-	userAvatar.value = true
+    avatarSrc.value = URL.createObjectURL(avatarImageData.value)
+    userAvatar.value = true
   } catch (error) {
     notificationStore.showNotification('No Avatar set yet.', false)
     userAvatar.value = false
@@ -69,21 +71,24 @@ const setAvatar = async () => {
 }
 
 const getVisitedUserId = async () => {
-	  try {
-	const response = await fetch(`http://localhost:3000/api/users/find?username=${userName.value}`, {
-	  method: 'GET',
-	  headers: {
-		'Content-Type': 'application/json',
-		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-	  }
-	})
-	const responseData = await response.json()
-	if (!response.ok) {
-	  notificationStore.showNotification(responseData.message, false)
-	  return
-	}
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/users/find?username=${userName.value}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
+    )
+    const responseData = await response.json()
+    if (!response.ok) {
+      notificationStore.showNotification(responseData.message, false)
+      return
+    }
   } catch (error) {
-	notificationStore.showNotification('Something went Wrong', false)
+    notificationStore.showNotification('Something went Wrong', false)
   }
 }
 

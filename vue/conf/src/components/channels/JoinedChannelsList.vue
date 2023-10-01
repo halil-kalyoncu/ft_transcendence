@@ -46,7 +46,7 @@ const unreadMessages = ref([])
 const role = 'all'
 
 const emit = defineEmits(['channel-entered'])
-const showEmptyListNotification = ref(false);
+const showEmptyListNotification = ref(false)
 
 const handleChannelEntered = (channelId: number) => {
   emit('channel-entered', channelId)
@@ -153,8 +153,8 @@ onMounted(async () => {
   initSocket()
   setNewChannelMessageListener()
   setTimeout(() => {
-      showEmptyListNotification.value = true;
-  }, 5);
+    showEmptyListNotification.value = true
+  }, 5)
 })
 
 onBeforeUnmount(() => {

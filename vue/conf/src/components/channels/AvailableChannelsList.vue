@@ -47,7 +47,7 @@ const handleChannelEntered = (channelId: number) => {
 const channelData = ref<ChannelEntryI[]>([])
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
-const showEmptyListNotification = ref(false);
+const showEmptyListNotification = ref(false)
 
 const setPublicChannels = async () => {
   try {
@@ -103,8 +103,8 @@ onMounted(async () => {
   await setPublicChannels()
   setChannelListener()
   setTimeout(() => {
-    showEmptyListNotification.value = true;
-}, 5);
+    showEmptyListNotification.value = true
+  }, 5)
 })
 
 onBeforeUnmount(() => {

@@ -16,7 +16,6 @@ import type { UserAchievementI } from '../../model/achievement/userAchievement.i
 //   username: string;
 // }>();
 
-
 const router = useRouter()
 const route = ref(useRoute())
 let userId = route.value.params.userId as string
@@ -27,13 +26,16 @@ const losses = ref<number>(0)
 const matchHistory = ref<MatchI[] | null>(null)
 const achievements = ref<UserAchievementI[] | null>(null)
 
-watch(() => route, (newVal, oldVal) => {
-  if(newVal){
-	userId = newVal.value.params.userId as string
-	console.log('userId', userId)
-	checkUserId()
-
-     }});
+watch(
+  () => route,
+  (newVal, oldVal) => {
+    if (newVal) {
+      userId = newVal.value.params.userId as string
+      console.log('userId', userId)
+      checkUserId()
+    }
+  }
+)
 
 async function getMatchOutcomes(): Promise<void> {
   try {
@@ -110,7 +112,7 @@ async function checkUserId(): Promise<void> {
     })
     if (response.ok) {
       const userData = await response.json()
-	  username.value = userData.username
+      username.value = userData.username
     }
   } catch (error) {
     console.error('Failed to fetch user data:', error)
