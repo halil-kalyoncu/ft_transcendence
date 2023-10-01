@@ -24,7 +24,7 @@ watch(() => route, (newVal, oldVal) => {
 	userId = newVal.value.params.userId as string
 	console.log('userId', userId)
 
-   }
+     }});
 
 const matchHistory = ref<MatchI[] | null>(null)
 const achievements = ref<UserAchievementI[] | null>(null)
