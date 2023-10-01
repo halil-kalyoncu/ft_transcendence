@@ -66,7 +66,7 @@ const props = defineProps({
 })
 
 const viewProfile = () => {
-  router.push(`/profile/${props.username}`)
+  router.push(`/profile/${props.targetUserId}`)
 }
 
 const acceptFriendRequest = () => {

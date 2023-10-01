@@ -10,6 +10,9 @@ export class ChannelInvitationDto {
   inviterName: string;
 
   @IsNotEmpty()
+  inviterUserId: number;
+
+  @IsNotEmpty()
   channelName: string;
 
   @IsOptional()

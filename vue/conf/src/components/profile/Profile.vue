@@ -93,8 +93,6 @@ async function getAchievments(): Promise<void> {
       const matchData = await response.json()
 
       achievements.value = matchData
-
-      console.log('RESPONSE:', matchData)
     }
   } catch (error) {
     console.error('Failed to fetch achievement history:', error)
@@ -112,8 +110,7 @@ async function checkUserId(): Promise<void> {
     })
     if (response.ok) {
       const userData = await response.json()
-      console.log('USERDATA', userData)
-	  username = userData.username
+	  username.value = userData.username
     }
   } catch (error) {
     console.error('Failed to fetch user data:', error)

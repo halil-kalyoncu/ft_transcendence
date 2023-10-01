@@ -99,7 +99,7 @@ watchEffect(() => {
 })
 
 const goToProfile = () => {
-  router.push(`/profile/${props.username}`)
+  router.push(`/profile/${props.targetUserId}`)
 }
 
 const kickUser = async () => {

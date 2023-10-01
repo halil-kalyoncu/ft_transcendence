@@ -41,7 +41,6 @@ let userName = ref(props.username)
 watch(() => props.username, async (newVal, oldVal) =>  {
   if(newVal){
 	userName.value = newVal
-    console.log('USERNAME FROM INFO', userName.value)
 	await getVisitedUserId()
 	await setAvatar()
    }
@@ -49,7 +48,6 @@ watch(() => props.username, async (newVal, oldVal) =>  {
 
 const setAvatar = async () => {
   try {
-	console.log('visitedUserId', props.userid)
 	const response = await fetch(`http://localhost:3000/api/users/avatar/${props.userid}`, {
       method: 'GET',
       headers: {
@@ -99,8 +97,6 @@ onMounted(async () => {
     )
     return
   }
-  console.log('username', userName.value)
-  console.log('userid', props.userid)
   //await getVisitedUserId()
   await setAvatar()
 })

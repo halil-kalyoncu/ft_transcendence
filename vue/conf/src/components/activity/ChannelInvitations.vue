@@ -5,6 +5,7 @@
         <div v-for="invitation in channelInvitations" :key="invitation.invitationId">
           <ChannelInvitationsItem
             :username="invitation.inviterName"
+			:inviterId="invitation.inviterUserId"
             :channelName="invitation.channelName"
             :isPasswordProtected="invitation.isPasswordProtected"
             :isPrivate="invitation.ChannelVisibility === 'PRIVATE' ? true : false"
@@ -108,8 +109,6 @@ const setInvitationListener = () => {
     if (UserName !== username.value) {
       return
     }
-    console.log(channelName)
-    console.log(UserName)
     console.log('User Accepted ChannelInvitaion fired')
     setChannelInvitations()
   })

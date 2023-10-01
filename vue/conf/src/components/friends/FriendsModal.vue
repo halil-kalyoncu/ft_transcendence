@@ -29,7 +29,7 @@
               <font-awesome-icon
                 class="icon"
                 :icon="['fas', 'eye']"
-                @mousedown="goToProfile(suggestion.username)"
+                @mousedown="goToProfile(suggestion.id)"
               />
             </li>
           </ul>
@@ -63,6 +63,7 @@ const router = useRouter()
 const inputName = ref('')
 const userSuggestions = ref<UserI[]>([])
 const showSuggestionList = ref(false)
+const userId = ref(0)
 
 const props = defineProps({
   isOpened: {
@@ -143,11 +144,11 @@ watch(inputName, (newValue) => {
   findUserSuggestions(newValue)
 })
 
-const goToProfile = (username: String | undefined) => {
-  if (username === undefined) {
+const goToProfile = (userId: Number | undefined) => {
+  if (userId === undefined) {
     return
   }
-  router.push(`/profile/${username}`)
+  router.push(`/profile/${userId}`)
 }
 </script>
 <style>
