@@ -41,6 +41,7 @@ const setFriendsVisible = (value: boolean) => {
   background: rgba(0, 0, 0, 0.75);
   padding: 0 0.5rem;
   border-right: 0.25px solid darkgray;
+  min-height: 700px;
 }
 
 .sideBar ul {

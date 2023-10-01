@@ -305,6 +305,8 @@ onMounted(async () => {
   color: #fff;
   box-sizing: border-box !important;
   background: rgba(0, 0, 0, 0.7);
+  min-height: 650px;
+  min-width: 700px;
 }
 
 .settings-container .username {

@@ -118,7 +118,7 @@ onMounted(async () => {
     <section class="detailed-info">
       <div class="achievements">
         <h2 class="profile-title">achievements</h2>
-        <ScrollViewer :maxHeight="'67vh'">
+        <ScrollViewer :maxHeight="'50vh'">
           <ProfileAchievementItem
             v-for="achievement in achievements"
             :key="achievement.id"
@@ -128,7 +128,7 @@ onMounted(async () => {
       </div>
       <div class="match-history">
         <h2 class="profile-title">match history</h2>
-        <ScrollViewer :maxHeight="'67vh'">
+        <ScrollViewer :maxHeight="'50vh'">
           <ProfileMatchHistoryItem
             v-for="match in matchHistory"
             :key="match.id"
@@ -149,6 +149,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
+  min-height: 650px;
+  min-width: 700px;
 }
 
 .detailed-info {

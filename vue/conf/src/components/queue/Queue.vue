@@ -238,6 +238,7 @@ onBeforeUnmount(async () => {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: flex-start;
+  min-height: 650px;
 }
 
 .timer {
