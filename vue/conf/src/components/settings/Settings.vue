@@ -3,9 +3,16 @@
     <h2 class="page-title">User Settings</h2>
 
     <form @submit.prevent="changeUsername" class="input-group">
-      <label for="username">Username:</label>
-      <input type="text" id="username" placeholder="Enter username" v-model="username" required />
-      <button type="submit">change</button>
+      <div class="username-container">
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter New Username"
+          v-model="username"
+          required
+        />
+        <button><font-awesome-icon :icon="['fa', 'fa-pencil-alt']" /></button>
+      </div>
     </form>
 
     <div class="input-group">
@@ -71,6 +78,8 @@ import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import type { UserI } from '../../model/user.interface'
 import type { ErrorI } from '../../model/error.interface'
 
@@ -296,6 +305,8 @@ onMounted(async () => {
   color: #fff;
   box-sizing: border-box !important;
   background: rgba(0, 0, 0, 0.7);
+  min-height: 650px;
+  min-width: 700px;
 }
 
 .settings-container .username {
@@ -311,8 +322,8 @@ input[type='text'] {
   padding: 0.5rem 1rem;
   margin-left: 0.25rem;
   min-height: 40px;
-  border: none;
-  min-width: 540px;
+  min-width: 492px;
+  margin-right: 8px;
   background-color: transparent;
   border: 1px solid aliceblue;
   opacity: 0.9;
@@ -322,6 +333,7 @@ input[type='text'] {
 
 input[type='text']::placeholder {
   text-align: center;
+  padding-left: 40px;
   color: aliceblue;
   font-size: 15px;
 }
@@ -413,6 +425,25 @@ input[type='file']:focus,
   overflow: hidden;
   pointer-events: none;
   clip: rect(0, 0, 0, 0);
+}
+
+.username-container {
+  display: flex;
+}
+
+.username-container button {
+  width: 40px;
+  background-color: transparent;
+  border: 1px solid aliceblue;
+  opacity: 0.9;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.25s ease;
+}
+
+.username-container button:hover {
+  border: 1px solid #ea9f42;
+  color: #ea9f42;
 }
 
 .disabled {

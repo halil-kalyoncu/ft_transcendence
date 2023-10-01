@@ -44,9 +44,7 @@
 import ChannelManager from './ChannelManager.vue'
 import ChannelMessages from '../chat/ChannelMessages.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import { connectChatSocket, disconnectChatSocket } from '../../websocket'
@@ -330,7 +328,7 @@ const updateChannelManager = async () => {
   display: block;
   width: calc(100%);
   background: transparent;
-  margin: 0 0 .5rem 0;
+  margin: 0 0 0.5rem 0;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
   color: aliceblue;
@@ -342,7 +340,6 @@ const updateChannelManager = async () => {
 
 .channels .channel-option-button:last-child {
   margin: 0 0 1rem 0;
-
 }
 
 .channels .channel-option-button:hover {

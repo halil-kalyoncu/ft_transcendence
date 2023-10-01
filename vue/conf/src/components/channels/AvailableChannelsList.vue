@@ -2,19 +2,19 @@
   <div class="available-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
       <div v-if="channelData && channelData.length">
-      <div v-for="channel in channelData" :key="channel.channel.id">
-        <ChannelListItem
-          :isPasswordProtected="channel.channel.protected"
-          :isPrivate="false"
-          :channelName="channel.channel.name"
-          :ownerName="channel.owner.username"
-          :joinChannelButtonNameProps="'Join'"
-          :channelId="channel.channel.id"
-          @channelEntered="handleChannelEntered(channel.channel.id)"
-        />
+        <div v-for="channel in channelData" :key="channel.channel.id">
+          <ChannelListItem
+            :isPasswordProtected="channel.channel.protected"
+            :isPrivate="false"
+            :channelName="channel.channel.name"
+            :ownerName="channel.owner.username"
+            :joinChannelButtonNameProps="'Join'"
+            :channelId="channel.channel.id"
+            @channelEntered="handleChannelEntered(channel.channel.id)"
+          />
+        </div>
       </div>
-      </div>
-      <div v-else>
+      <div v-else-if="showEmptyListNotification">
         <p class="friends-empty-notification">Channel list is empty</p>
       </div>
     </ScrollViewer>
@@ -47,6 +47,7 @@ const handleChannelEntered = (channelId: number) => {
 const channelData = ref<ChannelEntryI[]>([])
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
+const showEmptyListNotification = ref(false);
 
 const setPublicChannels = async () => {
   try {
@@ -101,6 +102,9 @@ onMounted(async () => {
   initSocket()
   await setPublicChannels()
   setChannelListener()
+  setTimeout(() => {
+    showEmptyListNotification.value = true;
+}, 5);
 })
 
 onBeforeUnmount(() => {

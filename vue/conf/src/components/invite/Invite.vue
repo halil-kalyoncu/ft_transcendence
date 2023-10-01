@@ -13,9 +13,6 @@ import { useRoute } from 'vue-router'
 import { Socket } from 'socket.io-client'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
-
-library.add(faArrowLeft)
 
 const route = useRoute()
 const matchId = route.params.matchId as string
@@ -306,6 +303,7 @@ onBeforeUnmount(() => {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: flex-start;
+  min-height: 650px;
 }
 
 .flex-row {

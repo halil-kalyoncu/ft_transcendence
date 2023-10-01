@@ -11,7 +11,6 @@ import FriendsModal from './FriendsModal.vue'
 import FriendMessages from '../chat/FriendMessages.vue'
 import FriendManager from './FriendManager.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
@@ -20,7 +19,6 @@ import type { ErrorI } from '../../model/error.interface'
 import type { UnreadMessageI } from '../../model/message/unreadMessage.interface'
 import type { DirectConverstationDto } from '../../model/message/directConversation.dto'
 import router from '../../router'
-library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
 
@@ -506,6 +504,7 @@ const goBack = () => {
   display: flex;
   flex-direction: column;
   height: calc(100% - 50px);
+  position: relative;
   padding: 1rem 0.5rem 1rem 0.5rem;
 }
 

@@ -90,6 +90,7 @@ onMounted(async () => {
   width: calc(100vw - 300px);
   background: rgba(0, 0, 0, 0.75);
   border-bottom: 0.25px solid darkgray;
+  min-width: 700px;
 }
 
 .header nav {

@@ -94,6 +94,7 @@ onMounted(() => {
   height: calc(100vh - 50.8px);
   background: rgba(0, 0, 0, 0.6);
   padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  min-height: 650px;
 }
 
 .play-button {

@@ -7,11 +7,11 @@
     </div>
     <div class="stats-section">
       <div class="stat-item">
-        <span class="stat-number">3</span>
+        <span class="stat-number">{{ wins }}</span>
         <span class="stat-text stat-wins">Victories</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">1</span>
+        <span class="stat-number">{{ losses }}</span>
         <span class="stat-text stat-losses">Defeats</span>
       </div>
     </div>
@@ -24,13 +24,15 @@ import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 
 const props = defineProps({
-  username: String
+  username: String,
+  userid: String,
+  wins: Number,
+  losses: Number
 })
 
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
 const avatarImageData = ref<Blob | null>(null)
-const visitedUserId = ref(0)
 const avatarSrc = ref('')
 const userAvatar = ref(false)
 let userName = ref(props.username)
@@ -47,8 +49,8 @@ watch(() => props.username, async (newVal, oldVal) =>  {
 
 const setAvatar = async () => {
   try {
-	console.log('visitedUserId', visitedUserId.value)
-	const response = await fetch(`http://localhost:3000/api/users/avatar/${visitedUserId.value}`, {
+	console.log('visitedUserId', props.userid)
+	const response = await fetch(`http://localhost:3000/api/users/avatar/${props.userid}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -82,7 +84,6 @@ const getVisitedUserId = async () => {
 	  notificationStore.showNotification(responseData.message, false)
 	  return
 	}
-	visitedUserId.value = responseData.id
   } catch (error) {
 	notificationStore.showNotification('Something went Wrong', false)
   }
@@ -99,7 +100,8 @@ onMounted(async () => {
     return
   }
   console.log('username', userName.value)
-  await getVisitedUserId()
+  console.log('userid', props.userid)
+  //await getVisitedUserId()
   await setAvatar()
 })
 </script>

@@ -14,7 +14,7 @@ import {
 import { Room } from '../../game/service/room.service';
 import { PowerupService } from '../../powerup/service/powerup.service';
 import { AchievementService } from '../../achievement/service/achievement.service';
-import { WinsLosesDto } from '../dto/wins-loses.dto';
+import { matchOutcomesDto } from '../dto/match-outcomes.dto';
 
 @Injectable()
 export class MatchService {
@@ -63,16 +63,15 @@ export class MatchService {
       },
     });
   }
-  async getMatchCountByUserId(userId: number): Promise<WinsLosesDto> {
+  async getMatchOutcomesByUserId(userId: number): Promise<matchOutcomesDto> {
     let wins = 0;
-    let loses = 0;
+    let losses = 0;
 
     const matches: Match[] = await this.prisma.match.findMany({
       where: {
         OR: [{ leftUserId: userId }, { rightUserId: userId }],
       },
     });
-    console.log(matches);
     matches.map((match: Match) => {
       if (match.leftUserId === userId && match.state === 'WINNERLEFT') {
         wins++;
@@ -82,10 +81,10 @@ export class MatchService {
       ) {
         wins++;
       } else {
-        loses++;
+        losses++;
       }
     });
-    return { wins: wins, loses: loses };
+    return { wins: wins, losses: losses };
   }
   async findAll(): Promise<Match[]> {
     return await this.prisma.match.findMany({
