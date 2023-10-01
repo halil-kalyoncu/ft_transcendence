@@ -22,8 +22,8 @@
         <button v-if="!blocked" class="action-button-ban" @click="blockUser" title="Block">
           <font-awesome-icon :icon="['fas', 'ban']" />
         </button>
-        <button v-else class="action-button-ban" @click="unblockUser" title="Unblock">
-          <font-awesome-icon :icon="['fas', 'door-open']" />
+        <button v-else class="action-button-unban" @click="unblockUser" title="Unblock">
+          <font-awesome-icon :icon="['fas', 'ban']" />
         </button>
       </div>
       <div
