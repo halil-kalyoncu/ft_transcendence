@@ -16,7 +16,7 @@
           />
         </div>
       </div>
-      <div v-else>
+      <div v-else-if="showEmptyListNotification">
         <p class="friends-empty-notification">Channel list is empty</p>
       </div>
     </ScrollViewer>
@@ -46,6 +46,8 @@ const unreadMessages = ref([])
 const role = 'all'
 
 const emit = defineEmits(['channel-entered'])
+const showEmptyListNotification = ref(false);
+
 const handleChannelEntered = (channelId: number) => {
   emit('channel-entered', channelId)
 }
@@ -150,6 +152,9 @@ onMounted(async () => {
   await setUnreadMessages()
   initSocket()
   setNewChannelMessageListener()
+  setTimeout(() => {
+      showEmptyListNotification.value = true;
+  }, 5);
 })
 
 onBeforeUnmount(() => {
