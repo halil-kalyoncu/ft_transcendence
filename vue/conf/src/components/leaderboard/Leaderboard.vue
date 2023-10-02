@@ -5,12 +5,13 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th>Score</th>
+          <th class="ladder-score">Score</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(player, index) in players" :key="index" @click="openProfile(player.id ?? 0)">
           <td>{{ player.username }}</td>
+          <td class="ladder-score">{{ player.ladderLevel }}</td>
         </tr>
       </tbody>
     </table>
@@ -63,11 +64,16 @@ onMounted(() => {
   padding: 20px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   margin: auto;
+  font-size: 20px;
 }
 
 table {
   border-collapse: collapse;
   margin: auto;
+}
+
+h1 {
+  font-size: 2em;
 }
 
 h2 {
@@ -80,16 +86,25 @@ td {
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid #ddd;
+  padding: 20px 25px;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
   color: #fff;
 }
 
 th {
   background-color: #e4a422;
   color: #333;
+  font-size: 1.5em;
 }
 
 tr:hover {
   background-color: #555;
+}
+
+.ladder-score,
+.ladder-score-header {
+  text-align: right;
 }
 
 @media (max-width: 600px) {

@@ -354,14 +354,14 @@ export class UserController {
   }
 
   @Get('get-all-users')
-  async getAllUsers(): Promise<User[] | null>{
-	try {
-		return await this.userService.getAllUsers();
-	  } catch (error) {
-		throw new HttpException(
-		  'Internal Server Error',
-		  HttpStatus.INTERNAL_SERVER_ERROR,
-		);
-	  }
+  async getAllUsers(): Promise<User[] | null> {
+    try {
+      return await this.userService.getAllUsers();
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

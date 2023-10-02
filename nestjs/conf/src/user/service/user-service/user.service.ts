@@ -271,8 +271,12 @@ export class UserService {
   private generateAvatarPath(avatarId: string): string {
     return process.env.AVATARPATH + '/' + avatarId;
   }
-  
+
   async getAllUsers(): Promise<User[]> {
-    return await this.prisma.user.findMany();
+    return await this.prisma.user.findMany({
+      orderBy: {
+        ladderLevel: 'desc',
+      },
+    });
   }
 }
