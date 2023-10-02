@@ -129,6 +129,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   unwatch()
 })
+
 const unwatch = watch(
   () => route.value.params.userId,
   async (newId) => {
