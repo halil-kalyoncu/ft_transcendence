@@ -2,29 +2,24 @@
   <div class="goals-to-beat">Goals to beat: {{ goalsToBeat }}</div>
   <div class="playerView">
     <div class="playerA">
-      <div class="playerAName">{{ shortenName(playerA) }}</div>
+      <div class="playerAName">{{ playerA }}</div>
       <div class="playerAScore">{{ playerAScore }}</div>
     </div>
     <div class="playerB">
-      <div class="playerBName">{{ shortenName(playerB) }}</div>
+      <div class="playerBName">{{ playerB }}</div>
       <div class="playerBScore">{{ playerBScore }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const shortenName = (name: string) => {
-  if (name.length > 6) return name.substring(0, 6) + '...'
-  return name
-}
-
-const props = defineProps<{
-  playerA: string
-  playerB: string
-  playerAScore: number
-  playerBScore: number
-  goalsToBeat: number
-}>()
+const props = defineProps({
+  playerA: String,
+  playerB: String,
+  playerAScore: Number,
+  playerBScore: Number,
+  goalsToBeat: Number
+})
 </script>
 
 <style scoped>
