@@ -267,6 +267,17 @@ export class UserService {
     });
   }
 
+  async updateLadderLevel(userId: number, newLadderLevel: number): Promise<User> {
+	return await this.prisma.user.update({
+		where: {
+			id: userId
+		},
+		data: {
+			ladderLevel: newLadderLevel
+		}
+	})
+  }
+
   private generateAvatarPath(avatarId: string): string {
     return process.env.AVATARPATH + '/' + avatarId;
   }

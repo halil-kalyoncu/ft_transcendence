@@ -103,7 +103,6 @@ onMounted(async () => {
     )
     return
   }
-  //await getVisitedUserId()
   await setAvatar()
 })
 </script>

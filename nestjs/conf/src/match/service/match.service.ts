@@ -8,6 +8,7 @@ import {
   Match,
   MatchPowerup,
   MatchState,
+  MatchType,
   Powerup,
   Prisma,
 } from '@prisma/client';
@@ -15,6 +16,7 @@ import { Room } from '../../game/service/room.service';
 import { PowerupService } from '../../powerup/service/powerup.service';
 import { AchievementService } from '../../achievement/service/achievement.service';
 import { matchOutcomesDto } from '../dto/match-outcomes.dto';
+import { UserService } from '../../user/service/user-service/user.service';
 
 @Injectable()
 export class MatchService {
@@ -22,6 +24,7 @@ export class MatchService {
     private prisma: PrismaService,
     private powerupService: PowerupService,
     private achievementService: AchievementService,
+	private userService: UserService
   ) {}
 
   async create(newMatch: Prisma.MatchCreateInput): Promise<Match> {
@@ -274,6 +277,23 @@ export class MatchService {
       },
     });
 
+	if (updatedMatch.type === MatchType.LADDER) {
+		let outcome = 0;
+
+		if (state === MatchState.WINNERLEFT || state === MatchState.DISCONNECTRIGHT) {
+			outcome = 1;
+		}
+		const { newLadderLevelLeftPlayer, newLadderLevelRightPlayer } = this.updateRatings(updatedMatch.leftUser.ladderLevel, updatedMatch.rightUser.ladderLevel, outcome);
+
+		try {
+			await this.userService.updateLadderLevel(updatedMatch.leftUserId, newLadderLevelLeftPlayer);
+			await this.userService.updateLadderLevel(updatedMatch.rightUserId, newLadderLevelRightPlayer);
+		}
+		catch (error) {
+			console.log('Something went wrong updating the ladder Levels of the players of the match ', updatedMatch.id);
+		}
+	}
+
     await this.achievementService.updateAchievement(
       updatedMatch.leftUserId,
       1,
@@ -349,5 +369,30 @@ export class MatchService {
     }
 
     return powerupNames;
+  }
+
+  private calculateExpectedProbability(ladderLevelLeftPlayer: number, ladderLevelRightPlayer: number) {
+	return 1 / (1 + Math.pow(10, (ladderLevelRightPlayer - ladderLevelLeftPlayer) / 400));
+  }
+
+  private updateRatings(ladderLevelLeftPlayer: number, ladderLevelRightPlayer: number, outcome: number) {
+	const K = 50;
+
+	const expectedProbabilityLeftPlayer = this.calculateExpectedProbability(ladderLevelLeftPlayer, ladderLevelRightPlayer);
+	const expectedProbabilityRightPlayer = 1 - expectedProbabilityLeftPlayer;
+
+	const deltaLeftPlayer = K * (outcome - expectedProbabilityLeftPlayer);
+	const deltaRightPlayer = K * ((1 - outcome) - expectedProbabilityRightPlayer);
+
+	let newLadderLevelLeftPlayer = ladderLevelLeftPlayer + deltaLeftPlayer;
+	let newLadderLevelRightPlayer = ladderLevelRightPlayer + deltaRightPlayer;
+	if (newLadderLevelLeftPlayer < 0) {
+		newLadderLevelLeftPlayer = 0;
+	}
+	if (newLadderLevelRightPlayer < 0) {
+		newLadderLevelRightPlayer = 0;
+	}
+
+	return { newLadderLevelLeftPlayer, newLadderLevelRightPlayer };
   }
 }
