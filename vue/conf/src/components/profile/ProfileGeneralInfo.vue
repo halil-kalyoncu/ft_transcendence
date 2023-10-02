@@ -59,7 +59,7 @@ const setAvatar = async () => {
     })
     if (!response.ok) {
       userAvatar.value = false
-	  return ;
+      return
     }
 
     avatarImageData.value = await response.blob()

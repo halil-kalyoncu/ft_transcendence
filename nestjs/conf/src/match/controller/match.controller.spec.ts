@@ -7,10 +7,16 @@ import { Match } from '@prisma/client';
 import { HttpStatus } from '@nestjs/common';
 import { PowerupService } from '../../powerup/service/powerup.service';
 import { AchievementService } from '../../achievement/service/achievement.service';
+import { UserService } from '../../user/service/user-service/user.service';
+import { JwtAuthService } from '../../auth/service/jwt-auth/jtw-auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { ConnectedUserService } from '../../chat/service/connected-user/connected-user.service';
 
 describe('MatchController', () => {
   let controller: MatchController;
   let matchService: MatchService;
+  let userService: UserService;
+  let jwtAuthService: JwtAuthService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,11 +29,19 @@ describe('MatchController', () => {
           useValue: PrismaService.getInstance(),
         },
         AchievementService,
+        UserService,
+        JwtAuthService,
+        {
+          provide: JwtService,
+          useValue: {},
+        },
+        ConnectedUserService,
       ],
     }).compile();
 
     controller = module.get<MatchController>(MatchController);
     matchService = module.get<MatchService>(MatchService);
+    userService = module.get<UserService>(UserService);
   });
 
   it('should be defined', () => {
