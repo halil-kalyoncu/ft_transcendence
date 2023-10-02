@@ -48,8 +48,6 @@ const setAvatar = async () => {
     })
     if (!response.ok) {
       userAvatar.value = false
-      notificationStore.showNotification('No Avatar set yet.', true)
-      userAvatar.value = false
       return
     }
 
