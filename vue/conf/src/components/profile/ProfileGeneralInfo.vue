@@ -3,7 +3,10 @@
     <div class="profile-section">
       <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />
       <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
-      <span class="header-username profile-username">{{ userName }}</span>
+      <div class="userinfo">
+        <span class="header-username profile-username">{{ userName }}</span>
+        <span class="profile-ladder">{{ ladderLevel }}</span>
+      </div>
     </div>
     <div class="stats-section">
       <div class="stat-item">
@@ -26,6 +29,7 @@ import { useNotificationStore } from '../../stores/notification'
 const props = defineProps({
   username: String,
   userid: String,
+  ladderLevel: Number,
   wins: Number,
   losses: Number
 })
@@ -42,7 +46,6 @@ watch(
   async (newVal, oldVal) => {
     if (newVal) {
       userName.value = newVal
-      await getVisitedUserId()
       await setAvatar()
     }
   }
@@ -68,28 +71,6 @@ const setAvatar = async () => {
   } catch (error) {
     notificationStore.showNotification('Something went wrong while fetching the user avatar', false)
     userAvatar.value = false
-  }
-}
-
-const getVisitedUserId = async () => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/users/find?username=${userName.value}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-        }
-      }
-    )
-    const responseData = await response.json()
-    if (!response.ok) {
-      notificationStore.showNotification(responseData.message, false)
-      return
-    }
-  } catch (error) {
-    notificationStore.showNotification('Something went Wrong', false)
   }
 }
 
@@ -132,6 +113,18 @@ onMounted(async () => {
   font-size: 1.5rem;
   font-family: 'Gill Sans', sans-serif;
   text-transform: uppercase;
+  margin-left: 1rem;
+}
+
+.userinfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-ladder {
+  color: grey;
+  font-size: 1rem;
+  font-family: 'Gill Sans', sans-serif;
   margin-left: 1rem;
 }
 

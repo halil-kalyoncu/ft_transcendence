@@ -65,13 +65,13 @@ const checkAuthorized = async () => {
       const matchmaking: MatchmakingI | null = responseText ? JSON.parse(responseText) : null
       if (!matchmaking) {
         notificationStore.showNotification('You are not authorized to visit this site', false)
-		authorized.value = false
+        authorized.value = false
       } else if (matchmaking.id !== parseInt(matchmakingId, 10)) {
         notificationStore.showNotification(
           'Something went wrong while directing you to the queue',
           false
         )
-		authorized.value = false
+        authorized.value = false
       }
     } else {
       const responseData = await response.json()
@@ -79,7 +79,7 @@ const checkAuthorized = async () => {
         'Error while fetching the matchmaking data: ' + responseData.message,
         false
       )
-	  authorized.value = false
+      authorized.value = false
     }
   } catch (error) {
     notificationStore.showNotification(
