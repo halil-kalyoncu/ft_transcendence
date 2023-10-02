@@ -24,8 +24,8 @@ import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 
 const props = defineProps({
-  username: String,
   userid: String,
+  username: String,
   wins: Number,
   losses: Number
 })
@@ -35,18 +35,7 @@ const userStore = useUserStore()
 const avatarImageData = ref<Blob | null>(null)
 const avatarSrc = ref('')
 const userAvatar = ref(false)
-let userName = ref(props.username)
-
-watch(
-  () => props.username,
-  async (newVal, oldVal) => {
-    if (newVal) {
-      userName.value = newVal
-      await getVisitedUserId()
-      await setAvatar()
-    }
-  }
-)
+const userName = computed(() => props.username)
 
 const setAvatar = async () => {
   try {
@@ -59,36 +48,16 @@ const setAvatar = async () => {
     })
     if (!response.ok) {
       userAvatar.value = false
-      throw new Error()
+      notificationStore.showNotification('No Avatar set yet.', true)
+      userAvatar.value = false
+      return
     }
     avatarImageData.value = await response.blob()
     avatarSrc.value = URL.createObjectURL(avatarImageData.value)
     userAvatar.value = true
   } catch (error) {
-    notificationStore.showNotification('No Avatar set yet.', false)
+    notificationStore.showNotification('Something went wrong', false)
     userAvatar.value = false
-  }
-}
-
-const getVisitedUserId = async () => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/users/find?username=${userName.value}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-        }
-      }
-    )
-    const responseData = await response.json()
-    if (!response.ok) {
-      notificationStore.showNotification(responseData.message, false)
-      return
-    }
-  } catch (error) {
-    notificationStore.showNotification('Something went Wrong', false)
   }
 }
 
