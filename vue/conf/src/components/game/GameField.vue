@@ -32,12 +32,7 @@
     </div>
   </div>
   <div v-else>
-    <PostGame
-      :playerA="playerAName"
-      :playerB="playerBName"
-      :playerAScore="matchResult.goalsLeftPlayer!"
-      :playerBScore="matchResult.goalsRightPlayer!"
-    />
+    <PostGame :matchResult="matchResult" />
   </div>
   <div class="leave-game">
     <button @click="goHome" class="leave-game-button">Leave Game</button>

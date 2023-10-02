@@ -184,7 +184,6 @@ export class EventsGateway {
       }
 
       const match = await this.matchService.finishMatch(room);
-
       if (socket.data.isLeftPlayer) {
         socket.to(room.socketIds[1]).emit('gameFinished', match);
       } else {
@@ -194,7 +193,6 @@ export class EventsGateway {
     clearInterval(intervalId);
     socket.disconnect();
   }
-
   // resetGame() {
   // 	this.gameIsRunning = false;
   // 	console.log("HERE");

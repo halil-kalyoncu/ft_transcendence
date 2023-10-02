@@ -304,7 +304,6 @@ export class UserController {
         return res.status(404).send('User not found.');
       }
       if (!user.avatarId) {
-        console.log(user.avatarId);
         return res.status(404).send('User does not have an avatar.');
       }
 
@@ -334,8 +333,7 @@ export class UserController {
   })
   @ApiResponse({
     status: 500,
-    description:
-      'Internal server error, when user not found or user has no avatar',
+    description: 'Internal server error',
   })
   @ApiBearerAuth('access-token')
   @Patch('avatar/:userId')
@@ -350,6 +348,9 @@ export class UserController {
       }
       return await this.userService.deleteAvatar(userId);
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

@@ -52,11 +52,12 @@ const setAvatar = async () => {
       userAvatar.value = false
       return
     }
+
     avatarImageData.value = await response.blob()
     avatarSrc.value = URL.createObjectURL(avatarImageData.value)
     userAvatar.value = true
   } catch (error) {
-    notificationStore.showNotification('Something went wrong', false)
+    notificationStore.showNotification('Something went wrong while fetching the user avatar', false)
     userAvatar.value = false
   }
 }
@@ -71,7 +72,6 @@ onMounted(async () => {
     )
     return
   }
-  //await getVisitedUserId()
   await setAvatar()
 })
 </script>
