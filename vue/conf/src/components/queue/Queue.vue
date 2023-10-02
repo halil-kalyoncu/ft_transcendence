@@ -11,7 +11,6 @@ import type { MatchI } from '../../model/match/match.interface'
 import jwtDecode from 'jwt-decode'
 import Spinner from '../utils/Spinner.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { library } from '@fortawesome/fontawesome-svg-core'
 
 const route = useRoute()
 const matchmakingId: string = route.params.matchmakingId as string
@@ -64,14 +63,15 @@ const checkAuthorized = async () => {
     if (response.ok) {
       const responseText = await response.text()
       const matchmaking: MatchmakingI | null = responseText ? JSON.parse(responseText) : null
-
       if (!matchmaking) {
         notificationStore.showNotification('You are not authorized to visit this site', false)
+		authorized.value = false
       } else if (matchmaking.id !== parseInt(matchmakingId, 10)) {
         notificationStore.showNotification(
           'Something went wrong while directing you to the queue',
           false
         )
+		authorized.value = false
       }
     } else {
       const responseData = await response.json()
@@ -79,14 +79,14 @@ const checkAuthorized = async () => {
         'Error while fetching the matchmaking data: ' + responseData.message,
         false
       )
+	  authorized.value = false
     }
-  } catch (error: any) {
+  } catch (error) {
     notificationStore.showNotification(
       'Something went wrong while fetching the matchmaking data',
       false
     )
     authorized.value = false
-    router.push('/home')
   }
 }
 
@@ -181,6 +181,10 @@ onMounted(async () => {
   }
 
   await checkAuthorized()
+
+  if (authorized.value === false) {
+    router.push('/home')
+  }
 
   startTimer()
 
