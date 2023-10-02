@@ -1,6 +1,6 @@
 <!-- TODO CHECK THE ROUTER! ID HAS THE USERNAME INSED USERNAME NOT DEFINED, CALL TO MATCHES NOT WORKING -->
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
@@ -25,38 +25,6 @@ const ladderLevel = ref<number>(0)
 
 const matchHistory = ref<MatchI[] | null>(null)
 const achievements = ref<UserAchievementI[] | null>(null)
-
-watch(
-  () => route,
-  (newVal, oldVal) => {
-    if (newVal) {
-      userId = newVal.value.params.userId as string
-      console.log('userId', userId)
-      checkUserId()
-    }
-  }
-)
-
-async function getMatchOutcomes(): Promise<void> {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/matches/match-outcomes?userId=${userId}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    if (response.ok) {
-      const outcomes = await response.json()
-      wins.value = outcomes.wins
-      losses.value = outcomes.losses
-    }
-  } catch (error) {
-    console.error('Failed to fetch match outcomes:', error)
-  }
-}
 
 async function getMatchHistory(): Promise<void> {
   try {
@@ -90,7 +58,6 @@ async function getAchievments(): Promise<void> {
         }
       }
     )
-    // console.log("RESPONSE:", userId.value)
     if (response.ok) {
       const matchData = await response.json()
 
@@ -128,6 +95,26 @@ async function checkUserId(): Promise<void> {
   }
 }
 
+async function getMatchOutcomes(): Promise<void> {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/matches/match-outcomes?userId=${userId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (response.ok) {
+      const outcomes = await response.json()
+      wins.value = outcomes.wins
+      losses.value = outcomes.losses
+    }
+  } catch (error) {
+    console.error('Failed to fetch match outcomes:', error)
+  }
+}
 onMounted(async () => {
   await checkUserId()
   if (profileExists.value === false) {
@@ -138,41 +125,60 @@ onMounted(async () => {
   getMatchHistory()
   getMatchOutcomes()
 })
+
+onBeforeUnmount(() => {
+  unwatch()
+})
+const unwatch = watch(
+  () => route.value.params.userId,
+  async (newId) => {
+    if (newId !== undefined) {
+      userId = newId as string
+      await checkUserId()
+      getAchievments()
+      getMatchHistory()
+      getMatchOutcomes()
+    }
+  },
+  {}
+)
 </script>
 
 <template>
-  <article class="profile">
-    <ProfileGeneralInfo
-      :username="username"
-      :userid="userId"
-      :ladderLevel="ladderLevel"
-      :wins="wins"
-      :losses="losses"
-    />
-    <section class="detailed-info">
-      <div class="achievements">
-        <h2 class="profile-title">achievements</h2>
-        <ScrollViewer :maxHeight="'50vh'">
-          <ProfileAchievementItem
-            v-for="achievement in achievements"
-            :key="achievement.id"
-            :achievement="achievement"
-          />
-        </ScrollViewer>
-      </div>
-      <div class="match-history">
-        <h2 class="profile-title">match history</h2>
-        <ScrollViewer :maxHeight="'50vh'">
-          <ProfileMatchHistoryItem
-            v-for="match in matchHistory"
-            :key="match.id"
-            :match="match"
-            :userId="userId"
-          />
-        </ScrollViewer>
-      </div>
-    </section>
-  </article>
+  <router-view :key="route.fullPath">
+    <article class="profile">
+      <ProfileGeneralInfo
+        :username="username"
+        :userid="userId"
+        :ladderLevel="ladderLevel"
+        :wins="wins"
+        :losses="losses"
+      />
+      <section class="detailed-info">
+        <div class="achievements">
+          <h2 class="profile-title">achievements</h2>
+          <ScrollViewer :maxHeight="'50vh'">
+            <ProfileAchievementItem
+              v-for="achievement in achievements"
+              :key="achievement.id"
+              :achievement="achievement"
+            />
+          </ScrollViewer>
+        </div>
+        <div class="match-history">
+          <h2 class="profile-title">match history</h2>
+          <ScrollViewer :maxHeight="'50vh'">
+            <ProfileMatchHistoryItem
+              v-for="match in matchHistory"
+              :key="match.id"
+              :match="match"
+              :userId="userId"
+            />
+          </ScrollViewer>
+        </div>
+      </section>
+    </article>
+  </router-view>
 </template>
 
 <style>

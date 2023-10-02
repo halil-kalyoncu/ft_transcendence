@@ -64,7 +64,9 @@ const setPublicChannels = async () => {
     const responseData = await response.json()
     if (!response.ok) {
       notificationStore.showNotification(responseData.message, false)
+      return
     }
+
     channelData.value = await responseData
   } catch (error) {
     notificationStore.showNotification('Something went Wrong', false)

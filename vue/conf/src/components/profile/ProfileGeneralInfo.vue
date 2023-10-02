@@ -27,9 +27,9 @@ import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 
 const props = defineProps({
-  username: String,
   userid: String,
   ladderLevel: Number,
+  username: String,
   wins: Number,
   losses: Number
 })
