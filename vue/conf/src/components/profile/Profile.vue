@@ -9,16 +9,22 @@ import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
 import type { MatchI } from '../../model/match/match.interface'
 import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
+import type { UserI } from '../../model/user.interface'
+import { useNotificationStore } from '../../stores/notification'
 
+const profileExists = ref<boolean>(true)
+
+const notificationStore = useNotificationStore()
 const router = useRouter()
 const route = ref(useRoute())
 let userId = route.value.params.userId as string
 let username = ref<string>('')
+const wins = ref<number>(0)
+const losses = ref<number>(0)
+const ladderLevel = ref<number>(0)
 
 const matchHistory = ref<MatchI[] | null>(null)
 const achievements = ref<UserAchievementI[] | null>(null)
-const wins = ref<number>(0)
-const losses = ref<number>(0)
 
 async function getMatchHistory(): Promise<void> {
   try {
@@ -71,13 +77,21 @@ async function checkUserId(): Promise<void> {
         Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
+
     if (response.ok) {
-      const userData = await response.json()
-      username.value = userData.username
+      const responseText = await response.text()
+      const user: UserI | null = responseText ? JSON.parse(responseText) : null
+
+      if (!user) {
+        notificationStore.showNotification("Profile doesn't exists", false)
+        profileExists.value = false
+      }
+      username.value = user?.username as string
+      ladderLevel.value = user?.ladderLevel as number
     }
   } catch (error) {
-    console.error('Failed to fetch user data:', error)
-    router.push('/home')
+    notificationStore.showNotification('Something went wrong during loading of profile', false)
+    profileExists.value = false
   }
 }
 
@@ -103,6 +117,10 @@ async function getMatchOutcomes(): Promise<void> {
 }
 onMounted(async () => {
   await checkUserId()
+  if (profileExists.value === false) {
+    router.push('/home')
+  }
+
   getAchievments()
   getMatchHistory()
   getMatchOutcomes()
@@ -130,14 +148,20 @@ const unwatch = watch(
 <template>
   <router-view :key="route.fullPath">
     <article class="profile">
-      <ProfileGeneralInfo :userid="userId" :username="username" :wins="wins" :losses="losses" />
+      <ProfileGeneralInfo
+        :username="username"
+        :userid="userId"
+        :ladderLevel="ladderLevel"
+        :wins="wins"
+        :losses="losses"
+      />
       <section class="detailed-info">
         <div class="achievements">
           <h2 class="profile-title">achievements</h2>
           <ScrollViewer :maxHeight="'50vh'">
             <ProfileAchievementItem
               v-for="achievement in achievements"
-              :key="route.fullPath"
+              :key="achievement.id"
               :achievement="achievement"
             />
           </ScrollViewer>
@@ -147,7 +171,7 @@ const unwatch = watch(
           <ScrollViewer :maxHeight="'50vh'">
             <ProfileMatchHistoryItem
               v-for="match in matchHistory"
-              :key="route.fullPath"
+              :key="match.id"
               :match="match"
               :userId="userId"
             />

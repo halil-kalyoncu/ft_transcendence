@@ -3,7 +3,10 @@
     <div class="profile-section">
       <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />
       <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
-      <span class="header-username profile-username">{{ userName }}</span>
+      <div class="userinfo">
+        <span class="header-username profile-username">{{ userName }}</span>
+        <span class="profile-ladder">{{ ladderLevel }}</span>
+      </div>
     </div>
     <div class="stats-section">
       <div class="stat-item">
@@ -25,6 +28,7 @@ import { useNotificationStore } from '../../stores/notification'
 
 const props = defineProps({
   userid: String,
+  ladderLevel: Number,
   username: String,
   wins: Number,
   losses: Number
@@ -35,7 +39,17 @@ const userStore = useUserStore()
 const avatarImageData = ref<Blob | null>(null)
 const avatarSrc = ref('')
 const userAvatar = ref(false)
-const userName = computed(() => props.username)
+let userName = ref(props.username)
+
+watch(
+  () => props.username,
+  async (newVal, oldVal) => {
+    if (newVal) {
+      userName.value = newVal
+      await setAvatar()
+    }
+  }
+)
 
 const setAvatar = async () => {
   try {
@@ -99,6 +113,18 @@ onMounted(async () => {
   font-size: 1.5rem;
   font-family: 'Gill Sans', sans-serif;
   text-transform: uppercase;
+  margin-left: 1rem;
+}
+
+.userinfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-ladder {
+  color: grey;
+  font-size: 1rem;
+  font-family: 'Gill Sans', sans-serif;
   margin-left: 1rem;
 }
 
