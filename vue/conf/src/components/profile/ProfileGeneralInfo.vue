@@ -59,13 +59,14 @@ const setAvatar = async () => {
     })
     if (!response.ok) {
       userAvatar.value = false
-      throw new Error()
+	  return ;
     }
+
     avatarImageData.value = await response.blob()
     avatarSrc.value = URL.createObjectURL(avatarImageData.value)
     userAvatar.value = true
   } catch (error) {
-    notificationStore.showNotification('No Avatar set yet.', false)
+    notificationStore.showNotification('Something went wrong while fetching the user avatar', false)
     userAvatar.value = false
   }
 }

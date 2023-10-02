@@ -8,13 +8,7 @@ import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
 import type { MatchI } from '../../model/match/match.interface'
-import type { AchievementI } from '../../model/achievement/achievement.interface'
 import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
-// let userId = ref<number>(0)
-
-// const props = defineProps<{
-//   username: string;
-// }>();
 
 const router = useRouter()
 const route = ref(useRoute())
