@@ -1,6 +1,6 @@
 <template>
   <div class="friend-list-item">
-    <div class="friend-container">
+    <div class="friend-container" @click="goToProfile">
       <font-awesome-icon class="icon" :icon="['fas', 'user']" />
       <p class="friend-name">{{ username }}</p>
       <div class="icon-container">
@@ -53,7 +53,8 @@ const props = defineProps({
   status: String,
   blocked: Boolean,
   unreadMessagesAmount: Number,
-  showActions: Boolean
+  showActions: Boolean,
+  userid: Number
 })
 
 const emit = defineEmits(['handle-unfriend', 'handle-block', 'handle-unblock'])
@@ -68,6 +69,12 @@ const blockUser = () => {
 
 const unblockUser = () => {
   emit('handle-unblock')
+}
+
+const goToProfile = () => {
+  if (props.userid) {
+    router.push(`/profile/${props.userid}`)
+  }
 }
 </script>
 

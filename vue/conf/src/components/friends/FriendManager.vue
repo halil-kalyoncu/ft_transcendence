@@ -5,6 +5,7 @@
       @handle-unblock="handleUnblockUser"
       @handle-unfriend="handleUnfriendUser"
       :username="selectedFriendEntry?.friend?.username ?? ''"
+      :userid="selectedFriendEntry?.friend?.id ?? 0"
       :status="selectedFriendEntry?.status!"
       :blocked="selectedFriendEntry?.blocked!"
       :showActions="true"
