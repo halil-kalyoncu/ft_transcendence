@@ -112,7 +112,7 @@ const setUserChangesListener = () => {
 const setNewChannelMessages = async () => {
   try {
     const response = await fetch(
-      `http://l${import.meta.env.VITE_IPADDRESS}:${
+      `http://${import.meta.env.VITE_IPADDRESS}:${
         import.meta.env.VITE_BACKENDPORT
       }/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${
         userId.value
