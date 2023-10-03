@@ -2,7 +2,7 @@
   <div class="friend-list-item">
     <div class="friend-container" @click="goToProfile">
       <font-awesome-icon class="icon" :icon="['fas', 'user']" />
-      <p class="friend-name">{{ username }}</p>
+      <p class="friend-name" :title="username">{{ username }}</p>
       <div class="icon-container">
         <font-awesome-icon
           :icon="['fas', 'envelope']"
@@ -102,7 +102,10 @@ const goToProfile = () => {
   font-size: 0.8rem;
   color: #ea9f42;
   font-weight: bold;
+  max-width: 120px;
   height: fit-content;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .friend-container .icon {
