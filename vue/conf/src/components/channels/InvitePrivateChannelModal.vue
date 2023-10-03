@@ -299,13 +299,6 @@ onMounted(async () => {
   initSocket()
   setInvitationUpdateListener()
 })
-
-onBeforeUnmount(() => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification('Error: Connection problems', false)
-    return
-  }
-})
 </script>
 <style>
 .modal {

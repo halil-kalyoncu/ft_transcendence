@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { Socket } from 'socket.io-client'
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import type { MatchI } from '../../model/match/match.interface'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import { disconnectChatSocket, connectChatSocket } from '../../websocket'
@@ -75,6 +75,19 @@ onMounted(async () => {
   setFriendRequestData()
   setMatchInviteData()
   setChannelInvitationData()
+})
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.off('matchInvites')
+  socket.value.off('friendRequests')
+  socket.value.off('NewChannelInvitation')
+  socket.value.off('ChannelInvitationRejected')
+  socket.value.off('ChannelInvitationAccepted')
 })
 
 const setMatchInviteListener = () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
 import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import type { UserI } from '../../model/user.interface'
@@ -174,6 +174,16 @@ onMounted(async () => {
 
   setFriendData()
   setDirectMessageData()
+})
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('friends')
+  socket.value.off('newDirectMessage')
 })
 
 interface ModalResult {

@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { connectChatSocket } from '../../websocket'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import type { UserI } from '../../model/user.interface'
 import type { directMessageI } from '../../model/message/directMessage.interface'
-import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
-import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const props = defineProps({
@@ -108,6 +106,15 @@ onMounted(async () => {
   initSocket()
   setDirectMessages()
   setNewDirectMessageListener()
+})
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('newDirectMessage')
 })
 
 const handleEnterKey = (event: KeyboardEvent) => {
