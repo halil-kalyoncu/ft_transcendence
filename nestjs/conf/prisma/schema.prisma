@@ -15,6 +15,37 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum AchievementState {
+    NONE
+    BRONZE
+    SILVER
+    GOLD
+}
+
+model Achievement {
+    id          Int    @id @default(autoincrement())
+    name        String @unique
+    scoreBronze Int    @default(0)
+    scoreSilver Int    @default(0)
+    scoreGold   Int    @default(0)
+
+    userAchievement UserAchievements[] //@relation(fields: [])
+}
+
+model UserAchievements {
+    id            Int              @id @default(autoincrement())
+    userId        Int
+    achievementId Int
+    progress      Int              @default(0)
+    state         AchievementState @default(NONE)
+
+
+    user        User        @relation(fields: [userId], references: [id])
+    achievement Achievement @relation(fields: [achievementId], references: [id])
+
+	@@unique([userId, achievementId])
+}
+
 model User {
     id          Int     @id @default(autoincrement())
     intraLogin  String  @unique
@@ -25,6 +56,8 @@ model User {
     secret2FA   String?
 
     connectedUser ConnectedUser?
+
+    achievements UserAchievements[]
 
     blockedUsers BlockedUser[] @relation("Blocked")
     blockedBy    BlockedUser[] @relation("BlockedBy")

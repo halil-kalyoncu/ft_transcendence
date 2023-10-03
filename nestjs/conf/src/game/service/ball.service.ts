@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import { PowerUp } from './powerup.service';
 import { Socket } from 'dgram';
 
+let timeoutId;
 //500, 200, 15, 15, 5, 4, 3, 800, 600
 @Injectable()
 export class Ball {
@@ -20,6 +21,7 @@ export class Ball {
     public magnet: number = 0,
     public ballSticking: number = 0,
     public magdiff: number = 0,
+    public pause: boolean = false,
   ) {}
 
   getBallPosition() {
@@ -32,9 +34,10 @@ export class Ball {
   resetBall() {
     this.x = this.fieldWidth / 2 - this.wid / 2;
     this.y = this.fieldHeight / 2 - this.hgt / 2;
-    this.dx = 5;
-    this.dy = 3;
+    this.dx = 5 * (Math.random() < 0.5 ? 1 : -1);
+    this.dy = 3 * (Math.random() < 0.5 ? 1 : -1);
     this.speed = 4;
+    this.pause = true;
     // this.magnet = 0;
   }
 
@@ -115,12 +118,27 @@ export class Ball {
       server.to(room.socketIds[1]).emit('scoreGoal', 'playerB');
       // this.magdiff = this.y - padd
       scoredGoal = true;
+      if (room.rightPlayerGoals == 1 && room.leftPlayerGoals == 0)
+        room.firstGoal = 'RIGHT';
+      if (
+        room.comeback == 'NONE' &&
+        room.rightPlayerGoals - room.leftPlayerGoals > room.goalsToWin / 2
+      )
+        room.comeback = 'LEFT';
     } else if (nextBallX + this.wid > this.fieldWidth && nextBallX > this.x) {
       server.to(room.socketIds[0]).emit('scoreGoal', 'playerA');
       server.to(room.socketIds[1]).emit('scoreGoal', 'playerA');
       room.leftPlayerGoals++;
       scoredGoal = true;
+      if (room.leftPlayerGoals == 1 && room.rightPlayerGoals == 0)
+        room.firstGoal = 'LEFT';
+      if (
+        room.comeback == 'NONE' &&
+        room.leftPlayerGoals - room.rightPlayerGoals > room.goalsToWin / 2
+      )
+        room.comeback = 'RIGHT';
     }
+
     if (scoredGoal) {
       room.checkGameFinished();
     }
@@ -132,10 +150,17 @@ export class Ball {
     let nextBallY = this.y + this.dy;
 
     if (this.scoreGoal(room, nextBallX, server)) {
-      this.resetBall();
       room.paddleA.setHeight(100);
       room.paddleB.setHeight(100);
       server.emit('resetPaddle');
+      this.resetBall();
+      this.pause = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => {
+        this.pause = false;
+      }, 3000);
     } else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;

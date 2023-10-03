@@ -1,18 +1,23 @@
 <template>
   <div class="joinned-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
-      <div v-for="channel in channelData" :key="channel.channel.id">
-        <ChannelListItem
-          :isPasswordProtected="channel.channel.protected"
-          :isPrivate="channel.channel.visibility === 'PRIVATE' ? true : false"
-          :channelName="channel.channel.name"
-          :ownerName="channel.owner.username"
-          :joinChannelButtonNameProps="'Enter'"
-          :channelId="channel.channel.id"
-          :unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
-          :userId="userId"
-          @channelEntered="handleChannelEntered(channel.channel.id)"
-        />
+      <div v-if="channelData && channelData.length">
+        <div v-for="channel in channelData" :key="channel.channel.id">
+          <ChannelListItem
+            :isPasswordProtected="channel.channel.protected"
+            :isPrivate="channel.channel.visibility === 'PRIVATE' ? true : false"
+            :channelName="channel.channel.name"
+            :ownerName="channel.owner.username"
+            :joinChannelButtonNameProps="'Enter'"
+            :channelId="channel.channel.id"
+            :unreadMessageCount="unreadMessageCounts[channel.channel.id] || 0"
+            :userId="userId"
+            @channelEntered="handleChannelEntered(channel.channel.id)"
+          />
+        </div>
+      </div>
+      <div v-else-if="showEmptyListNotification">
+        <p class="friends-empty-notification">Channel list is empty</p>
       </div>
     </ScrollViewer>
   </div>
@@ -41,6 +46,8 @@ const unreadMessages = ref([])
 const role = 'all'
 
 const emit = defineEmits(['channel-entered'])
+const showEmptyListNotification = ref(false)
+
 const handleChannelEntered = (channelId: number) => {
   emit('channel-entered', channelId)
 }
@@ -52,7 +59,11 @@ const initSocket = () => {
 const calculateUnreadMessages = async (channelId: number) => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${
+        userId.value
+      }`,
       {
         method: 'GET',
         headers: {
@@ -77,7 +88,9 @@ const calculateUnreadMessages = async (channelId: number) => {
 const setChannels = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`,
       {
         method: 'GET',
         headers: {
@@ -145,6 +158,9 @@ onMounted(async () => {
   await setUnreadMessages()
   initSocket()
   setNewChannelMessageListener()
+  setTimeout(() => {
+    showEmptyListNotification.value = true
+  }, 5)
 })
 
 onBeforeUnmount(() => {

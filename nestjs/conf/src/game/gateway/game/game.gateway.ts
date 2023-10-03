@@ -12,12 +12,16 @@ import { PowerUp } from '../../service/powerup.service';
 import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { Match } from '@prisma/client';
+import { createECDH } from 'crypto';
 
 let diffPadBall = 0;
 let intervalId;
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:4200', 'http://localhost:3000'],
+    origin: [
+      `http://${process.env.IP_ADDRESS}:${process.env.BACKEND}`,
+      `http://${process.env.IP_ADDRESS}:${process.env.FRONTEND_PORT}`,
+    ],
   },
   path: '/game',
 })
@@ -41,7 +45,6 @@ export class EventsGateway {
     const gameInterval = setInterval(async () => {
       if (room.gameIsRunning) {
         let newBallPos;
-
         if (room.ball.magnet && room.ball.ballSticking) {
           if (room.ball.magnet == 1 && room.ball.ballSticking == 1) {
             if (diffPadBall == 0) diffPadBall = room.ball.y - room.paddleA.y;
@@ -61,7 +64,7 @@ export class EventsGateway {
           this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
           room.ball.x = newBallPos.x;
           room.ball.y = newBallPos.y;
-        } else {
+        } else if (room.ball.pause == false) {
           newBallPos = room.ball.moveBall(room, this.server);
           this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos);
           this.server.to(room.socketIds[1]).emit('ballPosition', newBallPos);
@@ -70,14 +73,12 @@ export class EventsGateway {
           powerup.moveDown();
           this.server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
         }
-        // this.server.emit('ballPosition', newBallPos);
-
-        // console.log(room.ball.speed);
       } else {
         const finishedMatch: Match = await this.matchService.finishMatch(room);
         this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
         this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
         clearInterval(gameInterval);
+        clearInterval(intervalId);
       }
     }, 15);
   }
@@ -131,7 +132,12 @@ export class EventsGateway {
     if (!this.rooms.has(queryMatchId)) {
       this.rooms.set(
         queryMatchId,
-        new Room(queryMatchId, socket.data.match.goalsToWin),
+        new Room(
+          queryMatchId,
+          socket.data.match.goalsToWin,
+          socket.data.match.leftUserId,
+          socket.data.match.rightUserId,
+        ),
       );
       const powerupNames: string[] = await this.matchService.getPowerupNames(
         queryMatchId,
@@ -181,7 +187,6 @@ export class EventsGateway {
       }
 
       const match = await this.matchService.finishMatch(room);
-
       if (socket.data.isLeftPlayer) {
         socket.to(room.socketIds[1]).emit('gameFinished', match);
       } else {
@@ -191,7 +196,6 @@ export class EventsGateway {
     clearInterval(intervalId);
     socket.disconnect();
   }
-
   // resetGame() {
   // 	this.gameIsRunning = false;
   // 	console.log("HERE");

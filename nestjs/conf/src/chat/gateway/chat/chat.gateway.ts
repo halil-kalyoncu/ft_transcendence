@@ -55,7 +55,10 @@ import { ChannelInvitation } from 'src/_gen/prisma-class/channel_invitation';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:4200'],
+    origin: [
+      `http://${process.env.IP_ADDRESS}:${process.env.FRONTEND_PORT}`,
+      `http://${process.env.IP_ADDRESS}:${process.env.BACKEND_PORT}`,
+    ],
   },
   path: '/chat',
 })
@@ -848,9 +851,6 @@ export class ChatGateway
         const memberOnline: ConnectedUser =
           await this.connectedUserService.findByUserId(member.id);
         if (memberOnline) {
-          console.log('ACCEPTCHANNEL INVITATION');
-          console.log(memberOnline);
-          console.log(channelName + ' ' + inviteeName);
           socket
             .to(memberOnline.socketId)
             .emit('ChannelInvitationAccepted', channelName, inviteeName);
@@ -953,7 +953,7 @@ export class ChatGateway
         socket.data.user.id,
         invitedUser.id,
       );
-      if (!friendship) {
+      if (!friendship || friendship.status !== 'ACCEPTED') {
         throw new Error(invitedUser.username + ' is not your friend');
       }
 
@@ -1301,6 +1301,29 @@ export class ChatGateway
       socket.emit('friends');
       socket.emit('newDirectMessage');
       return unblockedUser;
+    } catch (error) {
+      return { error: error.message as string };
+    }
+  }
+
+  /****************
+   *** Settings ***
+   ****************/
+
+  @SubscribeMessage('changeUsername')
+  async changeUsername(
+    socket: Socket,
+    newUsername: string,
+  ): Promise<User | ErrorDto> {
+    try {
+      const updatedUser: User = await this.userService.changeUsername(
+        socket.data.user.id,
+        newUsername,
+      );
+      //TODO send events that need updating after username is changed
+      socket.emit('friends');
+      this.updateFriendsOf(updatedUser.id);
+      return updatedUser;
     } catch (error) {
       return { error: error.message as string };
     }

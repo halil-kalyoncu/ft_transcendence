@@ -3,15 +3,18 @@
     <div class="profile-section">
       <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />
       <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
-      <span class="header-username profile-username">{{ username }}</span>
+      <div class="userinfo">
+        <span class="header-username profile-username">{{ userName }}</span>
+        <span class="profile-ladder">{{ ladderLevel }}</span>
+      </div>
     </div>
     <div class="stats-section">
       <div class="stat-item">
-        <span class="stat-number">3</span>
+        <span class="stat-number">{{ wins }}</span>
         <span class="stat-text stat-wins">Victories</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">1</span>
+        <span class="stat-number">{{ losses }}</span>
         <span class="stat-text stat-losses">Defeats</span>
       </div>
     </div>
@@ -19,24 +22,62 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 
 const props = defineProps({
-  username: String
+  userid: String,
+  ladderLevel: Number,
+  username: String,
+  wins: Number,
+  losses: Number
 })
 
 const notificationStore = useNotificationStore()
 const userStore = useUserStore()
-const userAvatar = computed(() => userStore.avatarImageData)
+const avatarImageData = ref<Blob | null>(null)
+const avatarSrc = ref('')
+const userAvatar = ref(false)
+let userName = ref(props.username)
 
-const avatarSrc = computed(() => {
-  if (userAvatar.value === null) {
-    return ''
+watch(
+  () => props.username,
+  async (newVal, oldVal) => {
+    if (newVal) {
+      userName.value = newVal
+      await setAvatar()
+    }
   }
-  return URL.createObjectURL(userAvatar.value)
-})
+)
+
+const setAvatar = async () => {
+  try {
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/avatar/${props.userid}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
+    )
+    if (!response.ok) {
+      userAvatar.value = false
+      return
+    }
+
+    avatarImageData.value = await response.blob()
+    avatarSrc.value = URL.createObjectURL(avatarImageData.value)
+    userAvatar.value = true
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong while fetching the user avatar', false)
+    userAvatar.value = false
+  }
+}
 
 onMounted(async () => {
   try {
@@ -48,6 +89,7 @@ onMounted(async () => {
     )
     return
   }
+  await setAvatar()
 })
 </script>
 
@@ -76,6 +118,18 @@ onMounted(async () => {
   font-size: 1.5rem;
   font-family: 'Gill Sans', sans-serif;
   text-transform: uppercase;
+  margin-left: 1rem;
+}
+
+.userinfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-ladder {
+  color: grey;
+  font-size: 1rem;
+  font-family: 'Gill Sans', sans-serif;
   margin-left: 1rem;
 }
 

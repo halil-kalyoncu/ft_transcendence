@@ -2,6 +2,7 @@ export interface UserI {
   id?: number
   username?: string
   avatarId?: string
+  ladderLevel?: number
 }
 
 export interface ChannelInviteeUserI {

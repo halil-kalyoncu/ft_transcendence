@@ -45,14 +45,19 @@ const handleInviteClick = async () => {
       matchType: 'CUSTOM' as MatchTypeType
     }
 
-    const response = await fetch('http://localhost:3000/api/matches/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-      },
-      body: JSON.stringify(createMatchDto)
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/create`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        },
+        body: JSON.stringify(createMatchDto)
+      }
+    )
 
     const responseData = await response.json()
     if (response.ok) {
@@ -94,6 +99,7 @@ onMounted(() => {
   height: calc(100vh - 50.8px);
   background: rgba(0, 0, 0, 0.6);
   padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  min-height: 650px;
 }
 
 .play-button {

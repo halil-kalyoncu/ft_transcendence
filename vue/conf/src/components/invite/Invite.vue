@@ -13,9 +13,6 @@ import { useRoute } from 'vue-router'
 import { Socket } from 'socket.io-client'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
-
-library.add(faArrowLeft)
 
 const route = useRoute()
 const matchId = route.params.matchId as string
@@ -57,13 +54,18 @@ const getUserFromAccessToken = (): UserI => {
 
 async function fetchMatchData(): Promise<void> {
   try {
-    const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/find-by-id?id=${matchId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     const responseData = await response.json()
     if (response.ok) {
@@ -306,6 +308,7 @@ onBeforeUnmount(() => {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: flex-start;
+  min-height: 650px;
 }
 
 .flex-row {

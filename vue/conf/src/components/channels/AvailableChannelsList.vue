@@ -1,18 +1,21 @@
 <template>
   <div class="available-channels">
     <ScrollViewer :maxHeight="'82.5vh'" :paddingRight="'.5rem'">
-      <div v-for="channel in channelData" :key="channel.channel?.id">
-        <div v-if="channel.channel?.id">
+      <div v-if="channelData && channelData.length">
+        <div v-for="channel in channelData" :key="channel.channel.id">
           <ChannelListItem
-            :isPasswordProtected="channel.channel?.protected"
+            :isPasswordProtected="channel.channel.protected"
             :isPrivate="false"
-            :channelName="channel.channel?.name"
-            :ownerName="channel.owner?.username"
+            :channelName="channel.channel.name"
+            :ownerName="channel.owner.username"
             :joinChannelButtonNameProps="'Join'"
-            :channelId="channel.channel?.id"
+            :channelId="channel.channel.id"
             @channelEntered="handleChannelEntered(channel.channel.id)"
           />
         </div>
+      </div>
+      <div v-else-if="showEmptyListNotification">
+        <p class="friends-empty-notification">Channel list is empty</p>
       </div>
     </ScrollViewer>
   </div>
@@ -44,11 +47,14 @@ const handleChannelEntered = (channelId: number) => {
 const channelData = ref<ChannelEntryI[]>([])
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
+const showEmptyListNotification = ref(false)
 
 const setPublicChannels = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -60,7 +66,9 @@ const setPublicChannels = async () => {
     const responseData = await response.json()
     if (!response.ok) {
       notificationStore.showNotification(responseData.message, false)
+      return
     }
+
     channelData.value = await responseData
   } catch (error) {
     notificationStore.showNotification('Something went Wrong', false)
@@ -98,6 +106,9 @@ onMounted(async () => {
   initSocket()
   await setPublicChannels()
   setChannelListener()
+  setTimeout(() => {
+    showEmptyListNotification.value = true
+  }, 5)
 })
 
 onBeforeUnmount(() => {

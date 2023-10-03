@@ -1,37 +1,37 @@
+<!-- TODO CHECK THE ROUTER! ID HAS THE USERNAME INSED USERNAME NOT DEFINED, CALL TO MATCHES NOT WORKING -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import ProfileGeneralInfo from './ProfileGeneralInfo.vue'
 import ProfileAchievementItem from './ProfileAchievementItem.vue'
 import ProfileMatchHistoryItem from './ProfileMatchHistoryItem.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
+import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
 import type { MatchI } from '../../model/match/match.interface'
+import type { UserAchievementI } from '../../model/achievement/userAchievement.interface'
+import type { UserI } from '../../model/user.interface'
+import { useNotificationStore } from '../../stores/notification'
 
-const route = useRoute()
-const userId = route.params.userId as string
-const username = route.params.username as string
+const profileExists = ref<boolean>(true)
 
-// let userId = ref<number>(0)
-
-// const props = defineProps<{
-//   username: string;
-// }>();
-
-const achievements = ref([
-  { type: 1, title: 'First Achievement', description: 'This is the first achievement' },
-  { type: 6, title: 'Last Achievement', description: 'This is the last achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' },
-  { type: 2, title: 'Second Achievement', description: 'This is the second achievement' }
-])
+const notificationStore = useNotificationStore()
+const router = useRouter()
+const route = ref(useRoute())
+let userId = route.value.params.userId as string
+let username = ref<string>('')
+const wins = ref<number>(0)
+const losses = ref<number>(0)
+const ladderLevel = ref<number>(0)
 
 const matchHistory = ref<MatchI[] | null>(null)
+const achievements = ref<UserAchievementI[] | null>(null)
 
 async function getMatchHistory(): Promise<void> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/matches/find-matches-by-user?userid=${userId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/find-matches-by-user?userid=${userId}`,
       {
         method: 'GET',
         headers: {
@@ -39,52 +39,158 @@ async function getMatchHistory(): Promise<void> {
         }
       }
     )
-    // console.log("RESPONSE:", userId.value)
     if (response.ok) {
       const matchData = await response.json()
 
       matchHistory.value = matchData
-
-      console.log('RESPONSE:', matchData)
     }
   } catch (error) {
     console.error('Failed to fetch match history:', error)
   }
 }
 
-onMounted(() => {
+async function getAchievments(): Promise<void> {
+  try {
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/achievement/get-user-achievements?userId=${userId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (response.ok) {
+      const matchData = await response.json()
+
+      achievements.value = matchData
+    }
+  } catch (error) {
+    console.error('Failed to fetch achievement history:', error)
+  }
+}
+
+async function checkUserId(): Promise<void> {
+  try {
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/find-by-id?id=${userId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
+    )
+
+    if (response.ok) {
+      const responseText = await response.text()
+      const user: UserI | null = responseText ? JSON.parse(responseText) : null
+
+      if (!user) {
+        notificationStore.showNotification("Profile doesn't exists", false)
+        profileExists.value = false
+      }
+      username.value = user?.username as string
+      ladderLevel.value = user?.ladderLevel as number
+    }
+  } catch (error) {
+    notificationStore.showNotification('Something went wrong during loading of profile', false)
+    profileExists.value = false
+  }
+}
+
+async function getMatchOutcomes(): Promise<void> {
+  try {
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/match-outcomes?userId=${userId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (response.ok) {
+      const outcomes = await response.json()
+      wins.value = outcomes.wins
+      losses.value = outcomes.losses
+    }
+  } catch (error) {
+    console.error('Failed to fetch match outcomes:', error)
+  }
+}
+onMounted(async () => {
+  await checkUserId()
+  if (profileExists.value === false) {
+    router.push('/home')
+  }
+
+  getAchievments()
   getMatchHistory()
+  getMatchOutcomes()
 })
+
+onBeforeUnmount(() => {
+  unwatch()
+})
+
+const unwatch = watch(
+  () => route.value.params.userId,
+  async (newId) => {
+    if (newId !== undefined) {
+      userId = newId as string
+      await checkUserId()
+      getAchievments()
+      getMatchHistory()
+      getMatchOutcomes()
+    }
+  },
+  {}
+)
 </script>
 
 <template>
-  <article class="profile">
-    <ProfileGeneralInfo :username="username" />
-    <section class="detailed-info">
-      <div class="achievements">
-        <h2 class="profile-title">achievements</h2>
-        <ScrollViewer :maxHeight="'50vh'">
-          <ProfileAchievementItem
-            v-for="achievement in achievements"
-            :achievementType="achievement.type"
-            :achievementTitle="achievement.title"
-            :achievementDescription="achievement.description"
-          />
-        </ScrollViewer>
-      </div>
-      <div class="match-history">
-        <h2 class="profile-title">match history</h2>
-        <ScrollViewer :maxHeight="'50vh'">
-          <ProfileMatchHistoryItem
-            v-for="match in matchHistory"
-            :key="match.id"
-            :match="match"
-            :userId="userId"
-          />
-        </ScrollViewer>
-      </div>
-    </section>
-  </article>
+  <router-view :key="route.fullPath">
+    <article class="profile">
+      <ProfileGeneralInfo
+        :username="username"
+        :userid="userId"
+        :ladderLevel="ladderLevel"
+        :wins="wins"
+        :losses="losses"
+      />
+      <section class="detailed-info">
+        <div class="achievements">
+          <h2 class="profile-title">achievements</h2>
+          <ScrollViewer :maxHeight="'50vh'">
+            <ProfileAchievementItem
+              v-for="achievement in achievements"
+              :key="achievement.id"
+              :achievement="achievement"
+            />
+          </ScrollViewer>
+        </div>
+        <div class="match-history">
+          <h2 class="profile-title">match history</h2>
+          <ScrollViewer :maxHeight="'50vh'">
+            <ProfileMatchHistoryItem
+              v-for="match in matchHistory"
+              :key="match.id"
+              :match="match"
+              :userId="userId"
+            />
+          </ScrollViewer>
+        </div>
+      </section>
+    </article>
+  </router-view>
 </template>
 
 <style>
@@ -95,6 +201,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
+  min-height: 650px;
+  min-width: 700px;
 }
 
 .detailed-info {

@@ -5,6 +5,7 @@
         <div v-for="invitation in channelInvitations" :key="invitation.invitationId">
           <ChannelInvitationsItem
             :username="invitation.inviterName"
+            :inviterId="invitation.inviterUserId"
             :channelName="invitation.channelName"
             :isPasswordProtected="invitation.isPasswordProtected"
             :isPrivate="invitation.ChannelVisibility === 'PRIVATE' ? true : false"
@@ -72,7 +73,9 @@ const initSocket = () => {
 const setChannelInvitations = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -108,8 +111,6 @@ const setInvitationListener = () => {
     if (UserName !== username.value) {
       return
     }
-    console.log(channelName)
-    console.log(UserName)
     console.log('User Accepted ChannelInvitaion fired')
     setChannelInvitations()
   })

@@ -168,7 +168,9 @@ const submit = async () => {
 const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId: Number) => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-invitations/InviteUserNameToChannel?channelId=${channelId}&inviteeName=${inviteeUsername}&inviterId=${inviterId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-invitations/InviteUserNameToChannel?channelId=${channelId}&inviteeName=${inviteeUsername}&inviterId=${inviterId}`,
       {
         method: 'POST',
         headers: {
@@ -197,7 +199,9 @@ const handleClickOutside = () => {
 const findUserSuggestions = async (input: string) => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/users/findUsersNotInChannel?channelId=${channelId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/findUsersNotInChannel?channelId=${channelId}`,
       {
         method: 'GET',
         headers: {
@@ -298,13 +302,6 @@ onMounted(async () => {
   await findUserSuggestions('')
   initSocket()
   setInvitationUpdateListener()
-})
-
-onBeforeUnmount(() => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification('Error: Connection problems', false)
-    return
-  }
 })
 </script>
 <style>

@@ -2,9 +2,18 @@
   <div class="settings-container">
     <h2 class="page-title">User Settings</h2>
 
-    <div class="input-group">
-      <input type="text" id="username" placeholder="Enter username" v-model="username" />
-    </div>
+    <form @submit.prevent="changeUsername" class="input-group">
+      <div class="username-container">
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter New Username"
+          v-model="username"
+          required
+        />
+        <button><font-awesome-icon :icon="['fa', 'fa-pencil-alt']" /></button>
+      </div>
+    </form>
 
     <div class="input-group">
       <div class="file-upload-wrapper">
@@ -67,11 +76,19 @@ import { ref, computed, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
+import { Socket } from 'socket.io-client'
+import { connectChatSocket } from '../../websocket'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import type { UserI } from '../../model/user.interface'
+import type { ErrorI } from '../../model/error.interface'
 
 const notificationStore = useNotificationStore()
 
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
+
+const socket = ref<Socket | null>(null)
 
 const username = ref('')
 const twoFAcode = ref('')
@@ -80,13 +97,6 @@ const showEnable2FA = ref(false)
 const twoFAEnabled = ref(true)
 const avatarInput: Ref<HTMLInputElement | null> = ref(null)
 const uploadedAvatarFile: Ref<File | null> = ref(null)
-const selectedFileName = ref('')
-const images = ref([
-  'src/assets/avatar-1.png',
-  'src/assets/avatar-2.png',
-  'src/assets/avatar-3.png',
-  'src/assets/avatar-2.png'
-])
 const qrCodeImage = ref('')
 
 const handleAvatarUpload = async () => {
@@ -98,7 +108,9 @@ const handleAvatarUpload = async () => {
       formData.append('file', uploadedAvatarFile.value)
 
       const response = await fetch(
-        `http://localhost:3000/api/users/avatar?userId=${userId.value}`,
+        `http://${import.meta.env.VITE_IPADDRESS}:${
+          import.meta.env.VITE_BACKENDPORT
+        }/api/users/avatar?userId=${userId.value}`,
         {
           method: 'POST',
           body: formData
@@ -120,12 +132,17 @@ const handleAvatarUpload = async () => {
 
 const deleteAvatar = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/avatar/${userId.value}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/avatar/${userId.value}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     const responseData = await response.json()
     if (response.ok) {
@@ -144,9 +161,14 @@ const deleteAvatar = async () => {
 
 const generateQRCode = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/2fa/generate?userId=${userId.value}`, {
-      method: 'POST'
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/generate?userId=${userId.value}`,
+      {
+        method: 'POST'
+      }
+    )
     if (!response.ok) {
       throw new Error('Network response was not ok')
     }
@@ -173,16 +195,19 @@ const enable2FA = () => {
 
 const check2FAcode = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/2fa/enable', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: userId.value,
-        code: twoFAcode.value
-      })
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/enable`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId.value,
+          code: twoFAcode.value
+        })
+      }
+    )
     if (!response.ok) {
       const responseData = await response.json()
       notificationStore.showNotification(responseData.message, false)
@@ -203,9 +228,14 @@ const confirm2FA = () => {
 
 const disable2FA = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/2fa/disable?userId=${userId.value}`, {
-      method: 'POST'
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/disable?userId=${userId.value}`,
+      {
+        method: 'POST'
+      }
+    )
     if (!response.ok) {
       throw new Error('Network response was not ok')
     } else {
@@ -230,7 +260,9 @@ const confirmDisable2FA = () => {
 const set2FAStatus = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/twoFAstatus?userId=${userId.value}`,
       {
         method: 'GET'
       }
@@ -245,6 +277,28 @@ const set2FAStatus = async () => {
   }
 }
 
+const changeUsername = () => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.emit('changeUsername', username.value, async (response: UserI | ErrorI) => {
+    if ('error' in response) {
+      notificationStore.showNotification(response.error, false)
+    } else {
+      notificationStore.showNotification('username changed', true)
+      await userStore.fetchUser()
+    }
+  })
+  username.value = ''
+}
+
+const initSocket = () => {
+  const accessToken = localStorage.getItem('ponggame') ?? ''
+  socket.value = connectChatSocket(accessToken)
+}
+
 onMounted(async () => {
   try {
     await userStore.mountStore()
@@ -255,6 +309,8 @@ onMounted(async () => {
     )
     return
   }
+
+  initSocket()
 
   set2FAStatus()
 })
@@ -271,6 +327,8 @@ onMounted(async () => {
   color: #fff;
   box-sizing: border-box !important;
   background: rgba(0, 0, 0, 0.7);
+  min-height: 650px;
+  min-width: 700px;
 }
 
 .settings-container .username {
@@ -286,8 +344,8 @@ input[type='text'] {
   padding: 0.5rem 1rem;
   margin-left: 0.25rem;
   min-height: 40px;
-  border: none;
-  min-width: 540px;
+  min-width: 492px;
+  margin-right: 8px;
   background-color: transparent;
   border: 1px solid aliceblue;
   opacity: 0.9;
@@ -297,6 +355,7 @@ input[type='text'] {
 
 input[type='text']::placeholder {
   text-align: center;
+  padding-left: 40px;
   color: aliceblue;
   font-size: 15px;
 }
@@ -388,6 +447,25 @@ input[type='file']:focus,
   overflow: hidden;
   pointer-events: none;
   clip: rect(0, 0, 0, 0);
+}
+
+.username-container {
+  display: flex;
+}
+
+.username-container button {
+  width: 40px;
+  background-color: transparent;
+  border: 1px solid aliceblue;
+  opacity: 0.9;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.25s ease;
+}
+
+.username-container button:hover {
+  border: 1px solid #ea9f42;
+  color: #ea9f42;
 }
 
 .disabled {

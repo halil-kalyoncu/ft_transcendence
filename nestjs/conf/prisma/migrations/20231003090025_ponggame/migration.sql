@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "AchievementState" AS ENUM ('NONE', 'BRONZE', 'SILVER', 'GOLD');
+
+-- CreateEnum
 CREATE TYPE "FriendshipStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
 
 -- CreateEnum
@@ -18,6 +21,28 @@ CREATE TYPE "MatchType" AS ENUM ('LADDER', 'CUSTOM');
 
 -- CreateEnum
 CREATE TYPE "MatchState" AS ENUM ('CREATED', 'INVITED', 'ACCEPTED', 'STARTED', 'DISCONNECTLEFT', 'DISCONNECTRIGHT', 'WINNERLEFT', 'WINNERRIGHT');
+
+-- CreateTable
+CREATE TABLE "Achievement" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "scoreBronze" INTEGER NOT NULL DEFAULT 0,
+    "scoreSilver" INTEGER NOT NULL DEFAULT 0,
+    "scoreGold" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "Achievement_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserAchievements" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "achievementId" INTEGER NOT NULL,
+    "progress" INTEGER NOT NULL DEFAULT 0,
+    "state" "AchievementState" NOT NULL DEFAULT 'NONE',
+
+    CONSTRAINT "UserAchievements_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -185,6 +210,12 @@ CREATE TABLE "Matchmaking" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Achievement_name_key" ON "Achievement"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserAchievements_userId_achievementId_key" ON "UserAchievements"("userId", "achievementId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_intraLogin_key" ON "User"("intraLogin");
 
 -- CreateIndex
@@ -234,6 +265,12 @@ CREATE UNIQUE INDEX "Matchmaking_userId_key" ON "Matchmaking"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Matchmaking_opponentUserId_key" ON "Matchmaking"("opponentUserId");
+
+-- AddForeignKey
+ALTER TABLE "UserAchievements" ADD CONSTRAINT "UserAchievements_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserAchievements" ADD CONSTRAINT "UserAchievements_achievementId_fkey" FOREIGN KEY ("achievementId") REFERENCES "Achievement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ConnectedUser" ADD CONSTRAINT "ConnectedUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { Socket } from 'socket.io-client'
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import type { MatchI } from '../../model/match/match.interface'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import { disconnectChatSocket, connectChatSocket } from '../../websocket'
@@ -77,6 +77,19 @@ onMounted(async () => {
   setChannelInvitationData()
 })
 
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  socket.value.off('matchInvites')
+  socket.value.off('friendRequests')
+  socket.value.off('NewChannelInvitation')
+  socket.value.off('ChannelInvitationRejected')
+  socket.value.off('ChannelInvitationAccepted')
+})
+
 const setMatchInviteListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
@@ -90,7 +103,9 @@ const setMatchInviteListener = () => {
 const setMatchInviteData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/matches/invites-by-userId?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/invites-by-userId?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -124,7 +139,9 @@ const setMatchInviteData = async () => {
 const setFriendRequestData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/friendships/get-friend-requests?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/friendships/get-friend-requests?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -164,7 +181,9 @@ const setFriendRequestListener = () => {
 const setChannelInvitationData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {

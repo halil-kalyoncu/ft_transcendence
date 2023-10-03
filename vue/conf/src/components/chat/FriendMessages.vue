@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { connectChatSocket } from '../../websocket'
 import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 import type { UserI } from '../../model/user.interface'
 import type { directMessageI } from '../../model/message/directMessage.interface'
-import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
 import { useNotificationStore } from '../../stores/notification'
 import { Socket } from 'socket.io-client'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const props = defineProps({
   selectedFriendEntry: {
@@ -59,7 +59,11 @@ const setDirectMessages = async () => {
   }
   try {
     const response = await fetch(
-      `http://localhost:3000/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${
+        props.selectedFriendEntry?.friend?.id
+      }`,
       {
         method: 'GET',
         headers: {
@@ -108,6 +112,15 @@ onMounted(async () => {
   setNewDirectMessageListener()
 })
 
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('newDirectMessage')
+})
+
 const handleEnterKey = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     sendMessage()
@@ -149,10 +162,12 @@ const formatDate = (createdAt: Date) => {
 </script>
 
 <template>
-  <div v-if="props.selectedFriendEntry?.blocked!">You blocked {{ selectedUser?.username! }}</div>
-  <div v-else class="chat">
+  <div v-if="props.selectedFriendEntry?.blocked!" class="blocked-friend">
+    <font-awesome-icon :icon="['fas', 'ban']" class="blocked-icon" />
+  </div>
+  <div class="chat">
     <div></div>
-    <ScrollViewer :maxHeight="'60vh'">
+    <ScrollViewer :maxHeight="'60vh'" :class="{ blur: props.selectedFriendEntry?.blocked }">
       <div class="messages" v-if="!loading" ref="chatContainerRef">
         <Message
           v-for="message in messages"
@@ -166,7 +181,7 @@ const formatDate = (createdAt: Date) => {
       </div>
       <div v-else class="loading-text">Type to Start Conversation...</div>
     </ScrollViewer>
-    <div class="chat-input">
+    <div class="chat-input" :class="{ blur: props.selectedFriendEntry?.blocked }">
       <textarea
         type="text"
         v-model="newMessage"
@@ -244,5 +259,29 @@ const formatDate = (createdAt: Date) => {
 .chat .loading-text {
   font-size: 0.8rem;
   padding-left: 0.75rem;
+}
+
+.blur {
+  filter: blur(7.5px);
+  -moz-filter: blur(7.5px);
+  -webkit-filter: blur(7.5px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.blocked-friend {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #a83232;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+}
+
+.blocked-icon {
+  font-size: 6rem;
 }
 </style>

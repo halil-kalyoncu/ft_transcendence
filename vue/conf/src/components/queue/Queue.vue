@@ -11,10 +11,7 @@ import type { MatchI } from '../../model/match/match.interface'
 import jwtDecode from 'jwt-decode'
 import Spinner from '../utils/Spinner.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faArrowLeft)
 const route = useRoute()
 const matchmakingId: string = route.params.matchmakingId as string
 
@@ -55,25 +52,31 @@ const getUserFromAccessToken = (): UserI => {
 const checkAuthorized = async () => {
   try {
     const loggedUser = getUserFromAccessToken()
-    const response = await fetch(`http://localhost:3000/api/matchmaking/${loggedUser.id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matchmaking/${loggedUser.id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     if (response.ok) {
       const responseText = await response.text()
       const matchmaking: MatchmakingI | null = responseText ? JSON.parse(responseText) : null
-
       if (!matchmaking) {
         notificationStore.showNotification('You are not authorized to visit this site', false)
+        authorized.value = false
       } else if (matchmaking.id !== parseInt(matchmakingId, 10)) {
         notificationStore.showNotification(
           'Something went wrong while directing you to the queue',
           false
         )
+        authorized.value = false
       }
     } else {
       const responseData = await response.json()
@@ -81,14 +84,14 @@ const checkAuthorized = async () => {
         'Error while fetching the matchmaking data: ' + responseData.message,
         false
       )
+      authorized.value = false
     }
-  } catch (error: any) {
+  } catch (error) {
     notificationStore.showNotification(
       'Something went wrong while fetching the matchmaking data',
       false
     )
     authorized.value = false
-    router.push('/home')
   }
 }
 
@@ -128,13 +131,18 @@ const handleDeleteMatchmakingEntry = async () => {
   const loggedUser = getUserFromAccessToken()
 
   try {
-    const response = await fetch(`http://localhost:3000/api/matchmaking/${loggedUser.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matchmaking/${loggedUser.id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     const responseData = await response.json()
     if (!response.ok) {
@@ -183,6 +191,10 @@ onMounted(async () => {
   }
 
   await checkAuthorized()
+
+  if (authorized.value === false) {
+    router.push('/home')
+  }
 
   startTimer()
 
@@ -240,6 +252,7 @@ onBeforeUnmount(async () => {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: flex-start;
+  min-height: 650px;
 }
 
 .timer {

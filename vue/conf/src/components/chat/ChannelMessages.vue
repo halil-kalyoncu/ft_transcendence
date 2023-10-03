@@ -112,7 +112,11 @@ const setUserChangesListener = () => {
 const setNewChannelMessages = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${userId.value}`,
+      `http://l${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-message/getChannelMessagesforChannel?channelId=${channelId}&userId=${
+        userId.value
+      }`,
       {
         method: 'GET',
         headers: {
@@ -206,7 +210,9 @@ const sendChannelMessage = async () => {
 const updateMutedUsers = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/updateMutedUsers?channelId=${channelId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/updateMutedUsers?channelId=${channelId}`,
       {
         method: 'PATCH',
         headers: {

@@ -44,9 +44,7 @@
 import ChannelManager from './ChannelManager.vue'
 import ChannelMessages from '../chat/ChannelMessages.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import { connectChatSocket, disconnectChatSocket } from '../../websocket'
@@ -185,17 +183,22 @@ const showJoinedChannels = ref(false)
 
 const addUsertoChannel = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/channel/addUserToChannel', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-      },
-      body: JSON.stringify({
-        userId: userId.value,
-        channelId: joinedChannelId.value
-      })
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/addUserToChannel`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        },
+        body: JSON.stringify({
+          userId: userId.value,
+          channelId: joinedChannelId.value
+        })
+      }
+    )
     const responseData = await response.json()
     if (!response.ok) {
       notificationStore.showNotification(responseData.message, false)
@@ -211,7 +214,11 @@ const MarkMessagesAsRead = async () => {
     console.log('call mark messages')
     try {
       const response = await fetch(
-        `http://localhost:3000/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${userId.value}`,
+        `http://${import.meta.env.VITE_IPADDRESS}:${
+          import.meta.env.VITE_BACKENDPORT
+        }/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${
+          userId.value
+        }`,
         {
           method: 'PATCH',
           headers: {
@@ -338,6 +345,10 @@ const updateChannelManager = async () => {
   cursor: pointer;
   font-size: 1rem;
   transition: 0.25s color ease-out, border 0.25s ease-out;
+}
+
+.channels .channel-option-button:last-child {
+  margin: 0 0 1rem 0;
 }
 
 .channels .channel-option-button:hover {

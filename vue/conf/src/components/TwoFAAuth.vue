@@ -23,7 +23,9 @@ const twoFACode = ref('')
 const submitForm = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/2fa/checkFAcode?intraLogin=${intraLogin}&code=${twoFACode.value}`
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/checkFAcode?intraLogin=${intraLogin}&code=${twoFACode.value}`
     )
 
     twoFACode.value = ''

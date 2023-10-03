@@ -3,11 +3,17 @@ import { MatchService } from './match.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Match, Prisma } from '@prisma/client';
 import { PowerupService } from '../../powerup/service/powerup.service';
+import { AchievementService } from '../../achievement/service/achievement.service';
+import { UserService } from '../../user/service/user-service/user.service';
+import { JwtService } from '@nestjs/jwt';
+import { JwtAuthService } from '../../auth/service/jwt-auth/jtw-auth.service';
+import { ConnectedUserService } from '../../chat/service/connected-user/connected-user.service';
 
 describe('MatchService', () => {
   let service: MatchService;
   let prismaService: PrismaService;
   let powerupService: PowerupService;
+  let userService: UserService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -17,13 +23,22 @@ describe('MatchService', () => {
           provide: PrismaService,
           useValue: PrismaService.getInstance(),
         },
+        JwtAuthService,
+        {
+          provide: JwtService,
+          useValue: {},
+        },
         PowerupService,
+        AchievementService,
+        UserService,
+        ConnectedUserService,
       ],
     }).compile();
 
     service = module.get<MatchService>(MatchService);
     prismaService = module.get<PrismaService>(PrismaService);
     powerupService = module.get<PowerupService>(PowerupService);
+    userService = module.get<UserService>(UserService);
   });
 
   it('should be defined', () => {

@@ -51,6 +51,7 @@ const socket = ref<Socket | null>(null)
 
 const props = defineProps({
   username: String,
+  inviterId: Number,
   channelName: String,
   isPasswordProtected: Boolean,
   invitationId: Number,
@@ -67,7 +68,7 @@ onMounted(async () => {
 })
 
 const viewProfile = () => {
-  router.push(`/profile/${props.username}`)
+  router.push(`/profile/${props.inviterId}`)
 }
 
 const acceptRequest = () => {

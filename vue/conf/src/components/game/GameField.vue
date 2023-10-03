@@ -1,40 +1,38 @@
 <template>
-  <div v-if="!matchResult" class="field" ref="gameField">
-    <div class="left-border"></div>
-    <div class="right-border"></div>
-    <div v-if="countdown === -1" class="waiting">
-      <p>Waiting for opponent... {{ formattedTimer }}</p>
-    </div>
-    <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
-      <p>{{ countdown }}</p>
-    </div>
+  <div v-if="!matchResult">
     <PlayerView
       ref="playerview"
       :playerA="playerAName"
       :playerB="playerBName"
       :playerAScore="playerAScore"
       :playerBScore="playerBScore"
+      :goalsToBeat="goalsToBeat"
     />
-    <GameBall ref="ball" />
-    <GamePaddle ref="paddleA" />
-    <GamePaddle ref="paddleB" />
-    <PowerUp
-      v-for="powerup in PowerUps"
-      :id="powerup.id"
-      :x="powerup.x"
-      :y="powerup.y"
-      :color="powerup.color"
-      :index="powerup.index"
-      :type="powerup.type"
-    />
+    <div class="field" ref="gameField">
+      <div class="left-border"></div>
+      <div class="right-border"></div>
+      <div v-if="countdown === -1" class="waiting">
+        <p>Waiting for opponent... {{ formattedTimer }}</p>
+      </div>
+      <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
+        <p>{{ countdown }}</p>
+      </div>
+      <GameBall ref="ball" />
+      <GamePaddle ref="paddleA" />
+      <GamePaddle ref="paddleB" />
+      <PowerUp
+        v-for="powerup in PowerUps"
+        :id="powerup.id"
+        :x="powerup.x"
+        :y="powerup.y"
+        :color="powerup.color"
+        :index="powerup.index"
+        :type="powerup.type"
+      />
+    </div>
   </div>
   <div v-else>
-    <PostGame
-      :playerA="playerAName"
-      :playerB="playerBName"
-      :playerAScore="matchResult.goalsLeftPlayer!"
-      :playerBScore="matchResult.goalsRightPlayer!"
-    />
+    <PostGame :matchResult="matchResult" />
   </div>
   <div class="leave-game">
     <button @click="goHome" class="leave-game-button">Leave Game</button>
@@ -88,6 +86,7 @@ let playerAName = ref<string>('')
 let playerBName = ref<string>('')
 let playerAScore = ref<number>(0)
 let playerBScore = ref<number>(0)
+let goalsToBeat = ref<number>(0)
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
@@ -107,13 +106,15 @@ const getUserFromAccessToken = () => {
 }
 
 const keyHookDown = (e: KeyboardEvent) => {
-  switch (e.key) {
+  switch (e.code) {
     case 'p':
       isPaused.value = !isPaused.value
       break
+    case 'KeyW':
     case 'ArrowUp':
       isMovingUp.value = true
       break
+    case 'KeyS':
     case 'ArrowDown':
       isMovingDown.value = true
       break
@@ -127,9 +128,11 @@ const keyHookUp = (e: KeyboardEvent) => {
   }
 
   switch (e.code) {
+    case 'KeyW':
     case 'ArrowUp':
       isMovingUp.value = false
       break
+    case 'KeyS':
     case 'ArrowDown':
       isMovingDown.value = false
       break
@@ -164,12 +167,20 @@ const initGameField = async () => {
   fieldWidth.value = gameField.value?.clientWidth || 0
   fieldHeight.value = gameField.value?.clientHeight || 0
   // console.log(fieldWidth.value);
-  await getUserNames()
-  if (!playerAName || playerAName.value === '' || !playerBName || playerBName.value === '') {
+  await getMatchData()
+  if (
+    !playerAName ||
+    playerAName.value === '' ||
+    !playerBName ||
+    playerBName.value === '' ||
+    !goalsToBeat ||
+    goalsToBeat.value === 0
+  ) {
     //TODO what to do if the usernames are not set
     console.log('something went wrong fetching the usernames')
     return
   }
+  console.log('goalsTobeatttttttt: ', goalsToBeat)
   setTimeout(() => {
     update()
   }, 200)
@@ -227,10 +238,8 @@ onMounted(() => {
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
     if (playerId === 'left') {
       paddleA.value?.setY(newPos)
-      // console.log(playerId, ": ", newPos);
     } else {
       paddleB.value?.setY(newPos)
-      // console.log(playerId, ": ", newPos);
     }
   })
 
@@ -246,7 +255,7 @@ onMounted(() => {
     const newPowerUp = {
       id: Math.floor(Date.now()),
       x: PowerUp.x,
-      y: PowerUp.y, //Math.floor(Math.random() * ((fieldHeight.value! - 70) - 70 + 1)) + 70,
+      y: PowerUp.y,
       type: 'null',
       index: 0,
       color: 'white',
@@ -278,7 +287,6 @@ onMounted(() => {
     socket.value?.emit('spawnPowerUp', newPowerUp)
     console.log('PU spawn local')
     PowerUps.value?.push(newPowerUp)
-    // console.log("PU spawn remote");
   })
 
   socket.value.on('powerUpMove', ({ id, y }: { id: number; y: number }) => {
@@ -289,14 +297,6 @@ onMounted(() => {
       // console.log("ID: ", powerUp.id, "Y:", y);
     }
   })
-
-  // socket.value.on("newPaddleHeight", ({ player, hgt }: { player: string; hgt: number }) => {
-  // 	// return ;
-  // 	if (paddleA.value && player == "left")
-  // 		paddleA.value?.setHgt(hgt);
-  // 	else if (paddleB.value && player == "right")
-  // 		paddleB.value?.setHgt(hgt);
-  // });
 
   socket.value.on('destroyPowerUp', ({ id }: { id: number }) => {
     if (!socket || !socket.value) {
@@ -375,18 +375,6 @@ onBeforeUnmount(() => {
   disconnectGameSocket()
 })
 
-// watch(isMovingUp, () => {
-// 	if (socket.value) {
-// 		socket.value.emit('paddle', 'up');
-// 	}
-// });
-
-// watch(isMovingDown, () => {
-// 	if (socket.value) {
-// 		socket.value.emit('paddle', 'down');
-// 	}
-// });
-
 function update() {
   // console.log("UPDATE");
   if (isPaused.value) {
@@ -425,48 +413,26 @@ function update() {
   requestAnimationFrame(update)
 }
 
-// function spawnPowerUp() {
-//   const newPowerUp = {
-//     id: Math.floor(Date.now()),
-//     x: Math.floor(Math.random() * fieldWidth.value!),
-//     y: -30,
-//     index: 0,
-//     type: Math.floor(Math.random() * 4),
-//     color: 'white',
-//     wid: 30,
-//     hgt: 30
-//   }
-//   if (newPowerUp.type == 0) {
-//     newPowerUp.color = 'red'
-//     newPowerUp.index = 0
-//   } else if (newPowerUp.type == 1) {
-//     newPowerUp.color = 'green'
-//     newPowerUp.index = 3
-//   } else if (newPowerUp.type == 2) {
-//     newPowerUp.color = 'blue'
-//     newPowerUp.index = 2
-//   } else if (newPowerUp.type == 3) {
-//     newPowerUp.color = 'white'
-//     newPowerUp.index = 1
-//   }
-//   socket.value?.emit('spawnPowerUp', newPowerUp)
-//   console.log('PU spawn local')
-// }
-
-async function getUserNames(): Promise<void> {
+async function getMatchData(): Promise<void> {
   try {
-    const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/find-by-id?id=${matchId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     const responseData = await response.json()
     if (response.ok) {
       playerAName = responseData.leftUser.username
       playerBName = responseData.rightUser.username
+      goalsToBeat = responseData.goalsToWin
     } else {
       notificationStore.showNotification(
         'Error while fetching the match data' + responseData.message,
