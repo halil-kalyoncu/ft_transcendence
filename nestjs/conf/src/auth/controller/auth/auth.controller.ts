@@ -15,8 +15,8 @@ export class AuthController {
 
   @Get('callback')
   async fortyTwoCallback(@Query('code') code: string, @Res() res) {
-	const ipAddress = process.env.IP_ADDRESS;
-	const frontendPort = process.env.FRONTEND_PORT;
+    const ipAddress = process.env.IP_ADDRESS;
+    const frontendPort = process.env.FRONTEND_PORT;
 
     try {
       const response = await axios.post(
@@ -57,7 +57,9 @@ export class AuthController {
         user.id,
       );
       if (connectedUser) {
-        return res.redirect(`http://${ipAddress}:${frontendPort}?error=already_signedIn`);
+        return res.redirect(
+          `http://${ipAddress}:${frontendPort}?error=already_signedIn`,
+        );
       }
 
       if (user.enabled2FA) {
@@ -67,9 +69,13 @@ export class AuthController {
       }
 
       const jwt: string = await this.jwtAuthService.generateJwt(user);
-      return res.redirect(`http://${ipAddress}:${frontendPort}/validateToken/${btoa(jwt)}`);
+      return res.redirect(
+        `http://${ipAddress}:${frontendPort}/validateToken/${btoa(jwt)}`,
+      );
     } catch (error) {
-      return res.redirect(`http://${ipAddress}:${frontendPort}?error=authentication_failed`);
+      return res.redirect(
+        `http://${ipAddress}:${frontendPort}?error=authentication_failed`,
+      );
     }
   }
 }

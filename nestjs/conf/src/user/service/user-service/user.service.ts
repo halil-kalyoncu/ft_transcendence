@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -38,13 +39,21 @@ export class UserService {
   }
 
   async register(userInput: Prisma.UserCreateInput): Promise<string> {
-    let user: User | null = await this.findByUsername(userInput.username);
+    let user: User | null;
 
+    if (userInput.username.length >= 11) {
+      throw new BadRequestException(
+        'Username is too long, please choose a username with less than 11 characters',
+      );
+    }
+
+    user = await this.findByUsername(userInput.username);
     if (user) {
       throw new ConflictException(
         'Username ' + user.username + ' is already used',
       );
     }
+
     user = await this.prisma.user.update({
       where: {
         intraLogin: userInput.intraLogin,
@@ -64,8 +73,15 @@ export class UserService {
     file: Express.Multer.File,
     userInput: Prisma.UserCreateInput,
   ): Promise<string> {
-    let user: User | null = await this.findByUsername(userInput.username);
+    let user: User | null;
 
+    if (userInput.username.length >= 11) {
+      throw new BadRequestException(
+        'Username is too long, please choose a username with less than 11 characters',
+      );
+    }
+
+    user = await this.findByUsername(userInput.username);
     if (user) {
       throw new ConflictException(
         'Username ' + user.username + ' is already used',

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -125,7 +126,10 @@ export class UserController {
       const jwt: string = await this.userService.register(userEntity);
       return btoa(jwt);
     } catch (error) {
-      if (error instanceof ConflictException) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new HttpException(
@@ -172,7 +176,10 @@ export class UserController {
       );
       return btoa(jwt);
     } catch (error) {
-      if (error instanceof ConflictException) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new HttpException(
