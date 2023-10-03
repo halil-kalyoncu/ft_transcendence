@@ -469,12 +469,6 @@ const goBack = () => {
 <template>
   <section class="friends">
     <template v-if="!showFriendManagerAndChat">
-      <FriendsModal
-        :isOpened="isModalOpened"
-        :title="modalTitle"
-        @submit="handleSubmit"
-        @close="handleClose"
-      />
       <div class="friendsList">
         <h2
           v-if="friends === undefined || friends?.length === 0"
@@ -482,6 +476,7 @@ const goBack = () => {
         >
           Friend list is empty
         </h2>
+        <div class="friends-scrollview-container">
         <ScrollViewer :maxHeight="'68vh'" class="friendsList" :class="'messages-scrollviewer'">
           <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
             <FriendsListItem
@@ -494,9 +489,12 @@ const goBack = () => {
             />
           </div>
         </ScrollViewer>
+        <div>
         <button class="add-friend-button" @click="openAddModal">Add Friend</button>
         <button class="add-friend-button" @click="openBlockModal">Block User</button>
         <button class="add-friend-button" @click="openUnblockModal">Unblock User</button>
+        </div>
+      </div>
       </div>
 
       <div v-if="showChat" class="chat-container">
@@ -520,6 +518,12 @@ const goBack = () => {
       />
       <FriendMessages :selectedFriendEntry="selectedFriend" />
     </template>
+    <FriendsModal
+        :isOpened="isModalOpened"
+        :title="modalTitle"
+        @submit="handleSubmit"
+        @close="handleClose"
+      />
   </section>
 </template>
 
@@ -530,12 +534,23 @@ const goBack = () => {
   height: calc(100% - 50px);
   position: relative;
   padding: 1rem 0.5rem 1rem 0.5rem;
+
+}
+
+.friends-scrollview-container{
+  display:flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
 }
 
 .friendsList {
+  min-height: fit-content;
   flex: 1;
   display: flex;
   flex-direction: column;
+
 }
 
 .friendsList ul {
@@ -558,12 +573,12 @@ const goBack = () => {
 .add-friend-button {
   font-family: 'Courier New', Courier, monospace !important;
   display: block;
-  min-width: 90%;
+  min-width: 100%;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
   background: transparent;
   color: aliceblue;
-  border: 0.5px solid aliceblue;
+  border: .5px solid aliceblue;
   cursor: pointer;
   font-size: 1rem;
   transition: 0.25s color ease-out, border 0.25s ease-out;
@@ -572,7 +587,10 @@ const goBack = () => {
 
 .add-friend-button:hover {
   color: aliceblue;
-  border: 1px solid #ea9f42;
+  border: .5px solid #ea9f42;
   font-weight: bold;
 }
+
+
+
 </style>
