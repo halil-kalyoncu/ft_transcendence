@@ -12,7 +12,8 @@ import jwtDecode from 'jwt-decode'
 import { useRoute } from 'vue-router'
 import { Socket } from 'socket.io-client'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { library } from '@fortawesome/fontawesome-svg-core'
+import type { CreateMatchDto } from '../../model/match/create-match.dto'
+import type { MatchTypeType } from '../../model/match/match.interface'
 
 const route = useRoute()
 const matchId = route.params.matchId as string
@@ -52,6 +53,41 @@ const getUserFromAccessToken = (): UserI => {
   return decodedToken.user as UserI
 }
 
+const handleCreateNewInvite = async () => {
+  try {
+    const loggedUser: UserI = getUserFromAccessToken()
+    const createMatchDto: CreateMatchDto = {
+      userId: loggedUser.id as number,
+      matchType: 'CUSTOM' as MatchTypeType
+    }
+
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/create`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        },
+        body: JSON.stringify(createMatchDto)
+      }
+    )
+
+    const responseData = await response.json()
+	console.log(responseData)
+    if (response.ok) {
+      const matchId = String(responseData.id)
+      router.push(`/invite/${matchId}`)
+    } else {
+      notificationStore.showNotification('Failed to create a game: ' + responseData.message, false)
+    }
+  } catch (error: any) {
+    notificationStore.showNotification('Something went wrong when creating a game', false)
+  }
+}
+
 async function fetchMatchData(): Promise<void> {
   try {
     const response = await fetch(
@@ -67,15 +103,23 @@ async function fetchMatchData(): Promise<void> {
       }
     )
 
-    const responseData = await response.json()
     if (response.ok) {
-      match.value = responseData
-      leftPlayer.value = responseData.leftUser
-      rightPlayer.value = responseData.rightUser
+	  const responseText = await response.text()
+	  const matchData: MatchI | null = responseText ? JSON.parse(responseText) : null
+
+	  if (!matchData) {
+		console.log('create new game ' + matchId)
+		await handleCreateNewInvite()
+		console.log('continuing after creating new game ' + matchId)
+	  }
+      match.value = matchData
+      leftPlayer.value = matchData.leftUser as UserI
+      rightPlayer.value = matchData.rightUser as UserI
       if (match.value.rightUser && match.value.state === 'INVITED') {
         isWaitingForResponse.value = true
       }
     } else {
+	  const responseData = await response.json()
       notificationStore.showNotification(
         'Error while fetching the match data: ' + responseData.message,
         false
@@ -90,6 +134,7 @@ async function fetchMatchData(): Promise<void> {
 
 //check if match object is correct and user is part of this queue
 const checkAuthorized = (user: UserI): boolean => {
+	console.log('checkAuthorized ' + matchId)
   if (!match.value) {
     notificationStore.showNotification('Unexpected error occured', false)
     return false
@@ -145,6 +190,7 @@ const handleStartMatch = () => {
 }
 
 onMounted(async () => {
+	console.log('onMounted ' + matchId)
   initChatSocket()
   if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
@@ -154,6 +200,7 @@ onMounted(async () => {
   await fetchMatchData()
   const user: UserI = getUserFromAccessToken()
 
+  console.log('before checkAuthorized ' + matchId)
   if (!checkAuthorized(user)) {
     authorized.value = false
     router.push('/home')
@@ -224,19 +271,25 @@ const cancelWaiting = () => {
 }
 
 onBeforeUnmount(() => {
+	console.log('onBeforeUnmount ' + matchId)
   if (authorized.value) {
+	console.log(1)
     if (!lobbyIsFinished.value && userIsHost.value) {
+	  console.log('handleHostLeaveMatch')
       handleHostLeaveMatch()
     } else if (!lobbyIsFinished.value && !userIsHost.value) {
+		console.log('handleLeaveMatch')
       handleLeaveMatch()
     }
   }
 
+  console.log(2)
   if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
+  console.log(3)
   chatSocket.value.off('matchInviteSent')
   chatSocket.value.off('matchInviteAccepted')
   chatSocket.value.off('matchInviteRejected')
