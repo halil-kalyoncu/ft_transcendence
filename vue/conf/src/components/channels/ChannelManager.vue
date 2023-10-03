@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
   socket.value.off('ChannelDestroy')
   socket.value.off('UserSignedOut')
   socket.value.off('UserSignedIn')
-  socket.value.off('ChannelInvitationAccepted')
+  socket.value.off('ChannelInvitationAcceptedManager')
   socket.value.off('madeAdmin')
   socket.value.off('memberKicked')
   socket.value.off('memberBanned')
@@ -256,13 +256,16 @@ const setUserSignedListener = async () => {
     })
   })
 
-  socket.value.on('ChannelInvitationAccepted', (channelName: string, inviteeName: string) => {
-    console.log('ChannelInvitationAccepted fired')
-    //notificationStore.showNotification(' Signed in Channel', true)
-    setMembers().then(() => {
-      setCurrentUserRole()
-    })
-  })
+  socket.value.on(
+    'ChannelInvitationAcceptedManager',
+    (channelName: string, inviteeName: string) => {
+      console.log('ChannelInvitationAccepted fired')
+      //notificationStore.showNotification(' Signed in Channel', true)
+      setMembers().then(() => {
+        setCurrentUserRole()
+      })
+    }
+  )
 
   socket.value.on('madeAdmin', (username: string, channelname: string) => {
     if (channelname !== ChannelName.value) {

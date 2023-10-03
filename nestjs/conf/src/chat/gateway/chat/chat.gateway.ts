@@ -854,6 +854,9 @@ export class ChatGateway
           socket
             .to(memberOnline.socketId)
             .emit('ChannelInvitationAccepted', channelName, inviteeName);
+          socket
+            .to(memberOnline.socketId)
+            .emit('ChannelInvitationAcceptedManager', channelName, inviteeName);
         }
       }
       return invitation;
@@ -912,6 +915,9 @@ export class ChatGateway
         socket
           .to(inviteeOnline.socketId)
           .emit('NewChannelInvitation', inviteeUsername);
+        socket
+          .to(inviteeOnline.socketId)
+          .emit('NewChannelInvitationBell', inviteeUsername);
       }
       const ChannelMembers = await this.channelService.getMembers(channelId);
       for (const member of ChannelMembers) {
@@ -921,6 +927,9 @@ export class ChatGateway
           socket
             .to(memberOnline.socketId)
             .emit('NewChannelInvitation', inviteeUsername);
+          socket
+            .to(inviteeOnline.socketId)
+            .emit('NewChannelInvitationBell', inviteeUsername);
         }
       }
       return invitee;

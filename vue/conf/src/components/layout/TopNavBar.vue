@@ -121,13 +121,13 @@ onMounted(async () => {
   color: red;
 }
 
-.settings-button .icon{
+.settings-button .icon {
   transition: color 0.15s ease-in-out;
 }
 
 .settings-button:hover .icon,
 .navButton:hover .settings-button {
-  color: 	#5A5A5A;
+  color: #5a5a5a;
 }
 
 .header-username {
