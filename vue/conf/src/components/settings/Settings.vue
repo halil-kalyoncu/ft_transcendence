@@ -108,7 +108,7 @@ const handleAvatarUpload = async () => {
       formData.append('file', uploadedAvatarFile.value)
 
       const response = await fetch(
-        `http://localhost:3000/api/users/avatar?userId=${userId.value}`,
+        `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/avatar?userId=${userId.value}`,
         {
           method: 'POST',
           body: formData
@@ -130,7 +130,7 @@ const handleAvatarUpload = async () => {
 
 const deleteAvatar = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/avatar/${userId.value}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/avatar/${userId.value}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
@@ -154,7 +154,7 @@ const deleteAvatar = async () => {
 
 const generateQRCode = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/2fa/generate?userId=${userId.value}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}api/2fa/generate?userId=${userId.value}`, {
       method: 'POST'
     })
     if (!response.ok) {
@@ -183,7 +183,7 @@ const enable2FA = () => {
 
 const check2FAcode = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/2fa/enable', {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/enable`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -213,7 +213,7 @@ const confirm2FA = () => {
 
 const disable2FA = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/2fa/disable?userId=${userId.value}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/disable?userId=${userId.value}`, {
       method: 'POST'
     })
     if (!response.ok) {
@@ -240,7 +240,7 @@ const confirmDisable2FA = () => {
 const set2FAStatus = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/twoFAstatus?userId=${userId.value}`,
       {
         method: 'GET'
       }

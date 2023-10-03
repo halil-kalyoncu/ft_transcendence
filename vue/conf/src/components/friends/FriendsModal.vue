@@ -104,7 +104,7 @@ const findUserSuggestions = async (username: string) => {
   try {
     const accessToken = localStorage.getItem('ponggame') ?? ''
     const response = await fetch(
-      `http://localhost:3000/api/users/find-by-username?username=${username}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/find-by-username?username=${username}`,
       {
         method: 'GET',
         headers: {

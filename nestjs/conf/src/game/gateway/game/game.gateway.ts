@@ -18,7 +18,7 @@ let diffPadBall = 0;
 let intervalId;
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:4200', 'http://localhost:3000'],
+    origin: [`http://${process.env.IP_ADDRESS}:${process.env.BACKEND}`, `http://${process.env.IP_ADDRESS}:${process.env.FRONTEND_PORT}`],
   },
   path: '/game',
 })

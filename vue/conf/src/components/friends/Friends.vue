@@ -54,7 +54,7 @@ const updateSelectedFriend = () => {
 
 const fetchUser = async (username: string): Promise<UserI | null> => {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/find?username=${username}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ const fetchUser = async (username: string): Promise<UserI | null> => {
 const setFriendData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/friendships/get-accepted-friends?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/friendships/get-accepted-friends?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -101,7 +101,7 @@ const setFriendData = async () => {
 const setDirectMessageData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/directMessages/allUnreadByUserId?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/directMessages/allUnreadByUserId?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -415,7 +415,7 @@ const markConversationAsRead = async (withUserId: number) => {
       withUserId: withUserId
     }
 
-    const response = await fetch('http://localhost:3000/api/directMessages/markAsRead', {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/directMessages/markAsRead`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

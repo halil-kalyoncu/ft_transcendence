@@ -67,7 +67,7 @@ const props = defineProps({
 
 const setLadderLevel = async (playerId: number) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/find-by-id?id=${playerId}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/find-by-id?id=${playerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

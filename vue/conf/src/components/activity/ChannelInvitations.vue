@@ -73,7 +73,7 @@ const initSocket = () => {
 const setChannelInvitations = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {

@@ -104,7 +104,7 @@ const handleUnblockUser = async (unblockUserId: number, username: string) => {
 const setBlockedUsersData = async () => {
   try {
     const accessToken = localStorage.getItem('ponggame') ?? ''
-    const response = await fetch(`http://localhost:3000/api/blockedUsers?userId=${userId.value}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/blockedUsers?userId=${userId.value}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

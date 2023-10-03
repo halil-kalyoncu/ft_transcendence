@@ -183,7 +183,7 @@ const showJoinedChannels = ref(false)
 
 const addUsertoChannel = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/channel/addUserToChannel', {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/channel/addUserToChannel`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -209,7 +209,7 @@ const MarkMessagesAsRead = async () => {
     console.log('call mark messages')
     try {
       const response = await fetch(
-        `http://localhost:3000/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${userId.value}`,
+        `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${userId.value}`,
         {
           method: 'PATCH',
           headers: {

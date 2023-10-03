@@ -29,7 +29,7 @@ const achievements = ref<UserAchievementI[] | null>(null)
 async function getMatchHistory(): Promise<void> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/matches/find-matches-by-user?userid=${userId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/matches/find-matches-by-user?userid=${userId}`,
       {
         method: 'GET',
         headers: {
@@ -50,7 +50,7 @@ async function getMatchHistory(): Promise<void> {
 async function getAchievments(): Promise<void> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/achievement/get-user-achievements?userId=${userId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/achievement/get-user-achievements?userId=${userId}`,
       {
         method: 'GET',
         headers: {
@@ -70,7 +70,7 @@ async function getAchievments(): Promise<void> {
 
 async function checkUserId(): Promise<void> {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/find-by-id?id=${userId}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/find-by-id?id=${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ async function checkUserId(): Promise<void> {
 async function getMatchOutcomes(): Promise<void> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/matches/match-outcomes?userId=${userId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/matches/match-outcomes?userId=${userId}`,
       {
         method: 'GET',
         headers: {

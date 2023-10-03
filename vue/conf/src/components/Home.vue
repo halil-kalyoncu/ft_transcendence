@@ -45,7 +45,7 @@ const handleInviteClick = async () => {
       matchType: 'CUSTOM' as MatchTypeType
     }
 
-    const response = await fetch('http://localhost:3000/api/matches/create', {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/matches/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

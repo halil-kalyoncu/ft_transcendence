@@ -55,7 +55,7 @@ import { ChannelInvitation } from 'src/_gen/prisma-class/channel_invitation';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:4200'],
+    origin: [`http://${process.env.IP_ADDRESS}:${process.env.FRONTEND_PORT}`, `http://${process.env.IP_ADDRESS}:${process.env.BACKEND_PORT}`],
   },
   path: '/chat',
 })

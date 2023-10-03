@@ -13,7 +13,7 @@ export const useUserStore = defineStore('user', () => {
     const jwtUser: UserI = getUserFromAccessToken()
     const jwtUserId: number = jwtUser.id as number
 
-    const response = await fetch(`http://localhost:3000/api/users/find-by-id?id=${jwtUserId}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/find-by-id?id=${jwtUserId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export const useUserStore = defineStore('user', () => {
     const jwtUser: UserI = getUserFromAccessToken()
     const jwtUserId: number = jwtUser.id as number
 
-    const response = await fetch(`http://localhost:3000/api/users/avatar/${jwtUserId}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/avatar/${jwtUserId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

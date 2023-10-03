@@ -415,7 +415,7 @@ function update() {
 
 async function getMatchData(): Promise<void> {
   try {
-    const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/matches/find-by-id?id=${matchId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

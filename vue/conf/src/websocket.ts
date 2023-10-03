@@ -5,7 +5,7 @@ let gameSocket: Socket | null = null
 
 export function connectChatSocket(accessToken: string): Socket {
   if (!chatSocket) {
-    chatSocket = io('http://localhost:3000', {
+    chatSocket = io(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}`, {
       transportOptions: {
         polling: {
           extraHeaders: {
@@ -33,7 +33,7 @@ export function connectGameSocket(data: any): Socket {
       userId: data.userId.toString(),
       matchId: data.matchId.toString()
     }
-    gameSocket = io('http://localhost:3000', {
+    gameSocket = io(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}`, {
       query: queryData,
       path: '/game'
     })

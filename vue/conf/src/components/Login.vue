@@ -23,7 +23,7 @@ const notificationStore = useNotificationStore()
 const get2FAStatus = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/twoFAstatus?userId=${userId.value}`,
       {
         method: 'GET'
       }
@@ -42,7 +42,8 @@ const userStore = useUserStore()
 
 const submitForm = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/users/login', {
+	console.log(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/login`)
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
