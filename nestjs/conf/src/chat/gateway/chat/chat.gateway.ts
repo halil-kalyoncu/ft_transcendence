@@ -950,7 +950,7 @@ export class ChatGateway
         socket.data.user.id,
         invitedUser.id,
       );
-      if (!friendship) {
+      if (!friendship || friendship.status !== 'ACCEPTED') {
         throw new Error(invitedUser.username + ' is not your friend');
       }
 
