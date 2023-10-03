@@ -112,15 +112,6 @@ onMounted(async () => {
   setNewDirectMessageListener()
 })
 
-onBeforeUnmount(() => {
-  if (!socket || !socket.value) {
-    notificationStore.showNotification('Error: Connection problems', false)
-    return
-  }
-
-  socket.value.off('newDirectMessage')
-})
-
 const handleEnterKey = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     sendMessage()
