@@ -59,7 +59,11 @@ const initSocket = () => {
 const calculateUnreadMessages = async (channelId: number) => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${
+        userId.value
+      }`,
       {
         method: 'GET',
         headers: {
@@ -84,7 +88,9 @@ const calculateUnreadMessages = async (channelId: number) => {
 const setChannels = async () => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`,
       {
         method: 'GET',
         headers: {

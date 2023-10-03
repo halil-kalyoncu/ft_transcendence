@@ -54,7 +54,9 @@ const findFriendSuggestions = async (usernameSuggestion: string) => {
     const loggedUser: UserI = getUserFromAccessToken()
     const userId: string = loggedUser.id?.toString(10) ?? ''
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/friendships/get-like-username?userId=${userId}&username=${usernameSuggestion}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/friendships/get-like-username?userId=${userId}&username=${usernameSuggestion}`,
       {
         method: 'GET',
         headers: {

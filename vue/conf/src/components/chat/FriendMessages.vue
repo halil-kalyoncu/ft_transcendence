@@ -59,7 +59,11 @@ const setDirectMessages = async () => {
   }
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${props.selectedFriendEntry?.friend?.id}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/directMessages/getDirectMessages?readerUserId=${userId.value}&withUserId=${
+        props.selectedFriendEntry?.friend?.id
+      }`,
       {
         method: 'GET',
         headers: {

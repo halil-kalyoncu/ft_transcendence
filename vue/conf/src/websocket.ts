@@ -5,16 +5,19 @@ let gameSocket: Socket | null = null
 
 export function connectChatSocket(accessToken: string): Socket {
   if (!chatSocket) {
-    chatSocket = io(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}`, {
-      transportOptions: {
-        polling: {
-          extraHeaders: {
-            Authorization: `Bearer ${accessToken}`
+    chatSocket = io(
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}`,
+      {
+        transportOptions: {
+          polling: {
+            extraHeaders: {
+              Authorization: `Bearer ${accessToken}`
+            }
           }
-        }
-      },
-      path: '/chat'
-    })
+        },
+        path: '/chat'
+      }
+    )
   }
   return chatSocket
 }
@@ -33,10 +36,13 @@ export function connectGameSocket(data: any): Socket {
       userId: data.userId.toString(),
       matchId: data.matchId.toString()
     }
-    gameSocket = io(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}`, {
-      query: queryData,
-      path: '/game'
-    })
+    gameSocket = io(
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}`,
+      {
+        query: queryData,
+        path: '/game'
+      }
+    )
   }
   return gameSocket
 }

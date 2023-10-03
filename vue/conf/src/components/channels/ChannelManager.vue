@@ -183,7 +183,9 @@ onBeforeUnmount(() => {
 const setMembers = async () => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/channel/getAllChannelManagerMembers?channelId=${channelId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/getAllChannelManagerMembers?channelId=${channelId}`,
       {
         method: 'GET',
         headers: {

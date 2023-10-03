@@ -52,7 +52,9 @@ const showEmptyListNotification = ref(false)
 const setPublicChannels = async () => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {

@@ -103,7 +103,9 @@ const setMatchInviteListener = () => {
 const setMatchInviteData = async () => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/matches/invites-by-userId?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/invites-by-userId?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -137,7 +139,9 @@ const setMatchInviteData = async () => {
 const setFriendRequestData = async () => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/friendships/get-friend-requests?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/friendships/get-friend-requests?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -177,7 +181,9 @@ const setFriendRequestListener = () => {
 const setChannelInvitationData = async () => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {

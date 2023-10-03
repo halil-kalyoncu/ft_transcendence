@@ -24,7 +24,9 @@ const twoFACode = ref('')
 const check2FAcode = async () => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/checkFAcode?userId=${userId.value}&code=${twoFACode.value}`
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/checkFAcode?userId=${userId.value}&code=${twoFACode.value}`
     )
     const responseData = await response.json()
     if (!response.ok) {

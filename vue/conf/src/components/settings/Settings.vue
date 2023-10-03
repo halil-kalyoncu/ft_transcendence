@@ -108,7 +108,9 @@ const handleAvatarUpload = async () => {
       formData.append('file', uploadedAvatarFile.value)
 
       const response = await fetch(
-        `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/avatar?userId=${userId.value}`,
+        `http://${import.meta.env.VITE_IPADDRESS}:${
+          import.meta.env.VITE_BACKENDPORT
+        }/api/users/avatar?userId=${userId.value}`,
         {
           method: 'POST',
           body: formData
@@ -130,12 +132,17 @@ const handleAvatarUpload = async () => {
 
 const deleteAvatar = async () => {
   try {
-    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/users/avatar/${userId.value}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/avatar/${userId.value}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     const responseData = await response.json()
     if (response.ok) {
@@ -154,9 +161,14 @@ const deleteAvatar = async () => {
 
 const generateQRCode = async () => {
   try {
-    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}api/2fa/generate?userId=${userId.value}`, {
-      method: 'POST'
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }api/2fa/generate?userId=${userId.value}`,
+      {
+        method: 'POST'
+      }
+    )
     if (!response.ok) {
       throw new Error('Network response was not ok')
     }
@@ -183,16 +195,19 @@ const enable2FA = () => {
 
 const check2FAcode = async () => {
   try {
-    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/enable`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: userId.value,
-        code: twoFAcode.value
-      })
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/enable`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId.value,
+          code: twoFAcode.value
+        })
+      }
+    )
     if (!response.ok) {
       const responseData = await response.json()
       notificationStore.showNotification(responseData.message, false)
@@ -213,9 +228,14 @@ const confirm2FA = () => {
 
 const disable2FA = async () => {
   try {
-    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/disable?userId=${userId.value}`, {
-      method: 'POST'
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/disable?userId=${userId.value}`,
+      {
+        method: 'POST'
+      }
+    )
     if (!response.ok) {
       throw new Error('Network response was not ok')
     } else {
@@ -240,7 +260,9 @@ const confirmDisable2FA = () => {
 const set2FAStatus = async () => {
   try {
     const response = await fetch(
-      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/twoFAstatus?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/twoFAstatus?userId=${userId.value}`,
       {
         method: 'GET'
       }
