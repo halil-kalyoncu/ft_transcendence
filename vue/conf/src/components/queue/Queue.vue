@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notification'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { connectChatSocket, connectGameSocket } from '../../websocket'
 import { Socket } from 'socket.io-client'
 import type { MatchmakingI } from '../../model/match/matchmaking.interface'
@@ -13,7 +13,7 @@ import Spinner from '../utils/Spinner.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const route = useRoute()
-const matchmakingId: string = route.params.matchmakingId as string
+let matchmakingId: string = route.params.matchmakingId as string
 
 const notificationStore = useNotificationStore()
 const router = useRouter()
@@ -29,6 +29,7 @@ const waitingTime = ref<number>(0)
 const maxWaitingTime = 1 * 60
 
 const authorized = ref<boolean>(true)
+const calledWithUrl = ref<boolean>(false)
 
 const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
@@ -69,14 +70,8 @@ const checkAuthorized = async () => {
       const responseText = await response.text()
       const matchmaking: MatchmakingI | null = responseText ? JSON.parse(responseText) : null
       if (!matchmaking) {
-        notificationStore.showNotification('You are not authorized to visit this site', false)
-        authorized.value = false
-      } else if (matchmaking.id !== parseInt(matchmakingId, 10)) {
-        notificationStore.showNotification(
-          'Something went wrong while directing you to the queue',
-          false
-        )
-        authorized.value = false
+		authorized.value = false
+		calledWithUrl.value = true
       }
     } else {
       const responseData = await response.json()
@@ -183,6 +178,35 @@ const cancelTimer = () => {
   }
 }
 
+const handleCalledWithUrl = async () => {
+	if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  try {
+	const response: MatchmakingI = await new Promise((resolve, reject) => {
+		chatSocket.value.emit('queueUpForLadder', (response: MatchmakingI | ErrorI) => {
+			if ('error' in response) {
+				reject(response.error)
+			}
+			else {
+				resolve(response);
+			}
+		})
+	})
+
+	if (!response || response.id === 0) {
+		throw new Error('Something went wrong')
+	}
+    router.push(`/queue/${response.id}`);
+	matchmakingId = response.id.toString()
+  } catch(error) {
+	notificationStore.showNotification(error, false);
+	router.push('/home')
+  }
+}
+
 onMounted(async () => {
   initChatSocket()
   if (!chatSocket || !chatSocket.value) {
@@ -191,9 +215,12 @@ onMounted(async () => {
   }
 
   await checkAuthorized()
-
-  if (authorized.value === false) {
+  if (calledWithUrl.value) {
+	await handleCalledWithUrl()
+  }
+  else if (authorized.value === false) {
     router.push('/home')
+	return 
   }
 
   startTimer()
@@ -211,12 +238,22 @@ onMounted(async () => {
   })
 })
 
+const handleReloadComponent = watch(
+  () => route.params.matchmakingId,
+  async (newMatchmakingId) => {
+    if (newMatchmakingId) {
+		matchmakingId = newMatchmakingId as string
+    }
+  }
+)
+
 onBeforeUnmount(async () => {
   cancelTimer()
   if (authorized.value && waitingForGame.value) {
     await handleDeleteMatchmakingEntry()
   }
 
+  handleReloadComponent()
   if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
