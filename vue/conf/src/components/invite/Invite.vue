@@ -2,7 +2,7 @@
 import InvitePlayerAccepted from './InvitePlayerAccepted.vue'
 import Spinner from '../utils/Spinner.vue'
 import InviteFriend from './InviteFriend.vue'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { connectChatSocket, connectGameSocket } from '../../websocket'
 import type { UserI } from '../../model/user.interface'
 import type { MatchI } from '../../model/match/match.interface'
@@ -16,7 +16,7 @@ import type { CreateMatchDto } from '../../model/match/create-match.dto'
 import type { MatchTypeType } from '../../model/match/match.interface'
 
 const route = useRoute()
-const matchId = route.params.matchId as string
+let matchId = route.params.matchId as string
 
 const notificationStore = useNotificationStore()
 const router = useRouter()
@@ -34,6 +34,7 @@ const isWaitingForResponse = ref(false)
 const lobbyIsFinished = ref(false)
 
 const authorized = ref<boolean>(true)
+const calledWithUrl = ref<boolean>(false)
 
 const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
@@ -53,7 +54,7 @@ const getUserFromAccessToken = (): UserI => {
   return decodedToken.user as UserI
 }
 
-const handleCreateNewInvite = async () => {
+const handleCalledWithUrl = async () => {
   try {
     const loggedUser: UserI = getUserFromAccessToken()
     const createMatchDto: CreateMatchDto = {
@@ -76,10 +77,9 @@ const handleCreateNewInvite = async () => {
     )
 
     const responseData = await response.json()
-	console.log(responseData)
     if (response.ok) {
-      const matchId = String(responseData.id)
-      router.push(`/invite/${matchId}`)
+      const newMatchId = String(responseData.id)
+      router.push(`/invite/${newMatchId}`)
     } else {
       notificationStore.showNotification('Failed to create a game: ' + responseData.message, false)
     }
@@ -104,22 +104,29 @@ async function fetchMatchData(): Promise<void> {
     )
 
     if (response.ok) {
-	  const responseText = await response.text()
-	  const matchData: MatchI | null = responseText ? JSON.parse(responseText) : null
+      const responseText = await response.text()
+      const matchData: MatchI | null = responseText ? JSON.parse(responseText) : null
 
-	  if (!matchData) {
-		console.log('create new game ' + matchId)
-		await handleCreateNewInvite()
-		console.log('continuing after creating new game ' + matchId)
-	  }
-      match.value = matchData
-      leftPlayer.value = matchData.leftUser as UserI
-      rightPlayer.value = matchData.rightUser as UserI
+      if (
+        !matchData ||
+        matchData.state === 'STARTED' ||
+        matchData.state === 'DISCONNECTLEFT' ||
+        matchData.state === 'DISCONNECTRIGHT' ||
+        matchData.state === 'WINNERLEFT' ||
+        matchData.state === 'WINNERRIGHT'
+      ) {
+        authorized.value = false
+        calledWithUrl.value = true
+        return
+      }
+      match.value = matchData as MatchI
+      leftPlayer.value = matchData!.leftUser as UserI
+      rightPlayer.value = matchData!.rightUser as UserI
       if (match.value.rightUser && match.value.state === 'INVITED') {
         isWaitingForResponse.value = true
       }
     } else {
-	  const responseData = await response.json()
+      const responseData = await response.json()
       notificationStore.showNotification(
         'Error while fetching the match data: ' + responseData.message,
         false
@@ -134,7 +141,6 @@ async function fetchMatchData(): Promise<void> {
 
 //check if match object is correct and user is part of this queue
 const checkAuthorized = (user: UserI): boolean => {
-	console.log('checkAuthorized ' + matchId)
   if (!match.value) {
     notificationStore.showNotification('Unexpected error occured', false)
     return false
@@ -189,25 +195,28 @@ const handleStartMatch = () => {
   chatSocket.value.emit('startMatch', match.value.id)
 }
 
-onMounted(async () => {
-	console.log('onMounted ' + matchId)
-  initChatSocket()
-  if (!chatSocket || !chatSocket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
+const setupComponent = async () => {
+  await fetchMatchData()
+  if (calledWithUrl.value) {
+    handleCalledWithUrl()
     return
   }
 
-  await fetchMatchData()
   const user: UserI = getUserFromAccessToken()
-
-  console.log('before checkAuthorized ' + matchId)
   if (!checkAuthorized(user)) {
     authorized.value = false
-    router.push('/home')
+    return
   }
 
   if (user.id === leftPlayer.value.id) {
     userIsHost.value = true
+  }
+}
+
+const setEventListener = () => {
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
   }
 
   chatSocket.value.on('matchInviteSent', (updatedMatch: MatchI) => {
@@ -256,6 +265,20 @@ onMounted(async () => {
     initGameSocket()
     router.push(`/game/${matchId}`)
   })
+}
+
+onMounted(async () => {
+  initChatSocket()
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, true)
+    return
+  }
+
+  await setupComponent()
+  if (!authorized.value) {
+    router.push('/home')
+  }
+  setEventListener()
 })
 
 const handleSendMatchInvite = (user: UserI | null) => {
@@ -270,32 +293,43 @@ const cancelWaiting = () => {
   handleCancelWaiting()
 }
 
-onBeforeUnmount(() => {
-	console.log('onBeforeUnmount ' + matchId)
+const handleReloadComponent = watch(
+  () => route.params.matchId,
+  async (newMatchId) => {
+    if (newMatchId) {
+      matchId = newMatchId as string
+    }
+  }
+)
+
+const handleUnmountComponent = () => {
   if (authorized.value) {
-	console.log(1)
     if (!lobbyIsFinished.value && userIsHost.value) {
-	  console.log('handleHostLeaveMatch')
       handleHostLeaveMatch()
     } else if (!lobbyIsFinished.value && !userIsHost.value) {
-		console.log('handleLeaveMatch')
       handleLeaveMatch()
     }
   }
+}
 
-  console.log(2)
+const unsetEventListener = () => {
   if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
-  console.log(3)
   chatSocket.value.off('matchInviteSent')
   chatSocket.value.off('matchInviteAccepted')
   chatSocket.value.off('matchInviteRejected')
   chatSocket.value.off('hostLeftMatch')
   chatSocket.value.off('leftMatch')
   chatSocket.value.off('goToGame')
+}
+
+onBeforeUnmount(() => {
+  handleUnmountComponent()
+  handleReloadComponent()
+  unsetEventListener()
 })
 </script>
 
