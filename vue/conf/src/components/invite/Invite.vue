@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import InvitePlayerAccepted from './InvitePlayerAccepted.vue'
 import Spinner from '../utils/Spinner.vue'
 import InviteFriend from './InviteFriend.vue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -242,7 +241,7 @@ const setEventListener = () => {
   chatSocket.value.on('hostLeftMatch', () => {
     if (!userIsHost.value) {
       notificationStore.showNotification(
-        'Host ' + match.value.rightUser!.username + ' left the match',
+        'Host ' + match.value.leftUser!.username + ' left the match',
         false
       )
       lobbyIsFinished.value = true
