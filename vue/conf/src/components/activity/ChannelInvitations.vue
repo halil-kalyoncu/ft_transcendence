@@ -10,6 +10,7 @@
             :isPasswordProtected="invitation.isPasswordProtected"
             :isPrivate="invitation.ChannelVisibility === 'PRIVATE' ? true : false"
             :invitationId="invitation.invitationId"
+            @update-requests="updateRequests"
           />
         </div>
       </div>
@@ -59,10 +60,8 @@ onBeforeUnmount(() => {
     notificationStore.showNotification('Error: Connection problems', false)
     return
   }
+
   socket.value.off('NewChannelInvitation')
-  socket.value.off('ChannelInvitationAccepted')
-  socket.value.off('ChannelInvitationRejected')
-  socket.value.off('InvitationObsolete')
 })
 
 const initSocket = () => {
@@ -94,6 +93,11 @@ const setChannelInvitations = async () => {
   }
 }
 
+const updateRequests = async (invitationId: number) => {
+  console.log('updateRequests fired')
+  await setChannelInvitations()
+}
+
 const setInvitationListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
@@ -105,29 +109,6 @@ const setInvitationListener = () => {
     }
     notificationStore.showNotification('New Channel Invitation', true)
     console.log('newChannelInvitation fired from ChannelsInvitations.vue')
-    setChannelInvitations()
-  })
-  socket.value.on('ChannelInvitationAccepted', (channelName: string, UserName: string) => {
-    if (UserName !== username.value) {
-      return
-    }
-    console.log('User Accepted ChannelInvitaion fired')
-    setChannelInvitations()
-  })
-  socket.value.on('ChannelInvitationRejected', (channelName: string, UserName: string) => {
-    if (UserName !== username.value) {
-      return
-    }
-    console.log('User Rejected ChannelInvitaion fired')
-    setChannelInvitations()
-  })
-
-  socket.value.on('InvitationObsolete', (UserName: string, channelId: number) => {
-    if (UserName !== username.value) {
-      return
-    }
-    console.log('InvitationObsolete from ChannelInvitations.vue fired')
-    notificationStore.showNotification('User Signed In', true)
     setChannelInvitations()
   })
 }

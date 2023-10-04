@@ -164,7 +164,7 @@ const generateQRCode = async () => {
     const response = await fetch(
       `http://${import.meta.env.VITE_IPADDRESS}:${
         import.meta.env.VITE_BACKENDPORT
-      }api/2fa/generate?userId=${userId.value}`,
+      }/api/2fa/generate?userId=${userId.value}`,
       {
         method: 'POST'
       }

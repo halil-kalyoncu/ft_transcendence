@@ -32,9 +32,11 @@ const avatarSrc = computed(() => {
 
 const logout = () => {
   localStorage.removeItem('ponggame')
-  userStore.clearStore()
-  disconnectChatSocket()
   router.push('/')
+  userStore.clearStore()
+  setTimeout(() => {
+    disconnectChatSocket()
+  }, 1000)
 }
 
 onMounted(async () => {
@@ -61,13 +63,13 @@ onMounted(async () => {
       <div class="flex-box-center">
         <RouterLink class="navButton header-username" :to="`/profile/${userId.toString()}`">
           <div class="link-content">
-            {{ username ? username : 'TBD' }}
+            {{ username ? username : 'Legend' }}
             <img v-if="userAvatar" class="profile-image" :src="avatarSrc" alt="Profile" />
             <img v-else class="profile-image" src="../../assets/defaultAvatar.png" alt="Profile" />
           </div>
         </RouterLink>
         <NotificationBell />
-        <RouterLink class="navButton header-username" to="/settings">
+        <RouterLink class="navButton header-username" to="/settings" :class="'button-hover'">
           <button class="settings-button">
             <font-awesome-icon class="icon" icon="cog" title="Settings" />
           </button>
@@ -115,8 +117,17 @@ onMounted(async () => {
 }
 
 .navButtonLogout:hover,
-.settings-button:hover {
+.button-hover:hover {
   color: red;
+}
+
+.settings-button .icon {
+  transition: color 0.15s ease-in-out;
+}
+
+.settings-button:hover .icon,
+.navButton:hover .settings-button {
+  color: #5a5a5a;
 }
 
 .header-username {
@@ -157,7 +168,7 @@ onMounted(async () => {
 }
 
 .header .header-username:hover {
-  color: red;
+  color: gold;
 }
 
 .header .icon-wrapper {

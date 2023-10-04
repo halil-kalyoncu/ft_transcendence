@@ -86,10 +86,6 @@ onMounted(async () => {
   }
 })
 
-onBeforeUnmount(() => {
-  disconnectChatSocket()
-})
-
 const userStore = useUserStore()
 const username = computed(() => userStore.username)
 const userId = computed(() => userStore.userId)
@@ -353,7 +349,7 @@ const updateChannelManager = async () => {
 
 .channels .channel-option-button:hover {
   color: aliceblue;
-  border: 1px solid #ea9f42;
+  border: 0.5px solid #ea9f42;
   font-weight: bold;
 }
 
