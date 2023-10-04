@@ -186,7 +186,7 @@ const handleCalledWithUrl = async () => {
 
   try {
     const response: MatchmakingI = await new Promise((resolve, reject) => {
-      chatSocket.value.emit('queueUpForLadder', (response: MatchmakingI | ErrorI) => {
+      chatSocket.value?.emit('queueUpForLadder', (response: MatchmakingI | ErrorI) => {
         if ('error' in response) {
           reject(response.error)
         } else {
@@ -200,8 +200,8 @@ const handleCalledWithUrl = async () => {
     }
     router.push(`/queue/${response.id}`)
     matchmakingId = response.id.toString()
-  } catch (error) {
-    notificationStore.showNotification(error, false)
+  } catch (error: any) {
+    notificationStore.showNotification(error.message, false)
     router.push('/home')
   }
 }
