@@ -70,8 +70,8 @@ const checkAuthorized = async () => {
       const responseText = await response.text()
       const matchmaking: MatchmakingI | null = responseText ? JSON.parse(responseText) : null
       if (!matchmaking) {
-		authorized.value = false
-		calledWithUrl.value = true
+        authorized.value = false
+        calledWithUrl.value = true
       }
     } else {
       const responseData = await response.json()
@@ -179,31 +179,30 @@ const cancelTimer = () => {
 }
 
 const handleCalledWithUrl = async () => {
-	if (!chatSocket || !chatSocket.value) {
+  if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
 
   try {
-	const response: MatchmakingI = await new Promise((resolve, reject) => {
-		chatSocket.value.emit('queueUpForLadder', (response: MatchmakingI | ErrorI) => {
-			if ('error' in response) {
-				reject(response.error)
-			}
-			else {
-				resolve(response);
-			}
-		})
-	})
+    const response: MatchmakingI = await new Promise((resolve, reject) => {
+      chatSocket.value.emit('queueUpForLadder', (response: MatchmakingI | ErrorI) => {
+        if ('error' in response) {
+          reject(response.error)
+        } else {
+          resolve(response)
+        }
+      })
+    })
 
-	if (!response || response.id === 0) {
-		throw new Error('Something went wrong')
-	}
-    router.push(`/queue/${response.id}`);
-	matchmakingId = response.id.toString()
-  } catch(error) {
-	notificationStore.showNotification(error, false);
-	router.push('/home')
+    if (!response || response.id === 0) {
+      throw new Error('Something went wrong')
+    }
+    router.push(`/queue/${response.id}`)
+    matchmakingId = response.id.toString()
+  } catch (error) {
+    notificationStore.showNotification(error, false)
+    router.push('/home')
   }
 }
 
@@ -216,11 +215,10 @@ onMounted(async () => {
 
   await checkAuthorized()
   if (calledWithUrl.value) {
-	await handleCalledWithUrl()
-  }
-  else if (authorized.value === false) {
+    await handleCalledWithUrl()
+  } else if (authorized.value === false) {
     router.push('/home')
-	return 
+    return
   }
 
   startTimer()
@@ -242,7 +240,7 @@ const handleReloadComponent = watch(
   () => route.params.matchmakingId,
   async (newMatchmakingId) => {
     if (newMatchmakingId) {
-		matchmakingId = newMatchmakingId as string
+      matchmakingId = newMatchmakingId as string
     }
   }
 )
