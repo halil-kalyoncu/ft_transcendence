@@ -28,6 +28,7 @@ export interface MatchI {
   state?: MatchStateType
   goalsLeftPlayer?: number
   goalsRightPlayer?: number
+  goalsToWin?: number
   createdAt?: Date
   statedAt?: Date
   finishedAt?: Date

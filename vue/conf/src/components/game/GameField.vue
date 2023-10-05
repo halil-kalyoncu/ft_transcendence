@@ -1,5 +1,6 @@
 <template>
-  <div v-if="!matchResult">
+  <div v-if="!authorized">You are not authorized to enter this match</div>
+  <div v-else-if="!matchResult">
     <PlayerView
       ref="playerview"
       :playerA="playerAName"
@@ -99,6 +100,7 @@ const waitingTime = ref<number>(0)
 const maxWaitingTime = 1 * 60
 
 const matchResult = ref<MatchI | null>(null)
+const authorized = ref<boolean>(true)
 
 const getUserFromAccessToken = () => {
   const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
@@ -168,6 +170,10 @@ const initGameField = async () => {
   fieldHeight.value = gameField.value?.clientHeight || 0
   // console.log(fieldWidth.value);
   await getMatchData()
+  if (!authorized.value || matchResult.value) {
+    return
+  }
+
   if (
     !playerAName ||
     playerAName.value === '' ||
@@ -225,15 +231,11 @@ const cancelTimer = () => {
   }
 }
 
-onMounted(() => {
-  initGameSocket()
-  initChatSocket()
+const setEventListeners = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
-
-  startTimer()
 
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
     if (playerId === 'left') {
@@ -357,12 +359,22 @@ onMounted(() => {
     paddleA.value?.setHgt(100)
     paddleB.value?.setHgt(100)
   })
-  initGameField()
+}
+
+onMounted(async () => {
+  await initGameField()
+
+  if (!authorized.value || matchResult.value) {
+    return
+  }
+  initGameSocket()
+  initChatSocket()
+  startTimer()
+  setEventListeners()
 })
 
 const handleFinishedMatch = () => {
   if (!chatSocket || !chatSocket.value) {
-    notificationStore.showNotification('Error: Connection problem chat', false)
     return
   }
   chatSocket.value.emit('finishedMatch')
@@ -428,12 +440,37 @@ async function getMatchData(): Promise<void> {
       }
     )
 
-    const responseData = await response.json()
     if (response.ok) {
-      playerAName = responseData.leftUser.username
-      playerBName = responseData.rightUser.username
-      goalsToBeat = responseData.goalsToWin
+      const responseText = await response.text()
+      const matchData: MatchI | null = responseText ? JSON.parse(responseText) : null
+      const loggedUser: UserI = getUserFromAccessToken()
+
+	  if (!matchData) {
+		authorized.value = false
+        return
+	  }
+      if (loggedUser.id !== matchData.leftUserId && loggedUser.id !== matchData.rightUserId) {
+        authorized.value = false
+        return
+      }
+
+      if (
+        matchData.state === 'CREATED' ||
+        matchData.state === 'INVITED' ||
+        matchData.state === 'ACCEPTED'
+      ) {
+        authorized.value = false
+        return
+      } else if (matchData.state !== 'STARTED') {
+        matchResult.value = matchData
+        return
+      }
+
+      playerAName.value = matchData.leftUser?.username as string
+      playerBName.value = matchData.rightUser?.username as string
+      goalsToBeat.value = matchData.goalsToWin as number
     } else {
+      const responseData = await response.json()
       notificationStore.showNotification(
         'Error while fetching the match data' + responseData.message,
         false
