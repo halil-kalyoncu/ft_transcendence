@@ -1,4 +1,4 @@
-import { OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -52,6 +52,8 @@ import { MatchmakingService } from '../../../matchmaking/service/matchmaking.ser
 import { PowerupService } from '../../../powerup/service/powerup.service';
 import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
 import { ChannelInvitation } from 'src/_gen/prisma-class/channel_invitation';
+import { validate } from 'class-validator';
+import { GotChannelInvitationDto, SignInChannelDto } from '../../../chat/dto/channelInvitation.dto';
 
 @WebSocketGateway({
   cors: {
@@ -126,13 +128,14 @@ export class ChatGateway
    *** Friendlist ***
    ******************/
 
-  //ERROR HANDLING GATEWAY BACKEND
   @SubscribeMessage('sendFriendRequest')
   async sendFriendRequest(
-    socket: Socket,
-    receiverUsername: string,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() receiverUsername: string,
   ): Promise<Friendship | ErrorDto> {
     try {
+		this.checkStringInput(receiverUsername, 'Invalid username');
+
       const receiver: User = await this.userService.findByUsername(
         receiverUsername,
       );
@@ -160,20 +163,21 @@ export class ChatGateway
 
   @SubscribeMessage('acceptFriendRequest')
   async acceptFriendRequest(
-    socket: Socket,
-    friendshipId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() friendshipId: number,
   ): Promise<Friendship | ErrorDto> {
     try {
+		this.checkNumberInput(friendshipId, 'Invalid friendship id');
+
+		if (!Number.isInteger(friendshipId) || friendshipId <= 0) {
+			throw new Error('Invalid friendship id')
+		}
+
       const friendship: Friendship =
         await this.friendshipService.acceptFriendshipRequest(friendshipId);
       if (!friendship) {
         throw new Error('Friendship entry not found');
       }
-      // else if (friendship.status === FriendshipStatus.BLOCKED) {
-      //   throw new Error(
-      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
-      //   );
-      // }
 
       const senderOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.senderId);
@@ -194,28 +198,26 @@ export class ChatGateway
 
   @SubscribeMessage('rejectFriendRequest')
   async rejectFriendRequest(
-    socket: Socket,
-    friendshipId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() friendshipId: number,
   ): Promise<Friendship | ErrorDto> {
     try {
+		this.checkNumberInput(friendshipId, 'Invalid friendship id');
+
       const friendship: Friendship =
         await this.friendshipService.rejectFriendshipRequest(friendshipId);
       if (!friendship) {
         throw new Error('Friendship entry not found');
       }
-      // else if (friendship.status === FriendshipStatus.BLOCKED) {
-      //   throw new Error(
-      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
-      //   );
-      // }
+
       const senderOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.senderId);
       const receiverOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.receiverId);
-      if (!!senderOnline) {
+      if (senderOnline) {
         this.sendFriendsToClient(senderOnline);
       }
-      if (!!receiverOnline) {
+      if (receiverOnline) {
         this.sendFriendRequestsToClient(receiverOnline);
         this.sendFriendsToClient(receiverOnline);
       }
@@ -227,19 +229,17 @@ export class ChatGateway
 
   @SubscribeMessage('removeFriend')
   async removeFriend(
-    socket: Socket,
-    friendshipId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() friendshipId: number,
   ): Promise<Friendship | { error: string }> {
     try {
+		this.checkNumberInput(friendshipId, 'Invalid friendship id');
+
       const friendship = await this.friendshipService.getOne(friendshipId);
       if (!friendship) {
         throw new Error('Friendship entry not found');
       }
-      // else if (friendship.status === FriendshipStatus.BLOCKED) {
-      //   throw new Error(
-      //     "This is marked as blocked user, this shouldn't have happend. Please contact a System Admin",
-      //   );
-      // }
+
       const senderOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(friendship.senderId);
       const receiverOnline: ConnectedUser =
@@ -258,50 +258,17 @@ export class ChatGateway
     }
   }
 
-  // @SubscribeMessage('blockUser')
-  // async blockUser(
-  //   socket: Socket,
-  //   userId: number,
-  // ): Promise<Friendship | { error: string }> {
-  //   let updateFriendlist = false;
-
-  //   try {
-  //     if (socket.data.user.id === userId) {
-  //       throw new Error("Can't block yourself");
-  //     }
-  //     const friendship = await this.friendshipService.find(
-  //       socket.data.user.id,
-  //       userId,
-  //     );
-  //     console.log('friendship');
-  //     if (friendship && friendship.status === FriendshipStatus.ACCEPTED) {
-  //       updateFriendlist = true;
-  //     }
-  //     const blockEntry = await this.friendshipService.block({
-  //       sender: { connect: { id: socket.data.user.id } },
-  //       receiver: { connect: { id: userId } },
-  //     });
-
-  //     const receiverOnline: ConnectedUser =
-  //       await this.connectedUserService.findByUserId(blockEntry.receiverId);
-  //     if (updateFriendlist && receiverOnline) {
-  //       this.sendFriendsToClient(receiverOnline);
-  //     }
-  //     return blockEntry;
-  //   } catch (error) {
-  //     return { error: error.message };
-  //   }
-  // }
-
   /*********************
    *** DirectMessages ***
    **********************/
 
   @SubscribeMessage('sendDirectMessage')
   async sendDirectMessage(
-    socket: Socket,
-    createDirectMessageDto: CreateDirectMessageDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() createDirectMessageDto: CreateDirectMessageDto,
   ): Promise<void> {
+	await this.validateDto(createDirectMessageDto)
+
     const newMessage = await this.directMessageService.create(
       createDirectMessageDto,
     );
@@ -330,6 +297,8 @@ export class ChatGateway
     @MessageBody() createChannelDto: CreateChannelDto,
   ): Promise<Channel | ErrorDto> {
     try {
+		await this.validateDto(createChannelDto);
+
       const newChannel = await this.channelService.createUnProtectedChannel(
         createChannelDto,
       );
@@ -353,6 +322,8 @@ export class ChatGateway
     @MessageBody() createChannelDto: CreateChannelDto,
   ): Promise<Channel | ErrorDto> {
     try {
+		await this.validateDto(createChannelDto);
+
       const newChannel = await this.channelService.createProtectedChannel(
         createChannelDto,
       );
@@ -372,10 +343,12 @@ export class ChatGateway
 
   @SubscribeMessage('setChannelPassword')
   async handleSetPassword(
-    socket: Socket,
-    setPasswordDto: SetPasswordDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() setPasswordDto: SetPasswordDto,
   ): Promise<Channel | ErrorDto> {
     try {
+		await this.validateDto(setPasswordDto);
+
       const channel = await this.channelService.setPassword(setPasswordDto);
 
       const members: User[] = await this.channelService.getMembers(
@@ -396,10 +369,12 @@ export class ChatGateway
 
   @SubscribeMessage('deleteChannelPassword')
   async handleDeletePassword(
-    socket: Socket,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() deletePasswordDto: DeletePasswordDto,
   ): Promise<Channel | ErrorDto> {
     try {
+		await this.validateDto(deletePasswordDto);
+
       const channel = await this.channelService.deletePassword(
         deletePasswordDto,
       );
@@ -412,10 +387,12 @@ export class ChatGateway
 
   @SubscribeMessage('joinChannel')
   async handleJoinChannel(
-    socket: Socket,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember | ErrorDto> {
     try {
+		await this.validateDto(channelMembershipDto);
+
       const membership = await this.channelService.addUserToChannel(
         channelMembershipDto,
       );
@@ -428,10 +405,12 @@ export class ChatGateway
 
   @SubscribeMessage('leaveChannel')
   async handleLeaveChannel(
-    socket: Socket,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() channelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember | ErrorDto> {
     try {
+		await this.validateDto(channelMembershipDto);
+
       const membership = await this.channelService.removeUserFromChannel(
         channelMembershipDto,
       );
@@ -444,10 +423,12 @@ export class ChatGateway
 
   @SubscribeMessage('makeChannelAdmin')
   async handleMakeAdmin(
-    socket: Socket,
-    adminActionDto: AdminActionDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
   ): Promise<User | ErrorDto> {
     try {
+		await this.validateDto(adminActionDto);
+
       await this.channelService.makeAdmin(adminActionDto);
       const channel = await this.channelService.find(adminActionDto.channelId);
       const target = await this.userService.findById(
@@ -476,10 +457,12 @@ export class ChatGateway
 
   @SubscribeMessage('kickChannelMember')
   async handleKickChannelMember(
-    socket: Socket,
-    adminActionDto: AdminActionDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
   ): Promise<User | ErrorDto> {
     try {
+		await this.validateDto(adminActionDto);
+
       const members: User[] = await this.channelService.getMembers(
         adminActionDto.channelId,
       );
@@ -519,10 +502,12 @@ export class ChatGateway
 
   @SubscribeMessage('banChannelMember')
   async handleBanChannelMember(
-    socket: Socket,
-    adminActionDto: AdminActionDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
   ): Promise<User | ErrorDto> {
     try {
+		this.validateDto(adminActionDto);
+
       await this.channelService.banChannelMember(adminActionDto);
       const bannedUser = await this.userService.findById(
         adminActionDto.targetUserId,
@@ -560,10 +545,12 @@ export class ChatGateway
 
   @SubscribeMessage('unBanChannelMember')
   async handleUnBanChannelMember(
-    socket: Socket,
-    adminActionDto: AdminActionDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
   ): Promise<User | ErrorDto> {
     try {
+		await this.validateDto(adminActionDto);
+
       await this.channelService.unBanChannelMember(adminActionDto);
       const unBannedUser = await this.userService.findById(
         adminActionDto.targetUserId,
@@ -603,10 +590,12 @@ export class ChatGateway
 
   @SubscribeMessage('muteChannelMember')
   async handleMuteChannelMember(
-    socket: Socket,
-    adminActionDto: AdminActionDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
   ): Promise<void> {
     try {
+		await this.validateDto(adminActionDto);
+
       await this.channelService.muteChannelMember(adminActionDto);
       const target = await this.userService.findById(
         adminActionDto.targetUserId,
@@ -647,10 +636,12 @@ export class ChatGateway
 
   @SubscribeMessage('unMuteChannelMember')
   async handleUnMuteChannelMember(
-    socket: Socket,
-    adminActionDto: AdminActionDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() adminActionDto: AdminActionDto,
   ): Promise<User | ErrorDto> {
     try {
+		await this.validateDto(adminActionDto);
+
       await this.channelService.unMuteChannelMember(adminActionDto);
       const target = await this.userService.findById(
         adminActionDto.targetUserId,
@@ -680,8 +671,8 @@ export class ChatGateway
 
   @SubscribeMessage('sendUpdateUnMuted')
   async handleSendUpdateUnMuted(
-    socket: Socket,
-    membersToUnmute: ChannelMember[],
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() membersToUnmute: ChannelMember[],
   ): Promise<ChannelMember[] | ErrorDto> {
     try {
       const channelMembers: ChannelMember[] =
@@ -708,10 +699,12 @@ export class ChatGateway
 
   @SubscribeMessage('DestroyChannel')
   async handleDestroyChannel(
-    socket: Socket,
-    destroyChannelDto: DestroyChannelDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() destroyChannelDto: DestroyChannelDto,
   ): Promise<Channel | ErrorDto> {
     try {
+		this.validateDto(destroyChannelDto);
+
       const { senderId, channelId } = destroyChannelDto;
       const members: User[] = await this.channelService.getMembers(channelId);
       const channel = await this.channelService.find(channelId);
@@ -733,10 +726,12 @@ export class ChatGateway
 
   @SubscribeMessage('SignOutChannel')
   async handleSignOutChannel(
-    socket: Socket,
-    ChannelMembershipDto: ChannelMembershipDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() ChannelMembershipDto: ChannelMembershipDto,
   ): Promise<ChannelMember | ErrorDto> {
     try {
+		this.validateDto(ChannelMembershipDto);
+
       const { userId, channelId } = ChannelMembershipDto;
       const members: User[] = await this.channelService.getMembers(channelId);
       const sender = await this.userService.findById(userId);
@@ -761,14 +756,13 @@ export class ChatGateway
 
   @SubscribeMessage('SignInChannel')
   async handleSignInChannel(
-    socket: Socket,
-    data: {
-      channelId: number;
-      username: string;
-    },
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() signInChannelDto: SignInChannelDto
   ): Promise<User[] | ErrorDto> {
     try {
-      const { channelId, username } = data;
+		this.validateDto(signInChannelDto);
+
+      const { channelId, username } = signInChannelDto;
       socket.emit('UserSignedIn', username, channelId);
       socket.emit('InvitationObsolete', username, channelId);
       const members: User[] = await this.channelService.getMembers(channelId);
@@ -795,10 +789,12 @@ export class ChatGateway
 
   @SubscribeMessage('sendChannelMessage')
   async sendChannelMessage(
-    socket: Socket,
-    createChannelMessageDto: CreateChannelMessageDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() createChannelMessageDto: CreateChannelMessageDto,
   ): Promise<any | ErrorDto> {
     try {
+		this.validateDto(createChannelMessageDto);
+
       const { senderId, channelId, message } = createChannelMessageDto;
       const newMessage = await this.channelMessageService.createChannelMessageI(
         createChannelMessageDto,
@@ -830,10 +826,12 @@ export class ChatGateway
   //TODO CHECK THIS FUNCTION! DOESNT UPDATE THE LISTENERS
   @SubscribeMessage('acceptChannelInvitation')
   async handleAcceptChannelInvitation(
-    socket: Socket,
-    invitationId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() invitationId: number,
   ): Promise<ChannelInvitation | ErrorDto> {
     try {
+		this.checkNumberInput(invitationId, 'Invalid invitation id');
+
       const invitation = await this.channelInvitationService.getOne(
         invitationId,
       );
@@ -867,10 +865,12 @@ export class ChatGateway
 
   @SubscribeMessage('rejectChannelInvitation')
   async handleRejectChannelInvitation(
-    socket: Socket,
-    invitationId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() invitationId: number,
   ): Promise<ChannelInvitation | ErrorDto> {
     try {
+		this.checkNumberInput(invitationId, 'Invalid invitation id');
+
       const invitation = await this.channelInvitationService.getOne(
         invitationId,
       );
@@ -896,14 +896,13 @@ export class ChatGateway
 
   @SubscribeMessage('gotChannelInvitation')
   async handlGotChannelInvitation(
-    socket: Socket,
-    data: {
-      channelId: number;
-      inviteeUsername: string;
-    },
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() gotChannelInvationDto: GotChannelInvitationDto
   ): Promise<User | ErrorDto> {
     try {
-      const { channelId, inviteeUsername } = data;
+		await this.validateDto(gotChannelInvationDto);
+
+      const { channelId, inviteeUsername } = gotChannelInvationDto;
       const invitee = await this.userService.findByUsername(inviteeUsername);
       if (!invitee) {
         throw new Error('User not found');
@@ -943,10 +942,12 @@ export class ChatGateway
 
   @SubscribeMessage('sendMatchInvite')
   async sendGameInvite(
-    socket: Socket,
-    sendGameInviteDto: SendGameInviteDto,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() sendGameInviteDto: SendGameInviteDto,
   ): Promise<Match | ErrorDto> {
     try {
+		await this.validateDto(sendGameInviteDto);
+
       if (sendGameInviteDto.invitedUsername === socket.data.user.username) {
         throw new Error("Can't invite yourself to a game");
       }
@@ -992,10 +993,12 @@ export class ChatGateway
 
   @SubscribeMessage('acceptMatchInvite')
   async acceptGameInvite(
-    socket: Socket,
-    matchId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() matchId: number,
   ): Promise<Match | ErrorDto> {
     try {
+		this.checkNumberInput(matchId, 'Invalid match id');
+
       const match: Match | null = await this.matchService.findById(matchId);
       if (!match) {
         throw new Error('Match not found');
@@ -1020,10 +1023,12 @@ export class ChatGateway
 
   @SubscribeMessage('rejectMatchInvite')
   async rejectGameInvite(
-    socket: Socket,
-    matchId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() matchId: number,
   ): Promise<Match | ErrorDto> {
     try {
+		this.checkNumberInput(matchId, 'Invalid match id');
+
       const updatedMatch: Match | null = await this.matchService.rejectInvite(
         matchId,
       );
@@ -1048,7 +1053,9 @@ export class ChatGateway
   }
 
   @SubscribeMessage('cancelMatchInvite')
-  async cancelMatchInvite(socket: Socket, matchId: number): Promise<void> {
+  async cancelMatchInvite(@ConnectedSocket() socket: Socket, @MessageBody() matchId: number): Promise<void> {
+	this.checkNumberInput(matchId, 'Invalid match id');
+
     const match: Match = await this.matchService.findById(matchId);
     const receiverOnline: ConnectedUser =
       await this.connectedUserService.findByUserId(match.rightUserId);
@@ -1062,12 +1069,14 @@ export class ChatGateway
 
   @SubscribeMessage('sendMatchInviteViaChat')
   async sendMatchInviteViaChat(
-    socket: Socket,
-    againstUserId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() againstUserId: number,
   ): Promise<Match | ErrorDto> {
     let match: Match;
 
     try {
+		this.checkNumberInput(againstUserId, 'Invalid user id');
+
       const againstUser: User = await this.userService.findById(againstUserId);
 
       if (!againstUser) {
@@ -1099,7 +1108,7 @@ export class ChatGateway
    *** Match ***
    *************/
   @SubscribeMessage('hostLeaveMatch')
-  async hostLeaveMatch(socket: Socket, matchId: number): Promise<void> {
+  async hostLeaveMatch(@ConnectedSocket() socket: Socket, @MessageBody() matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
     let receiverOnline: ConnectedUser = null;
     if (match.rightUserId) {
@@ -1116,7 +1125,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('leaveMatch')
-  async leaveMatch(socket: Socket, matchId: number): Promise<void> {
+  async leaveMatch(@ConnectedSocket() socket: Socket, @MessageBody() matchId: number): Promise<void> {
     const updatedMatch: Match = await this.matchService.rejectInvite(matchId);
     const receiverOnline: ConnectedUser =
       await this.connectedUserService.findByUserId(updatedMatch.leftUserId);
@@ -1127,7 +1136,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('startMatch')
-  async startMatch(socket: Socket, matchId: number): Promise<void> {
+  async startMatch(@ConnectedSocket() socket: Socket, @MessageBody() matchId: number): Promise<void> {
     const match: Match = await this.matchService.findById(matchId);
     const receiverOnline: ConnectedUser =
       await this.connectedUserService.findByUserId(match.rightUserId);
@@ -1145,7 +1154,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('finishedMatch')
-  async finishedMatch(socket: Socket): Promise<void> {
+  async finishedMatch(@ConnectedSocket() socket: Socket): Promise<void> {
     this.updateFriendsOf(socket.data.user.id);
   }
 
@@ -1154,7 +1163,7 @@ export class ChatGateway
    ******************/
 
   @SubscribeMessage('queueUpForLadder')
-  async queueUpForLadder(socket: Socket): Promise<Matchmaking | ErrorDto> {
+  async queueUpForLadder(@ConnectedSocket() socket: Socket): Promise<Matchmaking | ErrorDto> {
     let existingMatchmaking: Matchmaking;
     let findOpponent: Matchmaking;
     let waitForPlayer: Matchmaking;
@@ -1196,13 +1205,15 @@ export class ChatGateway
 
   @SubscribeMessage('setReady')
   async setReady(
-    socket: Socket,
-    matchmakingId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() matchmakingId: number,
   ): Promise<Matchmaking | ErrorDto> {
     let matchmaking: Matchmaking;
     let connectedUser: ConnectedUser;
 
     try {
+		this.checkNumberInput(matchmakingId, 'Invalid matchmaking id');
+
       matchmaking = await this.matchmakingService.find(matchmakingId);
       if (!matchmaking) {
         return { error: 'Something went wrong while redirecting to the queue' };
@@ -1230,14 +1241,16 @@ export class ChatGateway
 
   @SubscribeMessage('startLadderGame')
   async startLadderMatch(
-    socket: Socket,
-    matchmakingId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() matchmakingId: number,
   ): Promise<Matchmaking | ErrorDto> {
     let matchmaking: Matchmaking;
     let ladderMatch: Match;
     let connectedUser: ConnectedUser;
 
     try {
+		this.checkNumberInput(matchmakingId, 'Invalid matchmaking id');
+
       matchmaking = await this.matchmakingService.find(matchmakingId);
       if (!matchmaking) {
         return { error: 'Something went wrong starting the ladder game' };
@@ -1277,10 +1290,12 @@ export class ChatGateway
 
   @SubscribeMessage('blockUser')
   async blockUser(
-    socket: Socket,
-    blockUserId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() blockUserId: number,
   ): Promise<BlockedUser | ErrorDto> {
     try {
+		this.checkNumberInput(blockUserId, 'Invalid matchmaking id');
+
       const blockedUser: BlockedUser = await this.blockedUserService.block(
         socket.data.user.id,
         blockUserId,
@@ -1297,10 +1312,12 @@ export class ChatGateway
 
   @SubscribeMessage('unblockUser')
   async unblockUser(
-    socket: Socket,
-    blockUserId: number,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() blockUserId: number,
   ): Promise<BlockedUser | ErrorDto> {
     try {
+		this.checkNumberInput(blockUserId, 'Invalid matchmaking id');
+
       const unblockedUser: BlockedUser = await this.blockedUserService.unblock(
         socket.data.user.id,
         blockUserId,
@@ -1321,10 +1338,12 @@ export class ChatGateway
 
   @SubscribeMessage('changeUsername')
   async changeUsername(
-    socket: Socket,
-    newUsername: string,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() newUsername: string,
   ): Promise<User | ErrorDto> {
     try {
+		this.checkStringInput(newUsername, 'Invalid username');
+
       const updatedUser: User = await this.userService.changeUsername(
         socket.data.user.id,
         newUsername,
@@ -1345,17 +1364,12 @@ export class ChatGateway
   private async sendFriendsToClient(
     connectedUser: ConnectedUser,
   ): Promise<void> {
-    // const friends: FriendshipDto[] = await this.friendshipService.getFriends(
-    //   connectedUser.userId,
-    // );
     this.server.to(connectedUser.socketId).emit('friends');
   }
 
   private async sendFriendRequestsToClient(
     connectedUser: ConnectedUser,
   ): Promise<void> {
-    // const requests: FriendshipDto[] =
-    //   await this.friendshipService.getFriendRequests(connectedUser.userId);
     this.server.to(connectedUser.socketId).emit('friendRequests');
   }
 
@@ -1367,7 +1381,7 @@ export class ChatGateway
     for (const friendEntry of friends) {
       const friendOnline: ConnectedUser =
         await this.connectedUserService.findByUser(friendEntry.friend);
-      if (!!friendOnline) {
+      if (friendOnline) {
         this.sendFriendsToClient(friendOnline);
       }
     }
@@ -1382,5 +1396,24 @@ export class ChatGateway
     const memberOnline: ConnectedUser =
       await this.connectedUserService.findByUserId(userId);
     return memberOnline;
+  }
+
+  private checkStringInput(input: string, errorMessage: string): void {
+	if (typeof input !== 'string' || input.trim() === '') {
+		throw new Error(errorMessage);
+	}
+  }
+
+  private checkNumberInput(input: number, errorMessage: string): void {
+	if (!Number.isInteger(input) || input <= 0) {
+		throw new Error(errorMessage)
+	}
+  }
+
+  private async validateDto(dto: any): Promise<void> {
+	const errors = await validate(dto);
+	if (errors.length > 0) {
+		throw new BadRequestException(errors);
+	}
   }
 }

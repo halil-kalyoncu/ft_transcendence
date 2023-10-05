@@ -5,6 +5,8 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   WebSocketServer,
+  ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Room } from '../../service/room.service';
@@ -204,7 +206,7 @@ export class EventsGateway {
   // }
 
   @SubscribeMessage('fire')
-  handleMagnetFire(socket: Socket): void {
+  handleMagnetFire(@ConnectedSocket() socket: Socket): void {
     console.log('FIRE');
     const room = this.rooms.get(socket.data.match.id);
     if (socket.id === room.socketIds[0] && room.ball.magnet === 1) {
@@ -220,7 +222,7 @@ export class EventsGateway {
   }
 
   @SubscribeMessage('paddle')
-  handlePaddleMove(socket: Socket, direction: string): void {
+  handlePaddleMove(@ConnectedSocket() socket: Socket, @MessageBody() direction: string): void {
     if (socket.data.isLeftPlayer === true) {
       let paddleAPos = { x: 0, y: 0, wid: 0, hgt: 0 };
 
@@ -291,8 +293,8 @@ export class EventsGateway {
 
   @SubscribeMessage('spawnPowerUp')
   createPowerUp(
-    socket: Socket,
-    data: {
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: {
       id: number;
       x: number;
       y: number;
@@ -325,8 +327,8 @@ export class EventsGateway {
 
   @SubscribeMessage('executePowerUp')
   activatePowerUp(
-    socket: Socket,
-    data: {
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: {
       type: string;
       player: string;
     },
@@ -358,7 +360,7 @@ export class EventsGateway {
   }
 
   @SubscribeMessage('removePowerUp')
-  removePowerUp(socket: Socket, id: number) {
+  removePowerUp(@ConnectedSocket() socket: Socket, @MessageBody() id: number) {
     const room = this.rooms.get(socket.data.match.id);
     let index = room.powerups.findIndex((powerup) => powerup.id == id);
     console.log('index: ', index);
@@ -368,7 +370,7 @@ export class EventsGateway {
   }
 
   @SubscribeMessage('maxWaitingTimeReached')
-  async maxWaitingTimeReached(socket: Socket) {
+  async maxWaitingTimeReached(@ConnectedSocket() socket: Socket) {
     const room = this.rooms.get(socket.data.match.id);
 
     room.gameIsRunning = false;
