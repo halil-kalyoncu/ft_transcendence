@@ -96,6 +96,12 @@ const setNewChannelMessageListener = () => {
     console.log('newChannelMessage fired')
     setNewChannelMessages()
   })
+  socket.value.on(
+    'memberKicked',
+    (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
+      setNewChannelMessages()
+    }
+  )
 }
 
 const setUserChangesListener = () => {
@@ -169,6 +175,7 @@ onBeforeUnmount(() => {
     return
   }
 
+  socket.value.off('MemberKicked')
   socket.value.off('newChannelMessage')
   socket.value.off('UserSignedOut')
 })

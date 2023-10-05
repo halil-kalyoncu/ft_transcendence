@@ -36,7 +36,7 @@
               <font-awesome-icon
                 class="icon"
                 :icon="['fas', 'eye']"
-                @mousedown="goToProfile(suggestion.username)"
+                @mousedown="goToProfile(suggestion.id)"
               />
             </li>
           </ul>
@@ -119,7 +119,7 @@ const toggleUserSelection = (user: ChannelInviteeUserI) => {
   inputName.value = ''
 }
 
-const sendSubmitEvent = (inviteeUsername: string) => {
+const sendSubmitEvent = async (inviteeUsername: string) => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, true)
     return
@@ -128,7 +128,7 @@ const sendSubmitEvent = (inviteeUsername: string) => {
     socket.value.emit(
       'gotChannelInvitation',
       {
-        channelId: channelId,
+        channelId: props.channelId,
         inviteeUsername: inviteeUsername
       },
       (response: ErrorI | any) => {
@@ -149,9 +149,10 @@ const submit = async () => {
   for (const inviteeUsername of selectedUsers.value) {
     error_occured = await inviteUser(channelId, inviteeUsername, userId.value)
     if (error_occured) {
+      console.log('error occured')
       continue
     }
-    sendSubmitEvent(inviteeUsername)
+    await sendSubmitEvent(inviteeUsername)
   }
   if (!error_occured) {
     if (userSelected === 1) {
@@ -164,7 +165,6 @@ const submit = async () => {
   findUserSuggestions('')
   emit('submit')
 }
-// ERROR HANDLING API FRONTEND
 const inviteUser = async (channelId: Number, inviteeUsername: string, inviterId: Number) => {
   try {
     const response = await fetch(
@@ -253,13 +253,13 @@ watch(inputName, (newValue) => {
   findUserSuggestions(newValue)
 })
 
-const goToProfile = (username: String | undefined) => {
+const goToProfile = (userId: number | undefined) => {
   console.log('u9')
 
-  if (username === undefined) {
+  if (userId === undefined) {
     return
   }
-  router.push(`/profile/${username}`)
+  router.push(`/profile/${userId}`)
 }
 
 const initSocket = () => {
