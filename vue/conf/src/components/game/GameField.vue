@@ -445,10 +445,10 @@ async function getMatchData(): Promise<void> {
       const matchData: MatchI | null = responseText ? JSON.parse(responseText) : null
       const loggedUser: UserI = getUserFromAccessToken()
 
-	  if (!matchData) {
-		authorized.value = false
+      if (!matchData) {
+        authorized.value = false
         return
-	  }
+      }
       if (loggedUser.id !== matchData.leftUserId && loggedUser.id !== matchData.rightUserId) {
         authorized.value = false
         return

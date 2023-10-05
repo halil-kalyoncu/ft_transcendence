@@ -3,9 +3,9 @@ import { Message, User } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateChannelMessageDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
-@IsNumber()
+  @IsNumber()
   senderId: number;
 
   @ApiProperty()
@@ -20,7 +20,7 @@ export class CreateChannelMessageDto {
 }
 
 export class ChannelMessageDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   id: number;
@@ -41,7 +41,7 @@ export class ChannelMessageDto {
 }
 
 export class DestroyChannelDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   channelId: number;

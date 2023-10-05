@@ -1,10 +1,17 @@
-import { IsNotEmpty, IsEnum, IsOptional, IsNumber, IsString, IsBoolean } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+  IsNumber,
+  IsString,
+  IsBoolean,
+} from 'class-validator';
 import { ChannelInvitationStatus } from '@prisma/client';
 import { ChannelVisibility } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ChannelInvitationDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   invitationId: number;
@@ -35,7 +42,7 @@ export class ChannelInvitationDto {
 }
 
 export class AnswerChannelInvitationDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   invitationId: number;
@@ -47,7 +54,7 @@ export class AnswerChannelInvitationDto {
 }
 
 export class ChannelInviteeUserDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   id: number;
@@ -63,25 +70,25 @@ export class ChannelInviteeUserDto {
 }
 
 export class GotChannelInvitationDto {
-	@ApiProperty()
-	@IsNotEmpty()
-	@IsNumber()
-	channelId: number;
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  channelId: number;
 
-	@ApiProperty()
-	@IsNotEmpty()
-	@IsString()
-	inviteeUsername: string;
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  inviteeUsername: string;
 }
 
 export class SignInChannelDto {
-	@ApiProperty()
-	@IsNotEmpty()
-	@IsNumber()
-	channelId: number;
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  channelId: number;
 
-	@ApiProperty()
-	@IsNotEmpty()
-	@IsString()
-	username: string;
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  username: string;
 }

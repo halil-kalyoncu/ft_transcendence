@@ -222,7 +222,10 @@ export class EventsGateway {
   }
 
   @SubscribeMessage('paddle')
-  handlePaddleMove(@ConnectedSocket() socket: Socket, @MessageBody() direction: string): void {
+  handlePaddleMove(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() direction: string,
+  ): void {
     if (socket.data.isLeftPlayer === true) {
       let paddleAPos = { x: 0, y: 0, wid: 0, hgt: 0 };
 
@@ -294,7 +297,8 @@ export class EventsGateway {
   @SubscribeMessage('spawnPowerUp')
   createPowerUp(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() data: {
+    @MessageBody()
+    data: {
       id: number;
       x: number;
       y: number;
@@ -328,7 +332,8 @@ export class EventsGateway {
   @SubscribeMessage('executePowerUp')
   activatePowerUp(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() data: {
+    @MessageBody()
+    data: {
       type: string;
       player: string;
     },

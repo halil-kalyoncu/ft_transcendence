@@ -1,9 +1,17 @@
-import { IsNotEmpty, IsEnum, IsOptional, IsNumber, IsString, IsDate, IsBoolean } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+  IsNumber,
+  IsString,
+  IsDate,
+  IsBoolean,
+} from 'class-validator';
 import { ChannelVisibility, Channel, User, Message } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateChannelDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   userId: number;
@@ -25,7 +33,7 @@ export class CreateChannelDto {
 }
 
 export class SetPasswordDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   channelId: number;
@@ -42,7 +50,7 @@ export class SetPasswordDto {
 }
 
 export class DeletePasswordDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   channelId: number;
@@ -54,7 +62,7 @@ export class DeletePasswordDto {
 }
 
 export class ChannelMembershipDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   userId: number;
@@ -66,7 +74,7 @@ export class ChannelMembershipDto {
 }
 
 export class AdminActionDto {
-	@ApiProperty()
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   requesterId: number;
@@ -88,8 +96,8 @@ export class AdminActionDto {
 }
 
 export class ChannelInfoDto {
-	@ApiProperty()
-	@IsNotEmpty()
+  @ApiProperty()
+  @IsNotEmpty()
   channel: Channel;
 
   @ApiProperty()
@@ -98,9 +106,9 @@ export class ChannelInfoDto {
 }
 
 export class ChannelMessageDto {
-	@ApiProperty()
-	@IsOptional()
-	@IsNumber()
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
   id?: number;
 
   @ApiProperty()
@@ -124,9 +132,9 @@ export class ChannelMessageDto {
 }
 
 export class ChannelMemberDto {
-	@ApiProperty()
-	@IsNotEmpty()
-	@IsNumber()
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
   channelMemberId: number;
 
   @ApiProperty()
