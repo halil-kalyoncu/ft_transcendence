@@ -238,6 +238,12 @@ const setEventListener = () => {
     isWaitingForResponse.value = false
   })
 
+  chatSocket.value.on('matchInviteCanceled', (updatedMatch: MatchI) => {
+    rightPlayer.value = null
+    match.value = updatedMatch
+    isWaitingForResponse.value = false
+  })
+
   chatSocket.value.on('hostLeftMatch', () => {
     if (!userIsHost.value) {
       notificationStore.showNotification(

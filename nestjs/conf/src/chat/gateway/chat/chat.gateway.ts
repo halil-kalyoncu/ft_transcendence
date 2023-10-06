@@ -1074,7 +1074,7 @@ export class ChatGateway
     if (receiverOnline) {
       socket.to(receiverOnline.socketId).emit('matchInvites');
     }
-    socket.emit('matchInviteRejected', updatedMatch);
+    socket.emit('matchInviteCanceled', updatedMatch);
   }
 
   @SubscribeMessage('sendMatchInviteViaChat')

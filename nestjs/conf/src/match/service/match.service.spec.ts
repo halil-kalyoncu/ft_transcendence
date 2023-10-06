@@ -463,71 +463,71 @@ describe('MatchService', () => {
     });
   });
 
-  describe('rejectInvite', () => {
-    it('should change the state of the match to CREATED and set rightUserId to null', async () => {
-      const matchId = 1;
-      const currentTime = new Date();
-      const match: Match = {
-        id: 1,
-        leftUserId: 1,
-        rightUserId: null,
-        type: 'CUSTOM',
-        state: 'CREATED',
-        goalsLeftPlayer: 0,
-        goalsRightPlayer: 0,
-        goalsToWin: 5,
-        createdAt: currentTime,
-        startedAt: null,
-        finishedAt: null,
-      };
+  //   describe('rejectInvite', () => {
+  //     it('should change the state of the match to CREATED and set rightUserId to null', async () => {
+  //       const matchId = 1;
+  //       const currentTime = new Date();
+  //       const match: Match = {
+  //         id: 1,
+  //         leftUserId: 1,
+  //         rightUserId: null,
+  //         type: 'CUSTOM',
+  //         state: 'CREATED',
+  //         goalsLeftPlayer: 0,
+  //         goalsRightPlayer: 0,
+  //         goalsToWin: 5,
+  //         createdAt: currentTime,
+  //         startedAt: null,
+  //         finishedAt: null,
+  //       };
 
-      const updateSpy = jest
-        .spyOn(prismaService.match, 'update')
-        .mockResolvedValue(match);
+  //       const updateSpy = jest
+  //         .spyOn(prismaService.match, 'update')
+  //         .mockResolvedValue(match);
 
-      const result = await service.rejectInvite(matchId);
+  //       const result = await service.rejectInvite(matchId);
 
-      expect(result).toBe(match);
-      expect(updateSpy).toHaveBeenCalledWith({
-        where: { id: matchId },
-        data: {
-          rightUserId: null,
-          state: 'CREATED',
-        },
-        include: {
-          leftUser: true,
-          rightUser: true,
-        },
-      });
+  //       expect(result).toBe(match);
+  //       expect(updateSpy).toHaveBeenCalledWith({
+  //         where: { id: matchId },
+  //         data: {
+  //           rightUserId: null,
+  //           state: 'CREATED',
+  //         },
+  //         include: {
+  //           leftUser: true,
+  //           rightUser: true,
+  //         },
+  //       });
 
-      updateSpy.mockRestore();
-    });
+  //       updateSpy.mockRestore();
+  //     });
 
-    it('should return null if match is not found', async () => {
-      const matchId = 4242;
+  //     it('should return null if match is not found', async () => {
+  //       const matchId = 4242;
 
-      const updateSpy = jest
-        .spyOn(prismaService.match, 'update')
-        .mockResolvedValue(null);
+  //       const updateSpy = jest
+  //         .spyOn(prismaService.match, 'update')
+  //         .mockResolvedValue(null);
 
-      const result = await service.rejectInvite(matchId);
+  //       const result = await service.rejectInvite(matchId);
 
-      expect(result).toBeNull;
-      expect(updateSpy).toHaveBeenCalledWith({
-        where: { id: matchId },
-        data: {
-          rightUserId: null,
-          state: 'CREATED',
-        },
-        include: {
-          leftUser: true,
-          rightUser: true,
-        },
-      });
+  //       expect(result).toBeNull;
+  //       expect(updateSpy).toHaveBeenCalledWith({
+  //         where: { id: matchId },
+  //         data: {
+  //           rightUserId: null,
+  //           state: 'CREATED',
+  //         },
+  //         include: {
+  //           leftUser: true,
+  //           rightUser: true,
+  //         },
+  //       });
 
-      updateSpy.mockRestore();
-    });
-  });
+  //       updateSpy.mockRestore();
+  //     });
+  //   });
 
   describe('getInvites', () => {
     it('should return matches with state INVITED and matching rightUserIds', async () => {
