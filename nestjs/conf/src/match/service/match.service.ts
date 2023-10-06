@@ -248,12 +248,12 @@ export class MatchService {
     let flawlessVictory = 0;
     let state: MatchState;
 
-    if (room.leftPlayerGoals === 5) {
+    if (room.leftPlayerGoals === room.goalsToWin) {
       if (room.rightPlayerGoals === 0) {
         flawlessVictory = room.leftPlayerId;
       }
       state = 'WINNERLEFT';
-    } else if (room.rightPlayerGoals === 5) {
+    } else if (room.rightPlayerGoals === room.goalsToWin) {
       if (room.leftPlayerGoals === 0) {
         flawlessVictory = room.rightPlayerId;
       }

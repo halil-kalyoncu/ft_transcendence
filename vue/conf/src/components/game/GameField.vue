@@ -186,7 +186,6 @@ const initGameField = async () => {
     console.log('something went wrong fetching the usernames')
     return
   }
-  console.log('goalsTobeatttttttt: ', goalsToBeat)
   setTimeout(() => {
     update()
   }, 200)
