@@ -41,71 +41,71 @@ describe('UserController', () => {
     expect(controller).toBeDefined();
   });
 
-//   describe('login', () => {
-//     it('should return jwt token', async () => {
-//       const createUserDto: CreateUserDto = {
-//         username: 'mmustermann',
-//       };
-//       const userEntity: Prisma.UserCreateInput = {
-//         username: 'mmustermann',
-//       };
-//       const jwt: string = 'jwtToken';
-//       const loginResponseDto: LoginResponseDto = {
-//         access_token: jwt,
-//         token_type: 'JWT',
-//         expires_in: 10000,
-//       };
+  //   describe('login', () => {
+  //     it('should return jwt token', async () => {
+  //       const createUserDto: CreateUserDto = {
+  //         username: 'mmustermann',
+  //       };
+  //       const userEntity: Prisma.UserCreateInput = {
+  //         username: 'mmustermann',
+  //       };
+  //       const jwt: string = 'jwtToken';
+  //       const loginResponseDto: LoginResponseDto = {
+  //         access_token: jwt,
+  //         token_type: 'JWT',
+  //         expires_in: 10000,
+  //       };
 
-//       const createUserDtoToEntitySpy = jest
-//         .spyOn(userHelperService, 'createUserDtoToEntity')
-//         .mockReturnValue(userEntity);
-//       const loginSpy = jest.spyOn(userService, 'login').mockResolvedValue(jwt);
+  //       const createUserDtoToEntitySpy = jest
+  //         .spyOn(userHelperService, 'createUserDtoToEntity')
+  //         .mockReturnValue(userEntity);
+  //       const loginSpy = jest.spyOn(userService, 'login').mockResolvedValue(jwt);
 
-//       const result = await controller.login(createUserDto);
+  //       const result = await controller.login(createUserDto);
 
-//       expect(result).toStrictEqual(loginResponseDto);
-//       expect(createUserDtoToEntitySpy).toHaveBeenCalledWith(createUserDto);
-//       expect(loginSpy).toHaveBeenCalledWith(userEntity);
+  //       expect(result).toStrictEqual(loginResponseDto);
+  //       expect(createUserDtoToEntitySpy).toHaveBeenCalledWith(createUserDto);
+  //       expect(loginSpy).toHaveBeenCalledWith(userEntity);
 
-//       createUserDtoToEntitySpy.mockRestore();
-//       loginSpy.mockRestore();
-//     });
+  //       createUserDtoToEntitySpy.mockRestore();
+  //       loginSpy.mockRestore();
+  //     });
 
-//     it('should throw a HttpException when user is already logged in', async () => {
-//       const createUserDto: CreateUserDto = {
-//         username: 'mmustermann',
-//       };
-//       const userEntity: Prisma.UserCreateInput = {
-//         username: 'mmustermann',
-//       };
+  //     it('should throw a HttpException when user is already logged in', async () => {
+  //       const createUserDto: CreateUserDto = {
+  //         username: 'mmustermann',
+  //       };
+  //       const userEntity: Prisma.UserCreateInput = {
+  //         username: 'mmustermann',
+  //       };
 
-//       const createUserDtoToEntitySpy = jest
-//         .spyOn(userHelperService, 'createUserDtoToEntity')
-//         .mockReturnValue(userEntity);
-//       const loginSpy = jest
-//         .spyOn(userService, 'login')
-//         .mockRejectedValue(
-//           new ConflictException(
-//             'User ${userEntity.username} is already logged in',
-//           ),
-//         );
+  //       const createUserDtoToEntitySpy = jest
+  //         .spyOn(userHelperService, 'createUserDtoToEntity')
+  //         .mockReturnValue(userEntity);
+  //       const loginSpy = jest
+  //         .spyOn(userService, 'login')
+  //         .mockRejectedValue(
+  //           new ConflictException(
+  //             'User ${userEntity.username} is already logged in',
+  //           ),
+  //         );
 
-//       try {
-//         await controller.login(createUserDto);
-//       } catch (e) {
-//         expect(e).toBeInstanceOf(ConflictException);
-//         expect(e.status).toBe(HttpStatus.CONFLICT);
-//         expect(e.response.message).toEqual(
-//           'User ${userEntity.username} is already logged in',
-//         );
-//       }
-//       expect(createUserDtoToEntitySpy).toHaveBeenCalledWith(createUserDto);
-//       expect(loginSpy).toHaveBeenCalledWith(userEntity);
+  //       try {
+  //         await controller.login(createUserDto);
+  //       } catch (e) {
+  //         expect(e).toBeInstanceOf(ConflictException);
+  //         expect(e.status).toBe(HttpStatus.CONFLICT);
+  //         expect(e.response.message).toEqual(
+  //           'User ${userEntity.username} is already logged in',
+  //         );
+  //       }
+  //       expect(createUserDtoToEntitySpy).toHaveBeenCalledWith(createUserDto);
+  //       expect(loginSpy).toHaveBeenCalledWith(userEntity);
 
-//       createUserDtoToEntitySpy.mockRestore();
-//       loginSpy.mockRestore();
-//     });
-//   });
+  //       createUserDtoToEntitySpy.mockRestore();
+  //       loginSpy.mockRestore();
+  //     });
+  //   });
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
