@@ -28,6 +28,9 @@ export class Room {
   comeback: string;
   firstGoal: string;
 
+  powerupInterval: any;
+  diffPadBall: number;
+
   constructor(
     id: number,
     goalsToWin: number,
@@ -51,6 +54,9 @@ export class Room {
 
     this.comeback = 'NONE';
     this.firstGoal = 'NONE';
+
+    this.powerupInterval = null;
+    this.diffPadBall = 0;
   }
 
   checkGameFinished(): void {
