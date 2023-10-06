@@ -336,16 +336,19 @@ const setEventListeners = () => {
     else target = paddleB.value
 
     if (type == 'increasePaddleHeight') {
-      target?.setHgt(400)
+      target?.increaseHgt()
     }
     if (type == 'decreasePaddleHeight') {
-      target?.setHgt(80)
+      target?.decreaseHgt()
     }
     if (type == 'slowBall') {
-      ball.value!.speed = 2
+      if (ball.value!.speed < 3) {
+        ball.value!.speed = 1
+      }
+      ball.value!.speed -= 2
     }
     if (type == 'fastBall') {
-      ball.value!.speed = 9
+      ball.value!.speed += 2
     }
     socket.value?.emit('executePowerUp', { type: type, player: player })
   })
@@ -356,8 +359,8 @@ const setEventListeners = () => {
   })
 
   socket.value.on('resetPaddle', () => {
-    paddleA.value?.setHgt(100)
-    paddleB.value?.setHgt(100)
+    paddleA.value?.resetHgt()
+    paddleB.value?.resetHgt()
   })
 }
 

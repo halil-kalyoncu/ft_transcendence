@@ -55,14 +55,21 @@ export class Ball {
     this.dy = this.speed * Math.sin(bounceAngle);
     this.dx = -this.dx;
   }
-  updateSpeed(newSpeed: number): void {
-    const speedFactor = newSpeed / this.speed;
 
-    this.speed = newSpeed;
+  changeSpeed(steps: number): void {
+    const oldSpeed = this.speed;
 
-    this.dx *= speedFactor;
-    this.dy *= speedFactor;
+    if (this.speed + steps < 1) {
+      this.speed = 1;
+      return;
+    }
+    this.speed += steps;
+
+    const speedFaktor = this.speed / oldSpeed;
+    this.dx *= speedFaktor;
+    this.dy *= speedFaktor;
   }
+
   handleBallCollision(
     nextBallX: number,
     nextBallY: number,
@@ -149,8 +156,8 @@ export class Ball {
     let nextBallY = this.y + this.dy;
 
     if (this.scoreGoal(room, nextBallX, server)) {
-      room.paddleA.setHeight(100);
-      room.paddleB.setHeight(100);
+      room.paddleA.resetHeight();
+      room.paddleB.resetHeight();
       server.to(room.socketIds[0]).emit('resetPaddle');
       server.to(room.socketIds[1]).emit('resetPaddle');
       this.resetBall();

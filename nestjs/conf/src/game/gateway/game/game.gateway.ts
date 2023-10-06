@@ -15,6 +15,7 @@ import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { Match } from '@prisma/client';
 import { createECDH } from 'crypto';
+import { Paddle } from 'src/game/service/paddle.service';
 
 @WebSocketGateway({
   cors: {
@@ -167,7 +168,6 @@ export class EventsGateway {
   async handleDisconnect(socket: Socket) {
     //this.players.delete(client.id);
     const room = this.rooms.get(socket.data.match.id);
-    console.log(socket.data.user.username + ' disconnected');
 
     if (!room) {
       socket.disconnect();
@@ -334,7 +334,7 @@ export class EventsGateway {
       player: string;
     },
   ): void {
-    let target;
+    let target: Paddle;
     const room = this.rooms.get(socket.data.match.id);
 
     if (data.player == 'left') {
@@ -343,20 +343,20 @@ export class EventsGateway {
       target = room.paddleB;
     }
     if (data.type == 'increasePaddleHeight') {
-      target.setHeight(400);
+      target.increaseHeight();
     }
     if (data.type == 'decreasePaddleHeight') {
-      target.setHeight(80);
+      target.decreaseHeight();
     }
     if (data.type == 'magnet') {
       if (data.player == 'left') room.ball.magnet = 1;
       else room.ball.magnet = 2;
     }
     if (data.type == 'slowBall') {
-      room.ball.updateSpeed(2);
+      room.ball.changeSpeed(-2);
     }
     if (data.type == 'fastBall') {
-      room.ball.updateSpeed(9);
+      room.ball.changeSpeed(2);
     }
   }
 
@@ -364,7 +364,6 @@ export class EventsGateway {
   removePowerUp(@ConnectedSocket() socket: Socket, @MessageBody() id: number) {
     const room = this.rooms.get(socket.data.match.id);
     let index = room.powerups.findIndex((powerup) => powerup.id == id);
-    console.log('index: ', index);
     if (index != -1) {
       room.powerups.splice(index, 1);
     }
@@ -435,7 +434,6 @@ export class EventsGateway {
     if (powerupNames.length > 0) {
       room.powerupInterval = setInterval(async () => {
         let powerUpIndex = Math.floor(Math.random() * powerupNames.length);
-        console.log(powerUpIndex);
         let x =
           Math.floor(Math.random() * (room.ball.fieldWidth - 70 - 70 + 1)) + 70;
         let y = -70;
