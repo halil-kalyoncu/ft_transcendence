@@ -5,6 +5,8 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   WebSocketServer,
+  ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Room } from '../../service/room.service';
@@ -13,9 +15,8 @@ import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { Match } from '@prisma/client';
 import { createECDH } from 'crypto';
+import { Paddle } from 'src/game/service/paddle.service';
 
-let diffPadBall = 0;
-let intervalId;
 @WebSocketGateway({
   cors: {
     origin: [
@@ -47,17 +48,18 @@ export class EventsGateway {
         let newBallPos;
         if (room.ball.magnet && room.ball.ballSticking) {
           if (room.ball.magnet == 1 && room.ball.ballSticking == 1) {
-            if (diffPadBall == 0) diffPadBall = room.ball.y - room.paddleA.y;
+            if (room.diffPadBall == 0)
+              room.diffPadBall = room.ball.y - room.paddleA.y;
             newBallPos = {
               x: room.paddleA.wid,
-              y: room.paddleA.y + diffPadBall,
+              y: room.paddleA.y + room.diffPadBall,
             };
           } else if (room.ball.magnet == 2 && room.ball.ballSticking == 2) {
-            if (diffPadBall == 0)
-              diffPadBall = room.ball.y + room.ball.wid - room.paddleB.y;
+            if (room.diffPadBall == 0)
+              room.diffPadBall = room.ball.y + room.ball.wid - room.paddleB.y;
             newBallPos = {
               x: room.paddleB.x - room.ball.wid,
-              y: room.paddleB.y + diffPadBall,
+              y: room.paddleB.y + room.diffPadBall,
             };
           }
           this.server.to(room.socketIds[0]).emit('ballPosition', newBallPos);
@@ -71,14 +73,20 @@ export class EventsGateway {
         }
         for (let powerup of room.powerups) {
           powerup.moveDown();
-          this.server.emit('powerUpMove', { id: powerup.id, y: powerup.y });
+          this.server
+            .to(room.socketIds[0])
+            .emit('powerUpMove', { id: powerup.id, y: powerup.y });
+          this.server
+            .to(room.socketIds[1])
+            .emit('powerUpMove', { id: powerup.id, y: powerup.y });
         }
       } else {
         const finishedMatch: Match = await this.matchService.finishMatch(room);
+        this.rooms.delete(room.id);
         this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
         this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
         clearInterval(gameInterval);
-        clearInterval(intervalId);
+        clearInterval(room.powerupInterval);
       }
     }, 15);
   }
@@ -130,33 +138,16 @@ export class EventsGateway {
 
     //first user that connects to the gateway creates the entry in the rooms array
     if (!this.rooms.has(queryMatchId)) {
-      this.rooms.set(
+      let newRoom = new Room(
         queryMatchId,
-        new Room(
-          queryMatchId,
-          socket.data.match.goalsToWin,
-          socket.data.match.leftUserId,
-          socket.data.match.rightUserId,
-        ),
+        socket.data.match.goalsToWin,
+        socket.data.match.leftUserId,
+        socket.data.match.rightUserId,
       );
-      const powerupNames: string[] = await this.matchService.getPowerupNames(
-        queryMatchId,
-      );
-      if (powerupNames.length > 0) {
-        intervalId = setInterval(async () => {
-          let powerUpIndex = Math.floor(Math.random() * powerupNames.length);
-          console.log(powerUpIndex);
-          let x =
-            Math.floor(Math.random() * (room.ball.fieldWidth - 70 - 70 + 1)) +
-            70;
-          let y = -70;
-          this.server.emit('newPowerUp', {
-            powerUp: powerupNames[powerUpIndex],
-            x: x,
-            y: y,
-          });
-        }, 10000);
-      }
+
+      this.rooms.set(queryMatchId, newRoom);
+
+      await this.setPowerupInterval(newRoom);
     }
 
     const room = this.rooms.get(queryMatchId);
@@ -177,7 +168,11 @@ export class EventsGateway {
   async handleDisconnect(socket: Socket) {
     //this.players.delete(client.id);
     const room = this.rooms.get(socket.data.match.id);
-    console.log(socket.data.user.username + ' disconnected');
+
+    if (!room) {
+      socket.disconnect();
+      return;
+    }
     if (room.gameIsRunning) {
       room.gameIsRunning = false;
       if (socket.data.isLeftPlayer) {
@@ -187,13 +182,16 @@ export class EventsGateway {
       }
 
       const match = await this.matchService.finishMatch(room);
+      this.rooms.delete(socket.data.match.id);
       if (socket.data.isLeftPlayer) {
         socket.to(room.socketIds[1]).emit('gameFinished', match);
       } else {
         socket.to(room.socketIds[0]).emit('gameFinished', match);
       }
     }
-    clearInterval(intervalId);
+    if (room.powerupInterval) {
+      clearInterval(room.powerupInterval);
+    }
     socket.disconnect();
   }
   // resetGame() {
@@ -204,23 +202,26 @@ export class EventsGateway {
   // }
 
   @SubscribeMessage('fire')
-  handleMagnetFire(socket: Socket): void {
+  handleMagnetFire(@ConnectedSocket() socket: Socket): void {
     console.log('FIRE');
     const room = this.rooms.get(socket.data.match.id);
     if (socket.id === room.socketIds[0] && room.ball.magnet === 1) {
       room.ball.ballSticking = 0;
       room.ball.magnet = 0;
-      diffPadBall = 0;
+      room.diffPadBall = 0;
     }
     if (socket.id === room.socketIds[1] && room.ball.magnet === 2) {
       room.ball.ballSticking = 0;
       room.ball.magnet = 0;
-      diffPadBall = 0;
+      room.diffPadBall = 0;
     }
   }
 
   @SubscribeMessage('paddle')
-  handlePaddleMove(socket: Socket, direction: string): void {
+  handlePaddleMove(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() direction: string,
+  ): void {
     if (socket.data.isLeftPlayer === true) {
       let paddleAPos = { x: 0, y: 0, wid: 0, hgt: 0 };
 
@@ -291,7 +292,8 @@ export class EventsGateway {
 
   @SubscribeMessage('spawnPowerUp')
   createPowerUp(
-    socket: Socket,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
     data: {
       id: number;
       x: number;
@@ -325,13 +327,14 @@ export class EventsGateway {
 
   @SubscribeMessage('executePowerUp')
   activatePowerUp(
-    socket: Socket,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
     data: {
       type: string;
       player: string;
     },
   ): void {
-    let target;
+    let target: Paddle;
     const room = this.rooms.get(socket.data.match.id);
 
     if (data.player == 'left') {
@@ -340,35 +343,34 @@ export class EventsGateway {
       target = room.paddleB;
     }
     if (data.type == 'increasePaddleHeight') {
-      target.setHeight(400);
+      target.increaseHeight();
     }
     if (data.type == 'decreasePaddleHeight') {
-      target.setHeight(80);
+      target.decreaseHeight();
     }
     if (data.type == 'magnet') {
       if (data.player == 'left') room.ball.magnet = 1;
       else room.ball.magnet = 2;
     }
     if (data.type == 'slowBall') {
-      room.ball.updateSpeed(2);
+      room.ball.changeSpeed(-2);
     }
     if (data.type == 'fastBall') {
-      room.ball.updateSpeed(9);
+      room.ball.changeSpeed(2);
     }
   }
 
   @SubscribeMessage('removePowerUp')
-  removePowerUp(socket: Socket, id: number) {
+  removePowerUp(@ConnectedSocket() socket: Socket, @MessageBody() id: number) {
     const room = this.rooms.get(socket.data.match.id);
     let index = room.powerups.findIndex((powerup) => powerup.id == id);
-    console.log('index: ', index);
     if (index != -1) {
       room.powerups.splice(index, 1);
     }
   }
 
   @SubscribeMessage('maxWaitingTimeReached')
-  async maxWaitingTimeReached(socket: Socket) {
+  async maxWaitingTimeReached(@ConnectedSocket() socket: Socket) {
     const room = this.rooms.get(socket.data.match.id);
 
     room.gameIsRunning = false;
@@ -379,7 +381,8 @@ export class EventsGateway {
     }
 
     const match = await this.matchService.finishMatch(room);
-    clearInterval(intervalId);
+    this.rooms.delete(socket.data.match.id);
+    clearInterval(room.powerupInterval);
     socket.emit('gameFinished', match);
   }
 
@@ -422,5 +425,26 @@ export class EventsGateway {
         this.startGame(room);
       }
     }, 1000);
+  }
+
+  private async setPowerupInterval(room: Room) {
+    const powerupNames: string[] = await this.matchService.getPowerupNames(
+      room.id,
+    );
+    if (powerupNames.length > 0) {
+      room.powerupInterval = setInterval(async () => {
+        let powerUpIndex = Math.floor(Math.random() * powerupNames.length);
+        let x =
+          Math.floor(Math.random() * (room.ball.fieldWidth - 70 - 70 + 1)) + 70;
+        let y = -70;
+        const newPowerUpData = {
+          powerUp: powerupNames[powerUpIndex],
+          x: x,
+          y: y,
+        };
+        this.server.to(room.socketIds[0]).emit('newPowerUp', newPowerUpData);
+        this.server.to(room.socketIds[1]).emit('newPowerUp', newPowerUpData);
+      }, 10000);
+    }
   }
 }

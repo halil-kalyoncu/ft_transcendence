@@ -181,6 +181,12 @@ export class MatchService {
   }
 
   async rejectInvite(id: number): Promise<Match | null> {
+    await this.prisma.matchPowerup.deleteMany({
+      where: {
+        matchId: id,
+      },
+    });
+
     return await this.prisma.match.update({
       where: { id },
       data: {

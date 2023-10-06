@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Room } from './room.service';
 import { Server } from 'socket.io';
 import { PowerUp } from './powerup.service';
-import { Socket } from 'dgram';
 
-let timeoutId;
 //500, 200, 15, 15, 5, 4, 3, 800, 600
 @Injectable()
 export class Ball {
@@ -22,6 +20,7 @@ export class Ball {
     public ballSticking: number = 0,
     public magdiff: number = 0,
     public pause: boolean = false,
+    public timeoutId: any = null,
   ) {}
 
   getBallPosition() {
@@ -56,14 +55,21 @@ export class Ball {
     this.dy = this.speed * Math.sin(bounceAngle);
     this.dx = -this.dx;
   }
-  updateSpeed(newSpeed: number): void {
-    const speedFactor = newSpeed / this.speed;
 
-    this.speed = newSpeed;
+  changeSpeed(steps: number): void {
+    const oldSpeed = this.speed;
 
-    this.dx *= speedFactor;
-    this.dy *= speedFactor;
+    if (this.speed + steps < 1) {
+      this.speed = 1;
+      return;
+    }
+    this.speed += steps;
+
+    const speedFaktor = this.speed / oldSpeed;
+    this.dx *= speedFaktor;
+    this.dy *= speedFaktor;
   }
+
   handleBallCollision(
     nextBallX: number,
     nextBallY: number,
@@ -150,15 +156,16 @@ export class Ball {
     let nextBallY = this.y + this.dy;
 
     if (this.scoreGoal(room, nextBallX, server)) {
-      room.paddleA.setHeight(100);
-      room.paddleB.setHeight(100);
-      server.emit('resetPaddle');
+      room.paddleA.resetHeight();
+      room.paddleB.resetHeight();
+      server.to(room.socketIds[0]).emit('resetPaddle');
+      server.to(room.socketIds[1]).emit('resetPaddle');
       this.resetBall();
       this.pause = true;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      if (this.timeoutId) {
+        clearTimeout(this.timeoutId);
       }
-      timeoutId = setTimeout(() => {
+      this.timeoutId = setTimeout(() => {
         this.pause = false;
       }, 3000);
     } else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
@@ -189,17 +196,25 @@ export class Ball {
         let target;
         if (this.dx > 0) target = 'left';
         else target = 'right';
-        server.emit('activatePowerUp', {
+        const activatePowerUpData = {
           player: target,
           type: powerup.type,
-        });
-        server.emit('destroyPowerUp', { id: powerup.id });
+        };
+        server
+          .to(room.socketIds[0])
+          .emit('activatePowerUp', activatePowerUpData);
+        server
+          .to(room.socketIds[1])
+          .emit('activatePowerUp', activatePowerUpData);
+        server.to(room.socketIds[0]).emit('destroyPowerUp', { id: powerup.id });
+        server.to(room.socketIds[1]).emit('destroyPowerUp', { id: powerup.id });
       }
       if (
         powerup.y + powerup.hgt >= this.fieldHeight &&
         !this.handlePowerUpCollision(nextBallX, nextBallY, powerup)
       ) {
-        server.emit('destroyPowerUp', { id: powerup.id });
+        server.to(room.socketIds[0]).emit('destroyPowerUp', { id: powerup.id });
+        server.to(room.socketIds[1]).emit('destroyPowerUp', { id: powerup.id });
       }
     }
     return {

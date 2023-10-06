@@ -44,7 +44,23 @@ export class Paddle {
     this.y = y;
   }
 
-  setHeight(hgt: number) {
-    this.hgt = hgt;
+  //   setHeight(hgt: number) {
+  //     this.hgt = hgt;
+  //   }
+
+  increaseHeight() {
+    if (this.hgt < 400) {
+      this.hgt += 20;
+    }
+  }
+
+  decreaseHeight() {
+    if (this.hgt > 40) {
+      this.hgt -= 20;
+    }
+  }
+
+  resetHeight() {
+    this.hgt = 100;
   }
 }

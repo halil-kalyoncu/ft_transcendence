@@ -349,7 +349,7 @@ const updateChannelManager = async () => {
 
 .channels .channel-option-button:hover {
   color: aliceblue;
-  border: .5px solid #ea9f42;
+  border: 0.5px solid #ea9f42;
   font-weight: bold;
 }
 

@@ -58,6 +58,8 @@ const props = defineProps({
   isPrivate: Boolean
 })
 
+const emit = defineEmits(['update-requests'])
+
 const initSocket = async () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
   socket.value = await connectChatSocket(accessToken)
@@ -83,6 +85,7 @@ const acceptRequest = () => {
         return
       } else {
         notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
+        emit('update-requests', props.invitationId)
         return
       }
     })
@@ -101,10 +104,15 @@ const rejectRequest = () => {
       if ('error' in response) {
         notificationStore.showNotification(response.error)
         return
+      } else {
+        notificationStore.showNotification(
+          `You rejected ${props.channelName} channel invitation`,
+          true
+        )
+        emit('update-requests', props.invitationId)
+        return
       }
     })
-    notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
-    return
   } catch (error) {
     notificationStore.showNotification(`Something went wrong`, false)
   }
