@@ -4,7 +4,10 @@
       v-if="matchResult!.state == 'WINNERLEFT' || matchResult!.state == 'DISCONNECTRIGHT'"
       class="winner"
     >
-      <div class="headline">{{ matchResult!.leftUser!.username }} has won!</div>
+      <div v-if="matchResult!.state == 'DISCONNECTRIGHT'">
+        <div class="headline">{{ matchResult!.leftUser!.username }} has won by disconnect!</div>
+      </div>
+      <div v-else class="headline">{{ matchResult!.leftUser!.username }} has won!</div>
       <div class="trophys">
         <div class="trophyA" :style="{ backgroundImage: `url(${image[0]})` }"></div>
         <div class="trophyB" :style="{ backgroundImage: `url(${image[1]})` }"></div>
@@ -14,7 +17,10 @@
       v-else-if="matchResult!.state == 'WINNERRIGHT' || matchResult!.state == 'DISCONNECTLEFT'"
       class="winner"
     >
-      <div class="headline">{{ matchResult!.rightUser!.username }} has won!</div>
+      <div v-if="matchResult!.state == 'DISCONNECTLEFT'">
+        <div class="headline">{{ matchResult!.leftUser!.username }} has won by disconnect!</div>
+      </div>
+      <div v-else class="headline">{{ matchResult!.rightUser!.username }} has won!</div>
       <div class="trophys">
         <div class="trophyA" :style="{ backgroundImage: `url(${image[1]})` }"></div>
         <div class="trophyB" :style="{ backgroundImage: `url(${image[0]})` }"></div>

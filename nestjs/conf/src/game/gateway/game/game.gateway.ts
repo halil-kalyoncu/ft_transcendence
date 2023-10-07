@@ -81,12 +81,12 @@ export class EventsGateway {
             .emit('powerUpMove', { id: powerup.id, y: powerup.y });
         }
       } else {
+        clearInterval(gameInterval);
+        clearInterval(room.powerupInterval);
         const finishedMatch: Match = await this.matchService.finishMatch(room);
         this.rooms.delete(room.id);
         this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
         this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
-        clearInterval(gameInterval);
-        clearInterval(room.powerupInterval);
       }
     }, 15);
   }

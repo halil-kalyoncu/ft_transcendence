@@ -56,6 +56,18 @@ export class MatchService {
     return await this.prisma.match.findMany({
       where: {
         OR: [{ leftUserId: userid }, { rightUserId: userid }],
+        AND: [
+          {
+            state: {
+              in: [
+                'WINNERLEFT',
+                'WINNERRIGHT',
+                'DISCONNECTLEFT',
+                'DISCONNECTRIGHT',
+              ],
+            },
+          },
+        ],
       },
       orderBy: {
         createdAt: 'desc',
@@ -66,6 +78,7 @@ export class MatchService {
       },
     });
   }
+
   async getMatchOutcomesByUserId(userId: number): Promise<matchOutcomesDto> {
     let wins = 0;
     let losses = 0;
@@ -82,16 +95,27 @@ export class MatchService {
       ) {
         wins++;
       } else if (
+        match.rightUserId &&
         match.rightUserId === userId &&
         (match.state === 'WINNERRIGHT' || match.state === 'DISCONNECTLEFT')
       ) {
         wins++;
-      } else {
+      } else if (
+        match.rightUserId &&
+        match.rightUserId === userId &&
+        (match.state === 'WINNERLEFT' || match.state === 'DISCONNECTRIGHT')
+      ) {
+        losses++;
+      } else if (
+        match.leftUserId === userId &&
+        (match.state === 'WINNERRIGHT' || match.state === 'DISCONNECTLEFT')
+      ) {
         losses++;
       }
     });
     return { wins: wins, losses: losses };
   }
+
   async findAll(): Promise<Match[]> {
     return await this.prisma.match.findMany({
       include: {
@@ -248,12 +272,12 @@ export class MatchService {
     let flawlessVictory = 0;
     let state: MatchState;
 
-    if (room.leftPlayerGoals === 5) {
+    if (room.leftPlayerGoals === room.goalsToWin) {
       if (room.rightPlayerGoals === 0) {
         flawlessVictory = room.leftPlayerId;
       }
       state = 'WINNERLEFT';
-    } else if (room.rightPlayerGoals === 5) {
+    } else if (room.rightPlayerGoals === room.goalsToWin) {
       if (room.leftPlayerGoals === 0) {
         flawlessVictory = room.rightPlayerId;
       }
@@ -268,6 +292,22 @@ export class MatchService {
   }
 
   async finishMatch(room: Room): Promise<Match | null> {
+    const match = await this.prisma.match.findUnique({
+      where: {
+        id: room.id,
+      },
+    });
+
+    if (
+      !match ||
+      match.state === 'WINNERLEFT' ||
+      match.state === 'WINNERRIGHT' ||
+      match.state === 'DISCONNECTRIGHT' ||
+      match.state === 'DISCONNECTLEFT'
+    ) {
+      return null;
+    }
+
     const { state, flawlessVictory } = this.determineMatchState(room);
 
     const updatedMatch = await this.prisma.match.update({
@@ -359,11 +399,11 @@ export class MatchService {
     } else {
       if (room.comeback == 'RIGHT')
         this.achievementService.updateAchievement(
-          updatedMatch.leftUserId,
+          updatedMatch.rightUserId,
           4,
           1,
         );
-      this.achievementService.updateAchievement(updatedMatch.leftUserId, 3, 1);
+      this.achievementService.updateAchievement(updatedMatch.rightUserId, 3, 1);
     }
 
     return updatedMatch;
