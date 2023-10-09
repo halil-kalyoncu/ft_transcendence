@@ -22,7 +22,7 @@ import { ConnectedUserService } from '../chat/service/connected-user/connected-u
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '10000s' },
+        signOptions: { expiresIn: '2 days' },
       }),
     }),
   ],
