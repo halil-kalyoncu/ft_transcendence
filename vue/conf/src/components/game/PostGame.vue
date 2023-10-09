@@ -18,7 +18,7 @@
       class="winner"
     >
       <div v-if="matchResult!.state == 'DISCONNECTLEFT'">
-        <div class="headline">{{ matchResult!.leftUser!.username }} has won by disconnect!</div>
+        <div class="headline">{{ matchResult!.rightUser!.username }} has won by disconnect!</div>
       </div>
       <div v-else class="headline">{{ matchResult!.rightUser!.username }} has won!</div>
       <div class="trophys">
@@ -129,7 +129,7 @@ onMounted(() => {
   font-weight: bold;
   align-items: center;
   justify-content: center;
-  font-size: 50px;
+  font-size: 40px;
 }
 .trophys {
   display: flex;
@@ -159,7 +159,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 50px;
+  font-size: 40px;
 }
 .ladderLevel {
   font-size: 25px;
