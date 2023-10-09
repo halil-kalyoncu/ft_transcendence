@@ -113,6 +113,7 @@ describe('UserController', () => {
         {
           id: 1,
           username: 'mmustermann',
+          intraLogin: 'mmustermann',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -121,6 +122,7 @@ describe('UserController', () => {
         {
           id: 2,
           username: 'mmusterfrau',
+          intraLogin: 'mmusterfrau',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -145,6 +147,7 @@ describe('UserController', () => {
         {
           id: 1,
           username: 'mmustermann',
+          intraLogin: 'mmustermann',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -186,6 +189,7 @@ describe('UserController', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -227,6 +231,7 @@ describe('UserController', () => {
         {
           id: 1,
           username: 'mmustermann',
+          intraLogin: 'mmustermann',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -235,6 +240,7 @@ describe('UserController', () => {
         {
           id: 2,
           username: 'mmusterfrau',
+          intraLogin: 'mmusterfrau',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -260,6 +266,7 @@ describe('UserController', () => {
         {
           id: 2,
           username: 'mmusterfrau',
+          intraLogin: 'mmusterfrau',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,

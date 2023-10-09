@@ -1,10 +1,25 @@
-import { Controller, Get, Query, Redirect, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Request,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import axios from 'axios';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { JwtAuthService } from '../../service/jwt-auth/jtw-auth.service';
 import { User } from '@prisma/client';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
+import { JwtAuthGuard } from '../../guards/jwt.guard';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Auth module')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -13,6 +28,7 @@ export class AuthController {
     private connectedUserService: ConnectedUserService,
   ) {}
 
+  @ApiOperation({ summary: 'Callback for the 42 api' })
   @Get('callback')
   async fortyTwoCallback(@Query('code') code: string, @Res() res) {
     const ipAddress = process.env.IP_ADDRESS;
@@ -77,5 +93,27 @@ export class AuthController {
         `http://${ipAddress}:${frontendPort}?error=authentication_failed`,
       );
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Request to check if the jwt token is valid' })
+  @ApiResponse({
+    status: 200,
+    description: 'Access token is valid, return intraLogin',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @Get('verify')
+  verifyToken(@Request() req): string {
+    return req.user.intraLogin;
   }
 }

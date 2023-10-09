@@ -17,12 +17,28 @@ const userStore = useUserStore()
 onMounted(async () => {
   try {
     const decodeParamToken = atob(token)
-    const decodedToken: Record<string, unknown> = jwtDecode(decodeParamToken)
 
     localStorage.setItem('ponggame', decodeParamToken)
-    await userStore.initStore()
-    connectChatSocket(decodeParamToken)
-    router.push('/home')
+
+	const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/auth/verify`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+          	Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+		}
+	  })
+
+	if (response.ok) {
+		await userStore.initStore()
+    	connectChatSocket(decodeParamToken)
+    	router.push('/home')
+	}
+	else {
+		notificationStore.showNotification('Redirection failed: invalid token', false)
+		router.push('/')
+	}
   } catch (error) {
     notificationStore.showNotification('Redirection failed: invalid token', false)
     router.push('/')

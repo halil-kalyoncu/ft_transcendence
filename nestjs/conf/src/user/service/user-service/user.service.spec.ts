@@ -45,10 +45,12 @@ describe('UserService', () => {
     it('should create a new user and generate a JWT', async () => {
       const input: Prisma.UserCreateInput = {
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
       };
       const createdUser: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -91,10 +93,12 @@ describe('UserService', () => {
     it('should find the user and generate a JWT', async () => {
       const input: Prisma.UserCreateInput = {
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
       };
       const foundUser: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -132,10 +136,12 @@ describe('UserService', () => {
     it('should throw an error when user is already logged in', async () => {
       const input: Prisma.UserCreateInput = {
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
       };
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -255,6 +261,7 @@ describe('UserService', () => {
       const user: User = {
         id: userId,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -301,6 +308,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username,
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -345,6 +353,7 @@ describe('UserService', () => {
         {
           id: 1,
           username: 'mmustermann',
+          intraLogin: 'mmustermann',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -353,6 +362,7 @@ describe('UserService', () => {
         {
           id: 2,
           username: 'mmusterfrau',
+          intraLogin: 'mmusterfrau',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -377,6 +387,7 @@ describe('UserService', () => {
         {
           id: 1,
           username: 'mmustermann',
+          intraLogin: 'mmustermann',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -419,6 +430,7 @@ describe('UserService', () => {
         {
           id: 1,
           username: 'mmustermann',
+          intraLogin: 'mmustermann',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -427,6 +439,7 @@ describe('UserService', () => {
         {
           id: 2,
           username: 'mmusterfrau',
+          intraLogin: 'mmusterfrau',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -458,6 +471,7 @@ describe('UserService', () => {
         {
           id: 2,
           username: 'mmusterfrau',
+          intraLogin: 'mmusterfrau',
           avatarId: null,
           ladderLevel: 1000,
           enabled2FA: false,
@@ -513,6 +527,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -550,6 +565,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: 'abc-123.png',
         ladderLevel: 1000,
         enabled2FA: false,
@@ -607,6 +623,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: 'abc-123.png',
         ladderLevel: 1000,
         enabled2FA: false,
@@ -642,6 +659,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -697,6 +715,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -742,6 +761,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: false,
@@ -768,6 +788,7 @@ describe('UserService', () => {
       const user: User = {
         id: 1,
         username: 'mmustermann',
+        intraLogin: 'mmustermann',
         avatarId: null,
         ladderLevel: 1000,
         enabled2FA: true,
