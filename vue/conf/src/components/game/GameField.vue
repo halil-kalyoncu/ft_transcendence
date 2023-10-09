@@ -38,15 +38,16 @@
   <div class="leave-game">
     <button @click="goHome" class="leave-game-button">Leave Game</button>
   </div>
- <div class="controls-legend">
+  <div class="controls-legend">
     <span class="control-item">
-       Move Up&nbsp;<font-awesome-icon class="spacebar-icon" :icon="['fas', 'fa-arrow-up']" />&nbsp;
+      Move Up&nbsp;<font-awesome-icon class="spacebar-icon" :icon="['fas', 'fa-arrow-up']" />&nbsp;
     </span>
     <span class="control-item">
-         Move Down&nbsp;<font-awesome-icon class="spacebar-icon" :icon="['fas', 'fa-arrow-down']" />
+      Move Down&nbsp;<font-awesome-icon class="spacebar-icon" :icon="['fas', 'fa-arrow-down']" />
     </span>
     <span class="control-item">
-      Release Magnet&nbsp;<div class="spacebar-icon">SPACE</div> 
+      Release Magnet&nbsp;
+      <div class="spacebar-icon">SPACE</div>
     </span>
   </div>
   <!-- <form @submit.prevent="connectToWS">
@@ -600,7 +601,7 @@ const goHome = () => {
   display: flex;
   width: fit-content;
   justify-content: space-between;
-  gap: .5rem;
+  gap: 0.5rem;
   background-color: rgba(255, 255, 255, 0.1); /* Slightly transparent background */
   padding: 10px;
   border-radius: 8px;
@@ -628,6 +629,4 @@ const goHome = () => {
   color: rgba(255, 255, 255, 0.5);
   margin-right: 5px;
 }
-
-
 </style>

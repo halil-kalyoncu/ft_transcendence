@@ -356,7 +356,7 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Find users sorted by Ladderscore'})
+  @ApiOperation({ summary: 'Find users sorted by Ladderscore' })
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of users sorted by Ladderscore',

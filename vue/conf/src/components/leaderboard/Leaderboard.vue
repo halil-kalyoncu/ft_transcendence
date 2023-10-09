@@ -31,29 +31,30 @@ const players = ref<UserI[] | null>(null)
 
 async function fetchUsers(): Promise<void> {
   try {
-    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${
-        import.meta.env.VITE_BACKENDPORT}/api/users/get-all-users-by-ladder`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/get-all-users-by-ladder`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
-	const responseData = await response.json()
+    const responseData = await response.json()
     if (response.ok) {
       players.value = responseData
-    }
-	else {
-		notificationStore.showNotification(
+    } else {
+      notificationStore.showNotification(
         'Error while fetching users: ' + responseData.message,
         false
       )
-	}
+    }
   } catch (error) {
-    notificationStore.showNotification(
-        'Something went wrong while fetching users', false
-      )
+    notificationStore.showNotification('Something went wrong while fetching users', false)
   }
 }
 
