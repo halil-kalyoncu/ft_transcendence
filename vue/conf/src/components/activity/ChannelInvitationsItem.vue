@@ -51,11 +51,14 @@ const socket = ref<Socket | null>(null)
 
 const props = defineProps({
   username: String,
+  inviterId: Number,
   channelName: String,
   isPasswordProtected: Boolean,
   invitationId: Number,
   isPrivate: Boolean
 })
+
+const emit = defineEmits(['update-requests'])
 
 const initSocket = async () => {
   const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -67,7 +70,7 @@ onMounted(async () => {
 })
 
 const viewProfile = () => {
-  router.push(`/profile/${props.username}`)
+  router.push(`/profile/${props.inviterId}`)
 }
 
 const acceptRequest = () => {
@@ -82,6 +85,7 @@ const acceptRequest = () => {
         return
       } else {
         notificationStore.showNotification(`You joined ${props.channelName} channel`, true)
+        emit('update-requests', props.invitationId)
         return
       }
     })
@@ -100,10 +104,15 @@ const rejectRequest = () => {
       if ('error' in response) {
         notificationStore.showNotification(response.error)
         return
+      } else {
+        notificationStore.showNotification(
+          `You rejected ${props.channelName} channel invitation`,
+          true
+        )
+        emit('update-requests', props.invitationId)
+        return
       }
     })
-    notificationStore.showNotification(`You declined ${props.channelName} channel invitation`, true)
-    return
   } catch (error) {
     notificationStore.showNotification(`Something went wrong`, false)
   }

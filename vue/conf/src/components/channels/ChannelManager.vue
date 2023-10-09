@@ -1,72 +1,70 @@
 <template>
-  <h2 class="current-channel-name">{{ ChannelName }}</h2>
-  <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'">
-    <InvitePrivateChannelModal
-      v-if="isModalOpened"
-      :isOpened="isModalOpened"
-      :title="modalTitle"
-      :channelId="channelId"
-      @submit="handleSubmit"
-      @close="handleClose"
-    />
-    <div
-      v-for="memberItem in memberItems"
-      :key="`${memberItem.isUserBannedProp}-${memberItem.isUserMutedProp}`"
-    >
-      <ChannelManagerUserItem
-        :username="memberItem.username"
-        :date="memberItem.date"
-        :roleProp="memberItem.roleProp"
-        :currentUserRole="memberItem.currentUserRole"
-        :requesterId="memberItem.requesterId"
-        :targetUserId="memberItem.targetUserId"
-        :channelId="memberItem.channelId"
-        :isUserBannedProp="memberItem.isUserBannedProp"
-        :isUserMutedProp="memberItem.isUserMutedProp"
+  <div class="channel-manager-layout">
+    <h2 class="current-channel-name">{{ ChannelName }}</h2>
+    <ScrollViewer :maxHeight="'35vh'" :paddingRight="'.5rem'">
+      <InvitePrivateChannelModal
+        v-if="isModalOpened"
+        :isOpened="isModalOpened"
+        :title="modalTitle"
+        :channelId="channelId"
+        @submit="handleSubmit"
+        @close="handleClose"
       />
-    </div>
-  </ScrollViewer>
-  <div class="channel-manager-info">
-    <div class="change-password-container">
-      <button
-        v-show="currentUserRole === ChannelMemberRole.OWNER"
-        class="join-channel-button"
-        @click="changePassword"
+      <div
+        v-for="memberItem in memberItems"
+        :key="`${memberItem.isUserBannedProp}-${memberItem.isUserMutedProp}`"
       >
-        {{ showPasswordField ? 'Confirm' : 'Change Password' }}
-      </button>
-      <input
-        v-if="showPasswordField"
-        v-model="password"
-        placeholder="Enter password"
-        type="password"
-        class="password-input"
-      />
-    </div>
+        <ChannelManagerUserItem
+          :username="memberItem.username"
+          :date="memberItem.date"
+          :roleProp="memberItem.roleProp"
+          :currentUserRole="memberItem.currentUserRole"
+          :requesterId="memberItem.requesterId"
+          :targetUserId="memberItem.targetUserId"
+          :channelId="memberItem.channelId"
+          :isUserBannedProp="memberItem.isUserBannedProp"
+          :isUserMutedProp="memberItem.isUserMutedProp"
+        />
+      </div>
+    </ScrollViewer>
+    <div class="channel-manager-info">
+      <div class="change-password-container" v-if="currentUserRole === ChannelMemberRole.OWNER">
+        <button class="join-channel-button" @click="changePassword">
+          {{ showPasswordField ? 'Confirm' : 'Change Password' }}
+        </button>
+        <input
+          v-if="showPasswordField"
+          v-model="password"
+          placeholder="Enter password"
+          type="password"
+          class="password-input"
+        />
+      </div>
 
-    <button :class="['join-channel-button', 'leave-channel-button']" @click="handleLeaveChannel">
-      Leave
-    </button>
-    <div class="destroy-container">
-      <button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
-        {{ getSignOutButtonText() }}
+      <button :class="['join-channel-button', 'leave-channel-button']" @click="handleLeaveChannel">
+        Leave
       </button>
-      <input
-        v-if="showConfirmDestroyField"
-        v-model="confirmDestroy"
-        placeholder="Confirm with 'OK'"
-        class="password-input"
-      />
+      <div class="destroy-container">
+        <button :class="['join-channel-button', 'signout-channel-button']" @click="handleSignOut">
+          {{ getSignOutButtonText() }}
+        </button>
+        <input
+          v-if="showConfirmDestroyField"
+          v-model="confirmDestroy"
+          placeholder="Confirm with 'OK'"
+          class="password-input"
+        />
+      </div>
+      <button
+        v-if="
+          currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN
+        "
+        :class="['join-channel-button', 'add-user-button']"
+        @click="openAddModal"
+      >
+        Add User
+      </button>
     </div>
-    <button
-      v-show="
-        currentUserRole === ChannelMemberRole.OWNER || currentUserRole === ChannelMemberRole.ADMIN
-      "
-      :class="['join-channel-button', 'add-user-button']"
-      @click="openAddModal"
-    >
-      Add User
-    </button>
   </div>
 </template>
 
@@ -172,7 +170,7 @@ onBeforeUnmount(() => {
   socket.value.off('ChannelDestroy')
   socket.value.off('UserSignedOut')
   socket.value.off('UserSignedIn')
-  socket.value.off('ChannelInvitationAccepted')
+  socket.value.off('ChannelInvitationAcceptedManager')
   socket.value.off('madeAdmin')
   socket.value.off('memberKicked')
   socket.value.off('memberBanned')
@@ -185,7 +183,9 @@ onBeforeUnmount(() => {
 const setMembers = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllChannelManagerMembers?channelId=${channelId}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/getAllChannelManagerMembers?channelId=${channelId}`,
       {
         method: 'GET',
         headers: {
@@ -256,13 +256,16 @@ const setUserSignedListener = async () => {
     })
   })
 
-  socket.value.on('ChannelInvitationAccepted', (channelName: string, inviteeName: string) => {
-    console.log('ChannelInvitationAccepted fired')
-    //notificationStore.showNotification(' Signed in Channel', true)
-    setMembers().then(() => {
-      setCurrentUserRole()
-    })
-  })
+  socket.value.on(
+    'ChannelInvitationAcceptedManager',
+    (channelName: string, inviteeName: string) => {
+      console.log('ChannelInvitationAccepted fired')
+      //notificationStore.showNotification(' Signed in Channel', true)
+      setMembers().then(() => {
+        setCurrentUserRole()
+      })
+    }
+  )
 
   socket.value.on('madeAdmin', (username: string, channelname: string) => {
     if (channelname !== ChannelName.value) {
@@ -512,6 +515,7 @@ const changePassword = async () => {
   align-items: flex-start;
   margin: 0.25rem 0 0 0;
   min-height: 2.75rem;
+  gap: 0.25rem;
 }
 
 .channel-manager-info .join-channel-button {
@@ -551,7 +555,7 @@ const changePassword = async () => {
 
 .destroy-container {
   display: flex;
-  flex-direction: column; /* Stack elements vertically */
-  align-items: flex-start; /* Align items to the start (left) */
+  flex-direction: column;
+  align-items: flex-start;
 }
 </style>

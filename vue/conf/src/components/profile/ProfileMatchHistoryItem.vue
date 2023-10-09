@@ -1,5 +1,13 @@
 <template>
-  <div class="match-history-item">
+  <div
+    class="match-history-item"
+    v-bind:class="{
+      'win-background': scoreMessage === 'Win',
+      'win-disconnect-background': scoreMessage === 'Win (Disconnect)',
+      'defeat-disconnect-background': scoreMessage === 'Defeat (Disconnect)',
+      'defeat-background': scoreMessage === 'Defeat'
+    }"
+  >
     <section class="left-player-section">
       <h2 class="profile-username">{{ leftPlayerName }}</h2>
     </section>
@@ -36,14 +44,24 @@ const scoreMessage = computed(() => {
 
   if (
     (props.match?.state === 'WINNERLEFT' && props.match?.leftUser?.id === parseInt(props.userId)) ||
+    (props.match?.state === 'WINNERRIGHT' && props.match?.rightUser?.id === parseInt(props.userId))
+  ) {
+    return 'Win'
+  } else if (
     (props.match?.state === 'DISCONNECTRIGHT' &&
       props.match?.leftUser?.id === parseInt(props.userId)) ||
-    (props.match?.state === 'WINNERRIGHT' &&
-      props.match?.rightUser?.id === parseInt(props.userId)) ||
     (props.match?.state === 'DISCONNECTLEFT' &&
       props.match?.rightUser?.id === parseInt(props.userId))
-  )
-    return 'Win'
+  ) {
+    return 'Win (Disconnect)'
+  } else if (
+    (props.match?.state === 'DISCONNECTRIGHT' &&
+      props.match?.rightUser?.id === parseInt(props.userId)) ||
+    (props.match?.state === 'DISCONNECTLEFT' &&
+      props.match?.leftUser?.id === parseInt(props.userId))
+  ) {
+    return 'Defeat (Disconnect)'
+  }
   return 'Defeat'
 })
 
@@ -76,13 +94,28 @@ const formattedTimestamp = computed(() => formatDate(time ?? null))
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #333;
   opacity: 0.9;
   color: #fff;
   padding: 20px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   margin: 0 1.5rem 1.5rem 0;
   border-radius: 0.25rem;
+}
+
+.win-background {
+  background-color: #007bff;
+}
+
+.win-disconnect-background {
+  background-color: #99ccff;
+}
+
+.defeat-background {
+  background-color: #dc3545;
+}
+
+.defeat-disconnect-background {
+  background-color: #ffb3b3;
 }
 
 section {

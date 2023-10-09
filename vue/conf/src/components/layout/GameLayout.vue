@@ -21,8 +21,7 @@ main {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  background-image: url('../../assets/gamebackground.png');
-  /* background-position: center; */
+  background: radial-gradient(circle, #3b3b3b, #000 50%);
   background-position: center;
   font-family: 'Courier New', Courier, monospace;
 }

@@ -75,7 +75,6 @@ export class UserService {
           });
         }),
       );
-      console.log(userAchievements);
       return user;
     } catch (error) {
       //P2002 is the prisma error code for the unique constraint
@@ -243,8 +242,15 @@ export class UserService {
   }
 
   async changeUsername(userId: number, newUsername: string): Promise<User> {
-    let user: User | null = await this.findByUsername(newUsername);
+    let user: User | null;
 
+    if (newUsername.length >= 11) {
+      throw new BadRequestException(
+        'Username is too long, please choose a username with less than 11 characters',
+      );
+    }
+
+    user = await this.findByUsername(newUsername);
     if (user && userId === user.id) {
       throw new BadRequestException(
         'Please choose a different username then your current one',
@@ -264,6 +270,20 @@ export class UserService {
       },
       data: {
         username: newUsername,
+      },
+    });
+  }
+
+  async updateLadderLevel(
+    userId: number,
+    newLadderLevel: number,
+  ): Promise<User> {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        ladderLevel: newLadderLevel,
       },
     });
   }

@@ -1,55 +1,48 @@
 <template>
+  <div class="goals-to-beat">Goals to beat: {{ goalsToBeat }}</div>
   <div class="playerView">
-    <div class="playerAName">{{ playerA }}</div>
-    <div class="playerBName">{{ playerB }}</div>
-    <div class="playerAScore">{{ playerAScore }}</div>
-    <div class="playerBScore">{{ playerBScore }}</div>
+    <div class="playerA">
+      <div class="playerAName">{{ playerA }}</div>
+      <div class="playerAScore">{{ playerAScore }}</div>
+    </div>
+    <div class="playerB">
+      <div class="playerBName">{{ playerB }}</div>
+      <div class="playerBScore">{{ playerBScore }}</div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  playerA: string
-  playerB: string
-  playerAScore: number
-  playerBScore: number
-}>()
+const props = defineProps({
+  playerA: String,
+  playerB: String,
+  playerAScore: Number,
+  playerBScore: Number,
+  goalsToBeat: Number
+})
 </script>
 
 <style scoped>
+.goals-to-beat {
+  display: flex;
+  justify-content: center;
+}
 .playerView {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  /* grid- */
-  /* top: 50px;
-  left: 120px; */
-  width: 100%;
-  /* height: 15%; */
-  font-size: 35px;
-  /* background-color:#00000000; */
-  background-color: #f5f5f529;
-  /* border-radius: 10%; */
-  /* z-index: 999; */
+  position: absolute;
+  display: flex;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1200px;
 }
-.playerAName {
+.playerA {
   text-align: left;
-  margin-left: 5%;
-  /* border: 1px solid white;  */
+  flex: 1;
+  font-size: 30px;
 }
-.playerAScore {
-  text-align: left;
-  margin-left: 5%;
-  /* border: 1px solid white;  */
-}
-.playerBName {
+.playerB {
   text-align: right;
-  margin-right: 5%;
-  /* border: 1px solid white;  */
-}
-.playerBScore {
-  text-align: right;
-  margin-right: 5%;
-  /* border: 1px solid white;  */
+  flex: 1;
+  font-size: 30px;
 }
 </style>

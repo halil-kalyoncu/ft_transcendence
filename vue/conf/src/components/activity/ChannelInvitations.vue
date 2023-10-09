@@ -5,10 +5,12 @@
         <div v-for="invitation in channelInvitations" :key="invitation.invitationId">
           <ChannelInvitationsItem
             :username="invitation.inviterName"
+            :inviterId="invitation.inviterUserId"
             :channelName="invitation.channelName"
             :isPasswordProtected="invitation.isPasswordProtected"
             :isPrivate="invitation.ChannelVisibility === 'PRIVATE' ? true : false"
             :invitationId="invitation.invitationId"
+            @update-requests="updateRequests"
           />
         </div>
       </div>
@@ -58,10 +60,8 @@ onBeforeUnmount(() => {
     notificationStore.showNotification('Error: Connection problems', false)
     return
   }
+
   socket.value.off('NewChannelInvitation')
-  socket.value.off('ChannelInvitationAccepted')
-  socket.value.off('ChannelInvitationRejected')
-  socket.value.off('InvitationObsolete')
 })
 
 const initSocket = () => {
@@ -72,7 +72,9 @@ const initSocket = () => {
 const setChannelInvitations = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-invitations/GetPendingInvitations?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -91,6 +93,11 @@ const setChannelInvitations = async () => {
   }
 }
 
+const updateRequests = async (invitationId: number) => {
+  console.log('updateRequests fired')
+  await setChannelInvitations()
+}
+
 const setInvitationListener = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
@@ -102,31 +109,6 @@ const setInvitationListener = () => {
     }
     notificationStore.showNotification('New Channel Invitation', true)
     console.log('newChannelInvitation fired from ChannelsInvitations.vue')
-    setChannelInvitations()
-  })
-  socket.value.on('ChannelInvitationAccepted', (channelName: string, UserName: string) => {
-    if (UserName !== username.value) {
-      return
-    }
-    console.log(channelName)
-    console.log(UserName)
-    console.log('User Accepted ChannelInvitaion fired')
-    setChannelInvitations()
-  })
-  socket.value.on('ChannelInvitationRejected', (channelName: string, UserName: string) => {
-    if (UserName !== username.value) {
-      return
-    }
-    console.log('User Rejected ChannelInvitaion fired')
-    setChannelInvitations()
-  })
-
-  socket.value.on('InvitationObsolete', (UserName: string, channelId: number) => {
-    if (UserName !== username.value) {
-      return
-    }
-    console.log('InvitationObsolete from ChannelInvitations.vue fired')
-    notificationStore.showNotification('User Signed In', true)
     setChannelInvitations()
   })
 }

@@ -138,7 +138,9 @@ const initSocket = () => {
 const comparePassword = async (): Promise<boolean> => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/comparePassword?channelId=${props.channelId}&password=${password.value}`,
       {
         method: 'GET',
         headers: {
@@ -163,7 +165,9 @@ const comparePassword = async (): Promise<boolean> => {
 const setUserBanned = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/isUserBanned?channelId=${props.channelId}&userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/isUserBanned?channelId=${props.channelId}&userId=${userId.value}`,
       {
         method: 'GET',
         headers: {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notification'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { connectChatSocket, connectGameSocket } from '../../websocket'
 import { Socket } from 'socket.io-client'
 import type { MatchmakingI } from '../../model/match/matchmaking.interface'
@@ -11,12 +11,9 @@ import type { MatchI } from '../../model/match/match.interface'
 import jwtDecode from 'jwt-decode'
 import Spinner from '../utils/Spinner.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faArrowLeft)
 const route = useRoute()
-const matchmakingId: string = route.params.matchmakingId as string
+let matchmakingId: string = route.params.matchmakingId as string
 
 const notificationStore = useNotificationStore()
 const router = useRouter()
@@ -32,6 +29,7 @@ const waitingTime = ref<number>(0)
 const maxWaitingTime = 1 * 60
 
 const authorized = ref<boolean>(true)
+const calledWithUrl = ref<boolean>(false)
 
 const initChatSocket = () => {
   chatSocket.value = connectChatSocket(accessToken)
@@ -55,25 +53,25 @@ const getUserFromAccessToken = (): UserI => {
 const checkAuthorized = async () => {
   try {
     const loggedUser = getUserFromAccessToken()
-    const response = await fetch(`http://localhost:3000/api/matchmaking/${loggedUser.id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matchmaking/${loggedUser.id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     if (response.ok) {
       const responseText = await response.text()
       const matchmaking: MatchmakingI | null = responseText ? JSON.parse(responseText) : null
-
       if (!matchmaking) {
-        notificationStore.showNotification('You are not authorized to visit this site', false)
-      } else if (matchmaking.id !== parseInt(matchmakingId, 10)) {
-        notificationStore.showNotification(
-          'Something went wrong while directing you to the queue',
-          false
-        )
+        authorized.value = false
+        calledWithUrl.value = true
       }
     } else {
       const responseData = await response.json()
@@ -81,14 +79,14 @@ const checkAuthorized = async () => {
         'Error while fetching the matchmaking data: ' + responseData.message,
         false
       )
+      authorized.value = false
     }
-  } catch (error: any) {
+  } catch (error) {
     notificationStore.showNotification(
       'Something went wrong while fetching the matchmaking data',
       false
     )
     authorized.value = false
-    router.push('/home')
   }
 }
 
@@ -128,13 +126,18 @@ const handleDeleteMatchmakingEntry = async () => {
   const loggedUser = getUserFromAccessToken()
 
   try {
-    const response = await fetch(`http://localhost:3000/api/matchmaking/${loggedUser.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matchmaking/${loggedUser.id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     const responseData = await response.json()
     if (!response.ok) {
@@ -175,6 +178,34 @@ const cancelTimer = () => {
   }
 }
 
+const handleCalledWithUrl = async () => {
+  if (!chatSocket || !chatSocket.value) {
+    notificationStore.showNotification(`Error: Connection problems`, false)
+    return
+  }
+
+  try {
+    const response: MatchmakingI = await new Promise((resolve, reject) => {
+      chatSocket.value?.emit('queueUpForLadder', (response: MatchmakingI | ErrorI) => {
+        if ('error' in response) {
+          reject(response.error)
+        } else {
+          resolve(response)
+        }
+      })
+    })
+
+    if (!response || response.id === 0) {
+      throw new Error('Something went wrong')
+    }
+    router.push(`/queue/${response.id}`)
+    matchmakingId = response.id.toString()
+  } catch (error: any) {
+    notificationStore.showNotification(error.message, false)
+    router.push('/home')
+  }
+}
+
 onMounted(async () => {
   initChatSocket()
   if (!chatSocket || !chatSocket.value) {
@@ -183,6 +214,12 @@ onMounted(async () => {
   }
 
   await checkAuthorized()
+  if (calledWithUrl.value) {
+    await handleCalledWithUrl()
+  } else if (authorized.value === false) {
+    router.push('/home')
+    return
+  }
 
   startTimer()
 
@@ -199,12 +236,22 @@ onMounted(async () => {
   })
 })
 
+const handleReloadComponent = watch(
+  () => route.params.matchmakingId,
+  async (newMatchmakingId) => {
+    if (newMatchmakingId) {
+      matchmakingId = newMatchmakingId as string
+    }
+  }
+)
+
 onBeforeUnmount(async () => {
   cancelTimer()
   if (authorized.value && waitingForGame.value) {
     await handleDeleteMatchmakingEntry()
   }
 
+  handleReloadComponent()
   if (!chatSocket || !chatSocket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
@@ -240,6 +287,7 @@ onBeforeUnmount(async () => {
   flex-direction: row;
   justify-content: space-evenly;
   align-items: flex-start;
+  min-height: 650px;
 }
 
 .timer {
@@ -250,6 +298,7 @@ onBeforeUnmount(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .queue .icon-button-reject {

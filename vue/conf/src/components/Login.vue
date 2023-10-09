@@ -20,13 +20,12 @@ const userId = computed(() => userStore.userId)
 const router = useRouter()
 const notificationStore = useNotificationStore()
 
-console.log(import.meta.env)
-console.log(import.meta.env.VITE_SOMETHING)
-
 const get2FAStatus = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/twoFAstatus?userId=${userId.value}`,
       {
         method: 'GET'
       }
@@ -45,13 +44,18 @@ const userStore = useUserStore()
 
 const submitForm = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/users/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ username: username.value })
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/login`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: username.value })
+      }
+    )
 
     const responseData = await response.json()
     if (response.ok) {

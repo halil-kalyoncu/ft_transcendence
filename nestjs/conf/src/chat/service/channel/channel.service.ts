@@ -694,11 +694,7 @@ export class ChannelService {
 
     if (channels.length === 0) {
       console.log('No channels found.');
-      const emptyDto = new ChannelInfoDto();
-      emptyDto.channel = null;
-      emptyDto.owner = null;
-
-      return [emptyDto];
+      return [];
     }
     const channelEntries: ChannelInfoDto[] = await Promise.all(
       channels.map((channel) => {

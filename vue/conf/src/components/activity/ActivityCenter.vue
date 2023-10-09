@@ -54,13 +54,12 @@ const setActivePanel = (value: string) => {
 .activityCenter {
   width: 100%;
   height: calc(100vh - 50.8px);
-
   background: rgba(0, 0, 0, 0.6);
-
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
   align-items: center;
+  min-height: 650px;
 }
 
 .activityCenter ul {

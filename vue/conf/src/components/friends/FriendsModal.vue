@@ -29,7 +29,7 @@
               <font-awesome-icon
                 class="icon"
                 :icon="['fas', 'eye']"
-                @mousedown="goToProfile(suggestion.username)"
+                @mousedown="goToProfile(suggestion.id)"
               />
             </li>
           </ul>
@@ -63,6 +63,7 @@ const router = useRouter()
 const inputName = ref('')
 const userSuggestions = ref<UserI[]>([])
 const showSuggestionList = ref(false)
+const userId = ref(0)
 
 const props = defineProps({
   isOpened: {
@@ -103,7 +104,9 @@ const findUserSuggestions = async (username: string) => {
   try {
     const accessToken = localStorage.getItem('ponggame') ?? ''
     const response = await fetch(
-      `http://localhost:3000/api/users/find-by-username?username=${username}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/find-by-username?username=${username}`,
       {
         method: 'GET',
         headers: {
@@ -143,11 +146,11 @@ watch(inputName, (newValue) => {
   findUserSuggestions(newValue)
 })
 
-const goToProfile = (username: String | undefined) => {
-  if (username === undefined) {
+const goToProfile = (userId: Number | undefined) => {
+  if (userId === undefined) {
     return
   }
-  router.push(`/profile/${username}`)
+  router.push(`/profile/${userId}`)
 }
 </script>
 <style>

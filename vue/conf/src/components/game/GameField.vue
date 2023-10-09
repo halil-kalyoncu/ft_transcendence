@@ -1,43 +1,53 @@
 <template>
-  <div v-if="!matchResult" class="field" ref="gameField">
-    <div class="left-border"></div>
-    <div class="right-border"></div>
-    <div v-if="countdown === -1" class="waiting">
-      <p>Waiting for opponent... {{ formattedTimer }}</p>
-    </div>
-    <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
-      <p>{{ countdown }}</p>
-    </div>
+  <div v-if="!authorized">You are not authorized to enter this match</div>
+  <div v-else-if="!matchResult">
     <PlayerView
       ref="playerview"
       :playerA="playerAName"
       :playerB="playerBName"
       :playerAScore="playerAScore"
       :playerBScore="playerBScore"
+      :goalsToBeat="goalsToBeat"
     />
-    <GameBall ref="ball" />
-    <GamePaddle ref="paddleA" />
-    <GamePaddle ref="paddleB" />
-    <PowerUp
-      v-for="powerup in PowerUps"
-      :id="powerup.id"
-      :x="powerup.x"
-      :y="powerup.y"
-      :color="powerup.color"
-      :index="powerup.index"
-      :type="powerup.type"
-    />
+    <div class="field" ref="gameField">
+      <div class="left-border"></div>
+      <div class="right-border"></div>
+      <div v-if="countdown === -1" class="waiting">
+        <p>Waiting for opponent... {{ formattedTimer }}</p>
+      </div>
+      <div v-else-if="countdown > 0" class="countdown" ref="cancelTimer">
+        <p>{{ countdown }}</p>
+      </div>
+      <GameBall ref="ball" />
+      <GamePaddle ref="paddleA" />
+      <GamePaddle ref="paddleB" />
+      <PowerUp
+        v-for="powerup in PowerUps"
+        :id="powerup.id"
+        :x="powerup.x"
+        :y="powerup.y"
+        :color="powerup.color"
+        :index="powerup.index"
+        :type="powerup.type"
+      />
+    </div>
   </div>
   <div v-else>
-    <PostGame
-      :playerA="playerAName"
-      :playerB="playerBName"
-      :playerAScore="matchResult.goalsLeftPlayer!"
-      :playerBScore="matchResult.goalsRightPlayer!"
-    />
+    <PostGame :matchResult="matchResult" />
   </div>
   <div class="leave-game">
     <button @click="goHome" class="leave-game-button">Leave Game</button>
+  </div>
+ <div class="controls-legend">
+    <span class="control-item">
+       Move Up&nbsp;<font-awesome-icon class="spacebar-icon" :icon="['fas', 'fa-arrow-up']" />&nbsp;
+    </span>
+    <span class="control-item">
+         Move Down&nbsp;<font-awesome-icon class="spacebar-icon" :icon="['fas', 'fa-arrow-down']" />
+    </span>
+    <span class="control-item">
+      Release Magnet&nbsp;<div class="spacebar-icon">SPACE</div> 
+    </span>
   </div>
   <!-- <form @submit.prevent="connectToWS">
 			<input type="text" v-model="serverIp" placeholder="Enter Server IP"/>
@@ -58,9 +68,13 @@ import jwtDecode from 'jwt-decode'
 import type { UserI } from '../../model/user.interface'
 import { connectChatSocket, connectGameSocket, disconnectGameSocket } from '../../websocket'
 import { useRoute, useRouter } from 'vue-router'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faArrowUp, faArrowDown, faMagnet } from '@fortawesome/free-solid-svg-icons'
 import { useNotificationStore } from '../../stores/notification'
 import type { MatchI } from '../../model/match/match.interface'
 
+library.add(faArrowUp, faArrowDown, faMagnet)
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const notificationStore = useNotificationStore()
 const route = useRoute()
@@ -88,6 +102,7 @@ let playerAName = ref<string>('')
 let playerBName = ref<string>('')
 let playerAScore = ref<number>(0)
 let playerBScore = ref<number>(0)
+let goalsToBeat = ref<number>(0)
 
 let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
@@ -100,6 +115,7 @@ const waitingTime = ref<number>(0)
 const maxWaitingTime = 1 * 60
 
 const matchResult = ref<MatchI | null>(null)
+const authorized = ref<boolean>(true)
 
 const getUserFromAccessToken = () => {
   const decodedToken: Record<string, unknown> = jwtDecode(accessToken)
@@ -168,8 +184,19 @@ const initGameField = async () => {
   fieldWidth.value = gameField.value?.clientWidth || 0
   fieldHeight.value = gameField.value?.clientHeight || 0
   // console.log(fieldWidth.value);
-  await getUserNames()
-  if (!playerAName || playerAName.value === '' || !playerBName || playerBName.value === '') {
+  await getMatchData()
+  if (!authorized.value || matchResult.value) {
+    return
+  }
+
+  if (
+    !playerAName ||
+    playerAName.value === '' ||
+    !playerBName ||
+    playerBName.value === '' ||
+    !goalsToBeat ||
+    goalsToBeat.value === 0
+  ) {
     //TODO what to do if the usernames are not set
     console.log('something went wrong fetching the usernames')
     return
@@ -218,15 +245,11 @@ const cancelTimer = () => {
   }
 }
 
-onMounted(() => {
-  initGameSocket()
-  initChatSocket()
+const setEventListeners = () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification(`Error: Connection problems`, false)
     return
   }
-
-  startTimer()
 
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
     if (playerId === 'left') {
@@ -248,7 +271,7 @@ onMounted(() => {
     const newPowerUp = {
       id: Math.floor(Date.now()),
       x: PowerUp.x,
-      y: PowerUp.y, //Math.floor(Math.random() * ((fieldHeight.value! - 70) - 70 + 1)) + 70,
+      y: PowerUp.y,
       type: 'null',
       index: 0,
       color: 'white',
@@ -327,16 +350,19 @@ onMounted(() => {
     else target = paddleB.value
 
     if (type == 'increasePaddleHeight') {
-      target?.setHgt(400)
+      target?.increaseHgt()
     }
     if (type == 'decreasePaddleHeight') {
-      target?.setHgt(80)
+      target?.decreaseHgt()
     }
     if (type == 'slowBall') {
-      ball.value!.speed = 2
+      if (ball.value!.speed < 3) {
+        ball.value!.speed = 1
+      }
+      ball.value!.speed -= 2
     }
     if (type == 'fastBall') {
-      ball.value!.speed = 9
+      ball.value!.speed += 2
     }
     socket.value?.emit('executePowerUp', { type: type, player: player })
   })
@@ -347,15 +373,25 @@ onMounted(() => {
   })
 
   socket.value.on('resetPaddle', () => {
-    paddleA.value?.setHgt(100)
-    paddleB.value?.setHgt(100)
+    paddleA.value?.resetHgt()
+    paddleB.value?.resetHgt()
   })
-  initGameField()
+}
+
+onMounted(async () => {
+  await initGameField()
+
+  if (!authorized.value || matchResult.value) {
+    return
+  }
+  initGameSocket()
+  initChatSocket()
+  startTimer()
+  setEventListeners()
 })
 
 const handleFinishedMatch = () => {
   if (!chatSocket || !chatSocket.value) {
-    notificationStore.showNotification('Error: Connection problem chat', false)
     return
   }
   chatSocket.value.emit('finishedMatch')
@@ -406,21 +442,52 @@ function update() {
   requestAnimationFrame(update)
 }
 
-async function getUserNames(): Promise<void> {
+async function getMatchData(): Promise<void> {
   try {
-    const response = await fetch(`http://localhost:3000/api/matches/find-by-id?id=${matchId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/matches/find-by-id?id=${matchId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
-    const responseData = await response.json()
     if (response.ok) {
-      playerAName = responseData.leftUser.username
-      playerBName = responseData.rightUser.username
+      const responseText = await response.text()
+      const matchData: MatchI | null = responseText ? JSON.parse(responseText) : null
+      const loggedUser: UserI = getUserFromAccessToken()
+
+      if (!matchData) {
+        authorized.value = false
+        return
+      }
+      if (loggedUser.id !== matchData.leftUserId && loggedUser.id !== matchData.rightUserId) {
+        authorized.value = false
+        return
+      }
+
+      if (
+        matchData.state === 'CREATED' ||
+        matchData.state === 'INVITED' ||
+        matchData.state === 'ACCEPTED'
+      ) {
+        authorized.value = false
+        return
+      } else if (matchData.state !== 'STARTED') {
+        matchResult.value = matchData
+        return
+      }
+
+      playerAName.value = matchData.leftUser?.username as string
+      playerBName.value = matchData.rightUser?.username as string
+      goalsToBeat.value = matchData.goalsToWin as number
     } else {
+      const responseData = await response.json()
       notificationStore.showNotification(
         'Error while fetching the match data' + responseData.message,
         false
@@ -528,4 +595,39 @@ const goHome = () => {
 .leave-game-button:hover {
   background-color: #0056b3;
 }
+
+.controls-legend {
+  display: flex;
+  width: fit-content;
+  justify-content: space-between;
+  gap: .5rem;
+  background-color: rgba(255, 255, 255, 0.1); /* Slightly transparent background */
+  padding: 10px;
+  border-radius: 8px;
+  margin: 1rem auto 0;
+  align-items: center;
+}
+
+.control-item {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.5); /* Semi-transparent white text */
+  margin: 0 10px;
+}
+
+.control-item .legend-icon {
+  margin-right: 5px;
+}
+
+.spacebar-icon {
+  display: inline-block;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 5px;
+}
+
+
 </style>

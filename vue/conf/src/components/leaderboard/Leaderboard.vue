@@ -23,23 +23,37 @@ import { ref, onMounted } from 'vue'
 import type { UserI } from '../../model/user.interface'
 import router from '../../router'
 
+import { useNotificationStore } from '../../stores/notification'
+
+const notificationStore = useNotificationStore()
+
 const players = ref<UserI[] | null>(null)
 
 async function fetchUsers(): Promise<void> {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/get-all-users-by-ladder`, {
+    const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT}/api/users/get-all-users-by-ladder`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+		Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
       }
     })
+
+	const responseData = await response.json()
     if (response.ok) {
-      const playerData = await response.json()
-      players.value = playerData
-      console.log(players.value)
+      players.value = responseData
     }
+	else {
+		notificationStore.showNotification(
+        'Error while fetching users: ' + responseData.message,
+        false
+      )
+	}
   } catch (error) {
-    console.error('Failed to fetch users:', error)
+    notificationStore.showNotification(
+        'Something went wrong while fetching users', false
+      )
   }
 }
 

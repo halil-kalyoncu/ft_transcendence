@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
 import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import type { UserI } from '../../model/user.interface'
@@ -11,7 +11,6 @@ import FriendsModal from './FriendsModal.vue'
 import FriendMessages from '../chat/FriendMessages.vue'
 import FriendManager from './FriendManager.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
@@ -20,7 +19,6 @@ import type { ErrorI } from '../../model/error.interface'
 import type { UnreadMessageI } from '../../model/message/unreadMessage.interface'
 import type { DirectConverstationDto } from '../../model/message/directConversation.dto'
 import router from '../../router'
-library.add(faArrowLeft)
 
 const notificationStore = useNotificationStore()
 
@@ -56,13 +54,18 @@ const updateSelectedFriend = () => {
 
 const fetchUser = async (username: string): Promise<UserI | null> => {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/find?username=${username}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/find?username=${username}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     const responseData = await response.json()
     if (response.ok) {
@@ -78,7 +81,9 @@ const fetchUser = async (username: string): Promise<UserI | null> => {
 const setFriendData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/friendships/get-accepted-friends?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/friendships/get-accepted-friends?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -103,7 +108,9 @@ const setFriendData = async () => {
 const setDirectMessageData = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/directMessages/allUnreadByUserId?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/directMessages/allUnreadByUserId?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -176,6 +183,16 @@ onMounted(async () => {
 
   setFriendData()
   setDirectMessageData()
+})
+
+onBeforeUnmount(() => {
+  if (!socket || !socket.value) {
+    notificationStore.showNotification('Error: Connection problems', false)
+    return
+  }
+
+  socket.value.off('friends')
+  socket.value.off('newDirectMessage')
 })
 
 interface ModalResult {
@@ -407,14 +424,19 @@ const markConversationAsRead = async (withUserId: number) => {
       withUserId: withUserId
     }
 
-    const response = await fetch('http://localhost:3000/api/directMessages/markAsRead', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-      },
-      body: JSON.stringify(directConversationDto)
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/directMessages/markAsRead`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        },
+        body: JSON.stringify(directConversationDto)
+      }
+    )
 
     const responseData = await response.json()
     if (response.ok) {
@@ -447,12 +469,6 @@ const goBack = () => {
 <template>
   <section class="friends">
     <template v-if="!showFriendManagerAndChat">
-      <FriendsModal
-        :isOpened="isModalOpened"
-        :title="modalTitle"
-        @submit="handleSubmit"
-        @close="handleClose"
-      />
       <div class="friendsList">
         <h2
           v-if="friends === undefined || friends?.length === 0"
@@ -460,21 +476,25 @@ const goBack = () => {
         >
           Friend list is empty
         </h2>
-        <ScrollViewer :maxHeight="'68vh'" class="friendsList" :class="'messages-scrollviewer'">
-          <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
-            <FriendsListItem
-              @click="handleFriendManagerOpened(entry)"
-              :status="entry.status!"
-              :blocked="entry.blocked!"
-              :username="entry.friend.username"
-              :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
-              :showActions="false"
-            />
+        <div class="friends-scrollview-container">
+          <ScrollViewer :maxHeight="'68vh'" class="friendsList" :class="'messages-scrollviewer'">
+            <div v-for="entry in friends" :key="entry.id" class="scrollviewer-item">
+              <FriendsListItem
+                @click="handleFriendManagerOpened(entry)"
+                :status="entry.status!"
+                :blocked="entry.blocked!"
+                :username="entry.friend.username"
+                :unreadMessagesAmount="unreadMessageReactive[entry.friend.id!] || 0"
+                :showActions="false"
+              />
+            </div>
+          </ScrollViewer>
+          <div>
+            <button class="add-friend-button" @click="openAddModal">Add Friend</button>
+            <button class="add-friend-button" @click="openBlockModal">Block User</button>
+            <button class="add-friend-button" @click="openUnblockModal">Unblock User</button>
           </div>
-        </ScrollViewer>
-        <button class="add-friend-button" @click="openAddModal">Add Friend</button>
-        <button class="add-friend-button" @click="openBlockModal">Block User</button>
-        <button class="add-friend-button" @click="openUnblockModal">Unblock User</button>
+        </div>
       </div>
 
       <div v-if="showChat" class="chat-container">
@@ -498,6 +518,12 @@ const goBack = () => {
       />
       <FriendMessages :selectedFriendEntry="selectedFriend" />
     </template>
+    <FriendsModal
+      :isOpened="isModalOpened"
+      :title="modalTitle"
+      @submit="handleSubmit"
+      @close="handleClose"
+    />
   </section>
 </template>
 
@@ -506,10 +532,20 @@ const goBack = () => {
   display: flex;
   flex-direction: column;
   height: calc(100% - 50px);
+  position: relative;
   padding: 1rem 0.5rem 1rem 0.5rem;
 }
 
+.friends-scrollview-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+}
+
 .friendsList {
+  min-height: fit-content;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -535,7 +571,7 @@ const goBack = () => {
 .add-friend-button {
   font-family: 'Courier New', Courier, monospace !important;
   display: block;
-  min-width: 90%;
+  min-width: 100%;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
   background: transparent;
@@ -549,7 +585,7 @@ const goBack = () => {
 
 .add-friend-button:hover {
   color: aliceblue;
-  border: 1px solid #ea9f42;
+  border: 0.5px solid #ea9f42;
   font-weight: bold;
 }
 </style>

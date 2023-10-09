@@ -1,8 +1,8 @@
 <template>
   <div class="friend-list-item">
-    <div class="friend-container">
+    <div class="friend-container" @click="goToProfile">
       <font-awesome-icon class="icon" :icon="['fas', 'user']" />
-      <p class="friend-name">{{ username }}</p>
+      <p class="friend-name" :title="username">{{ username }}</p>
       <div class="icon-container">
         <font-awesome-icon
           :icon="['fas', 'envelope']"
@@ -22,8 +22,8 @@
         <button v-if="!blocked" class="action-button-ban" @click="blockUser" title="Block">
           <font-awesome-icon :icon="['fas', 'ban']" />
         </button>
-        <button v-else class="action-button-ban" @click="unblockUser" title="Unblock">
-          <font-awesome-icon :icon="['fas', 'door-open']" />
+        <button v-else class="action-button-unban" @click="unblockUser" title="Unblock">
+          <font-awesome-icon :icon="['fas', 'ban']" />
         </button>
       </div>
       <div
@@ -53,7 +53,8 @@ const props = defineProps({
   status: String,
   blocked: Boolean,
   unreadMessagesAmount: Number,
-  showActions: Boolean
+  showActions: Boolean,
+  userid: Number
 })
 
 const emit = defineEmits(['handle-unfriend', 'handle-block', 'handle-unblock'])
@@ -68,6 +69,12 @@ const blockUser = () => {
 
 const unblockUser = () => {
   emit('handle-unblock')
+}
+
+const goToProfile = () => {
+  if (props.userid) {
+    router.push(`/profile/${props.userid}`)
+  }
 }
 </script>
 
@@ -95,7 +102,10 @@ const unblockUser = () => {
   font-size: 0.8rem;
   color: #ea9f42;
   font-weight: bold;
+  max-width: 120px;
   height: fit-content;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .friend-container .icon {

@@ -7,7 +7,7 @@
             v-if="isValidRequest(request)"
             :username="request.leftUser?.username"
             :requestId="request.id"
-            :targetUserIdId="request.leftUser?.id"
+            :targetUserId="request.leftUser?.id"
             :showAcceptRequest="true"
             :showRejectRequest="true"
             :showBlockUser="false"

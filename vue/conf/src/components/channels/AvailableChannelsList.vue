@@ -14,7 +14,7 @@
           />
         </div>
       </div>
-      <div v-else>
+      <div v-else-if="showEmptyListNotification">
         <p class="friends-empty-notification">Channel list is empty</p>
       </div>
     </ScrollViewer>
@@ -47,11 +47,14 @@ const handleChannelEntered = (channelId: number) => {
 const channelData = ref<ChannelEntryI[]>([])
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)
+const showEmptyListNotification = ref(false)
 
 const setPublicChannels = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/getAllAvaiableChannels?userId=${userId.value}`,
       {
         method: 'GET',
         headers: {
@@ -63,7 +66,9 @@ const setPublicChannels = async () => {
     const responseData = await response.json()
     if (!response.ok) {
       notificationStore.showNotification(responseData.message, false)
+      return
     }
+
     channelData.value = await responseData
   } catch (error) {
     notificationStore.showNotification('Something went Wrong', false)
@@ -101,6 +106,9 @@ onMounted(async () => {
   initSocket()
   await setPublicChannels()
   setChannelListener()
+  setTimeout(() => {
+    showEmptyListNotification.value = true
+  }, 5)
 })
 
 onBeforeUnmount(() => {

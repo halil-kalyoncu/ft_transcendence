@@ -44,9 +44,7 @@
 import ChannelManager from './ChannelManager.vue'
 import ChannelMessages from '../chat/ChannelMessages.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-library.add(faArrowLeft)
 import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
 import { connectChatSocket, disconnectChatSocket } from '../../websocket'
@@ -86,10 +84,6 @@ onMounted(async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems', true)
   }
-})
-
-onBeforeUnmount(() => {
-  disconnectChatSocket()
 })
 
 const userStore = useUserStore()
@@ -185,17 +179,22 @@ const showJoinedChannels = ref(false)
 
 const addUsertoChannel = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/channel/addUserToChannel', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-      },
-      body: JSON.stringify({
-        userId: userId.value,
-        channelId: joinedChannelId.value
-      })
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/addUserToChannel`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        },
+        body: JSON.stringify({
+          userId: userId.value,
+          channelId: joinedChannelId.value
+        })
+      }
+    )
     const responseData = await response.json()
     if (!response.ok) {
       notificationStore.showNotification(responseData.message, false)
@@ -211,7 +210,11 @@ const MarkMessagesAsRead = async () => {
     console.log('call mark messages')
     try {
       const response = await fetch(
-        `http://localhost:3000/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${userId.value}`,
+        `http://${import.meta.env.VITE_IPADDRESS}:${
+          import.meta.env.VITE_BACKENDPORT
+        }/api/channel-message/markChannelMessagesAsRead?channelId=${joinedChannelId.value}&userId=${
+          userId.value
+        }`,
         {
           method: 'PATCH',
           headers: {
@@ -346,7 +349,7 @@ const updateChannelManager = async () => {
 
 .channels .channel-option-button:hover {
   color: aliceblue;
-  border: 1px solid #ea9f42;
+  border: 0.5px solid #ea9f42;
   font-weight: bold;
 }
 

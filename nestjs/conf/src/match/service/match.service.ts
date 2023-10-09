@@ -8,13 +8,15 @@ import {
   Match,
   MatchPowerup,
   MatchState,
+  MatchType,
   Powerup,
   Prisma,
 } from '@prisma/client';
 import { Room } from '../../game/service/room.service';
 import { PowerupService } from '../../powerup/service/powerup.service';
 import { AchievementService } from '../../achievement/service/achievement.service';
-import { WinsLosesDto } from '../dto/wins-loses.dto';
+import { matchOutcomesDto } from '../dto/match-outcomes.dto';
+import { UserService } from '../../user/service/user-service/user.service';
 
 @Injectable()
 export class MatchService {
@@ -22,6 +24,7 @@ export class MatchService {
     private prisma: PrismaService,
     private powerupService: PowerupService,
     private achievementService: AchievementService,
+    private userService: UserService,
   ) {}
 
   async create(newMatch: Prisma.MatchCreateInput): Promise<Match> {
@@ -53,6 +56,18 @@ export class MatchService {
     return await this.prisma.match.findMany({
       where: {
         OR: [{ leftUserId: userid }, { rightUserId: userid }],
+        AND: [
+          {
+            state: {
+              in: [
+                'WINNERLEFT',
+                'WINNERRIGHT',
+                'DISCONNECTLEFT',
+                'DISCONNECTRIGHT',
+              ],
+            },
+          },
+        ],
       },
       orderBy: {
         createdAt: 'desc',
@@ -63,30 +78,44 @@ export class MatchService {
       },
     });
   }
-  async getMatchCountByUserId(userId: number): Promise<WinsLosesDto> {
+
+  async getMatchOutcomesByUserId(userId: number): Promise<matchOutcomesDto> {
     let wins = 0;
-    let loses = 0;
+    let losses = 0;
 
     const matches: Match[] = await this.prisma.match.findMany({
       where: {
         OR: [{ leftUserId: userId }, { rightUserId: userId }],
       },
     });
-    console.log(matches);
     matches.map((match: Match) => {
-      if (match.leftUserId === userId && match.state === 'WINNERLEFT') {
-        wins++;
-      } else if (
-        match.rightUserId === userId &&
-        match.state === 'WINNERRIGHT'
+      if (
+        match.leftUserId === userId &&
+        (match.state === 'WINNERLEFT' || match.state === 'DISCONNECTRIGHT')
       ) {
         wins++;
-      } else {
-        loses++;
+      } else if (
+        match.rightUserId &&
+        match.rightUserId === userId &&
+        (match.state === 'WINNERRIGHT' || match.state === 'DISCONNECTLEFT')
+      ) {
+        wins++;
+      } else if (
+        match.rightUserId &&
+        match.rightUserId === userId &&
+        (match.state === 'WINNERLEFT' || match.state === 'DISCONNECTRIGHT')
+      ) {
+        losses++;
+      } else if (
+        match.leftUserId === userId &&
+        (match.state === 'WINNERRIGHT' || match.state === 'DISCONNECTLEFT')
+      ) {
+        losses++;
       }
     });
-    return { wins: wins, loses: loses };
+    return { wins: wins, losses: losses };
   }
+
   async findAll(): Promise<Match[]> {
     return await this.prisma.match.findMany({
       include: {
@@ -176,6 +205,12 @@ export class MatchService {
   }
 
   async rejectInvite(id: number): Promise<Match | null> {
+    await this.prisma.matchPowerup.deleteMany({
+      where: {
+        matchId: id,
+      },
+    });
+
     return await this.prisma.match.update({
       where: { id },
       data: {
@@ -237,12 +272,12 @@ export class MatchService {
     let flawlessVictory = 0;
     let state: MatchState;
 
-    if (room.leftPlayerGoals === 5) {
+    if (room.leftPlayerGoals === room.goalsToWin) {
       if (room.rightPlayerGoals === 0) {
         flawlessVictory = room.leftPlayerId;
       }
       state = 'WINNERLEFT';
-    } else if (room.rightPlayerGoals === 5) {
+    } else if (room.rightPlayerGoals === room.goalsToWin) {
       if (room.leftPlayerGoals === 0) {
         flawlessVictory = room.rightPlayerId;
       }
@@ -257,6 +292,22 @@ export class MatchService {
   }
 
   async finishMatch(room: Room): Promise<Match | null> {
+    const match = await this.prisma.match.findUnique({
+      where: {
+        id: room.id,
+      },
+    });
+
+    if (
+      !match ||
+      match.state === 'WINNERLEFT' ||
+      match.state === 'WINNERRIGHT' ||
+      match.state === 'DISCONNECTRIGHT' ||
+      match.state === 'DISCONNECTLEFT'
+    ) {
+      return null;
+    }
+
     const { state, flawlessVictory } = this.determineMatchState(room);
 
     const updatedMatch = await this.prisma.match.update({
@@ -274,6 +325,39 @@ export class MatchService {
         rightUser: true,
       },
     });
+
+    if (updatedMatch.type === MatchType.LADDER) {
+      let outcome = 0;
+
+      if (
+        state === MatchState.WINNERLEFT ||
+        state === MatchState.DISCONNECTRIGHT
+      ) {
+        outcome = 1;
+      }
+      const { newLadderLevelLeftPlayer, newLadderLevelRightPlayer } =
+        this.updateRatings(
+          updatedMatch.leftUser.ladderLevel,
+          updatedMatch.rightUser.ladderLevel,
+          outcome,
+        );
+
+      try {
+        await this.userService.updateLadderLevel(
+          updatedMatch.leftUserId,
+          newLadderLevelLeftPlayer,
+        );
+        await this.userService.updateLadderLevel(
+          updatedMatch.rightUserId,
+          newLadderLevelRightPlayer,
+        );
+      } catch (error) {
+        console.log(
+          'Something went wrong updating the ladder Levels of the players of the match ',
+          updatedMatch.id,
+        );
+      }
+    }
 
     await this.achievementService.updateAchievement(
       updatedMatch.leftUserId,
@@ -315,11 +399,11 @@ export class MatchService {
     } else {
       if (room.comeback == 'RIGHT')
         this.achievementService.updateAchievement(
-          updatedMatch.leftUserId,
+          updatedMatch.rightUserId,
           4,
           1,
         );
-      this.achievementService.updateAchievement(updatedMatch.leftUserId, 3, 1);
+      this.achievementService.updateAchievement(updatedMatch.rightUserId, 3, 1);
     }
 
     return updatedMatch;
@@ -350,5 +434,43 @@ export class MatchService {
     }
 
     return powerupNames;
+  }
+
+  private calculateExpectedProbability(
+    ladderLevelLeftPlayer: number,
+    ladderLevelRightPlayer: number,
+  ) {
+    return (
+      1 /
+      (1 + Math.pow(10, (ladderLevelRightPlayer - ladderLevelLeftPlayer) / 400))
+    );
+  }
+
+  private updateRatings(
+    ladderLevelLeftPlayer: number,
+    ladderLevelRightPlayer: number,
+    outcome: number,
+  ) {
+    const K = 50;
+
+    const expectedProbabilityLeftPlayer = this.calculateExpectedProbability(
+      ladderLevelLeftPlayer,
+      ladderLevelRightPlayer,
+    );
+    const expectedProbabilityRightPlayer = 1 - expectedProbabilityLeftPlayer;
+
+    const deltaLeftPlayer = K * (outcome - expectedProbabilityLeftPlayer);
+    const deltaRightPlayer = K * (1 - outcome - expectedProbabilityRightPlayer);
+
+    let newLadderLevelLeftPlayer = ladderLevelLeftPlayer + deltaLeftPlayer;
+    let newLadderLevelRightPlayer = ladderLevelRightPlayer + deltaRightPlayer;
+    if (newLadderLevelLeftPlayer < 0) {
+      newLadderLevelLeftPlayer = 0;
+    }
+    if (newLadderLevelRightPlayer < 0) {
+      newLadderLevelRightPlayer = 0;
+    }
+
+    return { newLadderLevelLeftPlayer, newLadderLevelRightPlayer };
   }
 }

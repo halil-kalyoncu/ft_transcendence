@@ -3,9 +3,16 @@
     <h2 class="page-title">User Settings</h2>
 
     <form @submit.prevent="changeUsername" class="input-group">
-      <label for="username">Username:</label>
-      <input type="text" id="username" placeholder="Enter username" v-model="username" required />
-      <button type="submit">change</button>
+      <div class="username-container">
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter New Username"
+          v-model="username"
+          required
+        />
+        <button><font-awesome-icon :icon="['fa', 'fa-pencil-alt']" /></button>
+      </div>
     </form>
 
     <div class="input-group">
@@ -71,6 +78,8 @@ import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
 import { Socket } from 'socket.io-client'
 import { connectChatSocket } from '../../websocket'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import type { UserI } from '../../model/user.interface'
 import type { ErrorI } from '../../model/error.interface'
 
@@ -99,7 +108,9 @@ const handleAvatarUpload = async () => {
       formData.append('file', uploadedAvatarFile.value)
 
       const response = await fetch(
-        `http://localhost:3000/api/users/avatar?userId=${userId.value}`,
+        `http://${import.meta.env.VITE_IPADDRESS}:${
+          import.meta.env.VITE_BACKENDPORT
+        }/api/users/avatar?userId=${userId.value}`,
         {
           method: 'POST',
           body: formData
@@ -121,12 +132,17 @@ const handleAvatarUpload = async () => {
 
 const deleteAvatar = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/avatar/${userId.value}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/users/avatar/${userId.value}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
-    })
+    )
 
     const responseData = await response.json()
     if (response.ok) {
@@ -145,9 +161,14 @@ const deleteAvatar = async () => {
 
 const generateQRCode = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/2fa/generate?userId=${userId.value}`, {
-      method: 'POST'
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/generate?userId=${userId.value}`,
+      {
+        method: 'POST'
+      }
+    )
     if (!response.ok) {
       throw new Error('Network response was not ok')
     }
@@ -174,16 +195,19 @@ const enable2FA = () => {
 
 const check2FAcode = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/2fa/enable', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: userId.value,
-        code: twoFAcode.value
-      })
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}/api/2fa/enable`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId.value,
+          code: twoFAcode.value
+        })
+      }
+    )
     if (!response.ok) {
       const responseData = await response.json()
       notificationStore.showNotification(responseData.message, false)
@@ -204,9 +228,14 @@ const confirm2FA = () => {
 
 const disable2FA = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/2fa/disable?userId=${userId.value}`, {
-      method: 'POST'
-    })
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/disable?userId=${userId.value}`,
+      {
+        method: 'POST'
+      }
+    )
     if (!response.ok) {
       throw new Error('Network response was not ok')
     } else {
@@ -231,7 +260,9 @@ const confirmDisable2FA = () => {
 const set2FAStatus = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/2fa/twoFAstatus?userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/2fa/twoFAstatus?userId=${userId.value}`,
       {
         method: 'GET'
       }
@@ -296,6 +327,8 @@ onMounted(async () => {
   color: #fff;
   box-sizing: border-box !important;
   background: rgba(0, 0, 0, 0.7);
+  min-height: 650px;
+  min-width: 700px;
 }
 
 .settings-container .username {
@@ -311,8 +344,8 @@ input[type='text'] {
   padding: 0.5rem 1rem;
   margin-left: 0.25rem;
   min-height: 40px;
-  border: none;
-  min-width: 540px;
+  min-width: 492px;
+  margin-right: 8px;
   background-color: transparent;
   border: 1px solid aliceblue;
   opacity: 0.9;
@@ -322,6 +355,7 @@ input[type='text'] {
 
 input[type='text']::placeholder {
   text-align: center;
+  padding-left: 40px;
   color: aliceblue;
   font-size: 15px;
 }
@@ -413,6 +447,25 @@ input[type='file']:focus,
   overflow: hidden;
   pointer-events: none;
   clip: rect(0, 0, 0, 0);
+}
+
+.username-container {
+  display: flex;
+}
+
+.username-container button {
+  width: 40px;
+  background-color: transparent;
+  border: 1px solid aliceblue;
+  opacity: 0.9;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.25s ease;
+}
+
+.username-container button:hover {
+  border: 1px solid #ea9f42;
+  color: #ea9f42;
 }
 
 .disabled {

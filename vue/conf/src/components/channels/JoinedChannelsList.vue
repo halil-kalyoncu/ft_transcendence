@@ -16,7 +16,7 @@
           />
         </div>
       </div>
-      <div v-else>
+      <div v-else-if="showEmptyListNotification">
         <p class="friends-empty-notification">Channel list is empty</p>
       </div>
     </ScrollViewer>
@@ -46,6 +46,8 @@ const unreadMessages = ref([])
 const role = 'all'
 
 const emit = defineEmits(['channel-entered'])
+const showEmptyListNotification = ref(false)
+
 const handleChannelEntered = (channelId: number) => {
   emit('channel-entered', channelId)
 }
@@ -57,7 +59,11 @@ const initSocket = () => {
 const calculateUnreadMessages = async (channelId: number) => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${userId.value}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel-message-read-status/getUnreadStatus?channelId=${channelId}&userId=${
+        userId.value
+      }`,
       {
         method: 'GET',
         headers: {
@@ -82,7 +88,9 @@ const calculateUnreadMessages = async (channelId: number) => {
 const setChannels = async () => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`,
+      `http://${import.meta.env.VITE_IPADDRESS}:${
+        import.meta.env.VITE_BACKENDPORT
+      }/api/channel/getAllChannelsFromUser?userId=${userId.value}&role=${role}`,
       {
         method: 'GET',
         headers: {
@@ -150,6 +158,9 @@ onMounted(async () => {
   await setUnreadMessages()
   initSocket()
   setNewChannelMessageListener()
+  setTimeout(() => {
+    showEmptyListNotification.value = true
+  }, 5)
 })
 
 onBeforeUnmount(() => {

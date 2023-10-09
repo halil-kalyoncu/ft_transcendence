@@ -25,7 +25,9 @@ export type GamePaddleSetup = {
   getPaddleY: () => number
   setY: (newY: number) => void
   setX: (newX: number) => void
-  setHgt: (newhgt: number) => void
+  increaseHgt: () => void
+  decreaseHgt: () => void
+  resetHgt: () => void
   setWid: (newwid: number) => void
   getPaddleWidth: () => number
   getPaddleHeight: () => number
@@ -59,8 +61,24 @@ export default defineComponent({
       x.value = newX
     }
 
-    function setHgt(newhgt: number) {
-      hgt.value = newhgt
+    // function setHgt(newhgt: number) {
+    //   hgt.value = newhgt
+    // }
+
+    function increaseHgt() {
+      if (hgt.value < 400) {
+        hgt.value += 20
+      }
+    }
+
+    function decreaseHgt() {
+      if (hgt.value > 40) {
+        hgt.value -= 20
+      }
+    }
+
+    function resetHgt() {
+      hgt.value = 100
     }
 
     function setWid(newwid: number) {
@@ -88,7 +106,9 @@ export default defineComponent({
       getPaddleY,
       setY,
       setX,
-      setHgt,
+      increaseHgt,
+      decreaseHgt,
+      resetHgt,
       setWid,
       getPaddleWidth,
       getPaddleHeight,

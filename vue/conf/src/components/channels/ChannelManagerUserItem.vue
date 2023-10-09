@@ -29,11 +29,11 @@
           <font-awesome-icon :icon="['fas', 'futbol']" />
         </button>
         <button
-          class="action-button-ban"
+          :class="{ 'action-button-ban': !isUserBanned, 'action-button-unban': isUserBanned }"
           @click="banUnbanUser"
           :title="isUserBanned ? 'Unban' : 'Ban'"
         >
-          <font-awesome-icon :icon="isUserBanned ? ['fas', 'ban'] : ['fas', 'check']" />
+          <font-awesome-icon :icon="['fas', 'ban']" />
         </button>
         <button
           class="action-button-mute"
@@ -99,7 +99,7 @@ watchEffect(() => {
 })
 
 const goToProfile = () => {
-  router.push(`/profile/${props.username}`)
+  router.push(`/profile/${props.targetUserId}`)
 }
 
 const kickUser = async () => {
@@ -364,6 +364,7 @@ onMounted(async () => {
 
 .action-button-kick,
 .action-button-ban,
+.action-button-unban,
 .action-button-mute,
 .action-button-make-admin {
   background: none;
@@ -381,6 +382,11 @@ onMounted(async () => {
 .action-button-ban {
   color: #a83232;
 }
+
+.action-button-unban {
+  color: green;
+}
+
 .action-button-kick {
   color: white;
 }
