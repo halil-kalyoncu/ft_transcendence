@@ -3,7 +3,7 @@
     <form @submit.prevent="submitForm" class="login-form">
       <label for="twoFACode" class="font-color">Code:</label>
       <input type="text" id="twoFACode" v-model="twoFACode" required />
-      <button type="submit" role="link" class="dynamic-button">42 Login</button>
+      <button type="submit" role="link" class="dynamic-button">submit</button>
     </form>
   </div>
 </template>

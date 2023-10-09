@@ -9,14 +9,16 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { TwoFactorAuthService } from '../../service/two-factor-auth/two-factor-auth.service';
 import { Response } from 'express';
 import { TwoFactorAuthCodeDto } from '../../dto/two-factor-auth-code.dto';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { User } from '@prisma/client';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
 
 @ApiTags('Two Factor Authentification (Auth module)')
 @Controller('2fa')
@@ -26,6 +28,8 @@ export class TwoFactorAuthController {
     private readonly userService: UserService,
   ) {}
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Get('twoFAstatus')
   async twoFAstatus(
     @Query('userId', ParseIntPipe) userId: number,
@@ -63,6 +67,8 @@ export class TwoFactorAuthController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Post('generate')
   async generate(
     @Query('userId', ParseIntPipe) userId: number,
@@ -74,6 +80,8 @@ export class TwoFactorAuthController {
     return this.twoFactorAuthService.pipeQRCodeStream(res, otpAuthUrl);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Post('enable')
   async enable(
     @Body() twoFactorAuthCodeDto: TwoFactorAuthCodeDto,
@@ -97,6 +105,8 @@ export class TwoFactorAuthController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Post('disable')
   async disable(@Query('userId', ParseIntPipe) userId: number): Promise<User> {
     try {

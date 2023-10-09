@@ -169,7 +169,10 @@ const generateQRCode = async () => {
         import.meta.env.VITE_BACKENDPORT
       }/api/2fa/generate?userId=${userId.value}`,
       {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
     )
     if (!response.ok) {
@@ -203,7 +206,8 @@ const check2FAcode = async () => {
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
         },
         body: JSON.stringify({
           userId: userId.value,
@@ -236,7 +240,10 @@ const disable2FA = async () => {
         import.meta.env.VITE_BACKENDPORT
       }/api/2fa/disable?userId=${userId.value}`,
       {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
     )
     if (!response.ok) {
@@ -267,7 +274,10 @@ const set2FAStatus = async () => {
         import.meta.env.VITE_BACKENDPORT
       }/api/2fa/twoFAstatus?userId=${userId.value}`,
       {
-        method: 'GET'
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
       }
     )
     if (!response.ok) {
