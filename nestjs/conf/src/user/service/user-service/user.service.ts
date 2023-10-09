@@ -272,7 +272,7 @@ export class UserService {
     return process.env.AVATARPATH + '/' + avatarId;
   }
 
-  async getAllUsers(): Promise<User[]> {
+  async getAllUsersByLadder(): Promise<User[]> {
     return await this.prisma.user.findMany({
       orderBy: {
         ladderLevel: 'desc',

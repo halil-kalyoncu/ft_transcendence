@@ -27,7 +27,7 @@ const players = ref<UserI[] | null>(null)
 
 async function fetchUsers(): Promise<void> {
   try {
-    const response = await fetch(`http://localhost:3000/api/users/get-all-users`, {
+    const response = await fetch(`http://localhost:3000/api/users/get-all-users-by-ladder`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -57,19 +57,20 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 50%;
+  width: 100%;
+  height: calc(100vh - 50.8px);
   margin-top: 20px;
   color: #fff;
   border-radius: 0.25rem;
   padding: 20px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   margin: auto;
+  background: rgba(0, 0, 0, 0.6);
   font-size: 20px;
 }
 
 table {
   border-collapse: collapse;
-  margin: auto;
 }
 
 h1 {
