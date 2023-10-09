@@ -35,7 +35,8 @@ async function getMatchHistory(): Promise<void> {
       {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
         }
       }
     )
@@ -58,7 +59,8 @@ async function getAchievments(): Promise<void> {
       {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
         }
       }
     )
@@ -113,7 +115,8 @@ async function getMatchOutcomes(): Promise<void> {
       {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
         }
       }
     )

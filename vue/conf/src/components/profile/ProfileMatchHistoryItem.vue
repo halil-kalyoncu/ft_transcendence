@@ -107,7 +107,7 @@ const formattedTimestamp = computed(() => formatDate(time ?? null))
 }
 
 .win-disconnect-background {
-  background-color: #99ccff;
+  background-color: #6699cc;
 }
 
 .defeat-background {
@@ -115,7 +115,7 @@ const formattedTimestamp = computed(() => formatDate(time ?? null))
 }
 
 .defeat-disconnect-background {
-  background-color: #ffb3b3;
+  background-color: #ff7f7f;
 }
 
 section {

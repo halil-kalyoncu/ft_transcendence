@@ -5,7 +5,36 @@
   >
     <div class="achievement-wrapper">
       <img
-        :src="`../src/assets/achievement-${achievement.achievement.name}.png`"
+        v-if="achievement.achievement.name === 'total Goals'"
+        :src="achievementTotalGoals"
+        :style="{ background: backgroundColor }"
+        alt="Achievement"
+        class="achievement-image"
+      />
+      <img
+        v-if="achievement.achievement.name === 'flawless Victories'"
+        :src="achievementFlawlessVictories"
+        :style="{ background: backgroundColor }"
+        alt="Achievement"
+        class="achievement-image"
+      />
+      <img
+        v-if="achievement.achievement.name === 'total Wins'"
+        :src="achievementTotalWins"
+        :style="{ background: backgroundColor }"
+        alt="Achievement"
+        class="achievement-image"
+      />
+      <img
+        v-if="achievement.achievement.name === 'Comebacks'"
+        :src="achievementComebacks"
+        :style="{ background: backgroundColor }"
+        alt="Achievement"
+        class="achievement-image"
+      />
+      <img
+        v-if="achievement.achievement.name === 'first Goal'"
+        :src="achievementFirstGoal"
         :style="{ background: backgroundColor }"
         alt="Achievement"
         class="achievement-image"
@@ -42,6 +71,12 @@ import {
   UserAchievementState,
   type UserAchievementI
 } from '../../model/achievement/userAchievement.interface'
+
+import achievementTotalGoals from '@/assets/achievement-total Goals.png'
+import achievementFlawlessVictories from '@/assets/achievement-flawless Victories.png'
+import achievementTotalWins from '@/assets/achievement-total Wins.png'
+import achievementComebacks from '@/assets/achievement-Comebacks.png'
+import achievementFirstGoal from '@/assets/achievement-first Goal.png'
 
 const props = defineProps<{ achievement: UserAchievementI }>()
 

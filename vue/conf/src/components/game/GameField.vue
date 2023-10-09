@@ -38,6 +38,18 @@
   <div class="leave-game">
     <button @click="goHome" class="leave-game-button">Leave Game</button>
   </div>
+  <div class="controls-legend">
+    <span class="control-item">
+      Move Up&nbsp;<font-awesome-icon class="spacebar-icon" :icon="['fas', 'fa-arrow-up']" />&nbsp;
+    </span>
+    <span class="control-item">
+      Move Down&nbsp;<font-awesome-icon class="spacebar-icon" :icon="['fas', 'fa-arrow-down']" />
+    </span>
+    <span class="control-item">
+      Release Magnet&nbsp;
+      <div class="spacebar-icon">SPACE</div>
+    </span>
+  </div>
   <!-- <form @submit.prevent="connectToWS">
 			<input type="text" v-model="serverIp" placeholder="Enter Server IP"/>
 			<button type="submit">Connect</button>
@@ -57,9 +69,13 @@ import jwtDecode from 'jwt-decode'
 import type { UserI } from '../../model/user.interface'
 import { connectChatSocket, connectGameSocket, disconnectGameSocket } from '../../websocket'
 import { useRoute, useRouter } from 'vue-router'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faArrowUp, faArrowDown, faMagnet } from '@fortawesome/free-solid-svg-icons'
 import { useNotificationStore } from '../../stores/notification'
 import type { MatchI } from '../../model/match/match.interface'
 
+library.add(faArrowUp, faArrowDown, faMagnet)
 const accessToken = localStorage.getItem('ponggame') ?? ''
 const notificationStore = useNotificationStore()
 const route = useRoute()
@@ -579,5 +595,38 @@ const goHome = () => {
 
 .leave-game-button:hover {
   background-color: #0056b3;
+}
+
+.controls-legend {
+  display: flex;
+  width: fit-content;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.1); /* Slightly transparent background */
+  padding: 10px;
+  border-radius: 8px;
+  margin: 1rem auto 0;
+  align-items: center;
+}
+
+.control-item {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.5); /* Semi-transparent white text */
+  margin: 0 10px;
+}
+
+.control-item .legend-icon {
+  margin-right: 5px;
+}
+
+.spacebar-icon {
+  display: inline-block;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 5px;
 }
 </style>

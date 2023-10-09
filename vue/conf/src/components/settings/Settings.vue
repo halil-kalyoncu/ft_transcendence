@@ -113,6 +113,9 @@ const handleAvatarUpload = async () => {
         }/api/users/avatar?userId=${userId.value}`,
         {
           method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+          },
           body: formData
         }
       )

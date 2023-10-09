@@ -231,6 +231,22 @@ const router = createRouter({
           component: () => import('../views/NotFound.vue') //lazy load
         }
       ]
+    },
+    {
+      path: '/leaderboard',
+      component: MainLayout,
+      children: [
+        {
+          path: '',
+          name: 'leaderboard',
+          component: () => import('../views/LeaderboardView.vue') //lazy load
+        }
+      ],
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ): void => jwtGuard(to, from, next)
     }
   ]
 })

@@ -88,8 +88,4 @@ export class AchievementService {
       },
     });
   }
-
-  async getAchievements(): Promise<Achievement[]> {
-    return await this.prisma.achievement.findMany();
-  }
 }

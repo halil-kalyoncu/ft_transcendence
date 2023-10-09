@@ -324,9 +324,15 @@ export class UserController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Upload user avatar' })
   @ApiResponse({ status: 200, description: 'Successful upload of user avatar' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
   @ApiResponse({ status: 500, description: 'Server error' })
+  @ApiBearerAuth('access-token')
   @Post('avatar')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -443,6 +449,31 @@ export class UserController {
         throw error;
       }
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Find users sorted by Ladderscore' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful retrieval of users sorted by Ladderscore',
+    type: PrismaModel.User,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized, access token is invalid',
+  })
+  @ApiResponse({ status: 500, description: 'Server error' })
+  @ApiBearerAuth('access-token')
+  @Get('get-all-users-by-ladder')
+  async getAllUsersByLadder(): Promise<User[]> {
+    try {
+      return await this.userService.getAllUsersByLadder();
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

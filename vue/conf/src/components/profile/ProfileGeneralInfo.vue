@@ -159,10 +159,10 @@ onMounted(async () => {
 }
 
 .stat-wins {
-  color: green;
+  color: #007bff;
 }
 
 .stat-losses {
-  color: #e2411f;
+  color: #dc3545;
 }
 </style>
