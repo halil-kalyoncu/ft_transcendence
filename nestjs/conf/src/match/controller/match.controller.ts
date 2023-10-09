@@ -84,14 +84,17 @@ export class MatchController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Get('find-matches-by-user')
   async findMatchByUser(
     @Query('userid', ParseIntPipe) userid: number,
   ): Promise<Match[] | null> {
     return await this.matchService.findMatchByUser(userid);
-    // return await this.matchService.findMatchByUser();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Get('match-outcomes')
   async getMatchOutcomes(
     @Query('userId', ParseIntPipe) userId: number,
