@@ -232,8 +232,8 @@ const router = createRouter({
       children: [
         {
           path: '',
-          name: 'queue',
-          component: () => import('../views/Leaderboard.vue') //lazy load
+          name: 'leaderboard',
+          component: () => import('../views/LeaderboardView.vue') //lazy load
         }
       ],
       beforeEnter: (
