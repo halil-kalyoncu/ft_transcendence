@@ -20,25 +20,27 @@ onMounted(async () => {
 
     localStorage.setItem('ponggame', decodeParamToken)
 
-	const response = await fetch(`http://${import.meta.env.VITE_IPADDRESS}:${
+    const response = await fetch(
+      `http://${import.meta.env.VITE_IPADDRESS}:${
         import.meta.env.VITE_BACKENDPORT
-      }/api/auth/verify`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-          	Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
-		}
-	  })
+      }/api/auth/verify`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('ponggame') ?? ''}`
+        }
+      }
+    )
 
-	if (response.ok) {
-		await userStore.initStore()
-    	connectChatSocket(decodeParamToken)
-    	router.push('/home')
-	}
-	else {
-		notificationStore.showNotification('Redirection failed: invalid token', false)
-		router.push('/')
-	}
+    if (response.ok) {
+      await userStore.initStore()
+      connectChatSocket(decodeParamToken)
+      router.push('/home')
+    } else {
+      notificationStore.showNotification('Redirection failed: invalid token', false)
+      router.push('/')
+    }
   } catch (error) {
     notificationStore.showNotification('Redirection failed: invalid token', false)
     router.push('/')
@@ -47,22 +49,19 @@ onMounted(async () => {
 </script>
 
 <template>
-<div class="login">
+  <div class="login">
     <div class="waiting-container">
       <Spinner />
       <span>redirecting...</span>
     </div>
-</div>
-
+  </div>
 </template>
 
 <style>
-
 .waiting-container {
   margin: 10% 0 0 22.5%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 </style>

@@ -127,7 +127,7 @@ const submitForm = async () => {
 }
 
 onMounted(async () => {
-    await fetchCanBeRegistered()
+  await fetchCanBeRegistered()
 })
 </script>
 
@@ -274,6 +274,4 @@ onMounted(async () => {
   pointer-events: none;
   clip: rect(0, 0, 0, 0);
 }
-
-
 </style>
