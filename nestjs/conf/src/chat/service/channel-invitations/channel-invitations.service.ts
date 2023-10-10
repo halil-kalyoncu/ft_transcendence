@@ -107,7 +107,7 @@ export class ChannelInvitationsService {
     });
 
     if (!invitation) {
-      throw new Error(
+      throw new NotFoundException(
         `User with id ${userId} has no invitation to channel with id ${channelId}`,
       );
     }
@@ -138,7 +138,7 @@ export class ChannelInvitationsService {
     });
 
     if (!invitation) {
-      throw new Error(
+      throw new NotFoundException(
         `User with id ${userId} has no invitation to channel with id ${channelId}`,
       );
     }

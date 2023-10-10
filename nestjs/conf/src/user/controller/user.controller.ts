@@ -48,7 +48,6 @@ export class UserController {
     private userHelperService: UserHelperService,
   ) {}
 
-
   @ApiOperation({ summary: 'Login' })
   @ApiResponse({
     status: 201,

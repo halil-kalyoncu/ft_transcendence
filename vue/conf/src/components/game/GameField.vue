@@ -331,7 +331,7 @@ const setEventListeners = () => {
 
   socket.value.on('gameFinished', (match: MatchI) => {
     //show post game screen
-	cancelTimer()
+    cancelTimer()
     matchResult.value = match
   })
 

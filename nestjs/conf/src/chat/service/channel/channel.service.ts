@@ -771,8 +771,8 @@ export class ChannelService {
   }
 
   async findByUserId(userId: number): Promise<Channel[]> {
-	return await this.prisma.channel.findMany({
-	  where: { members: { some: { userId: userId } } },
-	});
+    return await this.prisma.channel.findMany({
+      where: { members: { some: { userId: userId } } },
+    });
   }
 }

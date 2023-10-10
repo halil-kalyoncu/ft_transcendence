@@ -90,7 +90,7 @@ export class ChannelInvitationsController {
     try {
       const user = await this.userService.findByUsername(inviteeName);
       if (!user) {
-        throw new Error('User not found');
+        throw new NotFoundException('User not found');
       }
       const inviteeId = user.id;
       return await this.channelInvitationsService.inviteUserToChannel(
