@@ -2,21 +2,21 @@
   <div class="leaderboardView">
     <h1>Leaderboard</h1>
     <ScrollViewer :maxHeight="'1000vh'" :paddingRight="'.5rem'">
-	<table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th class="ladder-score">Score</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(player, index) in players" :key="index" @click="openProfile(player.id ?? 0)">
-          <td>{{ player.username }}</td>
-          <td class="ladder-score">{{ player.ladderLevel }}</td>
-        </tr>
-      </tbody>
-    </table>
-</ScrollViewer>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th class="ladder-score">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(player, index) in players" :key="index" @click="openProfile(player.id ?? 0)">
+            <td>{{ player.username }}</td>
+            <td class="ladder-score">{{ player.ladderLevel }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </ScrollViewer>
   </div>
 </template>
 
