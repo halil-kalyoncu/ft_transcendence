@@ -149,7 +149,6 @@ const submit = async () => {
   for (const inviteeUsername of selectedUsers.value) {
     error_occured = await inviteUser(channelId, inviteeUsername, userId.value)
     if (error_occured) {
-      console.log('error occured')
       continue
     }
     await sendSubmitEvent(inviteeUsername)

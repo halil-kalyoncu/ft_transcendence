@@ -830,7 +830,6 @@ export class ChatGateway
    *** ChannelInvitations ***
    ***********************/
 
-  //TODO CHECK THIS FUNCTION! DOESNT UPDATE THE LISTENERS
   @SubscribeMessage('acceptChannelInvitation')
   async handleAcceptChannelInvitation(
     @ConnectedSocket() socket: Socket,
@@ -1369,9 +1368,10 @@ export class ChatGateway
         socket.data.user.id,
         newUsername,
       );
-      //TODO send events that need updating after username is changed
       socket.emit('friends');
-      this.updateFriendsOf(updatedUser.id);
+      socket.emit('newDirectMessage');
+      this.updateChangeUserNameFriends(updatedUser.id);
+      this.updateChannels(updatedUser.id);
       return updatedUser;
     } catch (error) {
       return { error: error.message as string };
@@ -1435,6 +1435,44 @@ export class ChatGateway
     const errors = await validate(dto);
     if (errors.length > 0) {
       throw new BadRequestException(errors);
+    }
+  }
+
+  private async updateChannels(userId: number): Promise<void> {
+    const channels: Channel[] = await this.channelService.findByUserId(userId);
+    for (const channel of channels) {
+      const members: User[] = await this.channelService.getMembers(channel.id);
+      for (const member of members) {
+        const memberOnline: ConnectedUser =
+          await this.connectedUserService.findByUserId(member.id);
+        if (memberOnline) {
+          this.server
+            .to(memberOnline.socketId)
+            .emit('UserSignedOut', channel.id);
+          this.server
+            .to(memberOnline.socketId)
+            .emit('NewChannelInvitation', channel.id);
+		  this.server
+		  .to(memberOnline.socketId)
+		  .emit("ChannelDestroy")
+        }
+      }
+    }
+  }
+
+  private async updateChangeUserNameFriends(
+    aboutClientId: number,
+  ): Promise<void> {
+    const friends: FriendshipDto[] = await this.friendshipService.getFriends(
+      aboutClientId,
+    );
+    for (const friendEntry of friends) {
+      const friendOnline: ConnectedUser =
+        await this.connectedUserService.findByUser(friendEntry.friend);
+      if (friendOnline) {
+        this.server.to(friendOnline.socketId).emit('friends');
+        this.server.to(friendOnline.socketId).emit('newDirectMessage');
+      }
     }
   }
 }

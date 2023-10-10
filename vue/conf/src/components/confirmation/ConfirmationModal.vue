@@ -30,7 +30,6 @@ const cancel = () => {
 </script>
 
 <style scoped>
-/* TODO: Style the box */
 .modal-overlay {
   position: fixed;
   top: 0;
