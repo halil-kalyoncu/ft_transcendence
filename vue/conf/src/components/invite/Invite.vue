@@ -303,10 +303,10 @@ const handleReloadComponent = watch(
   async (newMatchId) => {
     if (newMatchId) {
       matchId = newMatchId as string
-	  await setupComponent()
-  		if (!authorized.value) {
-    		router.push('/home')
-  		}
+      await setupComponent()
+      if (!authorized.value) {
+        router.push('/home')
+      }
     }
   }
 )

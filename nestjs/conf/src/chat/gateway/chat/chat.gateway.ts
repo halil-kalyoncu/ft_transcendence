@@ -1092,10 +1092,13 @@ export class ChatGateway
         throw new Error("Cannot invite user because user doesn't exists");
       }
 
-	  const invitedMatch: Match = await this.matchService.checkAlreadyInvited(socket.data.user.id, againstUserId);
-	  if (invitedMatch) {
-		throw new Error("Already sent a game invite");
-		}
+      const invitedMatch: Match = await this.matchService.checkAlreadyInvited(
+        socket.data.user.id,
+        againstUserId,
+      );
+      if (invitedMatch) {
+        throw new Error('Already sent a game invite');
+      }
 
       const receiverOnline: ConnectedUser =
         await this.connectedUserService.findByUserId(againstUserId);
@@ -1457,9 +1460,7 @@ export class ChatGateway
           this.server
             .to(memberOnline.socketId)
             .emit('NewChannelInvitation', channel.id);
-		  this.server
-		  .to(memberOnline.socketId)
-		  .emit("ChannelDestroy")
+          this.server.to(memberOnline.socketId).emit('ChannelDestroy');
         }
       }
     }
