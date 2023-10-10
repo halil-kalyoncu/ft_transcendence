@@ -331,14 +331,13 @@ const setEventListeners = () => {
 
   socket.value.on('gameFinished', (match: MatchI) => {
     //show post game screen
+	cancelTimer()
     matchResult.value = match
   })
 
   socket.value.on('countdown', (payload: number) => {
     countdown.value = payload
-    if (timerId) {
-      cancelTimer()
-    }
+    cancelTimer()
   })
 
   socket.value.on('startGame', () => {
