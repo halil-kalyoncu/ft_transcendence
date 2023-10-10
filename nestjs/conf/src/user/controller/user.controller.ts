@@ -48,7 +48,7 @@ export class UserController {
     private userHelperService: UserHelperService,
   ) {}
 
-  //TODO remove this function, when 42 login works
+
   @ApiOperation({ summary: 'Login' })
   @ApiResponse({
     status: 201,

@@ -830,7 +830,6 @@ export class ChatGateway
    *** ChannelInvitations ***
    ***********************/
 
-  //TODO CHECK THIS FUNCTION! DOESNT UPDATE THE LISTENERS
   @SubscribeMessage('acceptChannelInvitation')
   async handleAcceptChannelInvitation(
     @ConnectedSocket() socket: Socket,
@@ -1372,6 +1371,7 @@ export class ChatGateway
       //TODO send events that need updating after username is changed
       socket.emit('friends');
       this.updateFriendsOf(updatedUser.id);
+	  this.updateChannels(updatedUser.id);
       return updatedUser;
     } catch (error) {
       return { error: error.message as string };
@@ -1436,5 +1436,21 @@ export class ChatGateway
     if (errors.length > 0) {
       throw new BadRequestException(errors);
     }
+  }
+
+  private async updateChannels(userId: number): Promise<void> {
+	const channels: Channel[] = await this.channelService.findByUserId(userId);
+	for (const channel of channels) {
+	  const members: User[] = await this.channelService.getMembers(channel.id);
+	  for (const member of members) {
+		const memberOnline: ConnectedUser =
+		  await this.connectedUserService.findByUserId(member.id);
+		if (memberOnline) {
+		  this.server
+			.to(memberOnline.socketId)
+			.emit('UserSignedIn', channel.id);
+		}
+	  }
+	}
   }
 }

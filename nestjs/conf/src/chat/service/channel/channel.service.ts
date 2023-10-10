@@ -769,4 +769,10 @@ export class ChannelService {
     }
     return membersToUnmute;
   }
+
+  async findByUserId(userId: number): Promise<Channel[]> {
+	return await this.prisma.channel.findMany({
+	  where: { members: { some: { userId: userId } } },
+	});
+  }
 }

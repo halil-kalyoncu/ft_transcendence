@@ -543,7 +543,6 @@ input[type='file']:focus,
   margin-bottom: 1rem;
   max-width: 100%;
 }
-/* TODO: Make this responsive  */
 .qr-code-container .qrcode {
   flex-grow: 1;
   max-width: 100%;
