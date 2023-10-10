@@ -419,6 +419,9 @@ export class EventsGateway {
         countdown--;
       } else {
         clearInterval(countdownInterval);
+        if (room.leftPlayerDisconnect || room.rightPlayerDisconnect) {
+          return;
+        }
         room.gameIsRunning = true;
         this.server.to(room.socketIds[0]).emit('startGame');
         this.server.to(room.socketIds[1]).emit('startGame');
