@@ -158,7 +158,9 @@ export class MatchService {
       return null;
     } else if (match.leftUserId == invitedUserId) {
       throw new BadRequestException("Can't invite yourself to a match");
-    }
+    } else if (match.state === 'INVITED') {
+		throw new BadRequestException("Already sent a game invite");
+	}
 
     const matchPowerups = await Promise.all(
       powerups.map(async (powerup) => {
@@ -434,6 +436,16 @@ export class MatchService {
     }
 
     return powerupNames;
+  }
+
+  async checkAlreadyInvited(leftUserId: number, rightUserId: number): Promise<Match | null> {
+	return this.prisma.match.findFirst({
+		where: {
+			leftUserId,
+			rightUserId,
+			state: 'INVITED'
+		}
+	});
   }
 
   private calculateExpectedProbability(
