@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       context: ./nestjs
       # Only build development stage from Dockerfile
-      target: development
+      target: production
     # Mount our host dir to the docker container
     # Mount api directory (./api) to (:) docker container (/pong_game/src/app)
     # Reflect File changes from host to container
@@ -15,7 +15,7 @@ services:
       - /pong_game/src/app/node_modules/
     # RUN in debug mode: npm run start:debug -> Also start your vscode debugger
     # RUN in dev mode: npm run start:dev
-    command: npm run start:debug
+    command: npm run start:prod
     depends_on:
       - postgres
     env_file:
@@ -34,7 +34,7 @@ services:
     volumes:
       - ./vue/conf:/pong_game/frontend/src/app
       - /pong_game/frontend/src/app/node_modules/
-    command: npm run dev
+    command: npm run preview
     env_file:
       - .env
     restart: unless-stopped
