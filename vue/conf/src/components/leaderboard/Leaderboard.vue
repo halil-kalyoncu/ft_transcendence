@@ -1,7 +1,8 @@
 <template>
   <div class="leaderboardView">
     <h1>Leaderboard</h1>
-    <table>
+    <ScrollViewer :maxHeight="'1000vh'" :paddingRight="'.5rem'">
+	<table>
       <thead>
         <tr>
           <th>Name</th>
@@ -15,6 +16,7 @@
         </tr>
       </tbody>
     </table>
+</ScrollViewer>
   </div>
 </template>
 
@@ -22,6 +24,7 @@
 import { ref, onMounted } from 'vue'
 import type { UserI } from '../../model/user.interface'
 import router from '../../router'
+import ScrollViewer from '../utils/ScrollViewer.vue'
 
 import { useNotificationStore } from '../../stores/notification'
 
@@ -82,6 +85,8 @@ onMounted(() => {
   margin: auto;
   background: rgba(0, 0, 0, 0.6);
   font-size: 20px;
+  min-height: 650px;
+  min-width: 700px;
 }
 
 table {

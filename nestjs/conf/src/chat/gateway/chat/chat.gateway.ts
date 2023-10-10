@@ -1452,6 +1452,9 @@ export class ChatGateway
           this.server
             .to(memberOnline.socketId)
             .emit('NewChannelInvitation', channel.id);
+		  this.server
+		  .to(memberOnline.socketId)
+		  .emit("ChannelDestroy")
         }
       }
     }
