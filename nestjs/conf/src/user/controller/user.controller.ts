@@ -36,7 +36,6 @@ import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import { Response } from 'express';
-import { PrismaModel } from '../../_gen/prisma-class/index';
 import { ChannelInviteeUserDto } from '../../chat/dto/channelInvitation.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 
@@ -88,7 +87,6 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of users',
-    type: PrismaModel.User,
     isArray: true,
   })
   @ApiResponse({
@@ -114,7 +112,6 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of user by id',
-    type: PrismaModel.User,
   })
   @ApiResponse({
     status: 401,
@@ -139,7 +136,6 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of user by username',
-    type: PrismaModel.User,
   })
   @ApiResponse({
     status: 401,
@@ -164,7 +160,6 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of users that have a similar username',
-    type: PrismaModel.User,
     isArray: true,
   })
   @ApiResponse({
@@ -195,7 +190,6 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of users that are not in a channel',
-    type: PrismaModel.User,
     isArray: true,
   })
   @ApiResponse({
@@ -350,7 +344,6 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of users sorted by Ladderscore',
-    type: PrismaModel.User,
   })
   @ApiResponse({
     status: 401,

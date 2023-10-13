@@ -52,7 +52,6 @@ import { ErrorDto } from '../../../chat/dto/error.dto';
 import { MatchmakingService } from '../../../matchmaking/service/matchmaking.service';
 import { PowerupService } from '../../../powerup/service/powerup.service';
 import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
-import { ChannelInvitation } from 'src/_gen/prisma-class/channel_invitation';
 import { validate } from 'class-validator';
 import {
   GotChannelInvitationDto,
@@ -831,7 +830,7 @@ export class ChatGateway
   async handleAcceptChannelInvitation(
     @ConnectedSocket() socket: Socket,
     @MessageBody() invitationId: number,
-  ): Promise<ChannelInvitation | ErrorDto> {
+  ): Promise<any | ErrorDto> {
     try {
       this.checkNumberInput(invitationId, 'Invalid invitation id');
 
@@ -870,7 +869,7 @@ export class ChatGateway
   async handleRejectChannelInvitation(
     @ConnectedSocket() socket: Socket,
     @MessageBody() invitationId: number,
-  ): Promise<ChannelInvitation | ErrorDto> {
+  ): Promise<any | ErrorDto> {
     try {
       this.checkNumberInput(invitationId, 'Invalid invitation id');
 
@@ -913,6 +912,7 @@ export class ChatGateway
       const inviteeOnline = await this.connectedUserService.findByUserId(
         invitee.id,
       );
+
       if (inviteeOnline) {
         socket
           .to(inviteeOnline.socketId)
@@ -921,6 +921,7 @@ export class ChatGateway
           .to(inviteeOnline.socketId)
           .emit('NewChannelInvitationBell', inviteeUsername);
       }
+	
       const ChannelMembers = await this.channelService.getMembers(channelId);
       for (const member of ChannelMembers) {
         const memberOnline: ConnectedUser =
@@ -929,9 +930,6 @@ export class ChatGateway
           socket
             .to(memberOnline.socketId)
             .emit('NewChannelInvitation', inviteeUsername);
-          socket
-            .to(inviteeOnline.socketId)
-            .emit('NewChannelInvitationBell', inviteeUsername);
         }
       }
       return invitee;

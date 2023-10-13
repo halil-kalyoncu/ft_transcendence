@@ -12,11 +12,9 @@ import {
   ChannelInvitationStatus,
   Achievement,
 } from '@prisma/client';
-import { DirectMessageService } from '../../../chat/service/direct-message/direct-message.service';
 import { ChannelInviteeUserDto } from '../../../chat/dto/channelInvitation.dto';
 import * as fs from 'fs';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
-import { UserAchievements } from 'src/_gen/prisma-class/user_achievements';
 
 @Injectable()
 export class UserService {
