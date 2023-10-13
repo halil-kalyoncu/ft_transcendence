@@ -19,8 +19,6 @@ export const useFriendRequestStore = defineStore('friendRequest', {
       const index = this.friendRequests.findIndex((request) => request.id === requestId)
       if (index !== -1) {
         this.friendRequests.splice(index, 1)
-      } else {
-        console.log(`Friend request with ID ${requestId} not found.`)
       }
     }
   }

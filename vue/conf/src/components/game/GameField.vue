@@ -291,7 +291,6 @@ const setEventListeners = () => {
     }
 
     socket.value?.emit('spawnPowerUp', newPowerUp)
-    console.log('PU spawn local')
     PowerUps.value?.push(newPowerUp)
   })
 
@@ -313,7 +312,6 @@ const setEventListeners = () => {
     if (index != -1) {
       PowerUps.value?.splice(index, 1)
       socket.value.emit('removePowerUp', id)
-      console.log('PU removed')
     }
   })
 

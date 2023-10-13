@@ -205,7 +205,6 @@ const addUsertoChannel = async () => {
 
 const MarkMessagesAsRead = async () => {
   if (joinedChannelId.value !== 0) {
-    console.log('call mark messages')
     try {
       const response = await fetch(
         `http://${import.meta.env.VITE_IPADDRESS}:${

@@ -94,7 +94,6 @@ const setChannelInvitations = async () => {
 }
 
 const updateRequests = async (invitationId: number) => {
-  console.log('updateRequests fired')
   await setChannelInvitations()
 }
 
@@ -108,7 +107,6 @@ const setInvitationListener = () => {
       return
     }
     notificationStore.showNotification('New Channel Invitation', true)
-    console.log('newChannelInvitation fired from ChannelsInvitations.vue')
     setChannelInvitations()
   })
 }

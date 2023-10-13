@@ -87,8 +87,6 @@ const setLadderLevel = async (playerId: number) => {
     )
 
     const responseData = await response.json()
-    console.log('setLadderLevel')
-    console.log(props.matchResult!)
     if (response.ok) {
       if (playerId === props.matchResult?.leftUserId) {
         leftPlayerLadder.value = responseData.ladderLevel

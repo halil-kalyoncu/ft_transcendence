@@ -688,8 +688,6 @@ export class ChatGateway
             channelMember.userId,
           );
           if (onlineMember) {
-            console.log('memberUnMuted');
-            console.log(onlineMember);
             socket.to(onlineMember.socketId).emit('memberUnMuted', member);
           }
         }

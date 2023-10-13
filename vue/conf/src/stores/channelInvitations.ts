@@ -21,9 +21,6 @@ export const useChannelInvitationsStore = defineStore('channelInvitations', {
       )
       if (index !== -1) {
         this.channelInvitations.splice(index, 1)
-        console.log('ChannelInvitation with id ' + channelInvitationId + ' removed')
-      } else {
-        console.log('ChannelInvitation with id ' + channelInvitationId + ' not found')
       }
     }
   }
