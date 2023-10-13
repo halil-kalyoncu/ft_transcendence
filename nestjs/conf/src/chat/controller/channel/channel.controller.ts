@@ -218,27 +218,6 @@ export class ChannelController {
     }
   }
 
-  //Patch Functions to change existing Channel properties
-
-  @Patch('addUserToChannel')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token')
-  async addUserToChannel(
-    @Body() ChannelMembershipDto: ChannelMembershipDto,
-  ): Promise<ChannelMember> {
-    try {
-      return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
   @Patch('MakeUserAdmin')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')

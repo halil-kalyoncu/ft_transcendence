@@ -321,6 +321,16 @@ export class UserService {
       );
     }
 
+    if (!/[a-zA-Z]/.test(newUsername)) {
+      throw new BadRequestException(
+        'Username must contain at least one alphabetic character',
+      );
+    }
+
+    if (/\s/.test(newUsername)) {
+      throw new BadRequestException('Username cannot contain spaces');
+    }
+
     user = await this.findByUsername(newUsername);
     if (user && userId === user.id) {
       throw new BadRequestException(

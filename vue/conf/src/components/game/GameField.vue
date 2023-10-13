@@ -311,7 +311,7 @@ const setEventListeners = () => {
     let index = PowerUps.value?.findIndex((powerup) => powerup.id == id)
     if (index != -1) {
       PowerUps.value?.splice(index, 1)
-      socket.value.emit('removePowerUp', id)
+      //   socket.value.emit('removePowerUp', id)
     }
   })
 
@@ -349,7 +349,10 @@ const setEventListeners = () => {
     if (type == 'fastBall') {
       ball.value!.speed += 2
     }
-    socket.value?.emit('executePowerUp', { type: type, player: player })
+
+    if (side.value! == 'left') {
+      socket.value?.emit('executePowerUp', { type: type, player: player })
+    }
   })
 
   socket.value.on('scoreGoal', (payload: string) => {
