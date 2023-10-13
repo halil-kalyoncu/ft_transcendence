@@ -131,12 +131,10 @@ const setNewChannelMessageListener = () => {
     return
   }
   socket.value.on('newChannelMessage', () => {
-    console.log('newChannelMessage fired from JoinedChannelsList.vue to update unread messages')
     setUnreadMessages()
     return
   })
   socket.value.on('ChannelDestroy', (channelName: string) => {
-    console.log('ChannelDestroy fired from JoinedChannelsList.vue')
     setChannels()
     return
   })

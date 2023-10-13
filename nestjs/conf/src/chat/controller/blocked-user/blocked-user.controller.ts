@@ -17,7 +17,6 @@ import {
 } from '@nestjs/swagger';
 import { BlockedUser } from '@prisma/client';
 import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
-import { PrismaModel } from '../../../_gen/prisma-class';
 
 @ApiTags('Blocked Users (Chat module)')
 @Controller('blockedUsers')
@@ -29,7 +28,6 @@ export class BlockedUserController {
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of blocked list',
-    type: PrismaModel.BlockedUser,
     isArray: true,
   })
   @ApiResponse({

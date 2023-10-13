@@ -203,14 +203,12 @@ const setBannedFromChannelListener = () => {
     return
   }
   socket.value.on('memberBanned', () => {
-    console.log('memberBanned fired from JoinedChannelsList.vue')
     setUserBanned()
     return
   })
   socket.value.on(
     'memberUnBanned',
     (unBannedUserName: string, unBanChannelId: number, unBanChannelName: string) => {
-      console.log('memberUnBanned fired from JoinedChannelsList.vue')
       if (unBannedUserName === username.value) {
         notificationStore.showNotification(
           'You got unbanned from Channel: ' + unBanChannelName,

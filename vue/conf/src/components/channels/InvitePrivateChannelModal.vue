@@ -253,8 +253,6 @@ watch(inputName, (newValue) => {
 })
 
 const goToProfile = (userId: number | undefined) => {
-  console.log('u9')
-
   if (userId === undefined) {
     return
   }

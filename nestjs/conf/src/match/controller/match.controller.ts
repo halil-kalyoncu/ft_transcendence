@@ -18,7 +18,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { PrismaModel } from '../../_gen/prisma-class/index';
 import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 import { matchOutcomesDto } from '../dto/match-outcomes.dto';
 
@@ -32,7 +31,6 @@ export class MatchController {
   @ApiResponse({
     status: 201,
     description: 'Successful creation of match',
-    type: PrismaModel.Match,
   })
   @ApiResponse({
     status: 401,
@@ -63,7 +61,6 @@ export class MatchController {
   @ApiResponse({
     status: 201,
     description: 'Successful retrieval of match, null if id is not found',
-    type: PrismaModel.Match,
   })
   @ApiResponse({
     status: 401,
@@ -111,7 +108,6 @@ export class MatchController {
   @ApiResponse({
     status: 201,
     description: 'Successful retrieval of matches',
-    type: PrismaModel.Match,
   })
   @ApiResponse({
     status: 401,

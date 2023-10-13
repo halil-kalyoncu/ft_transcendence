@@ -234,7 +234,6 @@ const setUserSignedListener = async () => {
   }
 
   socket.value.on('UserSignedOut', (userSignedOutName: string, channelIdSignOut: number) => {
-    console.log('UserSignedOut from ChannelManager fired')
     setMembers().then(() => {
       setCurrentUserRole()
     })
@@ -247,7 +246,6 @@ const setUserSignedListener = async () => {
   })
 
   socket.value.on('UserSignedIn', (userSignedInName: string, channelSignIn: number) => {
-    console.log('UserSignedIn fired')
     if (channelSignIn === channelId) {
       notificationStore.showNotification(userSignedInName + ' signed in Channel', true)
     }
@@ -259,8 +257,6 @@ const setUserSignedListener = async () => {
   socket.value.on(
     'ChannelInvitationAcceptedManager',
     (channelName: string, inviteeName: string) => {
-      console.log('ChannelInvitationAccepted fired')
-
       setMembers().then(() => {
         setCurrentUserRole()
       })
@@ -272,7 +268,6 @@ const setUserSignedListener = async () => {
       return
     }
     notificationStore.showNotification(username + ' is now Admin of Channel:' + channelname, true)
-    console.log('madeAdmin fired')
     setMembers().then(() => {
       setCurrentUserRole()
     })
@@ -280,7 +275,6 @@ const setUserSignedListener = async () => {
   socket.value.on(
     'memberKicked',
     (kickedMemberName: string, kickChannelId: number, kickChannelName: string) => {
-      console.log('memberKicked fired')
       if (kickedMemberName === username.value) {
         notificationStore.showNotification('You got kicked from Channel: ' + kickChannelName, true)
         if (kickChannelId === channelId) {
@@ -298,8 +292,6 @@ const setUserSignedListener = async () => {
   )
 
   socket.value.on('memberBanned', (bannedUserName: string, banChannelId: number) => {
-    console.log('memberBanned fired')
-
     if (banChannelId === channelId) {
       if (bannedUserName === username.value) {
         notificationStore.showNotification('You got banned from Channel', true)
@@ -316,7 +308,6 @@ const setUserSignedListener = async () => {
   socket.value.on(
     'memberUnBanned',
     (unBannedUserName: string, unBanChannelId: number, unBanChannelName: string) => {
-      console.log('memberUnBanned fired')
       if (unBanChannelId === channelId) {
         notificationStore.showNotification(unBannedUserName + ' unBanned from Channel', true)
       }
@@ -328,7 +319,6 @@ const setUserSignedListener = async () => {
   socket.value.on(
     'memberMuted',
     (user: string, channelUnmuteId: number, channelName: string, timeMuted: number) => {
-      console.log('memberMuted fired')
       if (user === username.value) {
         notificationStore.showNotification(
           'You have been muted for ' + timeMuted.toString() + ' min. in Channel ' + channelName,
@@ -346,7 +336,6 @@ const setUserSignedListener = async () => {
     }
   )
   socket.value.on('memberUnMuted', (user: string, channelMuteId: number, channelName: string) => {
-    console.log('memberUnMuted fired')
     if (user === username.value) {
       notificationStore.showNotification('You have been unmuted in Channel: ' + channelName, true)
     } else if (channelMuteId === channelId) {
@@ -357,7 +346,6 @@ const setUserSignedListener = async () => {
     })
   })
   socket.value.on('passwordSet', (channelName: string) => {
-    console.log('passwordSet fired')
     notificationStore.showNotification(channelName + ' has new password')
     setMembers().then(() => {
       setCurrentUserRole()

@@ -206,9 +206,6 @@ export class ChannelService {
       channelMembershipDto.channelId,
     );
     if (existingMembership) {
-      console.log(
-        'User is already a member of this channel. Is not registered again.',
-      );
       return existingMembership;
     }
     return await this.prisma.channelMember.create({
@@ -690,7 +687,6 @@ export class ChannelService {
     });
 
     if (channels.length === 0) {
-      console.log('No channels found.');
       return [];
     }
     const channelEntries: ChannelInfoDto[] = await Promise.all(

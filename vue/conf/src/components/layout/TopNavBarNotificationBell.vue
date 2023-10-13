@@ -53,7 +53,6 @@ watch(
   async (newVal, oldVal) => {
     if (newVal) {
       length.value = newVal.length
-      console.log(length.value)
     }
   }
 )

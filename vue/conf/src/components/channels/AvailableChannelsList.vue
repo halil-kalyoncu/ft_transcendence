@@ -82,12 +82,10 @@ const setChannelListener = () => {
     return
   }
   socket.value.on('ChannelDestroy', (channelName: string) => {
-    console.log('ChannelDestroy fired from AvaibleChannelsList.vue')
     setPublicChannels()
     return
   })
   socket.value.on('channelCreated', () => {
-    console.log('channelCreated fired from AvaibleChannelsList.vue')
     setPublicChannels()
     return
   })

@@ -106,7 +106,7 @@ const chatSocket = ref<Socket | null>(null)
 
 const countdown = ref<number>(-1)
 
-let timerId: NodeJS.Timer | null = null
+let timerId: number = 0
 const waitingTime = ref<number>(0)
 const maxWaitingTime = 1 * 60
 
@@ -227,13 +227,13 @@ const startTimer = () => {
       )
       cancelTimer()
     }
-  }, 1000)
+  }, 1000) as unknown as number
 }
 
 const cancelTimer = () => {
   if (timerId) {
     clearInterval(timerId)
-    timerId = null
+    timerId = 0
   }
 }
 
@@ -291,7 +291,6 @@ const setEventListeners = () => {
     }
 
     socket.value?.emit('spawnPowerUp', newPowerUp)
-    console.log('PU spawn local')
     PowerUps.value?.push(newPowerUp)
   })
 
@@ -313,7 +312,6 @@ const setEventListeners = () => {
     if (index != -1) {
       PowerUps.value?.splice(index, 1)
       socket.value.emit('removePowerUp', id)
-      console.log('PU removed')
     }
   })
 

@@ -228,9 +228,6 @@ export class ChannelInvitationsService {
 
     if (existingInvitation) {
       if (existingInvitation.status === ChannelInvitationStatus.REJECTED) {
-        console.log(
-          'User already recjected invitation. New invitation will be send.',
-        );
         await this.prisma.channelInvitation.delete({
           where: {
             channelId_inviteeId: { channelId: channelId, inviteeId: inviteeId },

@@ -21,7 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { BlockedUserService } from '../../service/blocked-user/blocked-user.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
-import { PrismaModel } from '../../../_gen/prisma-class';
 
 @ApiTags('Direct message (Chat module)')
 @Controller('directMessages')
@@ -38,7 +37,6 @@ export class DirectMessageController {
   @ApiResponse({
     status: 200,
     description: 'Successful retrieval of direct messages',
-    type: PrismaModel.DirectMessage,
     isArray: true,
   })
   @ApiResponse({
@@ -134,7 +132,6 @@ export class DirectMessageController {
   @ApiResponse({
     status: 201,
     description: 'Successful update of converstation to read',
-    type: PrismaModel.DirectMessage,
     isArray: true,
   })
   @ApiResponse({
