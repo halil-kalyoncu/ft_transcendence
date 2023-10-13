@@ -29,7 +29,7 @@ model Achievement {
     scoreSilver Int    @default(0)
     scoreGold   Int    @default(0)
 
-    userAchievement UserAchievements[] //@relation(fields: [])
+    userAchievement UserAchievements[]
 }
 
 model UserAchievements {
