@@ -1,7 +1,7 @@
 #################
 ## DEVELOPMENT ##
 #################
-FROM node:lts-buster AS development
+FROM node:18-alpine AS development
 
 WORKDIR /pong_game/src/app
 
@@ -16,7 +16,7 @@ EXPOSE 3000
 ################
 ## PRODUCTION ##
 ################
-FROM node:lts-buster AS production
+FROM node:18-alpine AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}

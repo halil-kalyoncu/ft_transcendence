@@ -1,4 +1,4 @@
-FROM node:lts-alpine AS development
+FROM node:18-alpine AS development
 
 WORKDIR /pong_game/frontend/src/app
 
