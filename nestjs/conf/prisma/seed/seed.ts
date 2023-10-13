@@ -43,11 +43,11 @@ async function main() {
   await createPowerup('increasePaddleHeight');
   await createPowerup('magnet');
 
-  await createAchievement('total Goals', 10, 20, 30);
-  await createAchievement('flawless Victories', 2, 4, 6);
-  await createAchievement('total Wins', 10, 20, 30);
-  await createAchievement('Comebacks', 10, 20, 30);
-  await createAchievement('first Goal', 1, 2, 3);
+  await createAchievement('total Goals', 15, 75, 750);
+  await createAchievement('flawless Victories', 2, 10, 100);
+  await createAchievement('total Wins', 10, 50, 500);
+  await createAchievement('Comebacks', 3, 15, 150);
+  await createAchievement('first Goal', 5, 25, 250);
 
   await prisma.$disconnect();
 }
