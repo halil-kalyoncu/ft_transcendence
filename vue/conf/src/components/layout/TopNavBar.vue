@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import { computed, ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import router from '../../router'
 import { disconnectChatSocket } from '../../websocket'
-import { Socket } from 'socket.io-client'
 import { useNotificationStore } from '../../stores/notification'
 import { useUserStore } from '../../stores/userInfo'
 import NotificationBell from './TopNavBarNotificationBell.vue'
-import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
 
 library.add(fas)
 const userStore = useUserStore()

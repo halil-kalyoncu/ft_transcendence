@@ -1,12 +1,8 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { RouterView } from 'vue-router'
 
 import SideBar from './SideBar.vue'
 import TopNavBar from './TopNavBar.vue'
-
-const route = useRoute()
 </script>
 
 <template>

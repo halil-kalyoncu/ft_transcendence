@@ -28,12 +28,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { connectChatSocket } from '../../websocket'
-import type { ChannelEntryI } from '../../model/channels/createChannel.interface'
-import type { UserI } from '../../model/user.interface'
 import type { ChannelMessageI } from '../../model/channels/channelMessage.interface'
-import jwtDecode from 'jwt-decode'
 import Message from './Message.vue'
 import ScrollViewer from '../utils/ScrollViewer.vue'
 import { useUserStore } from '../../stores/userInfo'
@@ -57,7 +54,6 @@ const notificationStore = useNotificationStore()
 const channelMessages = ref<ChannelMessageI[]>([])
 const newchannelMessages = ref('')
 const loading = ref(true)
-//const selectedChannel = ref<ChannelEntryI | null>(null)
 
 type User = {
   id: number

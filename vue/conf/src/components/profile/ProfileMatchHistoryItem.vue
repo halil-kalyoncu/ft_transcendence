@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import type { MatchI } from '../../model/match/match.interface'
 
 const props = defineProps({

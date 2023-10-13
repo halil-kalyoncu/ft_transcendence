@@ -3,7 +3,6 @@ import {
   HttpException,
   HttpStatus,
   ParseIntPipe,
-  Patch,
   Get,
   Query,
   UseGuards,
@@ -12,7 +11,6 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AchievementService } from '../service/achievement.service';
 import { UserAchievements } from '@prisma/client';
-import { Achievement } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 
 @ApiTags('Achievement module')

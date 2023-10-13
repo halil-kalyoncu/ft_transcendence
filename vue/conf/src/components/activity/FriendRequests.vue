@@ -35,7 +35,6 @@ import { useNotificationStore } from '../../stores/notification'
 import { useFriendRequestStore } from '../../stores/friendRequests'
 import type { FriendshipI } from '../../model/friendship/friendship.interface'
 import type { ErrorI } from '../../model/error.interface'
-import type { UserI } from '../../model/user.interface'
 
 const friendRequestStore = useFriendRequestStore()
 const friendRequests = computed(() => friendRequestStore.friendRequests)

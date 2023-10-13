@@ -3,7 +3,6 @@ import { Room } from './room.service';
 import { Server } from 'socket.io';
 import { PowerUp } from './powerup.service';
 
-//500, 200, 15, 15, 5, 4, 3, 800, 600
 @Injectable()
 export class Ball {
   constructor(
@@ -37,7 +36,6 @@ export class Ball {
     this.dy = 3 * (Math.random() < 0.5 ? 1 : -1);
     this.speed = 4;
     this.pause = true;
-    // this.magnet = 0;
   }
 
   moveBallDir(paddleBY: number, paddleHeight: number, paddle: string): void {
@@ -47,7 +45,6 @@ export class Ball {
     let bounceAngle = (paddleHitLocation * 45 * Math.PI) / 180;
 
     this.speed++;
-    // console.log("Speed", this.speed);
 
     if (paddle == 'A') this.dx = -this.speed * Math.cos(bounceAngle);
     else this.dx = this.speed * Math.cos(bounceAngle);
@@ -122,7 +119,7 @@ export class Ball {
       room.rightPlayerGoals++;
       server.to(room.socketIds[0]).emit('scoreGoal', 'playerB');
       server.to(room.socketIds[1]).emit('scoreGoal', 'playerB');
-      // this.magdiff = this.y - padd
+
       scoredGoal = true;
       if (room.rightPlayerGoals == 1 && room.leftPlayerGoals == 0)
         room.firstGoal = 'RIGHT';
@@ -174,7 +171,6 @@ export class Ball {
     else if (this.handleBallCollision(nextBallX, nextBallY, room, 'A')) {
       if (this.magnet == 1) {
         this.ballSticking = 1;
-        // console.log("DIFFERENCE: ", this.y)
         return;
       }
       this.moveBallDir(room.paddleA.y, room.paddleA.hgt, 'A');

@@ -37,21 +37,6 @@ export class MatchService {
     });
   }
 
-  //   async findUserByName(username: string): Promise<Match> {
-  // 	return await this.prisma.match.findUnique({
-  // 	  where: {
-  // 		username: username,
-  // 	  },
-  // 	});
-  //   }
-  // async findUserByName(username: string): Promise<User | null> {
-  // 	return await this.prisma.user.findUnique({
-  // 	where: {
-  // 		username: username,
-  // 	},
-  // 	});
-  // }
-
   async findMatchByUser(userid: number): Promise<Match[]> {
     return await this.prisma.match.findMany({
       where: {

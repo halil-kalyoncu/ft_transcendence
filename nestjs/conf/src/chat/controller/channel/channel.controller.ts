@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Channel, ChannelMember, ChannelMessage } from '@prisma/client';
+import { Channel, ChannelMember } from '@prisma/client';
 import { ChannelService } from '../../service/channel/channel.service';
 import {
   CreateChannelDto,
@@ -24,7 +24,6 @@ import {
   ChannelMemberDto,
 } from '../../dto/channel.dto';
 import { ChannelMemberService } from '../../service/channel-member/channel-member.service';
-import { ErrorDto } from 'src/chat/dto/error.dto';
 import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
 
 @ApiTags('Channel module')

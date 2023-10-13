@@ -48,57 +48,6 @@ export class UserController {
     private userHelperService: UserHelperService,
   ) {}
 
-  //TODO remove this function, when 42 login works
-  //   @ApiOperation({ summary: 'Login' })
-  //   @ApiResponse({
-  //     status: 201,
-  //     description: 'Successful login',
-  //     type: LoginResponseDto,
-  //   })
-  //   @ApiResponse({ status: 400, description: 'CreateUserDto has errors' })
-  //   @ApiResponse({
-  //     status: 401,
-  //     description: 'Unauthorized, access token is invalid',
-  //   })
-  //   @ApiResponse({ status: 409, description: 'User is already logged in' })
-  //   @ApiResponse({ status: 500, description: 'Server error' })
-  //   @Post('login')
-  //   async login(@Body() createUserDto: CreateUserDto): Promise<LoginResponseDto> {
-  //     try {
-  //       const userEntity: Prisma.UserCreateInput =
-  //         this.userHelperService.createUserDtoToEntity(createUserDto);
-  //       const jwt: string = await this.userService.login(userEntity);
-  //       return {
-  //         access_token: jwt,
-  //         token_type: 'JWT',
-  //         expires_in: 10000,
-  //       };
-  //     } catch (error) {
-  //       if (error instanceof ConflictException) {
-  //         throw error;
-  //       }
-  //       throw new HttpException(
-  //         'Internal Server Error',
-  //         HttpStatus.INTERNAL_SERVER_ERROR,
-  //       );
-  //     }
-  //   }
-
-  //use this route, when 42 login works
-  // @Post()
-  // async create(@Body() createUserDto: CreateUserDto): Promise<User> {
-  //   try {
-  //     const UserEntity: Prisma.UserCreateInput =
-  //       this.userHelperService.createUserDtoToEntity(createUserDto);
-  //     return await this.userService.create(UserEntity);
-  //   } catch(error) {
-  //     if (error.message === 'Username is already in use') {
-  //       throw new HttpException('Username is already in use', HttpStatus.CONFLICT);
-  //     }
-  //     throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
-  //   }
-  // }
-
   @Get('canBeRegistered')
   async canBeRegistered(
     @Query('intraLogin') intraLogin: string,

@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import {
-  UserAchievements,
-  Achievement,
-  AchievementState,
-} from '@prisma/client';
+import { UserAchievements, AchievementState } from '@prisma/client';
 
 @Injectable()
 export class AchievementService {

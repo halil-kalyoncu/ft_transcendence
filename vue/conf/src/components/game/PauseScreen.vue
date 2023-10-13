@@ -13,7 +13,6 @@ export default {}
   left: 120px;
   width: 500px;
   height: 500px;
-  /* background-color:#00000000; */
   background-color: #b20000af;
   border-radius: 10%;
 }

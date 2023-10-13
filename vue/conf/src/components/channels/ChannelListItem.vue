@@ -68,7 +68,7 @@ const props = defineProps({
   channelId: Number,
   unreadMessageCount: Number
 })
-// const unreadMessageCount = ref(4)
+
 const emit = defineEmits(['channel-entered'])
 const showPasswordField = ref(false)
 

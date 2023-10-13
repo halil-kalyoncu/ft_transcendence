@@ -3,15 +3,7 @@ import { MessageService } from '../message/message.service';
 import { CreateChannelMessageDto } from '../../dto/create-channel-message.dto';
 import { ChannelMessageDto } from '../../dto/channel.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
-import {
-  ChannelMessage,
-  Message,
-  User,
-  Channel,
-  ChannelMember,
-  ChannelMessageReadStatus,
-  BlockedUser,
-} from '@prisma/client';
+import { ChannelMessage, User } from '@prisma/client';
 import { ChannelService } from '../channel/channel.service';
 import { ChannelMemberService } from '../channel-member/channel-member.service';
 import { BlockedUserService } from '../blocked-user/blocked-user.service';

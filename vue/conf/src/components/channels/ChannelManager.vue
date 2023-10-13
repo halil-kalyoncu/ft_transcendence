@@ -260,7 +260,7 @@ const setUserSignedListener = async () => {
     'ChannelInvitationAcceptedManager',
     (channelName: string, inviteeName: string) => {
       console.log('ChannelInvitationAccepted fired')
-      //notificationStore.showNotification(' Signed in Channel', true)
+
       setMembers().then(() => {
         setCurrentUserRole()
       })

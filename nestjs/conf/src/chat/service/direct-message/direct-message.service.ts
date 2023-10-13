@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MessageService } from '../message/message.service';
 import { CreateDirectMessageDto } from '../../dto/create-direct-message.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { DirectMessage, Prisma } from '@prisma/client';
+import { DirectMessage } from '@prisma/client';
 
 @Injectable()
 export class DirectMessageService {
