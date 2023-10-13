@@ -257,7 +257,6 @@ const setUserSignedListener = async () => {
   socket.value.on(
     'ChannelInvitationAcceptedManager',
     (channelName: string, inviteeName: string) => {
-
       setMembers().then(() => {
         setCurrentUserRole()
       })
@@ -293,7 +292,6 @@ const setUserSignedListener = async () => {
   )
 
   socket.value.on('memberBanned', (bannedUserName: string, banChannelId: number) => {
-
     if (banChannelId === channelId) {
       if (bannedUserName === username.value) {
         notificationStore.showNotification('You got banned from Channel', true)

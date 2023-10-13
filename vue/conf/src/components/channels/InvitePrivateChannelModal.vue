@@ -253,7 +253,6 @@ watch(inputName, (newValue) => {
 })
 
 const goToProfile = (userId: number | undefined) => {
-
   if (userId === undefined) {
     return
   }

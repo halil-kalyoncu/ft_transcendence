@@ -919,7 +919,7 @@ export class ChatGateway
           .to(inviteeOnline.socketId)
           .emit('NewChannelInvitationBell', inviteeUsername);
       }
-	
+
       const ChannelMembers = await this.channelService.getMembers(channelId);
       for (const member of ChannelMembers) {
         const memberOnline: ConnectedUser =
