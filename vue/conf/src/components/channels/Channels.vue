@@ -287,7 +287,6 @@ const hanndleChannelSignedout = async () => {
   await closeChannelManagerAndChat()
 }
 
-// ERROR HANDLING GATEWAY FRONTEND
 const updateChannelManager = async () => {
   if (!socket || !socket.value) {
     notificationStore.showNotification('Error: Connection problems')

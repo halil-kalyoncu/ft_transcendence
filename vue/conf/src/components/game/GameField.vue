@@ -87,8 +87,7 @@ const hitCount = ref<number>(0)
 let isMovingUp = ref<boolean>(false)
 let isMovingDown = ref<boolean>(false)
 const isPaused = ref<boolean>(false)
-// let mouseX = ref<number | null>(null);
-// let mouseY = ref<number | null>(null);
+
 const fieldWidth = ref<number | null>(null)
 const fieldHeight = ref<number | null>(null)
 const socket = ref<Socket | null>(null)
@@ -177,14 +176,12 @@ const initChatSocket = () => {
 
 const initGameField = async () => {
   if (!gameField.value) {
-    //error handling
-    console.log('gameField value is not set')
     return
   }
 
   fieldWidth.value = gameField.value?.clientWidth || 0
   fieldHeight.value = gameField.value?.clientHeight || 0
-  // console.log(fieldWidth.value);
+
   await getMatchData()
   if (!authorized.value || matchResult.value) {
     return
@@ -198,8 +195,6 @@ const initGameField = async () => {
     !goalsToBeat ||
     goalsToBeat.value === 0
   ) {
-    //TODO what to do if the usernames are not set
-    console.log('something went wrong fetching the usernames')
     return
   }
   setTimeout(() => {
@@ -264,10 +259,8 @@ const setEventListeners = () => {
     ball.value?.setX(x)
     ball.value?.setY(y)
     ballCoordinates.value = { x, y }
-    // console.log("ball")
   })
 
-  // socket.on("newPowerUp", ({ id, x, y, type }) => {
   socket.value.on('newPowerUp', (PowerUp: { powerUp: string; x: number; y: number }) => {
     const newPowerUp = {
       id: Math.floor(Date.now()),
@@ -311,7 +304,6 @@ const setEventListeners = () => {
     if (PowerUps.value) {
       powerUp = PowerUps.value?.find((powerup) => powerup.id === id)
       if (powerUp) powerUp.y = y
-      // console.log("ID: ", powerUp.id, "Y:", y);
     }
   })
 
@@ -330,7 +322,6 @@ const setEventListeners = () => {
   })
 
   socket.value.on('gameFinished', (match: MatchI) => {
-    //show post game screen
     cancelTimer()
     matchResult.value = match
   })
@@ -405,40 +396,31 @@ onBeforeUnmount(() => {
 })
 
 function update() {
-  // console.log("UPDATE");
   if (isPaused.value) {
     requestAnimationFrame(update)
     return
   }
-  // console.log(side.value);
   if (side.value && side.value == 'left') {
-    // console.log("update");
     if (paddleA.value && isMovingUp.value) {
       if (socket.value) {
         socket.value.emit('paddle', 'up')
       }
-    }
-    // paddleA.movePaddleDown();
-    else if (paddleA.value && isMovingDown.value) {
+    } else if (paddleA.value && isMovingDown.value) {
       if (socket.value) {
         socket.value.emit('paddle', 'down')
       }
     }
-    // paddleA.movePaddleDown();
   } else if (side.value && side.value == 'right') {
     if (paddleB.value && isMovingUp.value) {
       if (socket.value) {
         socket.value.emit('paddle', 'up')
       }
-    }
-    // paddleB.movePaddleDown();
-    else if (paddleB.value && isMovingDown.value) {
+    } else if (paddleB.value && isMovingDown.value) {
       if (socket.value) {
         socket.value.emit('paddle', 'down')
       }
     }
   }
-  // console.log(isMovingUp.value);
   requestAnimationFrame(update)
 }
 

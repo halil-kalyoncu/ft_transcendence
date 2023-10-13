@@ -57,7 +57,6 @@ const notificationStore = useNotificationStore()
 const channelMessages = ref<ChannelMessageI[]>([])
 const newchannelMessages = ref('')
 const loading = ref(true)
-//const selectedChannel = ref<ChannelEntryI | null>(null)
 
 type User = {
   id: number

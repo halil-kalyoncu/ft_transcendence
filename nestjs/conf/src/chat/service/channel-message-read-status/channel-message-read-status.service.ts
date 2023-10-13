@@ -39,7 +39,6 @@ export class ChannelMessageReadStatusService {
         });
       return unreadMessages;
     } catch (error) {
-      // Handle errors appropriately
       throw new Error('Error fetching unread messages: ' + error.message);
     }
   }

@@ -29,7 +29,6 @@ export function disconnectChatSocket(): void {
   }
 }
 
-//lazy data parameter!
 export function connectGameSocket(data: any): Socket {
   if (!gameSocket) {
     const queryData = {

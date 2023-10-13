@@ -119,22 +119,6 @@ const router = createRouter({
         next: NavigationGuardNext
       ): void => jwtGuard(to, from, next)
     },
-    // {
-    //   path: '/profile/:matchId',
-    //   component: MainLayout,
-    //   children: [
-    //     {
-    //       path: '',
-    //       name: 'invite',
-    //       component: () => import('../components/invite/Invite.vue') //lazy load
-    //     }
-    //   ],
-    //   beforeEnter: (
-    //     to: RouteLocationNormalized,
-    //     from: RouteLocationNormalized,
-    //     next: NavigationGuardNext
-    //   ): void => jwtGuard(to, from, next)
-    // },
     {
       path: '/settings',
       component: MainLayout,

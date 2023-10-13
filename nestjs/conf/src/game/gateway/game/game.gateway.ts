@@ -30,17 +30,12 @@ export class EventsGateway {
   constructor(
     private userService: UserService,
     private matchService: MatchService,
-  ) {
-    // this.rooms.set("test", new Room("test"));
-    // this.startGame();
-  }
+  ) {}
 
   @WebSocketServer()
   server: Server;
 
-  // gameIsRunning = false; -> individual game has to know if is running
   rooms = new Map<number, Room>();
-  // players = new Map<string, string>(); -> individual socket holds information if it is the left or right player
 
   startGame(room: Room) {
     const gameInterval = setInterval(async () => {
@@ -94,33 +89,8 @@ export class EventsGateway {
     }, 15);
   }
 
-  // afterInit(server: Server) {
-  // 	this.server = server;
-  // 	console.log('Server is ready');
-  // }
-
-  // handleConnection(client: any, ...args: any[]) {
-  // 	if (!this.players.has(client.id))
-  // 	{
-  // 		if (this.players.size < 1)
-  // 		{
-  // 			this.players.set(client.id, "left");
-  // 			client.emit('direction', 'left');
-  // 		}
-  // 		else
-  // 		{
-  // 			this.players.set(client.id, "right");
-  // 			client.emit('direction', 'right');
-  // 			client.broadcast.emit('startGame');
-  // 			client.emit('startGame');
-  // 		}
-  // 	}
-  // 	console.log(`Client connected: ${client.id}`);
-  // }
-
   async handleConnection(socket: Socket, ...args: any[]) {
     if (!socket.handshake.query.userId || !socket.handshake.query.matchId) {
-      //error handling?
       console.log("query doesn't have the properties userId and matchId");
       return;
     }
@@ -162,14 +132,12 @@ export class EventsGateway {
       room.socketIds[1] = socket.id;
     }
 
-    //both players are connected to the games if both socket ids are set, better solution?
     if (room.socketIds[0] != '' && room.socketIds[1] != '') {
       this.startCountdown(room);
     }
   }
 
   async handleDisconnect(socket: Socket) {
-    //this.players.delete(client.id);
     const room = this.rooms.get(socket.data.match.id);
 
     if (!room) {
@@ -197,16 +165,9 @@ export class EventsGateway {
     }
     socket.disconnect();
   }
-  // resetGame() {
-  // 	this.gameIsRunning = false;
-  // 	console.log("HERE");
-  // 	this.rooms.get("test").ball.resetBall();
-  // 	this.server.emit('ballPosition', this.rooms.get("test").ball.getBallPosition());
-  // }
 
   @SubscribeMessage('fire')
   handleMagnetFire(@ConnectedSocket() socket: Socket): void {
-    console.log('FIRE');
     const room = this.rooms.get(socket.data.match.id);
     if (socket.id === room.socketIds[0] && room.ball.magnet === 1) {
       room.ball.ballSticking = 0;
@@ -245,9 +206,6 @@ export class EventsGateway {
         'paddleMove',
         { playerId: 'left', newPos: paddleAPos.y },
       );
-
-      //this.server.emit('paddleMove', { playerId: 'left', newPos: paddleAPos.y }); ->	this would send to all clients currently on the server,
-      //																					we only want to send to the two users that are playing the match
     } else {
       let paddleBPos = { x: 0, y: 0, wid: 0, hgt: 0 };
 
@@ -268,30 +226,9 @@ export class EventsGateway {
         'paddleMove',
         { playerId: 'right', newPos: paddleBPos.y },
       );
-      //this.server.emit('paddleMove', { playerId: 'right', newPos: paddleBPos.y });
     }
     return;
   }
-
-  // @SubscribeMessage('ballX')
-  // updateBallX(socket: Socket, ballX: number): void {
-  // 	ballPos.x = ballX;
-  // 	this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'ballX', ballPos.x);
-  // 	//client.broadcast.emit('ballX', ballPos.x);
-  // }
-
-  // @SubscribeMessage('ballY')
-  // updateBallY(socket: Socket, ballY: number): void {
-  // 	ballPos.y = ballY;
-  // 	this.sendToOpponent(socket, this.rooms.get(socket.data.match.id).socketIds, 'ballY', ballPos.y);
-  // 	//client.broadcast.emit('ballY', ballPos.y);
-  // }
-
-  // @SubscribeMessage('start')
-  // sendStartMessage(client: any): void {
-  // 	client.broadcast.emit('startGame');
-  // 	console.log("start");
-  // }
 
   @SubscribeMessage('spawnPowerUp')
   createPowerUp(
@@ -310,7 +247,6 @@ export class EventsGateway {
   ): void {
     const room = this.rooms.get(socket.data.match.id);
     data.speed = 0.2;
-    // data.color = "blue";
     const newPowerUp = new PowerUp(
       data.id,
       data.x,
@@ -322,10 +258,6 @@ export class EventsGateway {
       data.color,
     );
     room.powerups.push(newPowerUp);
-    // socket.emit('newPowerUp', data);
-    // this.sendToOpponent(socket, room.socketIds, 'newPowerUp', data);
-    // this.server.to(room.socketIds[1]).emit('newPowerUp', data);
-    // console.log("powerup spawned at x: ", data.x)
   }
 
   @SubscribeMessage('executePowerUp')
@@ -402,7 +334,6 @@ export class EventsGateway {
       !socketIds[1] ||
       socketIds[1] === ''
     ) {
-      //handle error
       return;
     }
 

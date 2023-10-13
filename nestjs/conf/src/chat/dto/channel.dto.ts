@@ -128,7 +128,6 @@ export class ChannelMessageDto {
   @ApiProperty()
   @IsBoolean()
   blockGroupMessage: boolean;
-  //ChannelMessageReadStatus: ChannelMessageReadStatus;
 }
 
 export class ChannelMemberDto {

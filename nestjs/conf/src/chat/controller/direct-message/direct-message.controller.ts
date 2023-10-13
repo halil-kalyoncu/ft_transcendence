@@ -67,11 +67,6 @@ export class DirectMessageController {
     }
   }
 
-  // @Get('allUnreadByUserId')
-  // async getAllUnreadDirectMessages(@Query('userId', ParseIntPipe) userId: number): Promise<DirectMessage[]> {
-  //     return this.directMessageService.getAllUnreadMessages(userId);
-  // }
-
   //Get all the unread messages from the db based on the userId given as a URL from the frontend
   @UseGuards(JwtAuthGuard)
   @ApiOperation({

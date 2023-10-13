@@ -77,7 +77,6 @@ export class ChannelInvitationsService {
     return invitations;
   }
 
-  //ERROR HANDLING API BACKEND
   async inviteUserToChannel(
     channelId: number,
     inviteeId: number,

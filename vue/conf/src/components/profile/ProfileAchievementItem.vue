@@ -200,8 +200,6 @@ const updateTooltipPosition = (event: MouseEvent) => {
   position: fixed;
   box-sizing: border-box;
   background-color: rgba(18, 18, 18, 0.8);
-  /* border-width: 2px; */
-  /* border: 1px solid rgb(78, 78, 78); */
   color: #fff;
   padding: 5px 10px;
   border-radius: 5px;

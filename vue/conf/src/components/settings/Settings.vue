@@ -517,7 +517,6 @@ input[type='file']:focus,
 
 .input-group .two-FA-input {
   padding: 0.5rem 1rem;
-  /* min-width: 200px;  */
   min-height: 35px;
   min-width: 200px;
   border: 1px solid #ba4646;

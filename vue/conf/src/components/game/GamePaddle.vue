@@ -36,9 +36,6 @@ export type GamePaddleSetup = {
 
 export default defineComponent({
   setup() {
-    // const fieldHeight = ref(props.fieldHeight);
-    // const socket = ref(props.socket);
-
     let x = ref(1)
     let y = ref(100)
     let wid = ref(15)
@@ -60,10 +57,6 @@ export default defineComponent({
     function setX(newX: number) {
       x.value = newX
     }
-
-    // function setHgt(newhgt: number) {
-    //   hgt.value = newhgt
-    // }
 
     function increaseHgt() {
       if (hgt.value < 400) {

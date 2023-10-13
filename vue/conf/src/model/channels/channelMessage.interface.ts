@@ -8,7 +8,6 @@ export interface ChannelMessageI {
   sender: UserI
   createdAt: string
   blockGroupMessage: boolean
-  //channelMessageReadStatus: ChannelMessageReadStatusI[];
 }
 
 export interface ChannelMessageReadStatusI {

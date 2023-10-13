@@ -83,21 +83,6 @@ export class UserController {
     }
   }
 
-  //use this route, when 42 login works
-  // @Post()
-  // async create(@Body() createUserDto: CreateUserDto): Promise<User> {
-  //   try {
-  //     const UserEntity: Prisma.UserCreateInput =
-  //       this.userHelperService.createUserDtoToEntity(createUserDto);
-  //     return await this.userService.create(UserEntity);
-  //   } catch(error) {
-  //     if (error.message === 'Username is already in use') {
-  //       throw new HttpException('Username is already in use', HttpStatus.CONFLICT);
-  //     }
-  //     throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
-  //   }
-  // }
-
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({

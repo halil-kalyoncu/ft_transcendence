@@ -131,7 +131,7 @@ export class ChatGateway
     socket.disconnect();
   }
 
-  /*****************
+  /******************
    *** Friendlist ***
    ******************/
 
@@ -265,7 +265,7 @@ export class ChatGateway
     }
   }
 
-  /*********************
+  /**********************
    *** DirectMessages ***
    **********************/
 
@@ -294,7 +294,7 @@ export class ChatGateway
     }
   }
 
-  /**************
+  /***************
    *** Channel ***
    ***************/
 
@@ -790,7 +790,7 @@ export class ChatGateway
       return { error: error.message as string };
     }
   }
-  /**********************
+  /***********************
    *** ChannelMessages ***
    ***********************/
 
@@ -826,9 +826,9 @@ export class ChatGateway
       return { error: error.message as string };
     }
   }
-  /**********************
+  /**************************
    *** ChannelInvitations ***
-   ***********************/
+   **************************/
 
   @SubscribeMessage('acceptChannelInvitation')
   async handleAcceptChannelInvitation(
@@ -942,9 +942,9 @@ export class ChatGateway
       return { error: error.message as string };
     }
   }
-  /******************
+  /********************
    *** MatchInvites ***
-   *******************/
+   ********************/
 
   @SubscribeMessage('sendMatchInvite')
   async sendGameInvite(
@@ -1121,7 +1121,7 @@ export class ChatGateway
     }
   }
 
-  /************
+  /*************
    *** Match ***
    *************/
   @SubscribeMessage('hostLeaveMatch')
@@ -1184,9 +1184,9 @@ export class ChatGateway
     this.updateFriendsOf(socket.data.user.id);
   }
 
-  /******************
+  /*******************
    *** Matchmaking ***
-   ******************/
+   *******************/
 
   @SubscribeMessage('queueUpForLadder')
   async queueUpForLadder(
@@ -1312,9 +1312,9 @@ export class ChatGateway
     }
   }
 
-  /******************
+  /*******************
    *** Block users ***
-   ******************/
+   *******************/
 
   @SubscribeMessage('blockUser')
   async blockUser(
@@ -1386,7 +1386,7 @@ export class ChatGateway
     }
   }
 
-  /**********************
+  /***********************
    *** Helperfunctions ***
    ***********************/
 
