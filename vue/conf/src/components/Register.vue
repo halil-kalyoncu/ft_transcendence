@@ -22,9 +22,7 @@ const fetchCanBeRegistered = async () => {
       }/api/users/canBeRegistered?intraLogin=${intraLogin}`
     )
 
-    console.log(response)
     const responseData = await response.json()
-    console.log(responseData)
     if (!response.ok || !responseData) {
       notificationStore.showNotification('Something went wrong', false)
       router.push('/')
@@ -66,13 +64,14 @@ const handleRegisterWithoutAvatar = async () => {
       }
     )
 
-    const responseData = await response.text()
     username.value = ''
     if (response.ok) {
+      const responseData = await response.text()
       notificationStore.showNotification('Successfully registered', true)
       router.push(`/validateToken/${responseData}`)
     } else {
-      notificationStore.showNotification('Error occurred during registration', false)
+      const responseData = await response.json()
+      notificationStore.showNotification(`${responseData.message}`, false)
     }
   } catch (error) {
     username.value = ''
@@ -100,13 +99,14 @@ const handleRegisterWithAvatar = async () => {
       }
     )
 
-    const responseData = await response.text()
     username.value = ''
     if (response.ok) {
+      const responseData = await response.text()
       notificationStore.showNotification('Successfully registered', true)
       router.push(`/validateToken/${responseData}`)
     } else {
-      notificationStore.showNotification('Error occurred during registration', false)
+      const responseData = await response.json()
+      notificationStore.showNotification(`${responseData.message}`, false)
     }
   } catch (error) {
     username.value = ''

@@ -10,6 +10,7 @@ import { authenticator } from 'otplib';
 import { Response } from 'express';
 import { toFileStream } from 'qrcode';
 import { JwtAuthService } from '../jwt-auth/jtw-auth.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class TwoFactorAuthService {
@@ -21,13 +22,14 @@ export class TwoFactorAuthService {
   async generateSecret(userId: number) {
     const user: User = await this.userService.findById(userId);
     const secret: string = authenticator.generateSecret();
+    const secretEncrypt: string = this.encrypt(secret);
     const otpAuthUrl: string = authenticator.keyuri(
       user.username,
       'PONGGAME',
       secret,
     );
-    await this.userService.setTwoFactorAuthSecret(user.id, secret);
-    return { secret, otpAuthUrl };
+    await this.userService.setTwoFactorAuthSecret(user.id, secretEncrypt);
+    return { secretEncrypt, otpAuthUrl };
   }
 
   async pipeQRCodeStream(stream: Response, otpAuthUrl: string) {
@@ -72,7 +74,32 @@ export class TwoFactorAuthService {
   private checkCodeValid(user: User, code: string): boolean {
     return authenticator.verify({
       token: code,
-      secret: user.secret2FA,
+      secret: this.decrypt(user.secret2FA),
     });
+  }
+
+  private encrypt(text: string): string {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      Buffer.from(process.env.ENCRYPTION_KEY),
+      iv,
+    );
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return `${iv.toString('hex')}:${encrypted}`;
+  }
+
+  private decrypt(text: string): string {
+    const [ivString, encryptedText] = text.split(':');
+    const iv = Buffer.from(ivString, 'hex');
+    const decipher = crypto.createDecipheriv(
+      'aes-256-cbc',
+      Buffer.from(process.env.ENCRYPTION_KEY),
+      iv,
+    );
+    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
   }
 }

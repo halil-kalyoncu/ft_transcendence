@@ -36,8 +36,14 @@ export class TwoFactorAuthController {
   ): Promise<boolean> {
     try {
       return await this.userService.twoFAstatus(userId);
-    } catch (error: any) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -111,8 +117,14 @@ export class TwoFactorAuthController {
   async disable(@Query('userId', ParseIntPipe) userId: number): Promise<User> {
     try {
       return this.userService.turnOffTwoFactorAuth(userId);
-    } catch (error: any) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

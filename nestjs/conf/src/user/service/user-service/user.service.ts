@@ -51,6 +51,16 @@ export class UserService {
       );
     }
 
+    if (!/[a-zA-Z]/.test(userInput.username)) {
+      throw new BadRequestException(
+        'Username must contain at least one alphabetic character',
+      );
+    }
+
+    if (/\s/.test(userInput.username)) {
+      throw new BadRequestException('Username cannot contain spaces');
+    }
+
     user = await this.findByUsername(userInput.username);
     if (user) {
       throw new ConflictException(
@@ -83,6 +93,16 @@ export class UserService {
       throw new BadRequestException(
         'Username is too long, please choose a username with less than 11 characters',
       );
+    }
+
+    if (!/[a-zA-Z]/.test(userInput.username)) {
+      throw new BadRequestException(
+        'Username must contain at least one alphabetic character',
+      );
+    }
+
+    if (/\s/.test(userInput.username)) {
+      throw new BadRequestException('Username cannot contain spaces');
     }
 
     user = await this.findByUsername(userInput.username);
