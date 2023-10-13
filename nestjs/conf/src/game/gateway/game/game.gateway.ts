@@ -1,9 +1,6 @@
 import {
   SubscribeMessage,
   WebSocketGateway,
-  OnGatewayInit,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   WebSocketServer,
   ConnectedSocket,
   MessageBody,
@@ -14,7 +11,6 @@ import { PowerUp } from '../../service/powerup.service';
 import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import { Match } from '@prisma/client';
-import { createECDH } from 'crypto';
 import { Paddle } from 'src/game/service/paddle.service';
 
 @WebSocketGateway({

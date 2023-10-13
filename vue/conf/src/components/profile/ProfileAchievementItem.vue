@@ -66,7 +66,7 @@
 <script setup lang="ts">
 let currentMax = ref(0)
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import {
   UserAchievementState,
   type UserAchievementI

@@ -83,7 +83,6 @@ const matchId = route.params.matchId as string
 const router = useRouter()
 
 const gameField = ref<HTMLElement | null>(null)
-const hitCount = ref<number>(0)
 let isMovingUp = ref<boolean>(false)
 let isMovingDown = ref<boolean>(false)
 const isPaused = ref<boolean>(false)
@@ -91,7 +90,6 @@ const isPaused = ref<boolean>(false)
 const fieldWidth = ref<number | null>(null)
 const fieldHeight = ref<number | null>(null)
 const socket = ref<Socket | null>(null)
-const serverIp = ref<string | null>(null)
 const side = ref<string | null>(null)
 const ballCoordinates = ref<{ x: number; y: number } | null>(null)
 const PowerUps = ref<any[]>([])
@@ -103,8 +101,6 @@ let playerBName = ref<string>('')
 let playerAScore = ref<number>(0)
 let playerBScore = ref<number>(0)
 let goalsToBeat = ref<number>(0)
-
-let keyState: { [key: string]: boolean } = { ArrowUp: false, ArrowDown: false }
 
 const chatSocket = ref<Socket | null>(null)
 

@@ -8,7 +8,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ChannelMessage, ChannelMessageReadStatus } from '@prisma/client';
+import { ChannelMessageReadStatus } from '@prisma/client';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ChannelMessageReadStatusService } from '../../service/channel-message-read-status/channel-message-read-status.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';

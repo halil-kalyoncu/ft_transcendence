@@ -18,15 +18,12 @@ import { RouterLink } from 'vue-router'
 import { Socket } from 'socket.io-client'
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import type { MatchI } from '../../model/match/match.interface'
-import type { FriendshipEntryI } from '../../model/friendship/friendshipEntry.interface'
-import { disconnectChatSocket, connectChatSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import { useNotificationStore } from '../../stores/notification'
 import { useFriendRequestStore } from '../../stores/friendRequests'
 import { useMatchRequestsStore } from '../../stores/matchRequests'
-import { useChannelInvitationsStore } from '../../stores/channelInvitations'
 import type { ChannelInvitationI } from '../../model/channels/channelInvitation.interface'
 import { useUserStore } from '../../stores/userInfo'
-import router from '../../router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -34,9 +31,6 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(fas)
 const friendRequestsStore = useFriendRequestStore()
 const friendRequests = computed(() => friendRequestsStore.friendRequests)
-
-//const channelInvitationsStore = useChannelInvitationsStore()
-//const channelInvitations = computed(() => channelInvitationsStore.channelInvitations)
 
 const socket = ref<Socket | null>(null)
 const matchInvites = ref<MatchI[]>([])

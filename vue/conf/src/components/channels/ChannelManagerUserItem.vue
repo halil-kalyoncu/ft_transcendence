@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { computed, ref, watch, watchEffect, onMounted, onUnmounted } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -64,11 +64,9 @@ import type { ErrorI } from '../../model/error.interface'
 library.add(fas)
 const router = useRouter()
 const userStore = useUserStore()
-const usernameUserStore = computed(() => userStore.username)
 const notificationStore = useNotificationStore()
 const socket = ref<Socket | null>(null)
 const minutesMuted = ref(0)
-const maxValue = ref(100)
 
 //get the props from parent
 const props = defineProps({

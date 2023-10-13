@@ -14,7 +14,6 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userInfo'
 import { useNotificationStore } from '../stores/notification'
 
-const username = ref('')
 const router = useRouter()
 const userStore = useUserStore()
 const userId = computed(() => userStore.userId)

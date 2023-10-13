@@ -38,7 +38,6 @@ const userId = computed(() => userStore.userId)
 const socket = ref<Socket | null>(null)
 type UnreadMessageCounts = Record<number, number>
 const unreadMessageCounts = ref<UnreadMessageCounts>({})
-const bannedUsers = ref<Record<number, boolean>>({})
 
 const notificationStore = useNotificationStore()
 const channelData = ref<ChannelEntryI[]>([])

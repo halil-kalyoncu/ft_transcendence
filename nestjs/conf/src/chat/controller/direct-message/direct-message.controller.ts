@@ -1,11 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   HttpException,
   HttpStatus,
-  NotFoundException,
   ParseIntPipe,
   Post,
   Query,

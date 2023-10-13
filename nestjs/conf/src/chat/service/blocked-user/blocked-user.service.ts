@@ -3,10 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BlockedUser, Prisma, User } from '@prisma/client';
+import { BlockedUser, User } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UserService } from '../../../user/service/user-service/user.service';
-import { PrismaModel } from '../../../_gen/prisma-class/index';
 
 @Injectable()
 export class BlockedUserService {

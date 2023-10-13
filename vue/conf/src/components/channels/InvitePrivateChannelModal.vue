@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ChannelInviteeUserI } from '../../model/user.interface'
 import ScrollViewer from '../utils/ScrollViewer.vue'

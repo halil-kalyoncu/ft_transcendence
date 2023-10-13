@@ -40,18 +40,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useNotificationStore } from '../../stores/notification'
-import type { FriendshipI } from '../../model/friendship/friendship.interface'
-import type { ErrorI } from '../../model/error.interface'
 
 library.add(fas)
 const router = useRouter()
-const notificationStore = useNotificationStore()
 
 const emit = defineEmits(['reject-request', 'accept-request', 'block-user', 'unblock-user'])
 

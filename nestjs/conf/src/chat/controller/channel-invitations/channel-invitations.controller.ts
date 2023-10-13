@@ -8,7 +8,6 @@ import {
   ParseIntPipe,
   HttpException,
   HttpStatus,
-  ConsoleLogger,
   NotFoundException,
   BadRequestException,
   UseGuards,
@@ -18,8 +17,6 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ChannelInvitationsService } from '../../service/channel-invitations/channel-invitations.service';
 import { UserService } from '../../../user/service/user-service/user.service';
 import type { ChannelInvitationDto } from '../../dto/channelInvitation.dto';
-import { User } from '@prisma/client';
-import type { ErrorDto } from '../../dto/error.dto';
 import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
 
 @ApiTags('Channel-Invitations module')

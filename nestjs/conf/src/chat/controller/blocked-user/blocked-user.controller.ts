@@ -3,7 +3,6 @@ import {
   Get,
   HttpException,
   HttpStatus,
-  InternalServerErrorException,
   NotFoundException,
   ParseIntPipe,
   Query,

@@ -3,14 +3,12 @@ import {
   forwardRef,
   Inject,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   Channel,
   ChannelMember,
   ChannelVisibility,
-  Prisma,
   User,
   ChannelMemberRole,
   ChannelMemberStatus,
@@ -20,7 +18,6 @@ import * as bcrypt from 'bcryptjs';
 import {
   SetPasswordDto,
   DeletePasswordDto,
-  CreateChannelDto,
   ChannelMembershipDto,
   AdminActionDto,
   ChannelInfoDto,

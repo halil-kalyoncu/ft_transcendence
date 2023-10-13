@@ -43,19 +43,17 @@
 <script setup lang="ts">
 import ChannelManager from './ChannelManager.vue'
 import ChannelMessages from '../chat/ChannelMessages.vue'
-import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { onBeforeUnmount, onMounted, computed, watch, ref } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { useUserStore } from '../../stores/userInfo'
-import { connectChatSocket, disconnectChatSocket } from '../../websocket'
+import { connectChatSocket } from '../../websocket'
 import { ChannelVisibility } from '../../model/channels/createChannel.interface'
 import { useNotificationStore } from '../../stores/notification'
 import JoinedChannels from './JoinedChannelsList.vue'
 import AvailableChannels from './AvailableChannelsList.vue'
 import type {
   CreateChannelDto,
-  ChannelVisibilityType,
-  ChannelMemberI
+  ChannelVisibilityType
 } from '../../model/channels/createChannel.interface'
 import { Socket } from 'socket.io-client'
 import Modal from '../utils/Modal.vue'

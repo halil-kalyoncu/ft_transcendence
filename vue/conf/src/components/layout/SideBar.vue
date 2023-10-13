@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Channels from '../channels/Channels.vue'
 import Friends from '../friends/Friends.vue'
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
 let showFriendsSideBar = ref(true)
 

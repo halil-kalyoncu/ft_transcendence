@@ -29,12 +29,9 @@ import {
   ChannelMembershipDto,
 } from '../../dto/channel.dto';
 import {
-  ChannelVisibility,
   ConnectedUser,
   ChannelMember,
-  DirectMessage,
   Friendship,
-  FriendshipStatus,
   User,
   Match,
   Matchmaking,
