@@ -87,7 +87,6 @@ export class EventsGateway {
 
   async handleConnection(socket: Socket, ...args: any[]) {
     if (!socket.handshake.query.userId || !socket.handshake.query.matchId) {
-      console.log("query doesn't have the properties userId and matchId");
       return;
     }
 
@@ -291,14 +290,14 @@ export class EventsGateway {
     }
   }
 
-  @SubscribeMessage('removePowerUp')
-  removePowerUp(@ConnectedSocket() socket: Socket, @MessageBody() id: number) {
-    const room = this.rooms.get(socket.data.match.id);
-    let index = room.powerups.findIndex((powerup) => powerup.id == id);
-    if (index != -1) {
-      room.powerups.splice(index, 1);
-    }
-  }
+  //   @SubscribeMessage('removePowerUp')
+  //   removePowerUp(@ConnectedSocket() socket: Socket, @MessageBody() id: number) {
+  //     const room = this.rooms.get(socket.data.match.id);
+  //     let index = room.powerups.findIndex((powerup) => powerup.id == id);
+  //     if (index != -1) {
+  //       room.powerups.splice(index, 1);
+  //     }
+  //   }
 
   @SubscribeMessage('maxWaitingTimeReached')
   async maxWaitingTimeReached(@ConnectedSocket() socket: Socket) {
@@ -376,7 +375,6 @@ export class EventsGateway {
           y: y,
         };
         this.server.to(room.socketIds[0]).emit('newPowerUp', newPowerUpData);
-        this.server.to(room.socketIds[1]).emit('newPowerUp', newPowerUpData);
       }, 10000);
     }
   }

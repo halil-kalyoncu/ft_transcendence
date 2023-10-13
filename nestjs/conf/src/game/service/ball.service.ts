@@ -152,20 +152,53 @@ export class Ball {
     let nextBallX = this.x + this.dx;
     let nextBallY = this.y + this.dy;
 
-    if (this.scoreGoal(room, nextBallX, server)) {
-      room.paddleA.resetHeight();
-      room.paddleB.resetHeight();
-      server.to(room.socketIds[0]).emit('resetPaddle');
-      server.to(room.socketIds[1]).emit('resetPaddle');
-      this.resetBall();
-      this.pause = true;
-      if (this.timeoutId) {
-        clearTimeout(this.timeoutId);
+    // if (this.scoreGoal(room, nextBallX, server)) {
+    //   room.paddleA.resetHeight();
+    //   room.paddleB.resetHeight();
+    //   server.to(room.socketIds[0]).emit('resetPaddle');
+    //   server.to(room.socketIds[1]).emit('resetPaddle');
+    //   this.resetBall();
+    //   this.pause = true;
+    //   if (this.timeoutId) {
+    //     clearTimeout(this.timeoutId);
+    //   }
+    //   this.timeoutId = setTimeout(() => {
+    //     this.pause = false;
+    //   }, 3000);
+    //  } else
+    for (let powerup of room.powerups) {
+      if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)) {
+        let target;
+        if (this.dx > 0) target = 'left';
+        else target = 'right';
+        const activatePowerUpData = {
+          player: target,
+          type: powerup.type,
+        };
+        let index = room.powerups.findIndex((pow) => pow.id == powerup.id);
+        if (index == -1) {
+          return;
+        }
+        room.powerups.splice(index, 1);
+        server
+          .to(room.socketIds[0])
+          .emit('activatePowerUp', activatePowerUpData);
+        server
+          .to(room.socketIds[1])
+          .emit('activatePowerUp', activatePowerUpData);
+        server.to(room.socketIds[0]).emit('destroyPowerUp', { id: powerup.id });
+        server.to(room.socketIds[1]).emit('destroyPowerUp', { id: powerup.id });
       }
-      this.timeoutId = setTimeout(() => {
-        this.pause = false;
-      }, 3000);
-    } else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
+      if (
+        powerup.y + powerup.hgt >= this.fieldHeight &&
+        !this.handlePowerUpCollision(nextBallX, nextBallY, powerup)
+      ) {
+        server.to(room.socketIds[0]).emit('destroyPowerUp', { id: powerup.id });
+        server.to(room.socketIds[1]).emit('destroyPowerUp', { id: powerup.id });
+      }
+    }
+
+    if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;
     else if (this.handleBallCollision(nextBallX, nextBallY, room, 'A')) {
@@ -187,32 +220,6 @@ export class Ball {
       this.y = nextBallY;
     }
 
-    for (let powerup of room.powerups) {
-      if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)) {
-        let target;
-        if (this.dx > 0) target = 'left';
-        else target = 'right';
-        const activatePowerUpData = {
-          player: target,
-          type: powerup.type,
-        };
-        server
-          .to(room.socketIds[0])
-          .emit('activatePowerUp', activatePowerUpData);
-        server
-          .to(room.socketIds[1])
-          .emit('activatePowerUp', activatePowerUpData);
-        server.to(room.socketIds[0]).emit('destroyPowerUp', { id: powerup.id });
-        server.to(room.socketIds[1]).emit('destroyPowerUp', { id: powerup.id });
-      }
-      if (
-        powerup.y + powerup.hgt >= this.fieldHeight &&
-        !this.handlePowerUpCollision(nextBallX, nextBallY, powerup)
-      ) {
-        server.to(room.socketIds[0]).emit('destroyPowerUp', { id: powerup.id });
-        server.to(room.socketIds[1]).emit('destroyPowerUp', { id: powerup.id });
-      }
-    }
     return {
       x: this.x,
       y: this.y,
