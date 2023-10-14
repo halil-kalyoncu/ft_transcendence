@@ -159,9 +159,8 @@ window.addEventListener('keydown', keyHookDown)
 window.addEventListener('keyup', keyHookUp)
 
 const initGameSocket = () => {
-  const user: UserI = getUserFromAccessToken()
   socket.value = connectGameSocket({
-    userId: user.id,
+    accessToken: localStorage.getItem('ponggame') ?? '',
     matchId: matchId
   })
 }

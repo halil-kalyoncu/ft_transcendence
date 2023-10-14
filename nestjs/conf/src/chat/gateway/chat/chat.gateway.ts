@@ -595,7 +595,7 @@ export class ChatGateway
   async handleMuteChannelMember(
     @ConnectedSocket() socket: Socket,
     @MessageBody() adminActionDto: AdminActionDto,
-  ): Promise<void> {
+  ): Promise<void | ErrorDto> {
     try {
       await this.validateDto(adminActionDto);
 
@@ -632,8 +632,8 @@ export class ChatGateway
             );
         }
       }
-    } catch (error: any) {
-      socket.emit('error', error.message);
+    } catch (error) {
+      return { error: error.message as string };
     }
   }
 
@@ -1161,7 +1161,6 @@ export class ChatGateway
       await this.connectedUserService.findByUserId(match.rightUserId);
 
     if (!receiverOnline) {
-      socket.emit('Error', 'Opponent is not online');
       return;
     }
 
@@ -1409,8 +1408,10 @@ export class ChatGateway
     }
   }
 
-  private disconnectUnauthorized(socket: Socket): void {
-    socket.emit('Error', new UnauthorizedException());
+  private async disconnectUnauthorized(socket: Socket): Promise<void> {
+    if (socket.data && socket.data.user) {
+      await this.connectedUserService.deleteBySocketId(socket.id);
+    }
     socket.disconnect();
   }
 

@@ -40,9 +40,8 @@ const initChatSocket = () => {
 }
 
 const initGameSocket = () => {
-  const user: UserI = getUserFromAccessToken()
   const query = {
-    userId: user.id,
+    accessToken: localStorage.getItem('ponggame') ?? '',
     matchId
   }
   gameSocket.value = connectGameSocket(query)

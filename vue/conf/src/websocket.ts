@@ -32,12 +32,18 @@ export function disconnectChatSocket(): void {
 export function connectGameSocket(data: any): Socket {
   if (!gameSocket) {
     const queryData = {
-      userId: data.userId.toString(),
       matchId: data.matchId.toString()
     }
     gameSocket = io(
       `http://${import.meta.env.VITE_IPADDRESS}:${import.meta.env.VITE_BACKENDPORT}`,
       {
+        transportOptions: {
+          polling: {
+            extraHeaders: {
+              Authorization: `Bearer ${data.accessToken}`
+            }
+          }
+        },
         query: queryData,
         path: '/game'
       }

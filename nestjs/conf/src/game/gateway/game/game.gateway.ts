@@ -10,8 +10,9 @@ import { Room } from '../../service/room.service';
 import { PowerUp } from '../../service/powerup.service';
 import { MatchService } from '../../../match/service/match.service';
 import { UserService } from '../../../user/service/user-service/user.service';
-import { Match } from '@prisma/client';
-import { Paddle } from 'src/game/service/paddle.service';
+import { Match, User } from '@prisma/client';
+import { Paddle } from '../../service/paddle.service';
+import { JwtAuthService } from '../../../auth/service/jwt-auth/jtw-auth.service';
 
 @WebSocketGateway({
   cors: {
@@ -26,6 +27,7 @@ export class EventsGateway {
   constructor(
     private userService: UserService,
     private matchService: MatchService,
+    private jwtAuthService: JwtAuthService,
   ) {}
 
   @WebSocketServer()
@@ -86,49 +88,62 @@ export class EventsGateway {
   }
 
   async handleConnection(socket: Socket, ...args: any[]) {
-    if (!socket.handshake.query.userId || !socket.handshake.query.matchId) {
-      return;
-    }
+    try {
+      if (
+        !socket.handshake.query.matchId ||
+        !socket.handshake.headers.authorization
+      ) {
+        socket.disconnect();
+        return;
+      }
 
-    //get the user and match id from the query
-    const queryUserId: number = parseInt(
-      socket.handshake.query.userId as string,
-      10,
-    );
-    const queryMatchId: number = parseInt(
-      socket.handshake.query.matchId as string,
-      10,
-    );
-
-    //saving the user and match objects in the socket
-    socket.data.user = await this.userService.findById(queryUserId);
-    socket.data.match = await this.matchService.findById(queryMatchId);
-
-    //first user that connects to the gateway creates the entry in the rooms array
-    if (!this.rooms.has(queryMatchId)) {
-      let newRoom = new Room(
-        queryMatchId,
-        socket.data.match.goalsToWin,
-        socket.data.match.leftUserId,
-        socket.data.match.rightUserId,
+      const tokenArray: string[] =
+        socket.handshake.headers.authorization.split(' ');
+      const decodedToken = await this.jwtAuthService.verifyJwt(tokenArray[1]);
+      const queryMatchId: number = parseInt(
+        socket.handshake.query.matchId as string,
+        10,
       );
 
-      this.rooms.set(queryMatchId, newRoom);
+      //saving the user and match objects in the socket
+      const user: User = await this.userService.findById(decodedToken.user.id);
+      const match: Match = await this.matchService.findById(queryMatchId);
 
-      await this.setPowerupInterval(newRoom);
-    }
+      if (!user || !match) {
+        socket.disconnect();
+        return;
+      }
 
-    const room = this.rooms.get(queryMatchId);
-    if (queryUserId === socket.data.match.leftUserId) {
-      socket.data.isLeftPlayer = true;
-      room.socketIds[0] = socket.id;
-    } else {
-      socket.data.isLeftPlayer = false;
-      room.socketIds[1] = socket.id;
-    }
+      socket.data.user = user;
+      socket.data.match = match;
+      //first user that connects to the gateway creates the entry in the rooms array
+      if (!this.rooms.has(queryMatchId)) {
+        let newRoom = new Room(
+          queryMatchId,
+          socket.data.match.goalsToWin,
+          socket.data.match.leftUserId,
+          socket.data.match.rightUserId,
+        );
 
-    if (room.socketIds[0] != '' && room.socketIds[1] != '') {
-      this.startCountdown(room);
+        this.rooms.set(queryMatchId, newRoom);
+
+        await this.setPowerupInterval(newRoom);
+      }
+
+      const room = this.rooms.get(queryMatchId);
+      if (decodedToken.user.id === socket.data.match.leftUserId) {
+        socket.data.isLeftPlayer = true;
+        room.socketIds[0] = socket.id;
+      } else {
+        socket.data.isLeftPlayer = false;
+        room.socketIds[1] = socket.id;
+      }
+
+      if (room.socketIds[0] != '' && room.socketIds[1] != '') {
+        this.startCountdown(room);
+      }
+    } catch (error) {
+      socket.disconnect();
     }
   }
 
