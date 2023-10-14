@@ -15,6 +15,7 @@ import {
 import { ChannelInviteeUserDto } from '../../../chat/dto/channelInvitation.dto';
 import * as fs from 'fs';
 import { ConnectedUserService } from '../../../chat/service/connected-user/connected-user.service';
+import { devNull } from 'os';
 
 @Injectable()
 export class UserService {
@@ -302,6 +303,11 @@ export class UserService {
 
   async getAllUsersByLadder(): Promise<User[]> {
     return await this.prisma.user.findMany({
+      where: {
+        username: {
+          not: null,
+        },
+      },
       orderBy: {
         ladderLevel: 'desc',
       },
