@@ -279,6 +279,7 @@ export class MatchService {
   }
 
   async finishMatch(room: Room): Promise<Match | null> {
+    const { state, flawlessVictory } = this.determineMatchState(room);
     const match = await this.prisma.match.findUnique({
       where: {
         id: room.id,
@@ -294,8 +295,6 @@ export class MatchService {
     ) {
       return null;
     }
-
-    const { state, flawlessVictory } = this.determineMatchState(room);
 
     const updatedMatch = await this.prisma.match.update({
       where: {
