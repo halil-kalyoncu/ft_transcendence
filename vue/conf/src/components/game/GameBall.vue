@@ -15,8 +15,8 @@ import { defineComponent, ref } from 'vue'
 
 export default defineComponent({
   setup() {
-    let x = ref(500)
-    let y = ref(200)
+    let x = ref(400)
+    let y = ref(300)
     let wid = ref(15)
     let hgt = ref(15)
     let speed = ref(3)
