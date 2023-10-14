@@ -152,20 +152,6 @@ export class Ball {
     let nextBallX = this.x + this.dx;
     let nextBallY = this.y + this.dy;
 
-    // if (this.scoreGoal(room, nextBallX, server)) {
-    //   room.paddleA.resetHeight();
-    //   room.paddleB.resetHeight();
-    //   server.to(room.socketIds[0]).emit('resetPaddle');
-    //   server.to(room.socketIds[1]).emit('resetPaddle');
-    //   this.resetBall();
-    //   this.pause = true;
-    //   if (this.timeoutId) {
-    //     clearTimeout(this.timeoutId);
-    //   }
-    //   this.timeoutId = setTimeout(() => {
-    //     this.pause = false;
-    //   }, 3000);
-    //  } else
     for (let powerup of room.powerups) {
       if (this.handlePowerUpCollision(nextBallX, nextBallY, powerup)) {
         let target;
@@ -198,7 +184,20 @@ export class Ball {
       }
     }
 
-    if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
+    if (this.scoreGoal(room, nextBallX, server)) {
+      room.paddleA.resetHeight();
+      room.paddleB.resetHeight();
+      server.to(room.socketIds[0]).emit('resetPaddle');
+      server.to(room.socketIds[1]).emit('resetPaddle');
+      this.resetBall();
+      this.pause = true;
+      if (this.timeoutId) {
+        clearTimeout(this.timeoutId);
+      }
+      this.timeoutId = setTimeout(() => {
+        this.pause = false;
+      }, 3000);
+    } else if (nextBallX + this.wid > this.fieldWidth) this.dx = -this.dx;
     else if (nextBallY + this.hgt > this.fieldHeight || nextBallY < 0)
       this.dy = -this.dy;
     else if (this.handleBallCollision(nextBallX, nextBallY, room, 'A')) {

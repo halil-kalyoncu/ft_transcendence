@@ -74,6 +74,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faArrowUp, faArrowDown, faMagnet } from '@fortawesome/free-solid-svg-icons'
 import { useNotificationStore } from '../../stores/notification'
 import type { MatchI } from '../../model/match/match.interface'
+import { match } from 'assert'
 
 library.add(faArrowUp, faArrowDown, faMagnet)
 const accessToken = localStorage.getItem('ponggame') ?? ''
@@ -136,7 +137,6 @@ const keyHookDown = (e: KeyboardEvent) => {
 
 const keyHookUp = (e: KeyboardEvent) => {
   if (!socket || !socket.value) {
-    notificationStore.showNotification(`Error: Connection problems`, true)
     return
   }
 
@@ -216,6 +216,10 @@ const formattedTimer = computed(() => {
 })
 
 const startTimer = () => {
+  if (!socket || !socket.value) {
+    return
+  }
+
   timerId = setInterval(() => {
     waitingTime.value++
     if (waitingTime.value >= maxWaitingTime) {
@@ -243,6 +247,10 @@ const setEventListeners = () => {
   }
 
   socket.value.on('paddleMove', ({ playerId, newPos }: { playerId: string; newPos: number }) => {
+    if (matchResult.value) {
+      return
+    }
+
     if (playerId === 'left') {
       paddleA.value?.setY(newPos)
     } else {
@@ -251,47 +259,60 @@ const setEventListeners = () => {
   })
 
   socket.value.on('ballPosition', ({ x, y }: { x: number; y: number }) => {
+    if (matchResult.value) {
+      return
+    }
+
     ball.value?.setX(x)
     ball.value?.setY(y)
     ballCoordinates.value = { x, y }
   })
 
-  socket.value.on('newPowerUp', (PowerUp: { powerUp: string; x: number; y: number }) => {
-    const newPowerUp = {
-      id: Math.floor(Date.now()),
-      x: PowerUp.x,
-      y: PowerUp.y,
-      type: 'null',
-      index: 0,
-      color: 'white',
-      wid: 70,
-      hgt: 70
-    }
-    if (PowerUp.powerUp == 'increasePaddleHeight') {
-      newPowerUp.color = 'white'
-      newPowerUp.index = 0
-      newPowerUp.type = PowerUp.powerUp
-    } else if (PowerUp.powerUp == 'decreasePaddleHeight') {
-      newPowerUp.color = 'red'
-      newPowerUp.index = 1
-      newPowerUp.type = PowerUp.powerUp
-    } else if (PowerUp.powerUp == 'magnet') {
-      newPowerUp.color = 'green'
-      newPowerUp.index = 2
-      newPowerUp.type = PowerUp.powerUp
-    } else if (PowerUp.powerUp == 'slowBall') {
-      newPowerUp.color = 'blue'
-      newPowerUp.index = 3
-      newPowerUp.type = PowerUp.powerUp
-    } else if (PowerUp.powerUp == 'fastBall') {
-      newPowerUp.color = 'yellow'
-      newPowerUp.index = 4
-      newPowerUp.type = PowerUp.powerUp
-    }
+  socket.value.on(
+    'newPowerUp',
+    (PowerUp: { powerupID: number; powerUp: string; x: number; y: number }) => {
+      if (!socket || !socket.value || matchResult.value) {
+        return
+      }
 
-    socket.value?.emit('spawnPowerUp', newPowerUp)
-    PowerUps.value?.push(newPowerUp)
-  })
+      const newPowerUp = {
+        id: PowerUp.powerupID,
+        x: PowerUp.x,
+        y: PowerUp.y,
+        type: 'null',
+        index: 0,
+        color: 'white',
+        wid: 70,
+        hgt: 70
+      }
+      if (PowerUp.powerUp == 'increasePaddleHeight') {
+        newPowerUp.color = 'white'
+        newPowerUp.index = 0
+        newPowerUp.type = PowerUp.powerUp
+      } else if (PowerUp.powerUp == 'decreasePaddleHeight') {
+        newPowerUp.color = 'red'
+        newPowerUp.index = 1
+        newPowerUp.type = PowerUp.powerUp
+      } else if (PowerUp.powerUp == 'magnet') {
+        newPowerUp.color = 'green'
+        newPowerUp.index = 2
+        newPowerUp.type = PowerUp.powerUp
+      } else if (PowerUp.powerUp == 'slowBall') {
+        newPowerUp.color = 'blue'
+        newPowerUp.index = 3
+        newPowerUp.type = PowerUp.powerUp
+      } else if (PowerUp.powerUp == 'fastBall') {
+        newPowerUp.color = 'yellow'
+        newPowerUp.index = 4
+        newPowerUp.type = PowerUp.powerUp
+      }
+
+      if (side.value! == 'left') {
+        socket.value?.emit('spawnPowerUp', newPowerUp)
+      }
+      PowerUps.value?.push(newPowerUp)
+    }
+  )
 
   socket.value.on('powerUpMove', ({ id, y }: { id: number; y: number }) => {
     let powerUp = null
@@ -307,10 +328,13 @@ const setEventListeners = () => {
       return
     }
 
+    if (matchResult.value) {
+      return
+    }
+
     let index = PowerUps.value?.findIndex((powerup) => powerup.id == id)
     if (index != -1) {
       PowerUps.value?.splice(index, 1)
-      //   socket.value.emit('removePowerUp', id)
     }
   })
 
@@ -329,6 +353,10 @@ const setEventListeners = () => {
   })
 
   socket.value.on('activatePowerUp', ({ player, type }: { player: string; type: string }) => {
+    if (!socket || !socket.value || matchResult.value) {
+      return
+    }
+
     let target
     if (player == 'left') target = paddleA.value
     else target = paddleB.value
@@ -355,11 +383,19 @@ const setEventListeners = () => {
   })
 
   socket.value.on('scoreGoal', (payload: string) => {
+    if (matchResult.value) {
+      return
+    }
+
     if (payload == 'playerA') playerAScore.value++
     else playerBScore.value++
   })
 
   socket.value.on('resetPaddle', () => {
+    if (matchResult.value) {
+      return
+    }
+
     paddleA.value?.resetHgt()
     paddleB.value?.resetHgt()
   })
@@ -392,10 +428,15 @@ onBeforeUnmount(() => {
 })
 
 function update() {
+  if (!socket || !socket.value) {
+    return
+  }
+
   if (isPaused.value) {
     requestAnimationFrame(update)
     return
   }
+
   if (side.value && side.value == 'left') {
     if (paddleA.value && isMovingUp.value) {
       if (socket.value) {

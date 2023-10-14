@@ -305,15 +305,6 @@ export class EventsGateway {
     }
   }
 
-  //   @SubscribeMessage('removePowerUp')
-  //   removePowerUp(@ConnectedSocket() socket: Socket, @MessageBody() id: number) {
-  //     const room = this.rooms.get(socket.data.match.id);
-  //     let index = room.powerups.findIndex((powerup) => powerup.id == id);
-  //     if (index != -1) {
-  //       room.powerups.splice(index, 1);
-  //     }
-  //   }
-
   @SubscribeMessage('maxWaitingTimeReached')
   async maxWaitingTimeReached(@ConnectedSocket() socket: Socket) {
     const room = this.rooms.get(socket.data.match.id);
@@ -380,16 +371,19 @@ export class EventsGateway {
     );
     if (powerupNames.length > 0) {
       room.powerupInterval = setInterval(async () => {
+        let powerupID = Math.floor(Date.now());
         let powerUpIndex = Math.floor(Math.random() * powerupNames.length);
         let x =
           Math.floor(Math.random() * (room.ball.fieldWidth - 70 - 70 + 1)) + 70;
         let y = -70;
         const newPowerUpData = {
+          powerupID,
           powerUp: powerupNames[powerUpIndex],
           x: x,
           y: y,
         };
         this.server.to(room.socketIds[0]).emit('newPowerUp', newPowerUpData);
+        this.server.to(room.socketIds[1]).emit('newPowerUp', newPowerUpData);
       }, 10000);
     }
   }
