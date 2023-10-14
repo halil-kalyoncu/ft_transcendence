@@ -11,6 +11,8 @@ import {
   HttpException,
   HttpStatus,
   BadRequestException,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -209,6 +211,34 @@ export class ChannelController {
       );
     } catch (error) {
       if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Patch('addUserToChannel')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  async addUserToChannel(
+    @Req() req,
+    @Body() ChannelMembershipDto: ChannelMembershipDto,
+  ): Promise<ChannelMember> {
+    try {
+      if (req.user.id !== ChannelMembershipDto.userId) {
+        throw new ForbiddenException(
+          'You are tried to put another user in a channel that is not yourself',
+        );
+      }
+      return await this.ChannelService.addUserToChannel(ChannelMembershipDto);
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ForbiddenException
+      ) {
         throw error;
       }
       throw new HttpException(

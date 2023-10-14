@@ -31,6 +31,8 @@ export class Room {
   powerupInterval: any;
   diffPadBall: number;
 
+  handleDisconnect: boolean;
+
   constructor(
     id: number,
     goalsToWin: number,
@@ -57,6 +59,8 @@ export class Room {
 
     this.powerupInterval = null;
     this.diffPadBall = 0;
+
+    this.handleDisconnect = false;
   }
 
   checkGameFinished(): void {
