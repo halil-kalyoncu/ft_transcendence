@@ -6,8 +6,8 @@ import { PowerUp } from './powerup.service';
 @Injectable()
 export class Ball {
   constructor(
-    public x: number = 500,
-    public y: number = 200,
+    public x: number = 400,
+    public y: number = 300,
     public wid: number = 15,
     public hgt: number = 15,
     public speed: number = 4,

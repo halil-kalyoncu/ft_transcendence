@@ -76,13 +76,15 @@ export class EventsGateway {
       } else {
         clearInterval(gameInterval);
         clearInterval(room.powerupInterval);
-        const finishedMatch: Match = await this.matchService.finishMatch(room);
-        if (!finishedMatch) {
-          return;
-        }
-        this.rooms.delete(room.id);
-        this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
-        this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
+		if (room.gameIsRunning) {
+			const finishedMatch: Match = await this.matchService.finishMatch(room);
+			if (!finishedMatch) {
+			  return;
+			}
+			this.rooms.delete(room.id);
+			this.server.to(room.socketIds[0]).emit('gameFinished', finishedMatch);
+			this.server.to(room.socketIds[1]).emit('gameFinished', finishedMatch);
+		}
       }
     }, 15);
   }
