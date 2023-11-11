@@ -1,8 +1,6 @@
 # ft_transcendence
 
 
-https://github.com/halil-kalyoncu/ft_transcendence/assets/87129810/48c6626e-d253-49fa-9864-f51a610ea8a7
-
 
 
 **Table of Contents**
